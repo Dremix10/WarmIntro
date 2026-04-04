@@ -830,3 +830,37 @@ export async function generateFollowUp(req: {
   });
   return res.json();
 }
+
+export async function getCoachingTip(req: {
+  stage: string;
+  alumniName: string;
+  alumniRole: string;
+  companyName: string;
+  userMajor: string;
+}): Promise<{ tip: string; nextAction: string }> {
+  const res = await fetch("/api/coaching-tip", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return res.json();
+}
+
+export async function summarizeRecording(req: {
+  transcript: string;
+  alumniName: string;
+  alumniRole: string;
+  companyName: string;
+}): Promise<{
+  summary: string;
+  keyTakeaways: string[];
+  followUpActions: string[];
+  sentiment: "positive" | "neutral" | "needs_attention";
+}> {
+  const res = await fetch("/api/summarize-recording", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return res.json();
+}

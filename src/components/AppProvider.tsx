@@ -30,6 +30,17 @@ export interface Leaderboard {
   members: LeaderboardMember[];
 }
 
+export interface TrackedConnection {
+  alumniId: string;
+  alumniName: string;
+  alumniRole: string;
+  alumniEmail?: string;
+  alumniLinkedinUrl: string;
+  companyId: string;
+  companyName: string;
+  sentAt: string;
+}
+
 interface AppState {
   profile: UserProfile | null;
   selectedCompanies: Company[];
@@ -40,6 +51,9 @@ interface AppState {
   isProfileShared: boolean;
   sentOutreach: Array<{ alumniId: string; companyId: string }>;
   companyAlumniCount: Record<string, number>;
+  alumniStages: Record<string, string>;
+  connections: Record<string, TrackedConnection>;
+  connectionNotes: Record<string, { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }>;
   setProfile: (profile: UserProfile) => void;
   setSelectedCompanies: (companies: Company[]) => void;
   setAllCompanies: (companies: Company[]) => void;
@@ -49,6 +63,10 @@ interface AppState {
   setIsProfileShared: (shared: boolean) => void;
   addSentOutreach: (alumniId: string, companyId: string) => void;
   setCompanyAlumniCount: (companyId: string, count: number) => void;
+  setAlumniStage: (alumniId: string, stage: string) => void;
+  getAlumniStage: (alumniId: string) => string | null;
+  addConnection: (conn: TrackedConnection) => void;
+  setConnectionNote: (alumniId: string, note: { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }) => void;
   isSent: (alumniId: string) => boolean;
   getSentCount: (companyId: string) => number;
 }
@@ -65,6 +83,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isProfileShared, setIsProfileSharedState] = useState(false);
   const [sentOutreach, setSentOutreach] = useState<Array<{ alumniId: string; companyId: string }>>([]);
   const [companyAlumniCount, setCompanyAlumniCountState] = useState<Record<string, number>>({});
+  const [alumniStages, setAlumniStagesState] = useState<Record<string, string>>({});
+  const [connections, setConnectionsState] = useState<Record<string, TrackedConnection>>({});
+  const [connectionNotes, setConnectionNotesState] = useState<Record<string, { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }>>({});
 
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
@@ -75,6 +96,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setIsProfileShared = useCallback((s: boolean) => setIsProfileSharedState(s), []);
   const addSentOutreach = useCallback((alumniId: string, companyId: string) => setSentOutreach((prev) => prev.some((s) => s.alumniId === alumniId) ? prev : [...prev, { alumniId, companyId }]), []);
   const setCompanyAlumniCount = useCallback((companyId: string, count: number) => setCompanyAlumniCountState((prev) => ({ ...prev, [companyId]: count })), []);
+  const setAlumniStage = useCallback((alumniId: string, stage: string) => setAlumniStagesState((prev) => ({ ...prev, [alumniId]: stage })), []);
+  const getAlumniStage = useCallback((alumniId: string) => alumniStages[alumniId] ?? null, [alumniStages]);
+  const addConnection = useCallback((conn: TrackedConnection) => setConnectionsState((prev) => ({ ...prev, [conn.alumniId]: conn })), []);
+  const setConnectionNote = useCallback((alumniId: string, note: { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }) => setConnectionNotesState((prev) => ({ ...prev, [alumniId]: note })), []);
   const isSent = useCallback((alumniId: string) => sentOutreach.some((s) => s.alumniId === alumniId), [sentOutreach]);
   const getSentCount = useCallback((companyId: string) => sentOutreach.filter((s) => s.companyId === companyId).length, [sentOutreach]);
 
@@ -90,6 +115,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isProfileShared,
         sentOutreach,
         companyAlumniCount,
+        alumniStages,
+        connections,
+        connectionNotes,
         setProfile,
         setSelectedCompanies,
         setAllCompanies,
@@ -99,6 +127,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsProfileShared,
         addSentOutreach,
         setCompanyAlumniCount,
+        setAlumniStage,
+        getAlumniStage,
+        addConnection,
+        setConnectionNote,
         isSent,
         getSentCount,
       }}

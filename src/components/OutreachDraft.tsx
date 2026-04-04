@@ -6,12 +6,13 @@ import type { OutreachDraft as OutreachDraftType } from "@/shared/types";
 interface OutreachDraftProps {
   draft: OutreachDraftType;
   alumniLinkedinUrl?: string;
+  alumniEmail?: string;
   isSent?: boolean;
   onMarkSent: () => void;
   onGenerateFollowUp?: (originalBody: string) => void;
 }
 
-export function OutreachDraft({ draft, alumniLinkedinUrl, isSent = false, onMarkSent, onGenerateFollowUp }: OutreachDraftProps) {
+export function OutreachDraft({ draft, alumniLinkedinUrl, alumniEmail, isSent = false, onMarkSent, onGenerateFollowUp }: OutreachDraftProps) {
   const [body, setBody] = useState(draft.body);
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(isSent);
@@ -44,7 +45,9 @@ export function OutreachDraft({ draft, alumniLinkedinUrl, isSent = false, onMark
             {isEmail ? "\u2709\uFE0F" : "\uD83D\uDD17"}
           </span>
           <span className="text-sm font-semibold text-slate-700">
-            {isEmail ? "Email Draft" : "LinkedIn Message"}
+            {draft.id.startsWith("followup-")
+              ? (isEmail ? "Follow-up Email" : "Follow-up LinkedIn Message")
+              : (isEmail ? "Email Draft" : "LinkedIn Message")}
           </span>
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
             draft.tone === "warm"
@@ -95,6 +98,21 @@ export function OutreachDraft({ draft, alumniLinkedinUrl, isSent = false, onMark
           </svg>
           {copied ? "Copied!" : isEmail ? "Copy Email" : "Copy Message"}
         </button>
+
+        {alumniEmail && isEmail && (
+          <button
+            type="button"
+            onClick={async () => {
+              await navigator.clipboard.writeText(alumniEmail);
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+            Copy Email
+          </button>
+        )}
 
         {alumniLinkedinUrl && (
           <a

@@ -6,7 +6,7 @@ import { useAppState } from "@/components/AppProvider";
 import { AlumniList } from "@/components/AlumniList";
 import { OutreachDraft } from "@/components/OutreachDraft";
 import { Confetti } from "@/components/Confetti";
-import { findAlumni, generateOutreach, generateFollowUp, updateFunnel } from "@/hooks/useApi";
+import { findAlumni, generateOutreach, generateFollowUp, updateFunnel, getCoachingTip } from "@/hooks/useApi";
 import type { WarmPath, OutreachDraft as OutreachDraftType, Company, FunnelState } from "@/shared/types";
 import { FUNNEL_STAGES } from "@/shared/constants";
 
@@ -58,7 +58,7 @@ function LoadingCard({ message, count }: { message: string; count: number }) {
 export default function OutreachPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { profile, selectedCompanies, funnel, setFunnel, setGameState, isSent, addSentOutreach, setCompanyAlumniCount } = useAppState();
+  const { profile, selectedCompanies, funnel, setFunnel, setGameState, isSent, addSentOutreach, setCompanyAlumniCount, setAlumniStage, getAlumniStage, addConnection } = useAppState();
 
   const [company, setCompany] = useState<Company | null>(null);
   const [warmPaths, setWarmPaths] = useState<WarmPath[]>([]);
@@ -69,6 +69,8 @@ export default function OutreachPage() {
   const [xpToast, setXpToast] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [coachingTip, setCoachingTip] = useState<{ tip: string; nextAction: string } | null>(null);
+  const [loadingTip, setLoadingTip] = useState(false);
 
   useEffect(() => {
     const found = selectedCompanies.find((c) => c.id === params.id);
@@ -121,6 +123,19 @@ export default function OutreachPage() {
     if (isSent(selectedAlumniId)) return;
 
     addSentOutreach(selectedAlumniId, company.id);
+    const wp = warmPaths.find((w) => w.alumni.id === selectedAlumniId);
+    if (wp) {
+      addConnection({
+        alumniId: selectedAlumniId,
+        alumniName: wp.alumni.name,
+        alumniRole: wp.alumni.currentRole,
+        alumniEmail: wp.alumni.email,
+        alumniLinkedinUrl: wp.alumni.linkedinUrl,
+        companyId: company.id,
+        companyName: company.name,
+        sentAt: new Date().toISOString(),
+      });
+    }
 
     try {
       const res = await updateFunnel({
@@ -139,6 +154,45 @@ export default function OutreachPage() {
       if (newCount === 1) {
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3500);
+      }
+    } catch {
+      // silently fail for demo
+    }
+  };
+
+  const handleAdvanceStage = async (action: "reply_received" | "coffee_booked" | "referral_earned", nextStage: string) => {
+    if (!company || !selectedAlumniId) return;
+    const wp = warmPaths.find((w) => w.alumni.id === selectedAlumniId);
+    try {
+      const res = await updateFunnel({
+        action,
+        companyId: company.id,
+        alumniId: selectedAlumniId,
+      });
+      setFunnel(res.funnel);
+      setGameState(res.gameState);
+      setAlumniStage(selectedAlumniId, nextStage);
+      setXpToast(res.xpGained);
+      setTimeout(() => setXpToast(null), 2500);
+
+      // Fetch AI coaching tip
+      if (profile && wp) {
+        setLoadingTip(true);
+        setCoachingTip(null);
+        try {
+          const tip = await getCoachingTip({
+            stage: nextStage,
+            alumniName: wp.alumni.name,
+            alumniRole: wp.alumni.currentRole,
+            companyName: company.name,
+            userMajor: profile.major,
+          });
+          setCoachingTip(tip);
+        } catch {
+          // skip tip
+        } finally {
+          setLoadingTip(false);
+        }
       }
     } catch {
       // silently fail for demo
@@ -215,6 +269,32 @@ export default function OutreachPage() {
           </div>
         )}
 
+        {/* AI Coaching Tip */}
+        {(coachingTip || loadingTip) && (
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">{"\uD83E\uDDE0"}</span>
+              <div className="flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">AI Coach</p>
+                {loadingTip ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                    <p className="text-sm text-emerald-700">Generating coaching tip...</p>
+                  </div>
+                ) : coachingTip ? (
+                  <>
+                    <p className="text-sm text-emerald-800">{coachingTip.tip}</p>
+                    <p className="mt-2 text-xs font-semibold text-emerald-700">Next: {coachingTip.nextAction}</p>
+                  </>
+                ) : null}
+              </div>
+              {coachingTip && (
+                <button type="button" onClick={() => setCoachingTip(null)} className="text-emerald-400 hover:text-emerald-600 text-lg">&times;</button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Alumni list (left) */}
@@ -272,6 +352,7 @@ export default function OutreachPage() {
                     key={draft.id}
                     draft={draft}
                     alumniLinkedinUrl={selectedAlumni?.alumni.linkedinUrl}
+                    alumniEmail={selectedAlumni?.alumni.email}
                     isSent={draft.id.startsWith("followup-") ? false : (selectedAlumniId ? isSent(selectedAlumniId) : false)}
                     onMarkSent={handleMarkSent}
                     onGenerateFollowUp={async (originalBody) => {
@@ -293,6 +374,71 @@ export default function OutreachPage() {
                     }}
                   />
                 ))}
+
+                {/* Pipeline progression for sent alumni */}
+                {selectedAlumniId && isSent(selectedAlumniId) && (() => {
+                  const stage = getAlumniStage(selectedAlumniId);
+                  const stages = [
+                    { id: "sent", label: "Outreach Sent", icon: "\u2709\uFE0F", done: true },
+                    { id: "replied", label: "Reply Received", icon: "\uD83D\uDCAC", done: stage === "replied" || stage === "coffee" || stage === "referral" },
+                    { id: "coffee", label: "Coffee Chat", icon: "\u2615", done: stage === "coffee" || stage === "referral" },
+                    { id: "referral", label: "Referral", icon: "\uD83E\uDD1D", done: stage === "referral" },
+                  ];
+                  const nextAction = !stage
+                    ? { action: "reply_received" as const, nextStage: "replied", label: "Log Reply Received", xp: 25 }
+                    : stage === "replied"
+                    ? { action: "coffee_booked" as const, nextStage: "coffee", label: "Book Coffee Chat", xp: 50 }
+                    : stage === "coffee"
+                    ? { action: "referral_earned" as const, nextStage: "referral", label: "Got Referral!", xp: 100 }
+                    : null;
+
+                  return (
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Pipeline Progress</p>
+                      <div className="flex items-center gap-1">
+                        {stages.map((s, i) => (
+                          <div key={s.id} className="flex items-center gap-1 flex-1">
+                            <div className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium w-full justify-center ${
+                              s.done ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-50 text-slate-400 border border-slate-100"
+                            }`}>
+                              <span>{s.done ? "\u2705" : s.icon}</span>
+                              <span className="hidden sm:inline">{s.label}</span>
+                            </div>
+                            {i < stages.length - 1 && (
+                              <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                              </svg>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {nextAction && (
+                        <button
+                          type="button"
+                          onClick={() => handleAdvanceStage(nextAction.action, nextAction.nextStage)}
+                          className="mt-3 w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                        >
+                          <span>{nextAction.label}</span>
+                          <span className="rounded bg-blue-500 px-1.5 py-0.5 text-[10px]">+{nextAction.xp} XP</span>
+                        </button>
+                      )}
+                      {stage && (
+                        <button
+                          type="button"
+                          onClick={() => router.push("/crm")}
+                          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                        >
+                          View in CRM &rarr;
+                        </button>
+                      )}
+                      {stage === "referral" && (
+                        <div className="mt-2 text-center">
+                          <p className="text-sm font-semibold text-emerald-600">{"\uD83C\uDF89"} Full pipeline complete! Ready for interview.</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

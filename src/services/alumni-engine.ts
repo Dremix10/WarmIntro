@@ -69,6 +69,61 @@ function computeWarmthScore(
   return Math.min(score, 100);
 }
 
+const EMAIL_DOMAINS: Record<string, string> = {
+  "Tesla": "tesla.com",
+  "Toyota": "toyota.com",
+  "Ford Motor Company": "ford.com",
+  "General Motors": "gm.com",
+  "BMW Group": "bmw.com",
+  "Hyundai Motor Group": "hyundai.com",
+  "BYD": "byd.com",
+  "Volvo Cars": "volvocars.com",
+  "Rivian": "rivian.com",
+  "Lucid Motors": "lucidmotors.com",
+  "Google": "google.com",
+  "Microsoft": "microsoft.com",
+  "Apple": "apple.com",
+  "Amazon": "amazon.com",
+  "Meta": "meta.com",
+  "NVIDIA": "nvidia.com",
+  "Salesforce": "salesforce.com",
+  "Stripe": "stripe.com",
+  "Databricks": "databricks.com",
+  "Palantir": "palantir.com",
+  "Goldman Sachs": "gs.com",
+  "JPMorgan Chase": "jpmorgan.com",
+  "McKinsey": "mckinsey.com",
+  "BCG": "bcg.com",
+  "Bain": "bain.com",
+  "Deloitte": "deloitte.com",
+  "Morgan Stanley": "morganstanley.com",
+  "Citadel": "citadel.com",
+  "Johnson & Johnson": "jnj.com",
+  "Pfizer": "pfizer.com",
+  "Medtronic": "medtronic.com",
+  "Abbott": "abbott.com",
+  "Genentech": "gene.com",
+  "Intuitive Surgical": "intusurg.com",
+  "23andMe": "23andme.com",
+  "Moderna": "modernatx.com",
+  "Chevron": "chevron.com",
+  "ExxonMobil": "exxonmobil.com",
+  "NextEra Energy": "nexteraenergy.com",
+  "Procter & Gamble": "pg.com",
+  "Nike": "nike.com",
+  "Walmart": "walmart.com",
+  "HEB": "heb.com",
+};
+
+function generateEmail(name: string, company: string): string | undefined {
+  const domain = EMAIL_DOMAINS[company];
+  if (!domain) return undefined;
+  const parts = name.toLowerCase().split(" ");
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  return `${first}.${last}@${domain}`;
+}
+
 function findCompanyName(companyId: string): string {
   const company = allCompanies.find((c) => c.id === companyId);
   return company?.name ?? companyId;
@@ -113,6 +168,7 @@ export async function findAlumniAtCompany(
       return {
         ...a,
         name: resolvedName,
+        email: generateEmail(resolvedName, companyName),
         linkedinUrl:
           realProfile?.linkedinUrl ??
           `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(a.currentRole + " " + companyName + " " + university)}`,

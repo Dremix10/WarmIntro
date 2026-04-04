@@ -8,7 +8,9 @@ const STEPS = [
   { path: "/profile", label: "Profile", step: 2 },
   { path: "/companies", label: "Companies", step: 3 },
   { path: "/pipeline", label: "Pipeline", step: 4 },
-  { path: "/leaderboard", label: "Leaderboard", step: 6 },
+  { path: "/outreach", label: "Outreach", step: 5, noLink: true },
+  { path: "/crm", label: "CRM", step: 6 },
+  { path: "/leaderboard", label: "Leaderboard", step: 7 },
 ];
 
 export function NavHeader() {
@@ -19,8 +21,6 @@ export function NavHeader() {
   const isOutreach = pathname.startsWith("/outreach");
   const currentStep = isOutreach
     ? 5
-    : pathname === "/leaderboard"
-    ? 6
     : STEPS.find((s) => s.path === pathname)?.step ?? 0;
 
   // Don't show on landing page
@@ -56,8 +56,8 @@ export function NavHeader() {
               <button
                 key={s.path}
                 type="button"
-                onClick={() => navigable && router.push(s.path)}
-                disabled={!navigable}
+                onClick={() => navigable && !("noLink" in s && s.noLink) && router.push(s.path)}
+                disabled={!navigable || ("noLink" in s && !!s.noLink)}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   active
                     ? "bg-emerald-50 text-emerald-700"

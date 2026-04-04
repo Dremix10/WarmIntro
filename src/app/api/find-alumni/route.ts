@@ -14,6 +14,9 @@ interface CompanyData {
 
 const companies = companiesData as CompanyData[];
 
+// Cache full responses so alumni stay stable across page visits
+const responseCache = new Map<string, FindAlumniResponse>();
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as FindAlumniRequest;
@@ -23,6 +26,12 @@ export async function POST(request: Request) {
         { error: "companyId, university, userMajor, and userGradYear are required" },
         { status: 400 }
       );
+    }
+
+    // Return cached response if available (prevents alumni shuffling on re-entry)
+    const cacheKey = `${body.companyId}::${body.university}`;
+    if (responseCache.has(cacheKey)) {
+      return NextResponse.json(responseCache.get(cacheKey)!);
     }
 
     const { alumni, scores } = await findAlumniAtCompany(
@@ -41,6 +50,7 @@ export async function POST(request: Request) {
         body.university
       );
       const response: FindAlumniResponse = { alumni, warmPaths };
+      responseCache.set(cacheKey, response);
       return NextResponse.json(response);
     }
 
@@ -61,6 +71,7 @@ export async function POST(request: Request) {
       warmPaths: coldPaths,
     };
 
+    responseCache.set(cacheKey, response);
     return NextResponse.json(response);
   } catch (error) {
     const message =

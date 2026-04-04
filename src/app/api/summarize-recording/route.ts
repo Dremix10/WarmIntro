@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+import { askClaudeJSON } from "@/services/claude";
+
+interface SummarizeRequest {
+  transcript: string;
+  alumniName: string;
+  alumniRole: string;
+  companyName: string;
+}
+
+interface SummarizeResponse {
+  summary: string;
+  keyTakeaways: string[];
+  followUpActions: string[];
+  sentiment: "positive" | "neutral" | "needs_attention";
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as SummarizeRequest;
+
+    const prompt = `Summarize this coffee chat / networking conversation between a college student and ${body.alumniName} (${body.alumniRole} at ${body.companyName}).
+
+TRANSCRIPT/NOTES:
+${body.transcript.slice(0, 3000)}
+
+Return JSON:
+{
+  "summary": string (2-3 sentence summary of the conversation),
+  "keyTakeaways": string[] (3-5 bullet points of important things learned),
+  "followUpActions": string[] (2-3 specific next steps for the student),
+  "sentiment": "positive" | "neutral" | "needs_attention" (how receptive was the contact)
+}
+
+Focus on actionable insights — referral opportunities, hiring timeline, team info, advice given.`;
+
+    const result = await askClaudeJSON<SummarizeResponse>(prompt, {
+      maxTokens: 1024,
+    });
+
+    return NextResponse.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to summarize";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

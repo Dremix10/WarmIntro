@@ -133,7 +133,7 @@ export async function POST(request: Request) {
         gameState.streak += 1;
         break;
       case "reply_received":
-        funnelState.stages[1].currentCount += 1;
+        // XP only — reply is a signal, not a funnel stage
         break;
       case "coffee_booked":
         funnelState.stages[1].currentCount += 1;

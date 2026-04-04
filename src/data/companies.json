@@ -139,7 +139,7 @@
     "size": "enterprise",
     "description": "Leading technology company powering search, cloud computing, AI research, and a vast ecosystem of consumer and enterprise products.",
     "logoPlaceholder": "G",
-    "alumniCount": 14,
+    "alumniCount": 5,
     "warmthScore": 90
   },
   {
@@ -150,7 +150,7 @@
     "size": "enterprise",
     "description": "Global technology leader in cloud computing, productivity software, and AI through Azure, Office 365, and Copilot.",
     "logoPlaceholder": "MS",
-    "alumniCount": 11,
+    "alumniCount": 5,
     "warmthScore": 84
   },
   {
@@ -161,7 +161,7 @@
     "size": "enterprise",
     "description": "Consumer technology giant designing hardware, software, and services including iPhone, Mac, and Apple Intelligence.",
     "logoPlaceholder": "AP",
-    "alumniCount": 9,
+    "alumniCount": 5,
     "warmthScore": 78
   },
   {
@@ -172,7 +172,7 @@
     "size": "enterprise",
     "description": "Social technology company operating Facebook, Instagram, and WhatsApp while investing heavily in AI and the metaverse.",
     "logoPlaceholder": "M",
-    "alumniCount": 7,
+    "alumniCount": 5,
     "warmthScore": 70
   },
   {
@@ -183,7 +183,7 @@
     "size": "enterprise",
     "description": "Semiconductor company dominating the GPU market and powering the AI revolution with its accelerated computing platforms.",
     "logoPlaceholder": "NV",
-    "alumniCount": 6,
+    "alumniCount": 5,
     "warmthScore": 65
   },
   {
@@ -194,7 +194,7 @@
     "size": "mid",
     "description": "Financial infrastructure platform building economic tools for internet businesses, processing billions in payments annually.",
     "logoPlaceholder": "ST",
-    "alumniCount": 4,
+    "alumniCount": 1,
     "warmthScore": 55
   },
   {
@@ -205,7 +205,7 @@
     "size": "mid",
     "description": "Data and AI company offering a unified analytics platform built on Apache Spark for large-scale data engineering and ML.",
     "logoPlaceholder": "DB",
-    "alumniCount": 3,
+    "alumniCount": 1,
     "warmthScore": 48
   },
   {
@@ -216,7 +216,7 @@
     "size": "mid",
     "description": "Data analytics company building software platforms for defense, intelligence, and commercial organizations to make data-driven decisions.",
     "logoPlaceholder": "PL",
-    "alumniCount": 5,
+    "alumniCount": 1,
     "warmthScore": 60
   },
   {
@@ -249,7 +249,7 @@
     "size": "enterprise",
     "description": "Leading global investment bank providing financial services in investment management, securities, and consumer banking.",
     "logoPlaceholder": "GS",
-    "alumniCount": 13,
+    "alumniCount": 5,
     "warmthScore": 87
   },
   {
@@ -260,7 +260,7 @@
     "size": "enterprise",
     "description": "Largest U.S. bank by assets, offering investment banking, asset management, and commercial and retail banking services.",
     "logoPlaceholder": "JPM",
-    "alumniCount": 10,
+    "alumniCount": 5,
     "warmthScore": 82
   },
   {
@@ -293,7 +293,7 @@
     "size": "enterprise",
     "description": "Multinational investment bank and financial services company excelling in wealth management and institutional securities.",
     "logoPlaceholder": "MS",
-    "alumniCount": 7,
+    "alumniCount": 1,
     "warmthScore": 72
   },
   {
@@ -304,7 +304,7 @@
     "size": "mid",
     "description": "Global financial institution operating one of the world's largest hedge funds and a leading market-making firm.",
     "logoPlaceholder": "CT",
-    "alumniCount": 4,
+    "alumniCount": 1,
     "warmthScore": 55
   },
   {
@@ -315,7 +315,7 @@
     "size": "enterprise",
     "description": "Largest professional services firm globally, providing audit, consulting, tax, and advisory services to major enterprises.",
     "logoPlaceholder": "DL",
-    "alumniCount": 9,
+    "alumniCount": 1,
     "warmthScore": 79
   },
   {
@@ -359,7 +359,7 @@
     "size": "enterprise",
     "description": "Global pharmaceutical leader developing breakthrough medicines and vaccines across oncology, immunology, and rare diseases.",
     "logoPlaceholder": "PF",
-    "alumniCount": 7,
+    "alumniCount": 1,
     "warmthScore": 71
   },
   {
@@ -370,7 +370,7 @@
     "size": "enterprise",
     "description": "Diversified healthcare company operating in pharmaceuticals, medical devices, and consumer health products worldwide.",
     "logoPlaceholder": "JJ",
-    "alumniCount": 8,
+    "alumniCount": 1,
     "warmthScore": 74
   },
   {
@@ -381,7 +381,7 @@
     "size": "mid",
     "description": "Biotech pioneer in mRNA technology, developing vaccines and therapeutics for infectious diseases and cancer.",
     "logoPlaceholder": "MO",
-    "alumniCount": 4,
+    "alumniCount": 1,
     "warmthScore": 54
   },
   {
@@ -392,7 +392,7 @@
     "size": "enterprise",
     "description": "Biotechnology corporation and member of the Roche Group, pioneering therapies in oncology, immunology, and neuroscience.",
     "logoPlaceholder": "GN",
-    "alumniCount": 5,
+    "alumniCount": 1,
     "warmthScore": 63
   },
   {
@@ -458,7 +458,7 @@
     "size": "enterprise",
     "description": "World's largest publicly traded oil and gas company, increasingly investing in carbon capture and low-emission technologies.",
     "logoPlaceholder": "XOM",
-    "alumniCount": 11,
+    "alumniCount": 2,
     "warmthScore": 85
   },
   {
@@ -469,7 +469,7 @@
     "size": "enterprise",
     "description": "Multinational energy corporation operating in oil, natural gas, and geothermal energy with growing renewable investments.",
     "logoPlaceholder": "CV",
-    "alumniCount": 9,
+    "alumniCount": 2,
     "warmthScore": 78
   },
   {
@@ -480,7 +480,7 @@
     "size": "enterprise",
     "description": "World's largest generator of renewable energy from wind and solar, operating one of the largest electric utility companies in the U.S.",
     "logoPlaceholder": "NE",
-    "alumniCount": 5,
+    "alumniCount": 1,
     "warmthScore": 61
   },
   {
@@ -502,7 +502,7 @@
     "size": "mid",
     "description": "Solar energy technology company designing microinverters, battery storage, and smart energy management systems for homes.",
     "logoPlaceholder": "EN",
-    "alumniCount": 2,
+    "alumniCount": 1,
     "warmthScore": 36
   },
   {
@@ -513,7 +513,7 @@
     "size": "enterprise",
     "description": "Tesla's energy division producing Powerwall, Megapack battery systems, and solar roof tiles for residential and grid-scale use.",
     "logoPlaceholder": "TE",
-    "alumniCount": 7,
+    "alumniCount": 1,
     "warmthScore": 69
   },
   {
@@ -524,7 +524,7 @@
     "size": "mid",
     "description": "Houston-based residential solar and energy storage company serving homeowners across the United States and its territories.",
     "logoPlaceholder": "SN",
-    "alumniCount": 4,
+    "alumniCount": 1,
     "warmthScore": 53
   },
   {
@@ -557,7 +557,7 @@
     "size": "enterprise",
     "description": "Global e-commerce and cloud computing giant operating the world's largest online marketplace and AWS cloud platform.",
     "logoPlaceholder": "AZ",
-    "alumniCount": 10,
+    "alumniCount": 5,
     "warmthScore": 83
   },
   {
@@ -568,7 +568,7 @@
     "size": "enterprise",
     "description": "World's largest athletic footwear and apparel company, driving innovation in sports performance and direct-to-consumer retail.",
     "logoPlaceholder": "NK",
-    "alumniCount": 5,
+    "alumniCount": 1,
     "warmthScore": 59
   },
   {
@@ -579,7 +579,7 @@
     "size": "enterprise",
     "description": "Consumer goods corporation with a portfolio of trusted brands spanning personal care, home care, and health products.",
     "logoPlaceholder": "PG",
-    "alumniCount": 7,
+    "alumniCount": 2,
     "warmthScore": 70
   },
   {
@@ -590,7 +590,7 @@
     "size": "enterprise",
     "description": "World's largest retailer operating hypermarkets, grocery stores, and a fast-growing e-commerce business globally.",
     "logoPlaceholder": "WM",
-    "alumniCount": 4,
+    "alumniCount": 1,
     "warmthScore": 52
   },
   {
@@ -612,7 +612,7 @@
     "size": "enterprise",
     "description": "Membership-based warehouse retailer known for bulk goods, competitive pricing, and one of the highest customer loyalty rates.",
     "logoPlaceholder": "CO",
-    "alumniCount": 3,
+    "alumniCount": 1,
     "warmthScore": 44
   },
   {
@@ -667,7 +667,7 @@
     "size": "enterprise",
     "description": "Global management consulting firm and one of the Big Three, advising leaders in business and society.",
     "logoPlaceholder": "BCG",
-    "alumniCount": 6,
+    "alumniCount": 1,
     "warmthScore": 55
   },
   {
@@ -678,7 +678,7 @@
     "size": "enterprise",
     "description": "Global healthcare company creating breakthrough diagnostics, medical devices, nutritionals, and branded generic pharmaceuticals.",
     "logoPlaceholder": "AB",
-    "alumniCount": 4,
+    "alumniCount": 2,
     "warmthScore": 45
   },
   {
@@ -689,7 +689,7 @@
     "size": "enterprise",
     "description": "World's largest medical device company, pioneering therapies for chronic diseases.",
     "logoPlaceholder": "MD",
-    "alumniCount": 5,
+    "alumniCount": 2,
     "warmthScore": 50
   },
   {
@@ -700,7 +700,7 @@
     "size": "enterprise",
     "description": "Cloud-based CRM platform and enterprise software leader powering customer relationships worldwide.",
     "logoPlaceholder": "SF",
-    "alumniCount": 4,
+    "alumniCount": 1,
     "warmthScore": 48
   },
   {
@@ -711,7 +711,7 @@
     "size": "enterprise",
     "description": "Major American retail corporation operating nearly 2,000 stores with a focus on design partnerships and omnichannel shopping.",
     "logoPlaceholder": "TG",
-    "alumniCount": 3,
+    "alumniCount": 1,
     "warmthScore": 38
   }
 ]

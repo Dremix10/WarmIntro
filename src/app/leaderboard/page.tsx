@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
@@ -142,6 +142,30 @@ export default function LeaderboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [viewingProfile, setViewingProfile] = useState<{ profile: UserProfile; name: string } | null>(null);
+
+  // Auto-load demo leaderboard on first visit (in useEffect to avoid setState-during-render)
+  useEffect(() => {
+    if (profile && !leaderboard) {
+      const demoBoard: Leaderboard = {
+        code: "RICE26",
+        name: "Rice Networking 2027",
+        members: [...MOCK_MEMBERS, {
+          id: "current-user",
+          name: profile.name,
+          university: profile.university,
+          xp: gameState?.xp ?? 0,
+          level: gameState?.level ?? 1,
+          levelName: gameState?.levelName ?? "Networking Novice",
+          streak: gameState?.streak ?? 0,
+          outreachSent: gameState?.recentActions.filter((a) => a.type === "outreach_sent").length ?? 0,
+          isCurrentUser: true,
+          profileShared: isProfileShared,
+          sharedProfile: isProfileShared ? profile : null,
+        }],
+      };
+      setLeaderboard(demoBoard);
+    }
+  }, [profile, leaderboard, gameState, isProfileShared, setLeaderboard]);
 
   if (!profile) {
     return (
