@@ -7,6 +7,7 @@ import { FunnelDashboard } from "@/components/FunnelDashboard";
 import { XPBar } from "@/components/XPBar";
 import { StreakCounter } from "@/components/StreakCounter";
 import { AlumniBadge } from "@/components/AlumniBadge";
+import { AchievementBadge } from "@/components/AchievementBadge";
 import { updateFunnel } from "@/hooks/useApi";
 import type { FunnelState, GameState, Badge } from "@/shared/types";
 import { FUNNEL_STAGES } from "@/shared/constants";
@@ -95,7 +96,7 @@ export default function PipelinePage() {
       <div className="mx-auto max-w-3xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Step 4 of 5</p>
+          <p className="text-sm font-medium text-emerald-600 mb-1">Step 4 of 6</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Your Pipeline
           </h1>
@@ -106,14 +107,11 @@ export default function PipelinePage() {
 
         {/* Badge pop-in */}
         {earnedBadges.length > 0 && (
-          <div className="mb-6 animate-bounce">
+          <div className="mb-6 space-y-2">
             {earnedBadges.map((b) => (
               <div key={b.id} className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-                <span className="text-2xl">{b.icon}</span>
-                <div>
-                  <p className="text-sm font-semibold text-amber-800">Badge Earned!</p>
-                  <p className="text-xs text-amber-600">{b.name}</p>
-                </div>
+                <AchievementBadge badge={b} animate />
+                <p className="text-sm font-semibold text-amber-800">Badge Earned!</p>
               </div>
             ))}
           </div>
@@ -131,18 +129,7 @@ export default function PipelinePage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Badges</p>
             <div className="flex flex-wrap gap-2">
               {localGame.badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-opacity ${
-                    badge.earned
-                      ? "bg-amber-50 text-amber-700 border border-amber-200"
-                      : "bg-slate-50 text-slate-400 border border-slate-100 opacity-50"
-                  }`}
-                >
-                  <span>{badge.icon}</span>
-                  <span>{badge.name}</span>
-                  {badge.earned && <span className="text-amber-500">&#10003;</span>}
-                </div>
+                <AchievementBadge key={badge.id} badge={badge} />
               ))}
             </div>
           </div>
@@ -222,6 +209,28 @@ export default function PipelinePage() {
             </div>
           </div>
         )}
+
+        {/* Leaderboard CTA */}
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={() => router.push("/leaderboard")}
+            className="w-full rounded-xl bg-white border border-slate-200 shadow-sm p-5 text-left hover:border-emerald-300 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-xl">
+                &#x1F3C6;
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">Leaderboard</p>
+                <p className="text-xs text-slate-500">Compete with classmates — join or create a board</p>
+              </div>
+              <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   );

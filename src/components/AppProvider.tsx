@@ -9,17 +9,42 @@ import type {
   GameState,
 } from "@/shared/types";
 
+// Leaderboard types (not in shared/types.ts since it's frozen)
+export interface LeaderboardMember {
+  id: string;
+  name: string;
+  university: string;
+  xp: number;
+  level: number;
+  levelName: string;
+  streak: number;
+  outreachSent: number;
+  isCurrentUser: boolean;
+  profileShared: boolean;
+  sharedProfile: UserProfile | null;
+}
+
+export interface Leaderboard {
+  code: string;
+  name: string;
+  members: LeaderboardMember[];
+}
+
 interface AppState {
   profile: UserProfile | null;
   selectedCompanies: Company[];
   allCompanies: Company[];
   funnel: FunnelState | null;
   gameState: GameState | null;
+  leaderboard: Leaderboard | null;
+  isProfileShared: boolean;
   setProfile: (profile: UserProfile) => void;
   setSelectedCompanies: (companies: Company[]) => void;
   setAllCompanies: (companies: Company[]) => void;
   setFunnel: (funnel: FunnelState) => void;
   setGameState: (gameState: GameState) => void;
+  setLeaderboard: (leaderboard: Leaderboard | null) => void;
+  setIsProfileShared: (shared: boolean) => void;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -30,12 +55,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [allCompanies, setAllCompaniesState] = useState<Company[]>([]);
   const [funnel, setFunnelState] = useState<FunnelState | null>(null);
   const [gameState, setGameStateState] = useState<GameState | null>(null);
+  const [leaderboard, setLeaderboardState] = useState<Leaderboard | null>(null);
+  const [isProfileShared, setIsProfileSharedState] = useState(false);
 
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
   const setAllCompanies = useCallback((c: Company[]) => setAllCompaniesState(c), []);
   const setFunnel = useCallback((f: FunnelState) => setFunnelState(f), []);
   const setGameState = useCallback((g: GameState) => setGameStateState(g), []);
+  const setLeaderboard = useCallback((l: Leaderboard | null) => setLeaderboardState(l), []);
+  const setIsProfileShared = useCallback((s: boolean) => setIsProfileSharedState(s), []);
 
   return (
     <AppContext.Provider
@@ -45,11 +74,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         allCompanies,
         funnel,
         gameState,
+        leaderboard,
+        isProfileShared,
         setProfile,
         setSelectedCompanies,
         setAllCompanies,
         setFunnel,
         setGameState,
+        setLeaderboard,
+        setIsProfileShared,
       }}
     >
       {children}

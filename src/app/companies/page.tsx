@@ -49,7 +49,7 @@ export default function CompaniesPage() {
       <div className="mx-auto max-w-3xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Step 3 of 5</p>
+          <p className="text-sm font-medium text-emerald-600 mb-1">Step 3 of 6</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Pick Your Target Companies
           </h1>

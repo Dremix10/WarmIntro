@@ -127,6 +127,8 @@ export function ResumeUpload() {
 
   const handleUseSample = () => {
     setResumeText(SAMPLE_RESUME);
+    setMode("text");
+    setFileName(null);
     setError(null);
   };
 

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { AlumniList } from "@/components/AlumniList";
 import { OutreachDraft } from "@/components/OutreachDraft";
+import { Confetti } from "@/components/Confetti";
 import { findAlumni, generateOutreach, updateFunnel } from "@/hooks/useApi";
 import type { WarmPath, OutreachDraft as OutreachDraftType, Company } from "@/shared/types";
 
@@ -20,6 +21,8 @@ export default function OutreachPage() {
   const [loadingAlumni, setLoadingAlumni] = useState(true);
   const [loadingDrafts, setLoadingDrafts] = useState(false);
   const [xpToast, setXpToast] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [sentCount, setSentCount] = useState(0);
 
   // Find company from context
   useEffect(() => {
@@ -79,6 +82,14 @@ export default function OutreachPage() {
       setGameState(res.gameState);
       setXpToast(res.xpGained);
       setTimeout(() => setXpToast(null), 2500);
+
+      // Confetti on first outreach sent
+      const newCount = sentCount + 1;
+      setSentCount(newCount);
+      if (newCount === 1) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3500);
+      }
     } catch {
       // silently fail for demo
     }
@@ -124,7 +135,7 @@ export default function OutreachPage() {
               </div>
             )}
             <div>
-              <p className="text-sm font-medium text-emerald-600">Step 5 of 5</p>
+              <p className="text-sm font-medium text-emerald-600">Step 5 of 6</p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                 {company?.name ?? "Company"} Outreach
               </h1>
@@ -134,6 +145,9 @@ export default function OutreachPage() {
             Select an alumni to generate a personalized outreach draft. Edit, copy, and mark as sent.
           </p>
         </div>
+
+        {/* Confetti */}
+        <Confetti active={showConfetti} />
 
         {/* XP Toast */}
         {xpToast !== null && (
