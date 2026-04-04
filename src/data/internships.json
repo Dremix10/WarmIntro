@@ -1,0 +1,1154 @@
+[
+  {
+    "id": "tesla-mfg-1",
+    "companyId": "tesla",
+    "title": "Manufacturing Engineering Intern",
+    "location": "Fremont, CA",
+    "type": "summer",
+    "description": "Support production line optimization and process improvements at Tesla's vehicle manufacturing facility. Work directly with cross-functional teams to identify and resolve manufacturing challenges.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering, Manufacturing Engineering, or related field",
+      "Experience with CAD software (SolidWorks, CATIA, or similar)",
+      "Familiarity with lean manufacturing principles",
+      "Strong analytical and problem-solving skills",
+      "Ability to work in a fast-paced production environment"
+    ],
+    "matchScore": 95
+  },
+  {
+    "id": "tesla-mech-1",
+    "companyId": "tesla",
+    "title": "Mechanical Design Intern",
+    "location": "Palo Alto, CA",
+    "type": "summer",
+    "description": "Design and prototype mechanical components for next-generation Tesla vehicles. Collaborate with senior engineers on structural analysis and design validation.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Proficiency in SolidWorks or similar 3D CAD tools",
+      "Understanding of GD&T and engineering drawings",
+      "Experience with FEA or structural simulation is a plus",
+      "Strong attention to detail and documentation skills"
+    ],
+    "matchScore": 93
+  },
+  {
+    "id": "tesla-proc-1",
+    "companyId": "tesla",
+    "title": "Process Engineering Intern",
+    "location": "Austin, TX",
+    "type": "summer",
+    "description": "Develop and improve manufacturing processes at Tesla's Gigafactory. Analyze production data to identify bottlenecks and implement process improvements.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Industrial Engineering, or related field",
+      "Knowledge of statistical process control and Six Sigma methodologies",
+      "Experience with data analysis tools (Python, MATLAB, or Excel)",
+      "Strong communication and teamwork skills",
+      "Willingness to work on the factory floor"
+    ],
+    "matchScore": 91
+  },
+  {
+    "id": "toyota-mech-1",
+    "companyId": "toyota",
+    "title": "Powertrain Engineering Intern",
+    "location": "Ann Arbor, MI",
+    "type": "summer",
+    "description": "Assist in the development and testing of hybrid and electric powertrain systems. Support prototype builds and dynamometer testing of next-gen propulsion components.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering or Automotive Engineering",
+      "Understanding of thermodynamics and fluid mechanics",
+      "Familiarity with MATLAB/Simulink",
+      "Interest in electrification and hybrid vehicle technology",
+      "Strong written and verbal communication skills"
+    ],
+    "matchScore": 90
+  },
+  {
+    "id": "toyota-mfg-1",
+    "companyId": "toyota",
+    "title": "Production Engineering Intern",
+    "location": "Georgetown, KY",
+    "type": "summer",
+    "description": "Work within Toyota's renowned production system to improve assembly line efficiency. Apply Toyota Production System principles to real-world manufacturing challenges.",
+    "requirements": [
+      "Pursuing a BS in Mechanical or Industrial Engineering",
+      "Interest in lean manufacturing and continuous improvement",
+      "Ability to analyze data and present findings clearly",
+      "Willingness to spend significant time on the shop floor"
+    ],
+    "matchScore": 89
+  },
+  {
+    "id": "ford-vehicle-1",
+    "companyId": "ford",
+    "title": "Vehicle Dynamics Intern",
+    "location": "Dearborn, MI",
+    "type": "summer",
+    "description": "Support the vehicle dynamics team in ride and handling development for upcoming Ford models. Conduct on-track testing and analyze vehicle performance data.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Coursework in dynamics, vibrations, or vehicle systems",
+      "Experience with MATLAB or similar analysis software",
+      "Valid driver's license required",
+      "Strong interest in automotive performance"
+    ],
+    "matchScore": 92
+  },
+  {
+    "id": "ford-thermal-1",
+    "companyId": "ford",
+    "title": "Thermal Systems Engineering Intern",
+    "location": "Dearborn, MI",
+    "type": "fall",
+    "description": "Design and validate thermal management systems for Ford's electric vehicle battery packs. Perform thermal simulations and support prototype testing.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Strong background in heat transfer and thermodynamics",
+      "Experience with CFD software (ANSYS Fluent, Star-CCM+) is a plus",
+      "Proficiency in CAD modeling"
+    ],
+    "matchScore": 88
+  },
+  {
+    "id": "gm-battery-1",
+    "companyId": "gm",
+    "title": "Battery Systems Engineering Intern",
+    "location": "Warren, MI",
+    "type": "summer",
+    "description": "Contribute to the development of GM's Ultium battery platform. Assist in cell testing, module design, and pack-level integration for next-generation EVs.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering, Chemical Engineering, or Materials Science",
+      "Understanding of electrochemistry or battery fundamentals",
+      "Proficiency in CAD software and engineering analysis tools",
+      "Ability to work in a lab environment",
+      "Strong problem-solving skills"
+    ],
+    "matchScore": 87
+  },
+  {
+    "id": "bmw-design-1",
+    "companyId": "bmw",
+    "title": "Body Structure Design Intern",
+    "location": "Spartanburg, SC",
+    "type": "summer",
+    "description": "Support the design and optimization of vehicle body structures for crashworthiness and weight reduction. Work with advanced materials including aluminum and carbon fiber composites.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering or Aerospace Engineering",
+      "Experience with FEA tools (ANSYS, Abaqus, or LS-DYNA)",
+      "Understanding of materials science and structural mechanics",
+      "Strong CAD skills in CATIA or NX"
+    ],
+    "matchScore": 90
+  },
+  {
+    "id": "hyundai-ev-1",
+    "companyId": "hyundai",
+    "title": "EV Platform Engineering Intern",
+    "location": "Savannah, GA",
+    "type": "summer",
+    "description": "Support the engineering team at Hyundai's new EV manufacturing facility. Assist with platform integration, component testing, and design verification.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering or Electrical Engineering",
+      "Interest in electric vehicle architecture and design",
+      "Familiarity with CAD and simulation tools",
+      "Strong teamwork and communication skills",
+      "Ability to manage multiple tasks in a fast-paced environment"
+    ],
+    "matchScore": 86
+  },
+  {
+    "id": "rivian-test-1",
+    "companyId": "rivian",
+    "title": "Mechanical Test Engineering Intern",
+    "location": "Normal, IL",
+    "type": "summer",
+    "description": "Design and execute mechanical tests for Rivian's adventure vehicles. Develop test fixtures, run durability tests, and analyze failure modes.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Hands-on experience with prototyping and fabrication",
+      "Familiarity with test instrumentation and data acquisition",
+      "Experience with statistical analysis of test data",
+      "Enthusiasm for outdoor adventure and sustainable transportation"
+    ],
+    "matchScore": 91
+  },
+  {
+    "id": "volvo-safety-1",
+    "companyId": "volvo",
+    "title": "Safety Engineering Intern",
+    "location": "Mahwah, NJ",
+    "type": "spring",
+    "description": "Assist Volvo's safety engineering team in crash simulation, restraint system development, and regulatory compliance analysis. Contribute to Volvo's vision of zero serious injuries.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Coursework in solid mechanics or structural analysis",
+      "Experience with FEA simulation software",
+      "Interest in automotive safety and crashworthiness"
+    ],
+    "matchScore": 85
+  },
+  {
+    "id": "lucid-drivetrain-1",
+    "companyId": "lucid",
+    "title": "Drivetrain Engineering Intern",
+    "location": "Newark, CA",
+    "type": "summer",
+    "description": "Support the design and development of Lucid's high-performance electric drivetrain systems. Work on motor integration, gearbox design, and performance validation.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Strong foundation in machine design and dynamics",
+      "Experience with SolidWorks or CATIA",
+      "Interest in high-performance electric vehicles",
+      "Understanding of gear systems and rotating machinery"
+    ],
+    "matchScore": 89
+  },
+  {
+    "id": "byd-mfg-1",
+    "companyId": "byd",
+    "title": "Manufacturing Quality Intern",
+    "location": "Lancaster, CA",
+    "type": "summer",
+    "description": "Support quality control and assurance initiatives at BYD's North American manufacturing operations. Conduct root cause analysis and implement corrective actions.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Industrial Engineering, or related field",
+      "Knowledge of quality tools (8D, fishbone diagrams, FMEA)",
+      "Familiarity with statistical analysis methods",
+      "Strong attention to detail and documentation skills"
+    ],
+    "matchScore": 84
+  },
+  {
+    "id": "google-hw-1",
+    "companyId": "google",
+    "title": "Hardware Engineering Intern",
+    "location": "Mountain View, CA",
+    "type": "summer",
+    "description": "Design and test mechanical enclosures and thermal solutions for Google consumer hardware products. Collaborate with industrial design and electrical engineering teams.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Proficiency in 3D CAD (SolidWorks, Creo, or similar)",
+      "Experience with rapid prototyping and DFM/DFA principles",
+      "Understanding of thermal management for electronics",
+      "Strong cross-functional communication skills"
+    ],
+    "matchScore": 82
+  },
+  {
+    "id": "google-ops-1",
+    "companyId": "google",
+    "title": "Data Center Facilities Engineering Intern",
+    "location": "The Dalles, OR",
+    "type": "summer",
+    "description": "Optimize cooling and mechanical systems in Google's data center infrastructure. Analyze HVAC performance data and propose energy efficiency improvements.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering or related field",
+      "Coursework in thermodynamics and HVAC systems",
+      "Experience with energy modeling or simulation tools",
+      "Interest in sustainability and large-scale infrastructure"
+    ],
+    "matchScore": 78
+  },
+  {
+    "id": "microsoft-hw-1",
+    "companyId": "microsoft",
+    "title": "Surface Mechanical Engineering Intern",
+    "location": "Redmond, WA",
+    "type": "summer",
+    "description": "Contribute to the mechanical design and development of Microsoft Surface devices. Work on hinge mechanisms, structural components, and thermal solutions.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Experience with CAD software (SolidWorks, Creo, or NX)",
+      "Understanding of injection molding and sheet metal fabrication",
+      "Interest in consumer electronics design",
+      "Strong prototyping and hands-on skills"
+    ],
+    "matchScore": 80
+  },
+  {
+    "id": "apple-product-1",
+    "companyId": "apple",
+    "title": "Product Design Engineering Intern",
+    "location": "Cupertino, CA",
+    "type": "summer",
+    "description": "Work with Apple's product design team on next-generation consumer devices. Support mechanical design, tolerance analysis, and manufacturing feasibility studies.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Expert-level proficiency in 3D CAD (NX or SolidWorks preferred)",
+      "Deep understanding of GD&T and tolerance stack-up analysis",
+      "Experience with CNC machining, injection molding, or other manufacturing processes",
+      "Exceptional attention to detail"
+    ],
+    "matchScore": 83
+  },
+  {
+    "id": "amazon-robotics-1",
+    "companyId": "amazon",
+    "title": "Robotics Mechanical Engineering Intern",
+    "location": "North Reading, MA",
+    "type": "summer",
+    "description": "Design mechanical systems for Amazon Robotics warehouse automation. Work on robotic manipulators, conveyor systems, and packaging machinery.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering or Robotics",
+      "Experience with mechanism design and kinematics",
+      "Proficiency in SolidWorks or similar CAD software",
+      "Familiarity with sensors, actuators, and control systems",
+      "Hands-on prototyping experience"
+    ],
+    "matchScore": 85
+  },
+  {
+    "id": "meta-hw-1",
+    "companyId": "meta",
+    "title": "AR/VR Hardware Mechanical Engineering Intern",
+    "location": "Burlingame, CA",
+    "type": "summer",
+    "description": "Support the mechanical design and development of next-generation AR/VR headsets at Reality Labs. Work on miniaturized mechanisms and wearable comfort systems.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Strong CAD skills and design-for-manufacturing knowledge",
+      "Experience with consumer electronics or wearable devices is a plus",
+      "Understanding of ergonomics and human factors",
+      "Creative approach to miniaturization challenges"
+    ],
+    "matchScore": 79
+  },
+  {
+    "id": "nvidia-thermal-1",
+    "companyId": "nvidia",
+    "title": "Thermal Engineering Intern",
+    "location": "Santa Clara, CA",
+    "type": "summer",
+    "description": "Design and validate thermal solutions for NVIDIA's GPU products and data center systems. Conduct thermal simulations and correlate with experimental measurements.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering with a thermal focus",
+      "Experience with CFD tools (ANSYS Icepak, FloTHERM, or similar)",
+      "Understanding of heat sink design and thermal interface materials",
+      "Lab experience with thermal measurement equipment is a plus"
+    ],
+    "matchScore": 81
+  },
+  {
+    "id": "salesforce-ops-1",
+    "companyId": "salesforce",
+    "title": "Technical Program Management Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Support technical program management for Salesforce's infrastructure projects. Coordinate cross-functional teams and track project milestones for data center expansion.",
+    "requirements": [
+      "Pursuing a BS in Engineering, Business, or related field",
+      "Strong organizational and project management skills",
+      "Proficiency in spreadsheet and presentation tools",
+      "Excellent written and verbal communication"
+    ],
+    "matchScore": 55
+  },
+  {
+    "id": "stripe-ops-1",
+    "companyId": "stripe",
+    "title": "Hardware Security Engineering Intern",
+    "location": "San Francisco, CA",
+    "type": "fall",
+    "description": "Support the design and testing of Stripe's physical payment terminal hardware. Conduct reliability testing and environmental stress screening on terminal prototypes.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering or Electrical Engineering",
+      "Understanding of environmental testing standards (IP ratings, drop, thermal cycling)",
+      "Experience with test fixture design",
+      "Interest in payment technology and fintech"
+    ],
+    "matchScore": 72
+  },
+  {
+    "id": "goldman-sachs-analyst-1",
+    "companyId": "goldman-sachs",
+    "title": "Global Investment Research Summer Analyst",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Conduct financial analysis and build models for the industrials and clean energy sectors. Support senior analysts in publishing equity research reports.",
+    "requirements": [
+      "Pursuing a BS or MS in any major (Engineering background valued)",
+      "Strong quantitative and analytical skills",
+      "Proficiency in Excel and financial modeling",
+      "Interest in capital markets and equity research",
+      "Excellent written communication"
+    ],
+    "matchScore": 52
+  },
+  {
+    "id": "goldman-sachs-strats-1",
+    "companyId": "goldman-sachs",
+    "title": "Engineering Summer Analyst - Strats",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Apply quantitative modeling and engineering principles to solve complex financial problems. Build analytical tools and risk models for the securities division.",
+    "requirements": [
+      "Pursuing a BS or MS in Engineering, Math, Physics, or Computer Science",
+      "Strong programming skills in Python or C++",
+      "Familiarity with probability and statistics",
+      "Interest in applying technical skills to finance"
+    ],
+    "matchScore": 50
+  },
+  {
+    "id": "jpmorgan-tech-1",
+    "companyId": "jpmorgan",
+    "title": "Corporate Analyst Development Program - Summer Analyst",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Rotate across business functions including commercial banking, asset management, and corporate strategy. Gain exposure to financial services operations and client management.",
+    "requirements": [
+      "Pursuing a BS in any major",
+      "Strong analytical and problem-solving abilities",
+      "Leadership experience in extracurricular activities",
+      "Excellent interpersonal and communication skills",
+      "Interest in financial services"
+    ],
+    "matchScore": 45
+  },
+  {
+    "id": "mckinsey-ba-1",
+    "companyId": "mckinsey",
+    "title": "Summer Business Analyst",
+    "location": "Chicago, IL",
+    "type": "summer",
+    "description": "Work on client engagements across industries, conducting data analysis, stakeholder interviews, and strategic recommendations. Engineering backgrounds are highly valued for operations and manufacturing projects.",
+    "requirements": [
+      "Pursuing a BS or MS in any field (Engineering preferred for operations cases)",
+      "Exceptional problem-solving and structured thinking",
+      "Strong communication and presentation skills",
+      "Leadership experience and teamwork orientation"
+    ],
+    "matchScore": 58
+  },
+  {
+    "id": "bcg-associate-1",
+    "companyId": "bcg",
+    "title": "Summer Associate - Operations Practice",
+    "location": "Boston, MA",
+    "type": "summer",
+    "description": "Support consulting engagements focused on supply chain optimization, manufacturing strategy, and operational transformation. Engineering students bring a valued technical perspective.",
+    "requirements": [
+      "Pursuing a BS or MS in Engineering, Business, or related field",
+      "Strong quantitative and analytical reasoning",
+      "Experience with data analysis tools",
+      "Excellent interpersonal and presentation skills",
+      "Interest in management consulting"
+    ],
+    "matchScore": 55
+  },
+  {
+    "id": "jnj-med-device-1",
+    "companyId": "johnson-and-johnson",
+    "title": "Medical Device R&D Engineering Intern",
+    "location": "Raynham, MA",
+    "type": "summer",
+    "description": "Support the design and testing of orthopedic surgical instruments and implants. Conduct mechanical testing, design verification, and assist with regulatory submissions.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering or Biomedical Engineering",
+      "Experience with SolidWorks or Creo",
+      "Understanding of materials science, especially metals and polymers",
+      "Interest in medical device design and healthcare",
+      "Familiarity with FDA design controls is a plus"
+    ],
+    "matchScore": 82
+  },
+  {
+    "id": "pfizer-mfg-1",
+    "companyId": "pfizer",
+    "title": "Manufacturing Science & Technology Intern",
+    "location": "Groton, CT",
+    "type": "summer",
+    "description": "Support process engineering and equipment design for pharmaceutical manufacturing operations. Assist with scale-up of drug product manufacturing processes.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Chemical Engineering, or related field",
+      "Understanding of fluid mechanics and process engineering fundamentals",
+      "Experience with CAD and engineering analysis tools",
+      "Interest in pharmaceutical or biotech manufacturing"
+    ],
+    "matchScore": 74
+  },
+  {
+    "id": "medtronic-rd-1",
+    "companyId": "medtronic",
+    "title": "Mechanical R&D Engineering Intern",
+    "location": "Minneapolis, MN",
+    "type": "summer",
+    "description": "Design and prototype components for Medtronic's cardiac rhythm management devices. Perform tolerance analysis and support design transfer to manufacturing.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Proficiency in SolidWorks or Creo",
+      "Experience with rapid prototyping (3D printing, CNC)",
+      "Understanding of miniaturized mechanism design",
+      "Interest in medical technology and improving patient outcomes"
+    ],
+    "matchScore": 83
+  },
+  {
+    "id": "abbott-quality-1",
+    "companyId": "abbott",
+    "title": "Quality Engineering Intern",
+    "location": "Alameda, CA",
+    "type": "co-op",
+    "description": "Support quality engineering for Abbott's continuous glucose monitoring devices. Conduct failure analysis, manage CAPAs, and improve manufacturing quality processes.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Biomedical Engineering, or related field",
+      "Understanding of quality systems (ISO 13485, FDA QSR)",
+      "Experience with root cause analysis tools",
+      "Strong documentation and analytical skills"
+    ],
+    "matchScore": 76
+  },
+  {
+    "id": "chevron-proj-1",
+    "companyId": "chevron",
+    "title": "Facilities Mechanical Engineering Intern",
+    "location": "Houston, TX",
+    "type": "summer",
+    "description": "Support the design and maintenance of mechanical systems at Chevron's refining and petrochemical facilities. Work on rotating equipment, piping systems, and pressure vessels.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering",
+      "Coursework in fluid mechanics and thermodynamics",
+      "Familiarity with ASME codes and standards is a plus",
+      "Ability to work in an industrial plant environment",
+      "Strong safety awareness"
+    ],
+    "matchScore": 80
+  },
+  {
+    "id": "exxonmobil-proc-1",
+    "companyId": "exxonmobil",
+    "title": "Project Engineering Intern",
+    "location": "Spring, TX",
+    "type": "summer",
+    "description": "Support capital project execution for ExxonMobil's downstream operations. Assist with equipment specification, vendor coordination, and project scheduling.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering or Chemical Engineering",
+      "Understanding of project management fundamentals",
+      "Experience with CAD and engineering design software",
+      "Strong organizational and communication skills"
+    ],
+    "matchScore": 77
+  },
+  {
+    "id": "nextera-energy-1",
+    "companyId": "nextera-energy",
+    "title": "Wind Turbine Engineering Intern",
+    "location": "Juno Beach, FL",
+    "type": "summer",
+    "description": "Support the engineering team in wind turbine performance analysis and maintenance optimization. Analyze operational data to improve turbine availability and energy production.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering or Aerospace Engineering",
+      "Understanding of fluid dynamics and structural mechanics",
+      "Experience with MATLAB or Python for data analysis",
+      "Interest in renewable energy and sustainability",
+      "Willingness to travel to wind farm sites"
+    ],
+    "matchScore": 84
+  },
+  {
+    "id": "nextera-solar-1",
+    "companyId": "nextera-energy",
+    "title": "Solar Systems Engineering Intern",
+    "location": "Juno Beach, FL",
+    "type": "fall",
+    "description": "Assist with the design and optimization of utility-scale solar tracking systems. Conduct structural analysis and evaluate new mounting hardware designs.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering or Civil Engineering",
+      "Experience with structural analysis software",
+      "Understanding of solar energy fundamentals",
+      "Proficiency in CAD tools"
+    ],
+    "matchScore": 81
+  },
+  {
+    "id": "enphase-1",
+    "companyId": "enphase",
+    "title": "Product Development Engineering Intern",
+    "location": "Fremont, CA",
+    "type": "summer",
+    "description": "Support the mechanical design and thermal management of Enphase's microinverter products. Conduct environmental testing and drive design improvements for reliability.",
+    "requirements": [
+      "Pursuing a BS or MS in Mechanical Engineering",
+      "Experience with thermal simulation and analysis",
+      "Proficiency in SolidWorks",
+      "Understanding of electronics packaging and environmental testing",
+      "Interest in clean energy technology"
+    ],
+    "matchScore": 82
+  },
+  {
+    "id": "pg-packaging-1",
+    "companyId": "procter-gamble",
+    "title": "Packaging Engineering Intern",
+    "location": "Cincinnati, OH",
+    "type": "summer",
+    "description": "Design and test packaging solutions for P&G's consumer product brands. Work on structural packaging design, materials selection, and sustainability initiatives.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Packaging Engineering, or related field",
+      "Experience with CAD software",
+      "Understanding of materials science and manufacturing processes",
+      "Interest in sustainable packaging and consumer products",
+      "Creative design thinking"
+    ],
+    "matchScore": 75
+  },
+  {
+    "id": "nike-product-1",
+    "companyId": "nike",
+    "title": "Footwear Manufacturing Engineering Intern",
+    "location": "Beaverton, OR",
+    "type": "summer",
+    "description": "Support advanced manufacturing development for Nike footwear. Work on automated assembly processes, material testing, and production efficiency improvements.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Manufacturing Engineering, or Materials Science",
+      "Interest in advanced manufacturing and automation",
+      "Experience with CAD and prototyping",
+      "Strong problem-solving and hands-on skills",
+      "Passion for innovation in consumer products"
+    ],
+    "matchScore": 78
+  },
+  {
+    "id": "walmart-supply-1",
+    "companyId": "walmart",
+    "title": "Supply Chain Automation Engineering Intern",
+    "location": "Bentonville, AR",
+    "type": "summer",
+    "description": "Support the design and implementation of automated material handling systems in Walmart distribution centers. Work on conveyor design, robotic integration, and warehouse optimization.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering, Industrial Engineering, or related field",
+      "Interest in automation, robotics, and logistics",
+      "Experience with CAD software",
+      "Basic programming skills (Python or MATLAB)",
+      "Strong analytical thinking"
+    ],
+    "matchScore": 73
+  },
+  {
+    "id": "target-facilities-1",
+    "companyId": "target",
+    "title": "Facilities Engineering Intern",
+    "location": "Minneapolis, MN",
+    "type": "co-op",
+    "description": "Support the design and optimization of HVAC, refrigeration, and building systems across Target's retail locations. Contribute to energy efficiency and sustainability projects.",
+    "requirements": [
+      "Pursuing a BS in Mechanical Engineering or Architectural Engineering",
+      "Coursework in HVAC and building systems",
+      "Interest in energy efficiency and sustainable design",
+      "Experience with AutoCAD or Revit is a plus"
+    ],
+    "matchScore": 68
+  },
+  {
+    "id": "google-swe-1",
+    "companyId": "google",
+    "title": "Software Engineering Intern",
+    "location": "Mountain View, CA",
+    "type": "summer",
+    "description": "Design, develop, and test software for Google's core products and infrastructure. Work alongside experienced engineers on projects that impact billions of users worldwide.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in one or more of: Python, Java, C++, or Go",
+      "Strong understanding of data structures and algorithms",
+      "Experience with software development tools (Git, code review, testing frameworks)",
+      "Ability to write clean, well-documented, and testable code"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "google-ml-1",
+    "companyId": "google",
+    "title": "Machine Learning Engineering Intern",
+    "location": "Mountain View, CA",
+    "type": "summer",
+    "description": "Develop and optimize machine learning models for Google products such as Search, Assistant, and Cloud AI. Collaborate with research scientists to bring cutting-edge ML techniques into production.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, AI/ML, Statistics, or related field",
+      "Strong programming skills in Python and experience with ML frameworks (TensorFlow, PyTorch, or JAX)",
+      "Coursework in machine learning, deep learning, or statistical modeling",
+      "Understanding of linear algebra, probability, and optimization",
+      "Experience with large-scale data processing is a plus"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "microsoft-swe-1",
+    "companyId": "microsoft",
+    "title": "Software Engineering Intern",
+    "location": "Redmond, WA",
+    "type": "summer",
+    "description": "Build features and services for Microsoft products including Azure, Office 365, Teams, and Windows. Participate in the full software development lifecycle from design through deployment.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in one or more of: C#, TypeScript, Python, Java, or C++",
+      "Solid foundation in data structures, algorithms, and object-oriented design",
+      "Experience building web applications or cloud services is a plus",
+      "Strong problem-solving skills and ability to learn new technologies quickly"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "microsoft-aiml-1",
+    "companyId": "microsoft",
+    "title": "AI/ML Research Intern",
+    "location": "Redmond, WA",
+    "type": "summer",
+    "description": "Conduct applied research in artificial intelligence and machine learning at Microsoft Research. Work on projects spanning natural language processing, computer vision, and responsible AI.",
+    "requirements": [
+      "Pursuing a MS or PhD in Computer Science, AI/ML, or related field",
+      "Strong programming skills in Python and experience with PyTorch or TensorFlow",
+      "Research experience in NLP, computer vision, reinforcement learning, or related area",
+      "Solid mathematical foundation in linear algebra, statistics, and optimization",
+      "Track record of publications or open-source contributions is a plus"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "apple-swe-1",
+    "companyId": "apple",
+    "title": "Software Engineering Intern",
+    "location": "Cupertino, CA",
+    "type": "summer",
+    "description": "Develop software for Apple platforms across iOS, macOS, and cloud services. Contribute to features used by millions and collaborate with cross-functional teams in a fast-paced environment.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Swift, Objective-C, Python, or C++",
+      "Strong understanding of data structures, algorithms, and software design patterns",
+      "Experience with iOS/macOS development or backend systems is a plus",
+      "Passion for building high-quality user experiences"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "apple-ml-1",
+    "companyId": "apple",
+    "title": "Machine Learning Intern",
+    "location": "Cupertino, CA",
+    "type": "summer",
+    "description": "Apply machine learning to enhance Apple products including Siri, Camera, Health, and on-device intelligence. Develop and ship ML models optimized for Apple hardware.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, AI/ML, or related field",
+      "Strong Python skills and experience with ML frameworks (PyTorch, TensorFlow, or Core ML)",
+      "Understanding of deep learning architectures (CNNs, transformers, RNNs)",
+      "Coursework or projects in machine learning, NLP, or computer vision",
+      "Interest in on-device ML and model optimization is a plus"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "amazon-sde-1",
+    "companyId": "amazon",
+    "title": "Software Development Engineer Intern",
+    "location": "Seattle, WA",
+    "type": "summer",
+    "description": "Design and build scalable, distributed systems that power Amazon's e-commerce platform, AWS, and Alexa. Own features end-to-end and ship code to production serving millions of customers.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Java, Python, or C++ with strong object-oriented design skills",
+      "Solid understanding of data structures, algorithms, and system design",
+      "Experience with distributed systems, APIs, or cloud computing is a plus",
+      "Familiarity with agile development practices"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "amazon-ds-1",
+    "companyId": "amazon",
+    "title": "Data Science Intern",
+    "location": "Seattle, WA",
+    "type": "summer",
+    "description": "Leverage large-scale data to drive business decisions across Amazon's retail, logistics, and advertising organizations. Build statistical models, run A/B experiments, and deliver actionable insights.",
+    "requirements": [
+      "Pursuing a BS or MS in Data Science, Statistics, Computer Science, or related quantitative field",
+      "Proficiency in Python or R for data analysis and modeling",
+      "Strong SQL skills and experience working with large datasets",
+      "Understanding of statistical methods, hypothesis testing, and experimental design",
+      "Experience with data visualization tools (Matplotlib, Tableau, or similar)"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "meta-swe-1",
+    "companyId": "meta",
+    "title": "Software Engineering Intern",
+    "location": "Menlo Park, CA",
+    "type": "summer",
+    "description": "Build and ship features across Meta's family of apps including Facebook, Instagram, WhatsApp, and Messenger. Work on products that connect billions of people around the world.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in one or more of: Python, JavaScript/TypeScript, C++, or Hack",
+      "Strong foundation in data structures, algorithms, and software engineering principles",
+      "Experience with React, mobile development, or backend systems is a plus",
+      "Interest in building products at massive scale"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "meta-air-1",
+    "companyId": "meta",
+    "title": "AI Research Intern",
+    "location": "Menlo Park, CA",
+    "type": "summer",
+    "description": "Conduct cutting-edge AI research at FAIR (Fundamental AI Research). Work on problems in generative AI, computer vision, NLP, robotics, and self-supervised learning alongside world-class researchers.",
+    "requirements": [
+      "Pursuing a MS or PhD in Computer Science, AI/ML, or related field",
+      "Strong programming skills in Python and deep learning frameworks (PyTorch preferred)",
+      "Research experience demonstrated through publications, preprints, or significant projects",
+      "Deep understanding of modern deep learning architectures and training methods",
+      "Strong mathematical background in optimization, probability, and linear algebra"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "nvidia-swe-ai-1",
+    "companyId": "nvidia",
+    "title": "Software Engineering Intern (AI)",
+    "location": "Santa Clara, CA",
+    "type": "summer",
+    "description": "Develop software for NVIDIA's AI computing platform, including CUDA libraries, TensorRT, and GPU-accelerated frameworks. Help build the infrastructure that powers modern AI training and inference.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Computer Engineering, or related field",
+      "Proficiency in C++ and Python",
+      "Understanding of GPU computing, parallel programming, or high-performance computing",
+      "Familiarity with deep learning frameworks (PyTorch, TensorFlow) and CUDA is a plus",
+      "Strong foundation in data structures, algorithms, and systems programming"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "nvidia-dlr-1",
+    "companyId": "nvidia",
+    "title": "Deep Learning Research Intern",
+    "location": "Santa Clara, CA",
+    "type": "summer",
+    "description": "Advance the state of the art in deep learning at NVIDIA Research. Work on generative models, large language models, autonomous systems, or computer vision with leading researchers.",
+    "requirements": [
+      "Pursuing a MS or PhD in Computer Science, AI/ML, or related field",
+      "Strong Python programming and experience with PyTorch or TensorFlow",
+      "Research experience in deep learning, demonstrated through publications or substantial projects",
+      "Understanding of modern architectures (transformers, diffusion models, GANs)",
+      "Experience with large-scale distributed training is a plus"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "salesforce-swe-1",
+    "companyId": "salesforce",
+    "title": "Software Engineering Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Build and enhance Salesforce's enterprise cloud platform used by over 150,000 companies worldwide. Develop features across the full stack, from backend services to Lightning Web Components.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Java, JavaScript/TypeScript, or Python",
+      "Experience with web development (React, Angular, or similar frameworks)",
+      "Understanding of relational databases and SQL",
+      "Familiarity with REST APIs and microservices architecture"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "salesforce-aip-1",
+    "companyId": "salesforce",
+    "title": "AI Platform Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Work on Salesforce's Einstein AI platform, building intelligent features powered by machine learning and generative AI. Help integrate AI capabilities across the Salesforce product suite.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, AI/ML, or Data Science",
+      "Strong Python skills and experience with ML frameworks (PyTorch or TensorFlow)",
+      "Understanding of NLP, large language models, or generative AI",
+      "Experience with data pipelines and SQL",
+      "Interest in applying AI to enterprise software at scale"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "stripe-swe-1",
+    "companyId": "stripe",
+    "title": "Software Engineering Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Build the economic infrastructure of the internet at Stripe. Work on payments, billing, fraud detection, or developer tools that power millions of businesses worldwide.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in one or more of: Ruby, Python, Java, TypeScript, or Go",
+      "Strong understanding of data structures, algorithms, and system design",
+      "Interest in building reliable, high-availability distributed systems",
+      "Attention to code quality, testing, and API design"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "stripe-be-1",
+    "companyId": "stripe",
+    "title": "Backend Engineering Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Design and build backend services that process billions of dollars in payments. Work on Stripe's core API platform, database infrastructure, and event-driven systems.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science or related field",
+      "Strong proficiency in a backend language (Ruby, Go, Java, or Python)",
+      "Experience with databases (PostgreSQL, Redis, or similar) and SQL",
+      "Understanding of distributed systems, concurrency, and API design",
+      "Interest in financial infrastructure and systems reliability"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "databricks-swe-1",
+    "companyId": "databricks",
+    "title": "Software Engineering Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Build the Databricks Lakehouse Platform used by thousands of organizations for data engineering, data science, and machine learning. Work on distributed computing systems at massive scale.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Scala, Java, Python, or TypeScript",
+      "Strong foundation in data structures, algorithms, and distributed systems",
+      "Familiarity with Apache Spark, cloud platforms (AWS, Azure, GCP), or big data technologies is a plus",
+      "Interest in data infrastructure and large-scale computing"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "databricks-de-1",
+    "companyId": "databricks",
+    "title": "Data Engineering Intern",
+    "location": "San Francisco, CA",
+    "type": "summer",
+    "description": "Design and optimize data pipelines and storage systems for the Databricks platform. Work on core components of the data lakehouse including Delta Lake, streaming, and query optimization.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Data Engineering, or related field",
+      "Strong programming skills in Python, Scala, or Java",
+      "Experience with SQL and relational/NoSQL databases",
+      "Understanding of data modeling, ETL processes, and data warehouse concepts",
+      "Familiarity with Apache Spark, Kafka, or similar distributed data technologies is a plus"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "palantir-fdse-1",
+    "companyId": "palantir",
+    "title": "Forward Deployed Software Engineer Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Work directly with Palantir's most important customers to build custom software solutions on top of the Foundry and Gotham platforms. Bridge the gap between engineering and real-world operational problems.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Strong programming skills in Python, Java, or TypeScript",
+      "Ability to quickly learn new technologies and adapt to complex problem domains",
+      "Excellent communication skills and comfort working directly with end users",
+      "Interest in applying software to critical real-world problems in defense, healthcare, or finance"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "palantir-swe-1",
+    "companyId": "palantir",
+    "title": "Software Engineer Intern",
+    "location": "Palo Alto, CA",
+    "type": "summer",
+    "description": "Build core platform features for Palantir Foundry and Gotham. Develop backend services, data integrations, and frontend interfaces that power critical decision-making at scale.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science or related field",
+      "Proficiency in Java, TypeScript, or Go",
+      "Strong understanding of data structures, algorithms, and system design",
+      "Experience with backend development, databases, or distributed systems",
+      "Passion for building impactful software products"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "goldman-sachs-swe-1",
+    "companyId": "goldman-sachs",
+    "title": "Engineering Summer Analyst",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Build technology that drives Goldman Sachs' global businesses. Develop trading platforms, risk management systems, and internal tools using modern software engineering practices.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Java, Python, or C++ with strong object-oriented design",
+      "Solid understanding of data structures, algorithms, and software design principles",
+      "Interest in financial services technology and distributed systems",
+      "Strong analytical and problem-solving skills"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "goldman-sachs-quant-1",
+    "companyId": "goldman-sachs",
+    "title": "Quantitative Strategist Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Develop quantitative models and analytical tools for Goldman Sachs' trading and risk management divisions. Apply mathematical modeling, statistical analysis, and machine learning to financial markets.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Mathematics, Statistics, Physics, or related quantitative field",
+      "Strong programming skills in Python, C++, or R",
+      "Coursework in probability, statistics, stochastic processes, or machine learning",
+      "Experience with numerical computing (NumPy, SciPy) or data analysis (Pandas)",
+      "Interest in quantitative finance and derivatives pricing"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "jpmorgan-swe-1",
+    "companyId": "jpmorgan",
+    "title": "Software Engineer Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Develop enterprise-scale software at JPMorgan Chase, building applications for trading, payments, and digital banking. Work with modern tech stacks and contribute to systems that move trillions of dollars daily.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Java, Python, or TypeScript",
+      "Strong understanding of data structures, algorithms, and object-oriented programming",
+      "Experience with web frameworks (React, Spring Boot, or similar) is a plus",
+      "Interest in applying technology to financial services"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "jpmorgan-qr-1",
+    "companyId": "jpmorgan",
+    "title": "Quantitative Research Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Build quantitative models for pricing, risk management, and algorithmic trading at JPMorgan Chase. Apply mathematical techniques and machine learning to solve complex problems in global markets.",
+    "requirements": [
+      "Pursuing a MS or PhD in Computer Science, Mathematics, Statistics, Physics, or Quantitative Finance",
+      "Strong programming skills in Python and C++",
+      "Deep understanding of probability, statistics, and stochastic calculus",
+      "Experience with machine learning, time series analysis, or numerical methods",
+      "Familiarity with financial markets and derivative instruments is a plus"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "mckinsey-bt-1",
+    "companyId": "mckinsey",
+    "title": "Business Technology Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Combine technology expertise with strategic consulting at McKinsey Digital. Help Fortune 500 clients solve critical technology challenges including cloud migration, digital transformation, and AI adoption.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Information Systems, or related field",
+      "Strong programming skills in Python, Java, or JavaScript",
+      "Understanding of cloud platforms (AWS, Azure, or GCP) and modern architectures",
+      "Excellent problem-solving, communication, and presentation skills",
+      "Interest in applying technology strategy to business challenges"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "bcg-tc-1",
+    "companyId": "bcg",
+    "title": "Tech Consulting Intern",
+    "location": "Boston, MA",
+    "type": "summer",
+    "description": "Work at the intersection of technology and strategy at BCG X (formerly BCG Digital Ventures and BCG Gamma). Help clients design and build digital products, implement AI solutions, and drive tech-enabled transformation.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Data Science, or related field",
+      "Programming skills in Python, SQL, or JavaScript",
+      "Experience with data analysis, machine learning, or full-stack development",
+      "Strong communication and structured problem-solving skills",
+      "Interest in consulting and applying technical skills to business problems"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "morgan-stanley-ta-1",
+    "companyId": "morgan-stanley",
+    "title": "Technology Summer Analyst",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Build and maintain the technology infrastructure that supports Morgan Stanley's global operations. Work on trading systems, risk platforms, client-facing applications, or data engineering across the firm's technology division.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Java, Python, C++, or TypeScript",
+      "Strong foundation in data structures, algorithms, and databases",
+      "Experience with SQL and relational databases",
+      "Interest in financial technology and building reliable, low-latency systems"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "citadel-swe-1",
+    "companyId": "citadel",
+    "title": "Software Engineer Intern",
+    "location": "Chicago, IL",
+    "type": "summer",
+    "description": "Build high-performance, low-latency software systems at one of the world's leading quantitative trading firms. Work on trading infrastructure, real-time data processing, and analytics platforms.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science or related field",
+      "Strong proficiency in C++ or Python with excellent coding fundamentals",
+      "Deep understanding of data structures, algorithms, and computational complexity",
+      "Experience with systems programming, concurrency, or performance optimization",
+      "Interest in building mission-critical, latency-sensitive systems"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "citadel-qr-1",
+    "companyId": "citadel",
+    "title": "Quantitative Research Intern",
+    "location": "Chicago, IL",
+    "type": "summer",
+    "description": "Develop quantitative models and trading strategies at Citadel. Apply machine learning, statistical analysis, and mathematical modeling to identify opportunities in global financial markets.",
+    "requirements": [
+      "Pursuing a MS or PhD in Computer Science, Mathematics, Statistics, Physics, or related quantitative field",
+      "Strong programming skills in Python, C++, or R",
+      "Expertise in statistics, probability theory, and machine learning",
+      "Experience with time series analysis, optimization, or numerical methods",
+      "Ability to work with large datasets and derive actionable insights"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "blackrock-swe-1",
+    "companyId": "blackrock",
+    "title": "Software Engineer Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Develop software for BlackRock's Aladdin platform, the operating system used to manage over $21 trillion in assets. Build tools for portfolio management, risk analytics, and trading across global markets.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Software Engineering, or related field",
+      "Proficiency in Java, Python, or TypeScript",
+      "Strong understanding of data structures, algorithms, and software engineering best practices",
+      "Experience with web development (React, Angular) or backend services is a plus",
+      "Interest in financial technology and investment management"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "jane-street-swe-1",
+    "companyId": "jane-street",
+    "title": "Software Engineer Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Build trading systems and infrastructure at Jane Street, a quantitative trading firm. Work on real-time trading platforms, market data systems, and internal tools using OCaml and other functional programming languages.",
+    "requirements": [
+      "Pursuing a BS or MS in Computer Science, Mathematics, or related field",
+      "Strong programming skills with interest in functional programming (OCaml, Haskell, or similar)",
+      "Excellent understanding of data structures, algorithms, and type systems",
+      "Strong mathematical reasoning and problem-solving abilities",
+      "Interest in systems programming and building reliable, high-performance software"
+    ],
+    "matchScore": 0
+  },
+  {
+    "id": "point72-ds-1",
+    "companyId": "point72",
+    "title": "Data Science Intern",
+    "location": "New York, NY",
+    "type": "summer",
+    "description": "Apply data science and machine learning to investment research at Point72. Build models using alternative data sources, NLP on financial text, and quantitative analytics to support portfolio managers.",
+    "requirements": [
+      "Pursuing a BS or MS in Data Science, Computer Science, Statistics, or related quantitative field",
+      "Strong programming skills in Python with experience in Pandas, NumPy, and scikit-learn",
+      "Experience with SQL and working with large, real-world datasets",
+      "Understanding of machine learning, NLP, or statistical modeling techniques",
+      "Interest in financial markets and alternative data analysis"
+    ],
+    "matchScore": 0
+  }
+]

@@ -1,6 +1,7 @@
 // ===== USER PROFILE =====
 export interface UserProfile {
   name: string;
+  email?: string;
   university: string;
   graduationYear: number;
   major: string;
@@ -53,6 +54,7 @@ export interface Alumni {
   currentCompany: string;
   currentRole: string;
   linkedinUrl: string;
+  email?: string;
   connectionStrength: "strong" | "medium" | "weak";
   sharedBackground: string[];
 }
@@ -123,6 +125,7 @@ export interface GameAction {
 export interface ParseResumeRequest {
   resumeText: string;
   university: string;
+  email?: string;
 }
 export interface ParseResumeResponse {
   profile: UserProfile;

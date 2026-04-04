@@ -38,6 +38,7 @@ interface AppState {
   gameState: GameState | null;
   leaderboard: Leaderboard | null;
   isProfileShared: boolean;
+  sentAlumniIds: string[];
   setProfile: (profile: UserProfile) => void;
   setSelectedCompanies: (companies: Company[]) => void;
   setAllCompanies: (companies: Company[]) => void;
@@ -45,6 +46,7 @@ interface AppState {
   setGameState: (gameState: GameState) => void;
   setLeaderboard: (leaderboard: Leaderboard | null) => void;
   setIsProfileShared: (shared: boolean) => void;
+  addSentAlumniId: (id: string) => void;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -57,6 +59,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gameState, setGameStateState] = useState<GameState | null>(null);
   const [leaderboard, setLeaderboardState] = useState<Leaderboard | null>(null);
   const [isProfileShared, setIsProfileSharedState] = useState(false);
+  const [sentAlumniIds, setSentAlumniIds] = useState<string[]>([]);
 
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
@@ -65,6 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setGameState = useCallback((g: GameState) => setGameStateState(g), []);
   const setLeaderboard = useCallback((l: Leaderboard | null) => setLeaderboardState(l), []);
   const setIsProfileShared = useCallback((s: boolean) => setIsProfileSharedState(s), []);
+  const addSentAlumniId = useCallback((id: string) => setSentAlumniIds((prev) => prev.includes(id) ? prev : [...prev, id]), []);
 
   return (
     <AppContext.Provider
@@ -76,6 +80,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         gameState,
         leaderboard,
         isProfileShared,
+        sentAlumniIds,
         setProfile,
         setSelectedCompanies,
         setAllCompanies,
@@ -83,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setGameState,
         setLeaderboard,
         setIsProfileShared,
+        addSentAlumniId,
       }}
     >
       {children}

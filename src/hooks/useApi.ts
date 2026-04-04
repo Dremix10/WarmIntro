@@ -19,7 +19,7 @@ import type {
   Badge,
 } from "@/shared/types";
 
-const USE_MOCKS = true;
+const USE_MOCKS = false;
 
 function randomDelay(): Promise<void> {
   const ms = 500 + Math.random() * 300;

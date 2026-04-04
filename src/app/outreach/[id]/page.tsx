@@ -7,12 +7,58 @@ import { AlumniList } from "@/components/AlumniList";
 import { OutreachDraft } from "@/components/OutreachDraft";
 import { Confetti } from "@/components/Confetti";
 import { findAlumni, generateOutreach, updateFunnel } from "@/hooks/useApi";
-import type { WarmPath, OutreachDraft as OutreachDraftType, Company } from "@/shared/types";
+import type { WarmPath, OutreachDraft as OutreachDraftType, Company, FunnelState } from "@/shared/types";
+import { FUNNEL_STAGES } from "@/shared/constants";
+
+function MiniFunnel({ funnel }: { funnel: FunnelState | null }) {
+  if (!funnel) return null;
+  return (
+    <div className="flex items-center gap-1">
+      {funnel.stages.map((s) => (
+        <div key={s.id} className="flex items-center gap-1 text-[10px] text-slate-500">
+          <span>{s.icon}</span>
+          <span className="font-semibold" style={{ color: s.color }}>{s.currentCount}</span>
+          <span className="text-slate-300">/{s.targetCount}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LoadingCard({ message, count }: { message: string; count: number }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-6">
+        <div className="h-6 w-6 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent" />
+        <div>
+          <p className="text-sm font-medium text-slate-700">{message}</p>
+          <p className="text-xs text-slate-400 mt-0.5">This usually takes 5-10 seconds...</p>
+        </div>
+      </div>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-xl bg-white border border-slate-100 p-4">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-full bg-slate-100 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 rounded bg-slate-100 animate-pulse" />
+              <div className="h-3 w-48 rounded bg-slate-50 animate-pulse" />
+              <div className="h-3 w-24 rounded bg-slate-50 animate-pulse" />
+            </div>
+          </div>
+          <div className="mt-3 space-y-2">
+            <div className="h-3 w-full rounded bg-slate-50 animate-pulse" />
+            <div className="h-3 w-3/4 rounded bg-slate-50 animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function OutreachPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { profile, selectedCompanies, setFunnel, setGameState } = useAppState();
+  const { profile, selectedCompanies, funnel, setFunnel, setGameState, sentAlumniIds, addSentAlumniId } = useAppState();
 
   const [company, setCompany] = useState<Company | null>(null);
   const [warmPaths, setWarmPaths] = useState<WarmPath[]>([]);
@@ -24,13 +70,11 @@ export default function OutreachPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [sentCount, setSentCount] = useState(0);
 
-  // Find company from context
   useEffect(() => {
     const found = selectedCompanies.find((c) => c.id === params.id);
     if (found) setCompany(found);
   }, [params.id, selectedCompanies]);
 
-  // Load alumni
   useEffect(() => {
     if (!profile || !params.id) return;
 
@@ -42,15 +86,15 @@ export default function OutreachPage() {
       userGradYear: profile.graduationYear,
     })
       .then((res) => {
-        setWarmPaths(res.warmPaths);
-        if (res.warmPaths.length > 0) {
-          setSelectedAlumniId(res.warmPaths[0].alumni.id);
+        const paths = res.warmPaths ?? [];
+        setWarmPaths(paths);
+        if (paths.length > 0) {
+          setSelectedAlumniId(paths[0].alumni.id);
         }
       })
       .finally(() => setLoadingAlumni(false));
   }, [params.id, profile]);
 
-  // Generate drafts when alumni selected
   useEffect(() => {
     if (!profile || !company || !selectedAlumniId) return;
 
@@ -70,13 +114,18 @@ export default function OutreachPage() {
   }, [selectedAlumniId, profile, company, warmPaths]);
 
   const handleMarkSent = async () => {
-    if (!company) return;
+    if (!company || !selectedAlumniId) return;
+
+    // Prevent double-counting
+    if (sentAlumniIds.includes(selectedAlumniId)) return;
+
+    addSentAlumniId(selectedAlumniId);
 
     try {
       const res = await updateFunnel({
         action: "outreach_sent",
         companyId: company.id,
-        alumniId: selectedAlumniId ?? undefined,
+        alumniId: selectedAlumniId,
       });
       setFunnel(res.funnel);
       setGameState(res.gameState);
@@ -113,21 +162,30 @@ export default function OutreachPage() {
     );
   }
 
+  const selectedAlumni = warmPaths.find((w) => w.alumni.id === selectedAlumniId);
+
   return (
     <div className="min-h-screen bg-slate-50 py-12">
       <div className="mx-auto max-w-5xl px-6">
+        {/* Sticky top bar */}
+        <div className="sticky top-0 z-20 -mx-6 mb-6 bg-slate-50/90 backdrop-blur-sm px-6 py-3 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => router.push("/pipeline")}
+              className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+              Back to Pipeline
+            </button>
+            <MiniFunnel funnel={funnel} />
+          </div>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
-          <button
-            type="button"
-            onClick={() => router.push("/pipeline")}
-            className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors mb-3"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            Back to Pipeline
-          </button>
           <div className="flex items-center gap-3">
             {company && (
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-bold text-slate-600">
@@ -161,23 +219,19 @@ export default function OutreachPage() {
           {/* Alumni list (left) */}
           <div className="lg:col-span-2">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">
-              Alumni at {company?.name ?? "this company"}
+              {loadingAlumni ? "Finding connections..." : `Connections at ${company?.name ?? "this company"}`}
             </h2>
             {loadingAlumni ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-40 rounded-xl bg-white border border-slate-100 animate-pulse" />
-                ))}
-              </div>
+              <LoadingCard message="Searching for alumni connections..." count={3} />
             ) : warmPaths.length === 0 ? (
               <div className="rounded-xl bg-white border border-slate-200 p-6 text-center">
-                <p className="text-sm text-slate-500">No alumni data available for this company yet.</p>
-                <p className="mt-1 text-xs text-slate-400">Mock data is only available for Tesla.</p>
+                <p className="text-sm text-slate-500">No connections found for this company.</p>
               </div>
             ) : (
               <AlumniList
                 warmPaths={warmPaths}
                 selectedAlumniId={selectedAlumniId}
+                sentAlumniIds={sentAlumniIds}
                 onSelect={setSelectedAlumniId}
               />
             )}
@@ -186,10 +240,19 @@ export default function OutreachPage() {
           {/* Drafts (right) */}
           <div className="lg:col-span-3">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">
-              Outreach Drafts
+              {loadingDrafts ? "Writing personalized drafts..." : "Outreach Drafts"}
             </h2>
             {loadingDrafts ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-6">
+                  <div className="h-6 w-6 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">
+                      Claude is writing personalized outreach for {selectedAlumni?.alumni.name ?? "this contact"}...
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">Crafting email and LinkedIn message...</p>
+                  </div>
+                </div>
                 <div className="h-64 rounded-xl bg-white border border-slate-100 animate-pulse" />
                 <div className="h-32 rounded-xl bg-white border border-slate-100 animate-pulse" />
               </div>
@@ -197,8 +260,8 @@ export default function OutreachPage() {
               <div className="rounded-xl bg-white border border-slate-200 p-8 text-center">
                 <p className="text-sm text-slate-500">
                   {warmPaths.length === 0
-                    ? "Select a company with alumni data to generate drafts."
-                    : "Select an alumni to generate personalized drafts."}
+                    ? "Select a company with connections to generate drafts."
+                    : "Select a connection to generate personalized drafts."}
                 </p>
               </div>
             ) : (
@@ -207,6 +270,9 @@ export default function OutreachPage() {
                   <OutreachDraft
                     key={draft.id}
                     draft={draft}
+                    alumniLinkedinUrl={selectedAlumni?.alumni.linkedinUrl}
+                    alumniEmail={selectedAlumni?.alumni.email}
+                    isSent={selectedAlumniId ? sentAlumniIds.includes(selectedAlumniId) : false}
                     onMarkSent={handleMarkSent}
                   />
                 ))}

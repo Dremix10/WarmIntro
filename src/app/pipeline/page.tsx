@@ -107,17 +107,68 @@ export default function PipelinePage() {
 
         {/* Badge pop-in */}
         {earnedBadges.length > 0 && (
-          <div className="mb-6 space-y-2">
+          <div className="fixed top-6 right-6 z-50 space-y-2">
             {earnedBadges.map((b) => (
-              <div key={b.id} className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <div key={b.id} className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 shadow-lg animate-bounce">
                 <AchievementBadge badge={b} animate />
-                <p className="text-sm font-semibold text-amber-800">Badge Earned!</p>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Badge Earned!</p>
+                  <p className="text-xs text-amber-600">{b.name}</p>
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Gamification row */}
+        {/* COMPANIES FIRST — the primary action */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-slate-900">Start Here &mdash; Pick a Company</h2>
+          </div>
+          <p className="text-sm text-slate-500 mb-4">Click any company to find alumni connections and draft personalized outreach messages.</p>
+          <div className="space-y-3">
+            {selectedCompanies.map((company) => (
+              <div
+                key={company.id}
+                onClick={() => router.push(`/outreach/${company.id}`)}
+                className="flex items-center gap-4 rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-4 hover:shadow-md hover:border-emerald-200 cursor-pointer transition-all group"
+              >
+                {/* Logo */}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                  {company.logoPlaceholder}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">{company.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <AlumniBadge count={company.alumniCount} university={profile.university} />
+                    <span className="text-xs text-slate-400">{company.openInternships.length} open roles</span>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); handleQuickOutreach(company.id); }}
+                    className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 transition-colors"
+                  >
+                    +10 XP
+                  </button>
+                  <div className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white group-hover:bg-emerald-700 transition-colors">
+                    <span>Find Alumni &amp; Draft Outreach</span>
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* GAMIFICATION — below companies */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
           <XPBar gameState={localGame} />
           <StreakCounter streak={localGame.streak} />
@@ -137,51 +188,6 @@ export default function PipelinePage() {
 
         {/* Funnel */}
         <FunnelDashboard funnel={localFunnel} />
-
-        {/* Company list */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Companies</h2>
-          <div className="space-y-3">
-            {selectedCompanies.map((company) => (
-              <div
-                key={company.id}
-                className="flex items-center gap-4 rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-4 hover:shadow-md transition-shadow"
-              >
-                {/* Logo */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600">
-                  {company.logoPlaceholder}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">{company.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <AlumniBadge count={company.alumniCount} university={profile.university} />
-                    <span className="text-xs text-slate-400">{company.openInternships.length} open roles</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickOutreach(company.id)}
-                    className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 transition-colors"
-                  >
-                    +10 XP
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/outreach/${company.id}`)}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
-                  >
-                    View Alumni
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Recent activity */}
         {localGame.recentActions.length > 0 && (

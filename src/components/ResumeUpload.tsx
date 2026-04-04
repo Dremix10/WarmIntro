@@ -29,7 +29,7 @@ type InputMode = "text" | "pdf";
 
 async function extractTextFromPdf(file: File): Promise<string> {
   const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -267,21 +267,24 @@ export function ResumeUpload() {
         <p className="text-sm text-red-500 font-medium">{error}</p>
       )}
 
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={loading || extracting || !resumeText.trim()}
-        className="w-full rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        {loading ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            Analyzing your resume...
-          </span>
-        ) : (
-          "Analyze Resume & Find Connections"
-        )}
-      </button>
+      {loading ? (
+        <div className="w-full rounded-xl bg-emerald-600 px-6 py-4 text-center">
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <span className="text-sm font-semibold text-white">Analyzing your resume with AI...</span>
+          </div>
+          <p className="mt-1.5 text-xs text-emerald-200">Extracting skills, experience, and finding matches. This takes about 10 seconds.</p>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={extracting || !resumeText.trim()}
+          className="w-full rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Analyze Resume &amp; Find Connections
+        </button>
+      )}
 
       <p className="text-center text-xs text-slate-400">
         Claude AI will parse your resume to find the best alumni connections
