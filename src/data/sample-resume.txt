@@ -1,0 +1,64 @@
+ALEX RIVERA
+Houston, TX | alex.rivera@rice.edu | (713) 555-0147 | linkedin.com/in/alexrivera
+
+EDUCATION
+Rice University, Houston, TX
+Bachelor of Science in Mechanical Engineering                    Expected May 2027
+GPA: 3.72/4.00
+Relevant Coursework: Manufacturing Processes, Thermodynamics, Fluid Mechanics, Machine Design,
+Finite Element Analysis, Control Systems, Materials Science, Engineering Statistics
+
+EXPERIENCE
+
+Undergraduate Research Assistant                                Jan 2025 – Present
+Rice Robotics Lab, Houston, TX
+- Designed and prototyped adaptive gripper mechanisms for soft robotic manipulation using SolidWorks
+  and 3D printing, achieving 95% grasp success rate on irregular objects
+- Conducted FEA simulations (ANSYS) to optimize gripper contact surfaces, improving grip reliability
+  by 35% while reducing material usage by 20%
+- Programmed Arduino-based control systems in C++ for real-time sensor feedback loops integrating
+  force, proximity, and tactile sensors
+- Co-authored research paper submitted to IEEE International Conference on Robotics and Automation
+- Mentored 3 freshman researchers on CAD modeling and prototyping best practices
+
+Manufacturing Engineering Intern                                May 2025 – Aug 2025
+Apex Manufacturing Solutions, Houston, TX
+- Implemented Lean Manufacturing principles (5S, Kaizen, Value Stream Mapping) on assembly line,
+  reducing cycle time by 18% and increasing throughput by 12%
+- Created SolidWorks assemblies and technical drawings (GD&T) for 12 custom fixtures used in
+  production tooling, all approved first pass by senior engineers
+- Led root cause analysis using 8D methodology for recurring defect on stamping line, identifying
+  die alignment issue that saved $45K annually in scrap reduction
+- Developed Python scripts to automate quality data collection from CMM machines, reducing
+  inspection reporting time by 60%
+- Shadowed plant manager and participated in daily production meetings, gaining exposure to
+  capacity planning and scheduling
+
+TECHNICAL SKILLS
+
+CAD/CAE: SolidWorks (CSWA certified), ANSYS, AutoCAD, Fusion 360
+Programming: Python, MATLAB, C++, Arduino
+Manufacturing: Lean Manufacturing, Six Sigma (Yellow Belt), GD&T, CNC basics, 3D Printing (FDM/SLA)
+Analysis: Finite Element Analysis (FEA), CFD fundamentals, Statistical Process Control (SPC)
+Tools: Git, Microsoft Office Suite, JIRA, LaTeX
+
+LEADERSHIP & ACTIVITIES
+
+President, Rice Robotics Club                                   Aug 2025 – Present
+- Lead 40-member student organization focused on competitive robotics and community outreach
+- Organized Rice's first inter-university robotics competition with 8 participating schools
+- Secured $15K in corporate sponsorships from Texas Instruments and Schlumberger
+
+Member, Rice Engineering Student Council                        Aug 2024 – Present
+- Coordinate networking events connecting 200+ engineering students with industry professionals
+- Organized annual Engineering Career Fair with 50+ company representatives
+
+Volunteer, Houston Food Bank                                    Jan 2024 – Present
+- Contribute 5+ hours monthly to warehouse sorting and distribution operations
+
+CERTIFICATIONS & AWARDS
+
+- Certified SolidWorks Associate (CSWA), 2024
+- Lean Six Sigma Yellow Belt, 2025
+- Rice Engineering Dean's Honor Roll, Fall 2024, Spring 2025
+- 2nd Place, Rice Engineering Design Competition, 2025
