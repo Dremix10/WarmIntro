@@ -28,8 +28,8 @@ Manufacturing Engineering, Process Engineering, Product Design, EV Industry`;
 type InputMode = "text" | "pdf";
 
 async function extractTextFromPdf(file: File): Promise<string> {
-  const pdfjsLib = await import("pdfjs-dist");
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.legacy.js";
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -81,8 +81,9 @@ export function ResumeUpload() {
       } else {
         setResumeText(text);
       }
-    } catch {
-      setError("Failed to read PDF. Try pasting the text instead.");
+    } catch (err) {
+      console.error("PDF extraction error:", err);
+      setError(`Failed to read PDF: ${err instanceof Error ? err.message : String(err)}`);
       setFileName(null);
     } finally {
       setExtracting(false);
