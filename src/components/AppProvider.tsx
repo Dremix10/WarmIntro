@@ -39,6 +39,7 @@ interface AppState {
   leaderboard: Leaderboard | null;
   isProfileShared: boolean;
   sentOutreach: Array<{ alumniId: string; companyId: string }>;
+  companyAlumniCount: Record<string, number>;
   setProfile: (profile: UserProfile) => void;
   setSelectedCompanies: (companies: Company[]) => void;
   setAllCompanies: (companies: Company[]) => void;
@@ -47,6 +48,7 @@ interface AppState {
   setLeaderboard: (leaderboard: Leaderboard | null) => void;
   setIsProfileShared: (shared: boolean) => void;
   addSentOutreach: (alumniId: string, companyId: string) => void;
+  setCompanyAlumniCount: (companyId: string, count: number) => void;
   isSent: (alumniId: string) => boolean;
   getSentCount: (companyId: string) => number;
 }
@@ -62,6 +64,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [leaderboard, setLeaderboardState] = useState<Leaderboard | null>(null);
   const [isProfileShared, setIsProfileSharedState] = useState(false);
   const [sentOutreach, setSentOutreach] = useState<Array<{ alumniId: string; companyId: string }>>([]);
+  const [companyAlumniCount, setCompanyAlumniCountState] = useState<Record<string, number>>({});
 
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
@@ -71,6 +74,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setLeaderboard = useCallback((l: Leaderboard | null) => setLeaderboardState(l), []);
   const setIsProfileShared = useCallback((s: boolean) => setIsProfileSharedState(s), []);
   const addSentOutreach = useCallback((alumniId: string, companyId: string) => setSentOutreach((prev) => prev.some((s) => s.alumniId === alumniId) ? prev : [...prev, { alumniId, companyId }]), []);
+  const setCompanyAlumniCount = useCallback((companyId: string, count: number) => setCompanyAlumniCountState((prev) => ({ ...prev, [companyId]: count })), []);
   const isSent = useCallback((alumniId: string) => sentOutreach.some((s) => s.alumniId === alumniId), [sentOutreach]);
   const getSentCount = useCallback((companyId: string) => sentOutreach.filter((s) => s.companyId === companyId).length, [sentOutreach]);
 
@@ -85,6 +89,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         leaderboard,
         isProfileShared,
         sentOutreach,
+        companyAlumniCount,
         setProfile,
         setSelectedCompanies,
         setAllCompanies,
@@ -93,6 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setLeaderboard,
         setIsProfileShared,
         addSentOutreach,
+        setCompanyAlumniCount,
         isSent,
         getSentCount,
       }}

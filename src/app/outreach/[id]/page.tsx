@@ -58,7 +58,7 @@ function LoadingCard({ message, count }: { message: string; count: number }) {
 export default function OutreachPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { profile, selectedCompanies, funnel, setFunnel, setGameState, isSent, addSentOutreach } = useAppState();
+  const { profile, selectedCompanies, funnel, setFunnel, setGameState, isSent, addSentOutreach, setCompanyAlumniCount } = useAppState();
 
   const [company, setCompany] = useState<Company | null>(null);
   const [warmPaths, setWarmPaths] = useState<WarmPath[]>([]);
@@ -69,6 +69,7 @@ export default function OutreachPage() {
   const [xpToast, setXpToast] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [loadingFollowUp, setLoadingFollowUp] = useState(false);
 
   useEffect(() => {
     const found = selectedCompanies.find((c) => c.id === params.id);
@@ -88,6 +89,7 @@ export default function OutreachPage() {
       .then((res) => {
         const paths = res.warmPaths ?? [];
         setWarmPaths(paths);
+        setCompanyAlumniCount(params.id, paths.length);
         if (paths.length > 0) {
           setSelectedAlumniId(paths[0].alumni.id);
         }
@@ -271,11 +273,12 @@ export default function OutreachPage() {
                     key={draft.id}
                     draft={draft}
                     alumniLinkedinUrl={selectedAlumni?.alumni.linkedinUrl}
-                    isSent={selectedAlumniId ? isSent(selectedAlumniId) : false}
+                    alumniEmail={selectedAlumni?.alumni.email}
+                    isSent={draft.id.startsWith("followup-") ? false : (selectedAlumniId ? isSent(selectedAlumniId) : false)}
                     onMarkSent={handleMarkSent}
                     onGenerateFollowUp={async (originalBody) => {
                       if (!profile || !selectedAlumni || !company) return;
-                      setLoadingDrafts(true);
+                      setLoadingFollowUp(true);
                       try {
                         const res = await generateFollowUp({
                           userProfile: profile,
@@ -284,12 +287,23 @@ export default function OutreachPage() {
                           originalBody,
                         });
                         setDrafts((prev) => [...prev, ...res.drafts]);
+                      } catch {
+                        // silently fail for demo
                       } finally {
-                        setLoadingDrafts(false);
+                        setLoadingFollowUp(false);
                       }
                     }}
                   />
                 ))}
+                {loadingFollowUp && (
+                  <div className="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-6">
+                    <div className="h-6 w-6 animate-spin rounded-full border-3 border-amber-500 border-t-transparent" />
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">Generating follow-up message...</p>
+                      <p className="text-xs text-slate-400 mt-0.5">This takes a few seconds...</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

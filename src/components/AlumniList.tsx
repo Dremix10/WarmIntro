@@ -104,6 +104,9 @@ export function AlumniList({ warmPaths, selectedAlumniId, isSent, onSelect }: Al
                   LinkedIn
                 </a>
               )}
+              {a.email && (
+                <span className="text-[11px] text-slate-400">{a.email}</span>
+              )}
             </div>
 
             {/* Warm path narrative */}

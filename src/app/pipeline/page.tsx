@@ -40,7 +40,7 @@ const DEFAULT_GAME: GameState = {
 
 export default function PipelinePage() {
   const router = useRouter();
-  const { profile, selectedCompanies, funnel, gameState, setFunnel, setGameState, getSentCount } = useAppState();
+  const { profile, selectedCompanies, funnel, gameState, setFunnel, setGameState, getSentCount, companyAlumniCount } = useAppState();
   const [localFunnel, setLocalFunnel] = useState<FunnelState>(funnel ?? buildDefaultFunnel());
   const [localGame, setLocalGame] = useState<GameState>(gameState ?? DEFAULT_GAME);
   const [earnedBadges, setEarnedBadges] = useState<Badge[]>([]);
@@ -110,7 +110,7 @@ export default function PipelinePage() {
           <div className="space-y-3">
             {selectedCompanies.map((company) => {
               const sentCount = getSentCount(company.id);
-              const totalAlumni = company.alumniCount;
+              const totalAlumni = companyAlumniCount[company.id] ?? 0;
               const progress = totalAlumni > 0 ? Math.min((sentCount / totalAlumni) * 100, 100) : 0;
 
               return (
