@@ -6,16 +6,14 @@ import type { OutreachDraft as OutreachDraftType } from "@/shared/types";
 interface OutreachDraftProps {
   draft: OutreachDraftType;
   alumniLinkedinUrl?: string;
-  alumniEmail?: string;
   isSent?: boolean;
   onMarkSent: () => void;
   onGenerateFollowUp?: (originalBody: string) => void;
 }
 
-export function OutreachDraft({ draft, alumniLinkedinUrl, alumniEmail, isSent = false, onMarkSent, onGenerateFollowUp }: OutreachDraftProps) {
+export function OutreachDraft({ draft, alumniLinkedinUrl, isSent = false, onMarkSent, onGenerateFollowUp }: OutreachDraftProps) {
   const [body, setBody] = useState(draft.body);
   const [copied, setCopied] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
   const [sent, setSent] = useState(isSent);
 
   const handleCopy = async () => {
@@ -98,24 +96,7 @@ export function OutreachDraft({ draft, alumniLinkedinUrl, alumniEmail, isSent = 
           {copied ? "Copied!" : isEmail ? "Copy Email" : "Copy Message"}
         </button>
 
-        {alumniEmail && isEmail && (
-          <button
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard.writeText(alumniEmail);
-              setCopiedEmail(true);
-              setTimeout(() => setCopiedEmail(false), 2000);
-            }}
-            className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-            {copiedEmail ? "Copied!" : "Copy Email Address"}
-          </button>
-        )}
-
-        {!isEmail && alumniLinkedinUrl && (
+        {alumniLinkedinUrl && (
           <a
             href={alumniLinkedinUrl}
             target="_blank"

@@ -2,30 +2,7 @@ import type { Alumni, WarmPath } from "@/shared/types";
 import alumniData from "@/data/alumni.json";
 import companiesData from "@/data/companies.json";
 import { askClaudeJSON } from "./claude";
-import { findLinkedInProfile, findRealAlumni, findEmail } from "./linkedin-search";
-
-const EMAIL_DOMAINS: Record<string, string> = {
-  Tesla: "tesla.com", Google: "google.com", Microsoft: "microsoft.com",
-  Apple: "apple.com", Amazon: "amazon.com", Meta: "meta.com",
-  NVIDIA: "nvidia.com", Salesforce: "salesforce.com", Stripe: "stripe.com",
-  Databricks: "databricks.com", Palantir: "palantir.com",
-  "Goldman Sachs": "gs.com", "JPMorgan Chase": "jpmorgan.com",
-  "McKinsey & Company": "mckinsey.com", BCG: "bcg.com",
-  "Bain & Company": "bain.com", Deloitte: "deloitte.com",
-  "Morgan Stanley": "morganstanley.com", Citadel: "citadel.com",
-  BlackRock: "blackrock.com", "Jane Street": "janestreet.com",
-  Toyota: "toyota.com", "Ford Motor Company": "ford.com",
-  "General Motors": "gm.com", BMW: "bmw.com", Rivian: "rivian.com",
-  "Johnson & Johnson": "jnj.com", Pfizer: "pfizer.com",
-  Nike: "nike.com", Cloudflare: "cloudflare.com", Figma: "figma.com",
-};
-
-function generateEmail(name: string, company: string): string {
-  const [first, ...rest] = name.toLowerCase().split(" ");
-  const last = rest[rest.length - 1] || first;
-  const domain = EMAIL_DOMAINS[company] || company.toLowerCase().replace(/[^a-z]/g, "") + ".com";
-  return `${first}.${last}@${domain}`;
-}
+import { findLinkedInProfile, findRealAlumni } from "./linkedin-search";
 
 interface AlumniData {
   id: string;
@@ -124,10 +101,7 @@ export async function findAlumniAtCompany(
   // Batch-find real people at this company from this university (one API call)
   const realProfiles = await findRealAlumni(companyName, university, universityAlumni.length + 2);
 
-  const domain = EMAIL_DOMAINS[companyName] || companyName.toLowerCase().replace(/[^a-z]/g, "") + ".com";
-
   // Merge: use seed data for scoring/background, real profiles for name/LinkedIn
-  // Search for real emails in parallel
   const enriched: Alumni[] = await Promise.all(
     universityAlumni.map(async (a, i) => {
       const score = computeWarmthScore(a, userMajor, userGradYear);
@@ -136,15 +110,12 @@ export async function findAlumniAtCompany(
       const realProfile = realProfiles[i];
       const resolvedName = realProfile?.name ?? a.name;
 
-      const realEmail = await findEmail(resolvedName, domain);
-
       return {
         ...a,
         name: resolvedName,
         linkedinUrl:
           realProfile?.linkedinUrl ??
           `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(a.currentRole + " " + companyName + " " + university)}`,
-        email: realEmail ?? generateEmail(resolvedName, a.currentCompany),
       };
     })
   );
@@ -220,13 +191,8 @@ export async function generateColdOutreach(
   const realProfiles = await findRealAlumni(companyName, university, 5);
 
   if (realProfiles.length > 0) {
-    const coldDomain = EMAIL_DOMAINS[companyName] || companyName.toLowerCase().replace(/[^a-z]/g, "") + ".com";
-
-    // We found real people — build alumni entries with real email lookup
-    const alumni: Alumni[] = await Promise.all(
-      realProfiles.map(async (p, i) => {
-        const realEmail = await findEmail(p.name, coldDomain);
-        return {
+    // We found real people — build alumni entries from them
+    const alumni: Alumni[] = realProfiles.map((p, i) => ({
           id: `real-${companyId}-${i}`,
           name: p.name,
           university: university,
@@ -235,12 +201,9 @@ export async function generateColdOutreach(
           currentCompany: companyName,
           currentRole: p.headline.split(" at ")[0].split(" - ")[0].slice(0, 60),
           linkedinUrl: p.linkedinUrl,
-          email: realEmail ?? generateEmail(p.name, companyName),
           connectionStrength: "medium" as const,
           sharedBackground: [university],
-        };
-      })
-    );
+    }));
 
     const prompt = `Generate warm introduction paths for a ${university} ${userMajor} student (class of ${userGradYear}) reaching out to these REAL people found on LinkedIn at ${companyName}.
 
