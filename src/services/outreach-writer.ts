@@ -130,9 +130,10 @@ Keep it SHORT and genuine. No desperation. Add value — reference something spe
     maxTokens: 1024,
   });
 
+  const ts = Date.now();
   return [
     {
-      id: `followup-email-${alumni.id}-${company.id}`,
+      id: `followup-email-${alumni.id}-${company.id}-${ts}`,
       alumniId: alumni.id,
       companyId: company.id,
       subject: draft.email.subject,
@@ -141,7 +142,7 @@ Keep it SHORT and genuine. No desperation. Add value — reference something spe
       tone: "warm",
     },
     {
-      id: `followup-linkedin-${alumni.id}-${company.id}`,
+      id: `followup-linkedin-${alumni.id}-${company.id}-${ts}`,
       alumniId: alumni.id,
       companyId: company.id,
       subject: "Follow-up",

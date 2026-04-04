@@ -118,3 +118,41 @@ export async function findRealAlumni(
 
   return profiles;
 }
+
+const emailCache = new Map<string, string | null>();
+
+export async function findEmail(name: string, companyDomain: string): Promise<string | null> {
+  const cacheKey = `${name}::${companyDomain}`;
+  if (emailCache.has(cacheKey)) {
+    return emailCache.get(cacheKey) ?? null;
+  }
+
+  // Search for the person's email by looking for their name + domain
+  const query = `"${name}" "@${companyDomain}"`;
+  const results = await searchSerper(query, 5);
+
+  const emailRegex = new RegExp(`[\\w.+-]+@${companyDomain.replace(/\./g, "\\.")}`, "i");
+
+  for (const r of results) {
+    const text = r.title + " " + r.snippet;
+    const match = text.match(emailRegex);
+    if (match) {
+      emailCache.set(cacheKey, match[0].toLowerCase());
+      return match[0].toLowerCase();
+    }
+  }
+
+  // Fallback: check if the guessed email appears anywhere on the web
+  const [first, ...rest] = name.toLowerCase().split(" ");
+  const last = rest[rest.length - 1] || first;
+  const guessedEmail = `${first}.${last}@${companyDomain}`;
+
+  const verifyResults = await searchSerper(`"${guessedEmail}"`, 2);
+  if (verifyResults.length > 0) {
+    emailCache.set(cacheKey, guessedEmail);
+    return guessedEmail;
+  }
+
+  emailCache.set(cacheKey, null);
+  return null;
+}

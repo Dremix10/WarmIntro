@@ -2,7 +2,7 @@ import type { Alumni, WarmPath } from "@/shared/types";
 import alumniData from "@/data/alumni.json";
 import companiesData from "@/data/companies.json";
 import { askClaudeJSON } from "./claude";
-import { findLinkedInProfile, findRealAlumni } from "./linkedin-search";
+import { findLinkedInProfile, findRealAlumni, findEmail } from "./linkedin-search";
 
 const EMAIL_DOMAINS: Record<string, string> = {
   Tesla: "tesla.com", Google: "google.com", Microsoft: "microsoft.com",
@@ -124,23 +124,30 @@ export async function findAlumniAtCompany(
   // Batch-find real people at this company from this university (one API call)
   const realProfiles = await findRealAlumni(companyName, university, universityAlumni.length + 2);
 
+  const domain = EMAIL_DOMAINS[companyName] || companyName.toLowerCase().replace(/[^a-z]/g, "") + ".com";
+
   // Merge: use seed data for scoring/background, real profiles for name/LinkedIn
-  const enriched: Alumni[] = universityAlumni.map((a, i) => {
-    const score = computeWarmthScore(a, userMajor, userGradYear);
-    scores.set(a.id, score);
+  // Search for real emails in parallel
+  const enriched: Alumni[] = await Promise.all(
+    universityAlumni.map(async (a, i) => {
+      const score = computeWarmthScore(a, userMajor, userGradYear);
+      scores.set(a.id, score);
 
-    const realProfile = realProfiles[i];
+      const realProfile = realProfiles[i];
+      const resolvedName = realProfile?.name ?? a.name;
 
-    const resolvedName = realProfile?.name ?? a.name;
-    return {
-      ...a,
-      name: resolvedName,
-      linkedinUrl:
-        realProfile?.linkedinUrl ??
-        `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(a.currentRole + " " + companyName + " " + university)}`,
-      email: generateEmail(resolvedName, a.currentCompany),
-    };
-  });
+      const realEmail = await findEmail(resolvedName, domain);
+
+      return {
+        ...a,
+        name: resolvedName,
+        linkedinUrl:
+          realProfile?.linkedinUrl ??
+          `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(a.currentRole + " " + companyName + " " + university)}`,
+        email: realEmail ?? generateEmail(resolvedName, a.currentCompany),
+      };
+    })
+  );
 
   enriched.sort(
     (a, b) => (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0)
@@ -213,20 +220,27 @@ export async function generateColdOutreach(
   const realProfiles = await findRealAlumni(companyName, university, 5);
 
   if (realProfiles.length > 0) {
-    // We found real people — build alumni entries from them
-    const alumni: Alumni[] = realProfiles.map((p, i) => ({
-      id: `real-${companyId}-${i}`,
-      name: p.name,
-      university: university,
-      graduationYear: 0,
-      major: "Unknown",
-      currentCompany: companyName,
-      currentRole: p.headline.split(" at ")[0].split(" - ")[0].slice(0, 60),
-      linkedinUrl: p.linkedinUrl,
-      email: generateEmail(p.name, companyName),
-      connectionStrength: "medium" as const,
-      sharedBackground: [university],
-    }));
+    const coldDomain = EMAIL_DOMAINS[companyName] || companyName.toLowerCase().replace(/[^a-z]/g, "") + ".com";
+
+    // We found real people — build alumni entries with real email lookup
+    const alumni: Alumni[] = await Promise.all(
+      realProfiles.map(async (p, i) => {
+        const realEmail = await findEmail(p.name, coldDomain);
+        return {
+          id: `real-${companyId}-${i}`,
+          name: p.name,
+          university: university,
+          graduationYear: 0,
+          major: "Unknown",
+          currentCompany: companyName,
+          currentRole: p.headline.split(" at ")[0].split(" - ")[0].slice(0, 60),
+          linkedinUrl: p.linkedinUrl,
+          email: realEmail ?? generateEmail(p.name, companyName),
+          connectionStrength: "medium" as const,
+          sharedBackground: [university],
+        };
+      })
+    );
 
     const prompt = `Generate warm introduction paths for a ${university} ${userMajor} student (class of ${userGradYear}) reaching out to these REAL people found on LinkedIn at ${companyName}.
 

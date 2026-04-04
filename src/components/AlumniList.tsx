@@ -105,7 +105,9 @@ export function AlumniList({ warmPaths, selectedAlumniId, isSent, onSelect }: Al
                 </a>
               )}
               {a.email && (
-                <span className="text-[11px] text-slate-400">{a.email}</span>
+                <span className="text-[11px] text-slate-400">
+                  {a.email} <span className="text-[9px] text-slate-300">(estimated)</span>
+                </span>
               )}
             </div>
 
