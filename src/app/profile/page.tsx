@@ -1,15 +1,137 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAppState } from "@/components/AppProvider";
+import { ProfileCard } from "@/components/ProfileCard";
+import { findCompanies } from "@/hooks/useApi";
+import { INDUSTRIES } from "@/shared/constants";
+
 export default function ProfilePage() {
+  const router = useRouter();
+  const { profile, setAllCompanies } = useAppState();
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <p className="text-lg font-medium text-slate-700">No profile found</p>
+          <p className="text-sm text-slate-400">Upload your resume first to get started.</p>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+          >
+            Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const toggleIndustry = (industry: string) => {
+    setSelectedIndustries((prev) =>
+      prev.includes(industry)
+        ? prev.filter((i) => i !== industry)
+        : [...prev, industry]
+    );
+  };
+
+  const handleContinue = async () => {
+    if (selectedIndustries.length === 0) {
+      setError("Pick at least one industry.");
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await findCompanies({
+        industries: selectedIndustries,
+        university: profile.university,
+        skills: profile.skills,
+        roles: profile.targetRoles,
+      });
+      setAllCompanies(res.companies);
+      router.push("/companies");
+    } catch {
+      setError("Failed to load companies. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
-      <div className="w-full max-w-2xl px-6 py-16 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-          Your Profile
-        </h1>
-        <p className="mt-3 text-lg text-slate-600">
-          Placeholder — parsed resume and industry picker go here
-        </p>
+    <div className="min-h-screen bg-slate-50 py-12">
+      <div className="mx-auto max-w-2xl px-6">
+        {/* Header */}
+        <div className="mb-8">
+          <p className="text-sm font-medium text-emerald-600 mb-1">Step 2 of 5</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Your Profile
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Review your parsed resume and pick the industries you want to target.
+          </p>
+        </div>
+
+        {/* Profile card */}
+        <ProfileCard profile={profile} />
+
+        {/* Industry picker */}
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">
+            Target Industries
+          </h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Select the industries you want to explore. We&apos;ll find companies with alumni from {profile.university}.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {INDUSTRIES.map((industry) => {
+              const selected = selectedIndustries.includes(industry);
+              return (
+                <button
+                  key={industry}
+                  type="button"
+                  onClick={() => toggleIndustry(industry)}
+                  className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all ${
+                    selected
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm"
+                  }`}
+                >
+                  {selected && <span className="mr-1.5">&#10003;</span>}
+                  {industry}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {error && (
+          <p className="mt-4 text-sm text-red-500 font-medium">{error}</p>
+        )}
+
+        {/* Continue */}
+        <button
+          type="button"
+          onClick={handleContinue}
+          disabled={loading || selectedIndustries.length === 0}
+          className="mt-6 w-full rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Finding companies...
+            </span>
+          ) : (
+            `Find Companies in ${selectedIndustries.length || "..."} ${selectedIndustries.length === 1 ? "Industry" : "Industries"}`
+          )}
+        </button>
       </div>
     </div>
   );
