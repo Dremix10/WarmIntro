@@ -38,7 +38,7 @@ interface AppState {
   gameState: GameState | null;
   leaderboard: Leaderboard | null;
   isProfileShared: boolean;
-  sentAlumniIds: string[];
+  sentOutreach: Array<{ alumniId: string; companyId: string }>;
   setProfile: (profile: UserProfile) => void;
   setSelectedCompanies: (companies: Company[]) => void;
   setAllCompanies: (companies: Company[]) => void;
@@ -46,7 +46,9 @@ interface AppState {
   setGameState: (gameState: GameState) => void;
   setLeaderboard: (leaderboard: Leaderboard | null) => void;
   setIsProfileShared: (shared: boolean) => void;
-  addSentAlumniId: (id: string) => void;
+  addSentOutreach: (alumniId: string, companyId: string) => void;
+  isSent: (alumniId: string) => boolean;
+  getSentCount: (companyId: string) => number;
 }
 
 const AppContext = createContext<AppState | null>(null);
@@ -59,7 +61,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [gameState, setGameStateState] = useState<GameState | null>(null);
   const [leaderboard, setLeaderboardState] = useState<Leaderboard | null>(null);
   const [isProfileShared, setIsProfileSharedState] = useState(false);
-  const [sentAlumniIds, setSentAlumniIds] = useState<string[]>([]);
+  const [sentOutreach, setSentOutreach] = useState<Array<{ alumniId: string; companyId: string }>>([]);
 
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
@@ -68,7 +70,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setGameState = useCallback((g: GameState) => setGameStateState(g), []);
   const setLeaderboard = useCallback((l: Leaderboard | null) => setLeaderboardState(l), []);
   const setIsProfileShared = useCallback((s: boolean) => setIsProfileSharedState(s), []);
-  const addSentAlumniId = useCallback((id: string) => setSentAlumniIds((prev) => prev.includes(id) ? prev : [...prev, id]), []);
+  const addSentOutreach = useCallback((alumniId: string, companyId: string) => setSentOutreach((prev) => prev.some((s) => s.alumniId === alumniId) ? prev : [...prev, { alumniId, companyId }]), []);
+  const isSent = useCallback((alumniId: string) => sentOutreach.some((s) => s.alumniId === alumniId), [sentOutreach]);
+  const getSentCount = useCallback((companyId: string) => sentOutreach.filter((s) => s.companyId === companyId).length, [sentOutreach]);
 
   return (
     <AppContext.Provider
@@ -80,7 +84,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         gameState,
         leaderboard,
         isProfileShared,
-        sentAlumniIds,
+        sentOutreach,
         setProfile,
         setSelectedCompanies,
         setAllCompanies,
@@ -88,7 +92,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setGameState,
         setLeaderboard,
         setIsProfileShared,
-        addSentAlumniId,
+        addSentOutreach,
+        isSent,
+        getSentCount,
       }}
     >
       {children}

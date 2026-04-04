@@ -8,7 +8,6 @@ import { XPBar } from "@/components/XPBar";
 import { StreakCounter } from "@/components/StreakCounter";
 import { AlumniBadge } from "@/components/AlumniBadge";
 import { AchievementBadge } from "@/components/AchievementBadge";
-import { updateFunnel } from "@/hooks/useApi";
 import type { FunnelState, GameState, Badge } from "@/shared/types";
 import { FUNNEL_STAGES } from "@/shared/constants";
 
@@ -41,7 +40,7 @@ const DEFAULT_GAME: GameState = {
 
 export default function PipelinePage() {
   const router = useRouter();
-  const { profile, selectedCompanies, funnel, gameState, setFunnel, setGameState } = useAppState();
+  const { profile, selectedCompanies, funnel, gameState, setFunnel, setGameState, getSentCount } = useAppState();
   const [localFunnel, setLocalFunnel] = useState<FunnelState>(funnel ?? buildDefaultFunnel());
   const [localGame, setLocalGame] = useState<GameState>(gameState ?? DEFAULT_GAME);
   const [earnedBadges, setEarnedBadges] = useState<Badge[]>([]);
@@ -72,24 +71,6 @@ export default function PipelinePage() {
     );
   }
 
-  const handleQuickOutreach = async (companyId: string) => {
-    try {
-      const res = await updateFunnel({
-        action: "outreach_sent",
-        companyId,
-      });
-      setLocalFunnel(res.funnel);
-      setLocalGame(res.gameState);
-      setFunnel(res.funnel);
-      setGameState(res.gameState);
-      if (res.newBadges.length > 0) {
-        setEarnedBadges((prev) => [...prev, ...res.newBadges]);
-        setTimeout(() => setEarnedBadges([]), 3000);
-      }
-    } catch {
-      // silently fail for demo
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -127,44 +108,58 @@ export default function PipelinePage() {
           </div>
           <p className="text-sm text-slate-500 mb-4">Click any company to find alumni connections and draft personalized outreach messages.</p>
           <div className="space-y-3">
-            {selectedCompanies.map((company) => (
-              <div
-                key={company.id}
-                onClick={() => router.push(`/outreach/${company.id}`)}
-                className="flex items-center gap-4 rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-4 hover:shadow-md hover:border-emerald-200 cursor-pointer transition-all group"
-              >
-                {/* Logo */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
-                  {company.logoPlaceholder}
-                </div>
+            {selectedCompanies.map((company) => {
+              const sentCount = getSentCount(company.id);
+              const totalAlumni = company.alumniCount;
+              const progress = totalAlumni > 0 ? Math.min((sentCount / totalAlumni) * 100, 100) : 0;
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">{company.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <AlumniBadge count={company.alumniCount} university={profile.university} />
-                    <span className="text-xs text-slate-400">{company.openInternships.length} open roles</span>
-                  </div>
-                </div>
+              return (
+                <div
+                  key={company.id}
+                  onClick={() => router.push(`/outreach/${company.id}`)}
+                  className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-4 hover:shadow-md hover:border-emerald-200 cursor-pointer transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Logo */}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                      {company.logoPlaceholder}
+                    </div>
 
-                {/* CTA */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleQuickOutreach(company.id); }}
-                    className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 transition-colors"
-                  >
-                    +10 XP
-                  </button>
-                  <div className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white group-hover:bg-emerald-700 transition-colors">
-                    <span>Find Alumni &amp; Draft Outreach</span>
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">{company.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <AlumniBadge count={company.alumniCount} university={profile.university} />
+                        <span className="text-xs text-slate-400">{company.openInternships.length} open roles</span>
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white group-hover:bg-emerald-700 transition-colors shrink-0">
+                      <span>{sentCount > 0 ? "Continue Outreach" : "Find Alumni & Draft Outreach"}</span>
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </div>
                   </div>
+
+                  {/* Per-company progress bar */}
+                  {sentCount > 0 && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-all"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <span className="text-[11px] font-medium text-emerald-600 shrink-0">
+                        {sentCount}/{totalAlumni} contacted
+                      </span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

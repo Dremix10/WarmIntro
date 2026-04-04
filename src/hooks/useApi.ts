@@ -816,3 +816,17 @@ export async function updateFunnel(
   });
   return res.json();
 }
+
+export async function generateFollowUp(req: {
+  userProfile: UserProfile;
+  alumni: Alumni;
+  company: Company;
+  originalBody: string;
+}): Promise<GenerateOutreachResponse> {
+  const res = await fetch("/api/generate-followup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return res.json();
+}

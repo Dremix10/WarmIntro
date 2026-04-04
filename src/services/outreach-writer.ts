@@ -98,3 +98,56 @@ Keep it authentic. Student asking for advice, not demanding referrals.${isWarmCo
 
   return [emailDraft, linkedinDraft];
 }
+
+export async function generateFollowUp(
+  userProfile: UserProfile,
+  alumni: Alumni,
+  company: Company,
+  originalBody: string
+): Promise<OutreachDraft[]> {
+  const prompt = `Write a polite follow-up message. The student sent an initial outreach that got no reply after ~1 week.
+
+STUDENT: ${userProfile.name}, ${userProfile.university} '${String(userProfile.graduationYear).slice(2)} ${userProfile.major}
+CONTACT: ${alumni.name}, ${alumni.currentRole} at ${company.name}
+
+ORIGINAL MESSAGE (summarize, don't repeat):
+${originalBody.slice(0, 500)}
+
+Return JSON:
+{
+  "email": {
+    "subject": string (short follow-up subject),
+    "body": string (2-3 paragraphs: brief friendly reference to original message, add a new angle or specific question about their work, reiterate 15-min ask, sign-off with student's name and university)
+  },
+  "linkedin": {
+    "body": string (1-2 sentences: casual bump, reference original note, suggest a quick call)
+  }
+}
+
+Keep it SHORT and genuine. No desperation. Add value — reference something specific about ${company.name} or their role.`;
+
+  const draft = await askClaudeJSON<DraftResponse>(prompt, {
+    maxTokens: 1024,
+  });
+
+  return [
+    {
+      id: `followup-email-${alumni.id}-${company.id}`,
+      alumniId: alumni.id,
+      companyId: company.id,
+      subject: draft.email.subject,
+      body: draft.email.body,
+      channel: "email",
+      tone: "warm",
+    },
+    {
+      id: `followup-linkedin-${alumni.id}-${company.id}`,
+      alumniId: alumni.id,
+      companyId: company.id,
+      subject: "Follow-up",
+      body: draft.linkedin.body,
+      channel: "linkedin",
+      tone: "warm",
+    },
+  ];
+}

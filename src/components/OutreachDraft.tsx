@@ -6,15 +6,14 @@ import type { OutreachDraft as OutreachDraftType } from "@/shared/types";
 interface OutreachDraftProps {
   draft: OutreachDraftType;
   alumniLinkedinUrl?: string;
-  alumniEmail?: string;
   isSent?: boolean;
   onMarkSent: () => void;
+  onGenerateFollowUp?: (originalBody: string) => void;
 }
 
-export function OutreachDraft({ draft, alumniLinkedinUrl, alumniEmail, isSent = false, onMarkSent }: OutreachDraftProps) {
+export function OutreachDraft({ draft, alumniLinkedinUrl, isSent = false, onMarkSent, onGenerateFollowUp }: OutreachDraftProps) {
   const [body, setBody] = useState(draft.body);
   const [copied, setCopied] = useState(false);
-  const [copiedEmail, setCopiedEmail] = useState(false);
   const [sent, setSent] = useState(isSent);
 
   const handleCopy = async () => {
@@ -97,24 +96,6 @@ export function OutreachDraft({ draft, alumniLinkedinUrl, alumniEmail, isSent = 
           {copied ? "Copied!" : isEmail ? "Copy Email" : "Copy Message"}
         </button>
 
-        {alumniEmail && isEmail && (
-          <button
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard.writeText(alumniEmail);
-              setCopiedEmail(true);
-              setTimeout(() => setCopiedEmail(false), 2000);
-            }}
-            disabled={sent}
-            className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-            </svg>
-            {copiedEmail ? "Copied!" : "Copy Email Address"}
-          </button>
-        )}
-
         {!isEmail && alumniLinkedinUrl && (
           <a
             href={alumniLinkedinUrl}
@@ -149,6 +130,19 @@ export function OutreachDraft({ draft, alumniLinkedinUrl, alumniEmail, isSent = 
             </>
           )}
         </button>
+
+        {sent && onGenerateFollowUp && (
+          <button
+            type="button"
+            onClick={() => onGenerateFollowUp(body)}
+            className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
+            </svg>
+            Generate Follow-up
+          </button>
+        )}
       </div>
     </div>
   );

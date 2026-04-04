@@ -143,6 +143,28 @@ export default function LeaderboardPage() {
   const [copied, setCopied] = useState(false);
   const [viewingProfile, setViewingProfile] = useState<{ profile: UserProfile; name: string } | null>(null);
 
+  // Auto-load demo leaderboard on first visit
+  if (profile && !leaderboard) {
+    const demoBoard: Leaderboard = {
+      code: "RICE26",
+      name: "Rice Networking 2027",
+      members: [...MOCK_MEMBERS, {
+        id: "current-user",
+        name: profile.name,
+        university: profile.university,
+        xp: gameState?.xp ?? 0,
+        level: gameState?.level ?? 1,
+        levelName: gameState?.levelName ?? "Networking Novice",
+        streak: gameState?.streak ?? 0,
+        outreachSent: gameState?.recentActions.filter((a) => a.type === "outreach_sent").length ?? 0,
+        isCurrentUser: true,
+        profileShared: isProfileShared,
+        sharedProfile: isProfileShared ? profile : null,
+      }],
+    };
+    setLeaderboard(demoBoard);
+  }
+
   if (!profile) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">

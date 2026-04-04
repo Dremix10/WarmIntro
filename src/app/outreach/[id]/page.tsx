@@ -6,7 +6,7 @@ import { useAppState } from "@/components/AppProvider";
 import { AlumniList } from "@/components/AlumniList";
 import { OutreachDraft } from "@/components/OutreachDraft";
 import { Confetti } from "@/components/Confetti";
-import { findAlumni, generateOutreach, updateFunnel } from "@/hooks/useApi";
+import { findAlumni, generateOutreach, generateFollowUp, updateFunnel } from "@/hooks/useApi";
 import type { WarmPath, OutreachDraft as OutreachDraftType, Company, FunnelState } from "@/shared/types";
 import { FUNNEL_STAGES } from "@/shared/constants";
 
@@ -58,7 +58,7 @@ function LoadingCard({ message, count }: { message: string; count: number }) {
 export default function OutreachPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { profile, selectedCompanies, funnel, setFunnel, setGameState, sentAlumniIds, addSentAlumniId } = useAppState();
+  const { profile, selectedCompanies, funnel, setFunnel, setGameState, isSent, addSentOutreach } = useAppState();
 
   const [company, setCompany] = useState<Company | null>(null);
   const [warmPaths, setWarmPaths] = useState<WarmPath[]>([]);
@@ -117,9 +117,9 @@ export default function OutreachPage() {
     if (!company || !selectedAlumniId) return;
 
     // Prevent double-counting
-    if (sentAlumniIds.includes(selectedAlumniId)) return;
+    if (isSent(selectedAlumniId)) return;
 
-    addSentAlumniId(selectedAlumniId);
+    addSentOutreach(selectedAlumniId, company.id);
 
     try {
       const res = await updateFunnel({
@@ -231,7 +231,7 @@ export default function OutreachPage() {
               <AlumniList
                 warmPaths={warmPaths}
                 selectedAlumniId={selectedAlumniId}
-                sentAlumniIds={sentAlumniIds}
+                isSent={isSent}
                 onSelect={setSelectedAlumniId}
               />
             )}
@@ -271,9 +271,23 @@ export default function OutreachPage() {
                     key={draft.id}
                     draft={draft}
                     alumniLinkedinUrl={selectedAlumni?.alumni.linkedinUrl}
-                    alumniEmail={selectedAlumni?.alumni.email}
-                    isSent={selectedAlumniId ? sentAlumniIds.includes(selectedAlumniId) : false}
+                    isSent={selectedAlumniId ? isSent(selectedAlumniId) : false}
                     onMarkSent={handleMarkSent}
+                    onGenerateFollowUp={async (originalBody) => {
+                      if (!profile || !selectedAlumni || !company) return;
+                      setLoadingDrafts(true);
+                      try {
+                        const res = await generateFollowUp({
+                          userProfile: profile,
+                          alumni: selectedAlumni.alumni,
+                          company,
+                          originalBody,
+                        });
+                        setDrafts((prev) => [...prev, ...res.drafts]);
+                      } finally {
+                        setLoadingDrafts(false);
+                      }
+                    }}
                   />
                 ))}
               </div>

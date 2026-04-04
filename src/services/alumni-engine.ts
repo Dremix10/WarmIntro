@@ -27,58 +27,6 @@ interface CompanyData {
 const allAlumni = alumniData as AlumniData[];
 const allCompanies = companiesData as CompanyData[];
 
-const EMAIL_DOMAINS: Record<string, string> = {
-  Tesla: "tesla.com",
-  Google: "google.com",
-  Microsoft: "microsoft.com",
-  Apple: "apple.com",
-  Amazon: "amazon.com",
-  Meta: "meta.com",
-  NVIDIA: "nvidia.com",
-  Salesforce: "salesforce.com",
-  Stripe: "stripe.com",
-  Databricks: "databricks.com",
-  Palantir: "palantir.com",
-  "Goldman Sachs": "gs.com",
-  "JPMorgan Chase": "jpmorgan.com",
-  "McKinsey & Company": "mckinsey.com",
-  BCG: "bcg.com",
-  "Bain & Company": "bain.com",
-  Deloitte: "deloitte.com",
-  "Morgan Stanley": "morganstanley.com",
-  Citadel: "citadel.com",
-  BlackRock: "blackrock.com",
-  "Jane Street": "janestreet.com",
-  Point72: "point72.com",
-  Toyota: "toyota.com",
-  "Ford Motor Company": "ford.com",
-  "General Motors": "gm.com",
-  BMW: "bmw.com",
-  Hyundai: "hyundai.com",
-  Rivian: "rivian.com",
-  Volvo: "volvocars.com",
-  "Lucid Motors": "lucidmotors.com",
-  BYD: "byd.com",
-  "Johnson & Johnson": "jnj.com",
-  Pfizer: "pfizer.com",
-  Medtronic: "medtronic.com",
-  Abbott: "abbott.com",
-  Chevron: "chevron.com",
-  ExxonMobil: "exxonmobil.com",
-  "Procter & Gamble": "pg.com",
-  Nike: "nike.com",
-  Cloudflare: "cloudflare.com",
-  Figma: "figma.com",
-};
-
-function generateEmail(name: string, company: string): string {
-  const [first, ...rest] = name.toLowerCase().split(" ");
-  const last = rest[rest.length - 1] || first;
-  const domain =
-    EMAIL_DOMAINS[company] ||
-    company.toLowerCase().replace(/[^a-z]/g, "") + ".com";
-  return `${first}.${last}@${domain}`;
-}
 
 function computeWarmthScore(
   alumni: AlumniData,
@@ -166,7 +114,6 @@ export async function findAlumniAtCompany(
       linkedinUrl:
         realProfile?.linkedinUrl ??
         `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(a.currentRole + " " + companyName + " " + university)}`,
-      email: generateEmail(realProfile?.name ?? a.name, a.currentCompany),
     };
   });
 
@@ -251,7 +198,6 @@ export async function generateColdOutreach(
       currentCompany: companyName,
       currentRole: p.headline.split(" at ")[0].split(" - ")[0].slice(0, 60),
       linkedinUrl: p.linkedinUrl,
-      email: generateEmail(p.name, companyName),
       connectionStrength: "medium" as const,
       sharedBackground: [university],
     }));
