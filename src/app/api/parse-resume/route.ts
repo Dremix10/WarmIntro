@@ -19,6 +19,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (body.resumeText.length > 15000) {
+      return NextResponse.json(
+        { error: "Resume text too long (max 15,000 characters)" },
+        { status: 400 }
+      );
+    }
+
     const profile = await parseResume(body.resumeText, body.university, body.email);
     const response: ParseResumeResponse = { profile };
 

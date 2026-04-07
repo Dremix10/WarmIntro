@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 
+const VALID_STAGES = ["sent", "replied", "coffee", "referral"];
+
 export async function GET(request: Request) {
   try {
     const auth = await getUser(request);
     if (!auth) {
-      return NextResponse.json({ connections: [] });
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const { supabase, user } = auth;
@@ -36,6 +38,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "alumni_id and company_id are required" }, { status: 400 });
     }
 
+    const stage = body.stage ?? "sent";
+    if (!VALID_STAGES.includes(stage)) {
+      return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
+    }
+
     const { data, error } = await supabase.from("connections").upsert({
       user_id: user.id,
       alumni_id: body.alumni_id,
@@ -45,7 +52,7 @@ export async function POST(request: Request) {
       alumni_linkedin_url: body.alumni_linkedin_url,
       company_id: body.company_id,
       company_name: body.company_name,
-      stage: body.stage ?? "sent",
+      stage,
     }, {
       onConflict: "user_id,alumni_id",
     }).select().single();
@@ -76,7 +83,12 @@ export async function PATCH(request: Request) {
     }
 
     const updates: { stage?: string; notes_summary?: string } = {};
-    if (body.stage) updates.stage = body.stage;
+    if (body.stage) {
+      if (!VALID_STAGES.includes(body.stage)) {
+        return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
+      }
+      updates.stage = body.stage;
+    }
     if (body.notes_summary) updates.notes_summary = JSON.parse(JSON.stringify(body.notes_summary));
 
     const { data, error } = await supabase

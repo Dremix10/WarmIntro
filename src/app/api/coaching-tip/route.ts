@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const cacheKey = `${body.stage}::${body.companyName}::${body.alumniRole}`;
+    const cacheKey = `${body.stage}::${body.companyName}::${body.alumniRole}::${body.alumniName}::${body.userMajor}`;
     if (tipCache.has(cacheKey)) {
       return NextResponse.json(tipCache.get(cacheKey)!);
     }

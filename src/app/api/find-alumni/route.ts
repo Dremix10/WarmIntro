@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     // Return cached response if available (prevents alumni shuffling on re-entry)
-    const cacheKey = `${body.companyId}::${body.university}`;
+    const cacheKey = `${body.companyId}::${body.university}::${body.userMajor}::${body.userGradYear}`;
     if (responseCache.has(cacheKey)) {
       return NextResponse.json(responseCache.get(cacheKey)!);
     }

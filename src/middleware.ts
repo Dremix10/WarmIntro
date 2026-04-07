@@ -29,7 +29,9 @@ interface RateLimitEntry {
 const rateLimitMap = new Map<string, RateLimitEntry>();
 
 function getClientIp(request: NextRequest): string {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  // x-real-ip is set by Vercel from the socket — cannot be spoofed by client headers
+  // x-forwarded-for can be spoofed, only use as last resort
+  return request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 }
 
 function getTier(pathname: string): keyof typeof RATE_LIMITS {
@@ -67,11 +69,19 @@ function checkRateLimit(ip: string, tier: keyof typeof RATE_LIMITS): { allowed: 
   return { allowed: true, retryAfter: 0 };
 }
 
+const MAX_BODY_SIZE = 64 * 1024; // 64KB
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Periodic cleanup (~1% of requests)
-  if (Math.random() < 0.01) cleanupStaleEntries();
+  // Reject oversized payloads
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+    return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+  }
+
+  // Periodic cleanup, also triggered when map is large
+  if (Math.random() < 0.01 || rateLimitMap.size > 10000) cleanupStaleEntries();
 
   const ip = getClientIp(request);
   const tier = getTier(pathname);
