@@ -16,6 +16,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
 
+    if (!email.endsWith('@rice.edu')) {
+      return NextResponse.json({ error: "Early access is limited to @rice.edu emails" }, { status: 400 });
+    }
+
     const supabase = createServerClient();
     const { data, error } = await supabase.auth.signUp({ email, password });
 

@@ -16,6 +16,11 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
     setError(null);
 
     if (mode === "signup") {
+      if (!email.endsWith("@rice.edu")) {
+        setError("Early access is limited to @rice.edu emails");
+        setLoading(false);
+        return;
+      }
       const { error: err } = await supabase.auth.signUp({ email, password });
       if (err) {
         setError(err.message);
@@ -71,10 +76,11 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@rice.edu"
+          placeholder="your-netid@rice.edu"
           required
           className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow"
         />
+        <p className="text-xs text-slate-400 -mt-1">Early access for Rice University students</p>
         <input
           type="password"
           value={password}
