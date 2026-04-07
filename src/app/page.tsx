@@ -6,7 +6,7 @@ import { AuthForm } from "@/components/AuthForm";
 import { useAppState } from "@/components/AppProvider";
 import { useRouter } from "next/navigation";
 import { INDUSTRIES } from "@/shared/constants";
-import { saveProfile } from "@/hooks/useApi";
+import { saveProfile, findCompanies } from "@/hooks/useApi";
 import type { UserProfile } from "@/shared/types";
 
 const FUNNEL_STEPS = [
@@ -19,7 +19,7 @@ const FUNNEL_STEPS = [
 ];
 
 export default function HomePage() {
-  const { session, authLoading, profile, setProfile, isProfileShared, setIsProfileShared } = useAppState();
+  const { session, authLoading, profile, setProfile, setAllCompanies, isProfileShared, setIsProfileShared } = useAppState();
   const router = useRouter();
 
   if (authLoading) {
@@ -85,7 +85,17 @@ export default function HomePage() {
             email={linkedInEmail ?? ""}
             isProfileShared={isProfileShared}
             setIsProfileShared={setIsProfileShared}
-            onComplete={(p) => { setProfile(p); router.push("/companies"); }}
+            onComplete={async (p) => {
+              setProfile(p);
+              const res = await findCompanies({
+                industries: p.targetIndustries,
+                university: p.university,
+                skills: p.skills,
+                roles: p.targetRoles,
+              });
+              setAllCompanies(res.companies);
+              router.push("/companies");
+            }}
           />
         ) : (
           <div className="space-y-4">
@@ -138,7 +148,7 @@ function LinkedInProfileSetup({
   email: string;
   isProfileShared: boolean;
   setIsProfileShared: (v: boolean) => void;
-  onComplete: (profile: UserProfile) => void;
+  onComplete: (profile: UserProfile) => Promise<void>;
 }) {
   const [major, setMajor] = useState("");
   const [gradYear, setGradYear] = useState("2027");
@@ -252,7 +262,12 @@ function LinkedInProfileSetup({
 
           <button type="submit" disabled={saving}
             className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-            {saving ? "Setting up..." : "Find My Alumni Connections"}
+            {saving ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Finding your alumni connections...
+              </span>
+            ) : "Find My Alumni Connections"}
           </button>
         </form>
 
