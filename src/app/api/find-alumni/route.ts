@@ -6,6 +6,7 @@ import {
   generateWarmPaths,
 } from "@/services/alumni-engine";
 import { generateColdOutreach } from "@/services/cold-outreach";
+import { getUser } from "@/lib/auth";
 
 interface CompanyData {
   id: string;
@@ -19,6 +20,11 @@ const responseCache = new Map<string, FindAlumniResponse>();
 
 export async function POST(request: Request) {
   try {
+    const auth = await getUser(request);
+    if (!auth) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const body = (await request.json()) as FindAlumniRequest;
 
     if (!body.companyId || !body.university || !body.userMajor || !body.userGradYear) {

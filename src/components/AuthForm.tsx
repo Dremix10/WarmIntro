@@ -120,6 +120,11 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
           </>
         )}
       </p>
+
+      <p className="text-center text-[10px] text-slate-400 mt-2">
+        By signing up you agree to our{" "}
+        <a href="/privacy" className="text-slate-500 hover:underline">Privacy Policy</a>.
+      </p>
     </div>
   );
 }

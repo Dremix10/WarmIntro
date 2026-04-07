@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { askClaudeJSON } from "@/services/claude";
+import { getUser } from "@/lib/auth";
 
 interface SummarizeRequest {
   transcript: string;
@@ -17,6 +18,11 @@ interface SummarizeResponse {
 
 export async function POST(request: Request) {
   try {
+    const auth = await getUser(request);
+    if (!auth) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const body = (await request.json()) as SummarizeRequest;
 
     if (!body.transcript || !body.alumniName || !body.companyName) {

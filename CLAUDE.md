@@ -96,9 +96,16 @@ No database. Seed data in `src/data/` as JSON files: `alumni.json` (Rice alumni)
 - **Funnel stage** — one of: Outreach → Coffee Chat → Referral → Interview → Offer
 - **XP** — experience points: outreach_sent (10), reply_received (25), coffee_booked (50), referral_earned (100)
 
-## Current limitations (MVP)
+## Security
 
-- All state is in-memory — resets on server restart
-- No authentication or user identity
-- No rate limiting on API routes
-- Module-level state in `update-funnel/route.ts` is shared across all users in the same process
+- **Auth:** Supabase Auth (email + LinkedIn OAuth). All Claude-calling API routes require authentication via Bearer token.
+- **Rate limiting:** Middleware at `src/middleware.ts` — per-IP sliding window. AI routes: 10 req/min, auth routes: 5 req/min, others: 30 req/min.
+- **Headers:** CSP, HSTS, X-Frame-Options, Permissions-Policy configured in `next.config.ts`.
+- **RLS:** All Supabase tables have row-level security — users can only access their own data.
+- **OAuth callback:** `src/app/auth/callback/route.ts` handles Supabase OAuth redirects.
+
+## Current limitations
+
+- In-memory rate limiting is per-serverless-instance (not globally shared). Upgrade to Upstash Redis if abuse is observed.
+- Unauthenticated fallback still exists in `update-funnel/route.ts` for the transition period.
+- `find-companies` route is intentionally unauthenticated (no Claude call, used before profile setup).

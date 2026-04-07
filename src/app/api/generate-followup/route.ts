@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { UserProfile, Alumni, Company } from "@/shared/types";
 import { generateFollowUp } from "@/services/outreach-writer";
+import { getUser } from "@/lib/auth";
 
 interface FollowUpRequest {
   userProfile: UserProfile;
@@ -11,6 +12,11 @@ interface FollowUpRequest {
 
 export async function POST(request: Request) {
   try {
+    const auth = await getUser(request);
+    if (!auth) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const body = (await request.json()) as FollowUpRequest;
 
     if (!body.userProfile || !body.alumni || !body.company || !body.originalBody) {

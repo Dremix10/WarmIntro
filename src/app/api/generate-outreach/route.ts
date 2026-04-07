@@ -4,9 +4,15 @@ import type {
   GenerateOutreachResponse,
 } from "@/shared/types";
 import { generateOutreach } from "@/services/outreach-writer";
+import { getUser } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
+    const auth = await getUser(request);
+    if (!auth) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const body = (await request.json()) as GenerateOutreachRequest;
 
     if (!body.userProfile || !body.alumni || !body.company || !body.tone) {
