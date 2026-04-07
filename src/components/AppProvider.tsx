@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import type {
   UserProfile,
@@ -8,6 +8,8 @@ import type {
   FunnelState,
   GameState,
 } from "@/shared/types";
+import { supabase } from "@/lib/supabase-browser";
+import type { Session } from "@supabase/supabase-js";
 
 // Leaderboard types (not in shared/types.ts since it's frozen)
 export interface LeaderboardMember {
@@ -42,6 +44,8 @@ export interface TrackedConnection {
 }
 
 interface AppState {
+  session: Session | null;
+  authLoading: boolean;
   profile: UserProfile | null;
   selectedCompanies: Company[];
   allCompanies: Company[];
@@ -54,6 +58,7 @@ interface AppState {
   alumniStages: Record<string, string>;
   connections: Record<string, TrackedConnection>;
   connectionNotes: Record<string, { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }>;
+  signOut: () => Promise<void>;
   setProfile: (profile: UserProfile) => void;
   setSelectedCompanies: (companies: Company[]) => void;
   setAllCompanies: (companies: Company[]) => void;
@@ -74,9 +79,24 @@ interface AppState {
 const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [profile, setProfileState] = useState<UserProfile | null>(null);
   const [selectedCompanies, setSelectedCompaniesState] = useState<Company[]>([]);
   const [allCompanies, setAllCompaniesState] = useState<Company[]>([]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   const [funnel, setFunnelState] = useState<FunnelState | null>(null);
   const [gameState, setGameStateState] = useState<GameState | null>(null);
   const [leaderboard, setLeaderboardState] = useState<Leaderboard | null>(null);
@@ -87,6 +107,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [connections, setConnectionsState] = useState<Record<string, TrackedConnection>>({});
   const [connectionNotes, setConnectionNotesState] = useState<Record<string, { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }>>({});
 
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setProfileState(null);
+  }, []);
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
   const setAllCompanies = useCallback((c: Company[]) => setAllCompaniesState(c), []);
@@ -106,6 +131,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
+        session,
+        authLoading,
         profile,
         selectedCompanies,
         allCompanies,
@@ -118,6 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         alumniStages,
         connections,
         connectionNotes,
+        signOut,
         setProfile,
         setSelectedCompanies,
         setAllCompanies,

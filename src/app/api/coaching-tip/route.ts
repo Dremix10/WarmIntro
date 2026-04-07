@@ -21,6 +21,13 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CoachingTipRequest;
 
+    if (!body.stage || !body.alumniName || !body.alumniRole || !body.companyName) {
+      return NextResponse.json(
+        { error: "stage, alumniName, alumniRole, and companyName are required" },
+        { status: 400 }
+      );
+    }
+
     const cacheKey = `${body.stage}::${body.companyName}::${body.alumniRole}`;
     if (tipCache.has(cacheKey)) {
       return NextResponse.json(tipCache.get(cacheKey)!);

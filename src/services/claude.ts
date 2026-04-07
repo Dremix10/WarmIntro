@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 const client = new Anthropic();
 const MODEL = "claude-sonnet-4-20250514";
 
+const MAX_CACHE_SIZE = 200;
 const cache = new Map<string, string>();
 
 function hashKey(prompt: string, systemPrompt?: string): string {
@@ -42,6 +43,10 @@ export async function askClaude(
     .map((block) => block.text)
     .join("");
 
+  if (cache.size >= MAX_CACHE_SIZE) {
+    const oldest = cache.keys().next().value;
+    if (oldest !== undefined) cache.delete(oldest);
+  }
   cache.set(key, text);
   return text;
 }

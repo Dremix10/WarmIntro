@@ -19,6 +19,13 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as SummarizeRequest;
 
+    if (!body.transcript || !body.alumniName || !body.companyName) {
+      return NextResponse.json(
+        { error: "transcript, alumniName, and companyName are required" },
+        { status: 400 }
+      );
+    }
+
     const prompt = `Summarize this coffee chat / networking conversation between a college student and ${body.alumniName} (${body.alumniRole} at ${body.companyName}).
 
 TRANSCRIPT/NOTES:

@@ -16,9 +16,15 @@ interface LinkedInProfile {
 
 const profileCache = new Map<string, LinkedInProfile | null>();
 
+let serperKeyWarned = false;
+
 async function searchSerper(query: string, num: number = 3): Promise<SerperResult[]> {
   const apiKey = process.env.SERPER_API_KEY;
   if (!apiKey) {
+    if (!serperKeyWarned) {
+      console.warn("[linkedin-search] SERPER_API_KEY not set — LinkedIn lookups disabled");
+      serperKeyWarned = true;
+    }
     return [];
   }
 
@@ -89,12 +95,17 @@ export async function findLinkedInProfiles(
   return results;
 }
 
+const alumniCache = new Map<string, LinkedInProfile[]>();
+
 export async function findRealAlumni(
   company: string,
   university: string,
   count: number = 5
 ): Promise<LinkedInProfile[]> {
   const cacheKey = `real::${company}::${university}`;
+  if (alumniCache.has(cacheKey)) {
+    return alumniCache.get(cacheKey)!.slice(0, count);
+  }
 
   const query = `site:linkedin.com/in "${company}" "${university}"`;
   const results = await searchSerper(query, count + 2);
@@ -116,6 +127,7 @@ export async function findRealAlumni(
     if (profiles.length >= count) break;
   }
 
+  alumniCache.set(cacheKey, profiles);
   return profiles;
 }
 

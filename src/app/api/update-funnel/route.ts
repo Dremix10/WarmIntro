@@ -7,9 +7,10 @@ import type {
   Badge,
 } from "@/shared/types";
 import { FUNNEL_STAGES, LEVELS, XP_VALUES, BADGES } from "@/shared/constants";
+import { getUser } from "@/lib/auth";
 
-const funnelState: FunnelState = {
-  stages: FUNNEL_STAGES.map((s, i) => ({
+function createInitialStages() {
+  return FUNNEL_STAGES.map((s, i) => ({
     id: `stage-${i + 1}`,
     name: s.name,
     targetCount: s.targetMultiplier,
@@ -17,77 +18,43 @@ const funnelState: FunnelState = {
     conversionRate: s.conversionRate,
     color: s.color,
     icon: s.icon,
-  })),
-  totalOutreachNeeded: 100,
-  totalOutreachDone: 0,
-  estimatedOffers: 1,
-  weekNumber: 1,
-};
+  }));
+}
 
-const gameState: GameState = {
-  xp: 0,
-  level: 1,
-  levelName: LEVELS[0].name,
-  streak: 0,
-  badges: BADGES.map((b) => ({
+function createInitialBadges() {
+  return BADGES.map((b) => ({
     id: b.id,
     name: b.name,
     icon: b.icon,
     earned: false,
-  })),
-  recentActions: [],
-};
-
-// Track sent alumni to prevent double-counting
-const sentAlumniIds = new Set<string>();
-
-function updateLevel(state: GameState): void {
-  for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (state.xp >= LEVELS[i].minXP) {
-      state.level = LEVELS[i].level;
-      state.levelName = LEVELS[i].name;
-      break;
-    }
-  }
+  }));
 }
 
-function checkBadges(state: GameState, funnel: FunnelState): Badge[] {
+function updateLevel(xp: number): { level: number; levelName: string } {
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= LEVELS[i].minXP) {
+      return { level: LEVELS[i].level, levelName: LEVELS[i].name };
+    }
+  }
+  return { level: 1, levelName: LEVELS[0].name };
+}
+
+function checkBadges(badges: Badge[], stages: FunnelState["stages"], streak: number): Badge[] {
   const newBadges: Badge[] = [];
   const now = new Date().toISOString();
 
   const checks: { id: string; condition: boolean }[] = [
-    {
-      id: "first_outreach",
-      condition: funnel.stages[0].currentCount >= 1,
-    },
-    {
-      id: "ten_sent",
-      condition: funnel.stages[0].currentCount >= 10,
-    },
-    {
-      id: "first_reply",
-      condition: funnel.stages[1].currentCount >= 1,
-    },
-    {
-      id: "five_coffees",
-      condition: funnel.stages[1].currentCount >= 5,
-    },
-    {
-      id: "first_referral",
-      condition: funnel.stages[2].currentCount >= 1,
-    },
-    {
-      id: "streak_7",
-      condition: state.streak >= 7,
-    },
-    {
-      id: "offer_secured",
-      condition: funnel.stages[4].currentCount >= 1,
-    },
+    { id: "first_outreach", condition: stages[0].currentCount >= 1 },
+    { id: "ten_sent", condition: stages[0].currentCount >= 10 },
+    { id: "first_reply", condition: stages[1].currentCount >= 1 },
+    { id: "five_coffees", condition: stages[1].currentCount >= 5 },
+    { id: "first_referral", condition: stages[2].currentCount >= 1 },
+    { id: "streak_7", condition: streak >= 7 },
+    { id: "offer_secured", condition: stages[4].currentCount >= 1 },
   ];
 
   for (const check of checks) {
-    const badge = state.badges.find((b) => b.id === check.id);
+    const badge = badges.find((b) => b.id === check.id);
     if (badge && !badge.earned && check.condition) {
       badge.earned = true;
       badge.earnedAt = now;
@@ -98,78 +65,210 @@ function checkBadges(state: GameState, funnel: FunnelState): Badge[] {
   return newBadges;
 }
 
+// In-memory fallback for unauthenticated users (transition period)
+const memoryState: {
+  stages: FunnelState["stages"];
+  totalOutreachDone: number;
+  xp: number;
+  level: number;
+  levelName: string;
+  streak: number;
+  badges: Badge[];
+  recentActions: GameState["recentActions"];
+  sentAlumniIds: Set<string>;
+} = {
+  stages: createInitialStages(),
+  totalOutreachDone: 0,
+  xp: 0,
+  level: 1,
+  levelName: LEVELS[0].name,
+  streak: 0,
+  badges: createInitialBadges(),
+  recentActions: [],
+  sentAlumniIds: new Set<string>(),
+};
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as UpdateFunnelRequest;
 
-    if (!body.action || !body.companyId) {
-      return NextResponse.json(
-        { error: "action and companyId are required" },
-        { status: 400 }
-      );
+    if (!body.action || !body.companyId || typeof body.action !== "string" || typeof body.companyId !== "string") {
+      return NextResponse.json({ error: "action and companyId are required" }, { status: 400 });
     }
 
-    // Dedup: if this alumni was already marked sent, return current state without double-counting
-    if (body.action === "outreach_sent" && body.alumniId && sentAlumniIds.has(body.alumniId)) {
-      const response: UpdateFunnelResponse = {
-        funnel: { ...funnelState },
-        gameState: { ...gameState },
-        xpGained: 0,
-        newBadges: [],
-      };
-      return NextResponse.json(response);
+    const auth = await getUser(request);
+
+    if (auth) {
+      return handleAuthed(auth, body);
     }
 
-    if (body.action === "outreach_sent" && body.alumniId) {
-      sentAlumniIds.add(body.alumniId);
-    }
-
-    const xpGained = XP_VALUES[body.action];
-
-    switch (body.action) {
-      case "outreach_sent":
-        funnelState.stages[0].currentCount += 1;
-        funnelState.totalOutreachDone += 1;
-        gameState.streak += 1;
-        break;
-      case "reply_received":
-        // XP only — reply is a signal, not a funnel stage
-        break;
-      case "coffee_booked":
-        funnelState.stages[1].currentCount += 1;
-        break;
-      case "referral_earned":
-        funnelState.stages[2].currentCount += 1;
-        break;
-    }
-
-    gameState.xp += xpGained;
-    updateLevel(gameState);
-
-    gameState.recentActions.unshift({
-      type: body.action,
-      xpGained,
-      description: `${body.action.replace(/_/g, " ")} for ${body.companyId}`,
-      timestamp: new Date().toISOString(),
-    });
-
-    if (gameState.recentActions.length > 20) {
-      gameState.recentActions = gameState.recentActions.slice(0, 20);
-    }
-
-    const newBadges = checkBadges(gameState, funnelState);
-
-    const response: UpdateFunnelResponse = {
-      funnel: { ...funnelState },
-      gameState: { ...gameState },
-      xpGained,
-      newBadges,
-    };
-
-    return NextResponse.json(response);
+    return handleUnauthed(body);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to update funnel";
+    const message = error instanceof Error ? error.message : "Failed to update funnel";
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+async function handleAuthed(
+  auth: NonNullable<Awaited<ReturnType<typeof getUser>>>,
+  body: UpdateFunnelRequest
+): Promise<NextResponse> {
+  const { supabase, user } = auth;
+
+  // Load or create funnel state
+  const { data: existing } = await supabase
+    .from("funnel_states")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  const stages = (existing?.stages as FunnelState["stages"] | null) ?? createInitialStages();
+  const badges = (existing?.badges as Badge[] | null) ?? createInitialBadges();
+  let xp = existing?.xp ?? 0;
+  let streak = existing?.streak ?? 0;
+  let totalOutreachDone = existing?.total_outreach_done ?? 0;
+  const recentActions = (existing?.recent_actions as GameState["recentActions"] | null) ?? [];
+
+  // Dedup via connections table
+  if (body.action === "outreach_sent" && body.alumniId) {
+    const { data: existingConn } = await supabase
+      .from("connections")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("alumni_id", body.alumniId)
+      .single();
+
+    if (existingConn) {
+      return NextResponse.json(buildResponse(stages, xp, streak, badges, recentActions, totalOutreachDone, 0, []));
+    }
+  }
+
+  const xpGained = XP_VALUES[body.action];
+
+  switch (body.action) {
+    case "outreach_sent":
+      stages[0].currentCount += 1;
+      totalOutreachDone += 1;
+      streak += 1;
+      break;
+    case "reply_received":
+      break;
+    case "coffee_booked":
+      stages[1].currentCount += 1;
+      break;
+    case "referral_earned":
+      stages[2].currentCount += 1;
+      break;
+  }
+
+  xp += xpGained;
+  const { level, levelName } = updateLevel(xp);
+
+  recentActions.unshift({
+    type: body.action,
+    xpGained,
+    description: `${body.action.replace(/_/g, " ")} for ${body.companyId}`,
+    timestamp: new Date().toISOString(),
+  });
+  if (recentActions.length > 20) recentActions.splice(20);
+
+  const newBadges = checkBadges(badges, stages, streak);
+
+  // Upsert to Supabase
+  await supabase.from("funnel_states").upsert({
+    user_id: user.id,
+    xp,
+    level,
+    level_name: levelName,
+    streak,
+    badges: JSON.parse(JSON.stringify(badges)),
+    recent_actions: JSON.parse(JSON.stringify(recentActions)),
+    stages: JSON.parse(JSON.stringify(stages)),
+    total_outreach_done: totalOutreachDone,
+  });
+
+  return NextResponse.json(buildResponse(stages, xp, streak, badges, recentActions, totalOutreachDone, xpGained, newBadges, level, levelName));
+}
+
+function handleUnauthed(body: UpdateFunnelRequest): NextResponse {
+  const s = memoryState;
+
+  if (body.action === "outreach_sent" && body.alumniId) {
+    if (s.sentAlumniIds.has(body.alumniId)) {
+      return NextResponse.json(buildResponse(s.stages, s.xp, s.streak, s.badges, s.recentActions, s.totalOutreachDone, 0, []));
+    }
+    s.sentAlumniIds.add(body.alumniId);
+  }
+
+  const xpGained = XP_VALUES[body.action];
+
+  switch (body.action) {
+    case "outreach_sent":
+      s.stages[0].currentCount += 1;
+      s.totalOutreachDone += 1;
+      s.streak += 1;
+      break;
+    case "reply_received":
+      break;
+    case "coffee_booked":
+      s.stages[1].currentCount += 1;
+      break;
+    case "referral_earned":
+      s.stages[2].currentCount += 1;
+      break;
+  }
+
+  s.xp += xpGained;
+  const { level, levelName } = updateLevel(s.xp);
+  s.level = level;
+  s.levelName = levelName;
+
+  s.recentActions.unshift({
+    type: body.action,
+    xpGained,
+    description: `${body.action.replace(/_/g, " ")} for ${body.companyId}`,
+    timestamp: new Date().toISOString(),
+  });
+  if (s.recentActions.length > 20) s.recentActions.splice(20);
+
+  const newBadges = checkBadges(s.badges, s.stages, s.streak);
+
+  return NextResponse.json(buildResponse(s.stages, s.xp, s.streak, s.badges, s.recentActions, s.totalOutreachDone, xpGained, newBadges));
+}
+
+function buildResponse(
+  stages: FunnelState["stages"],
+  xp: number,
+  streak: number,
+  badges: Badge[],
+  recentActions: GameState["recentActions"],
+  totalOutreachDone: number,
+  xpGained: number,
+  newBadges: Badge[],
+  level?: number,
+  levelName?: string,
+): UpdateFunnelResponse {
+  const resolved = level !== undefined
+    ? { level, levelName: levelName! }
+    : updateLevel(xp);
+
+  return {
+    funnel: {
+      stages: stages.map((s) => ({ ...s })),
+      totalOutreachNeeded: 100,
+      totalOutreachDone,
+      estimatedOffers: 1,
+      weekNumber: 1,
+    },
+    gameState: {
+      xp,
+      level: resolved.level,
+      levelName: resolved.levelName,
+      streak,
+      badges: badges.map((b) => ({ ...b })),
+      recentActions: [...recentActions],
+    },
+    xpGained,
+    newBadges,
+  };
 }

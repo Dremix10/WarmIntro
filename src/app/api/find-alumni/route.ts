@@ -4,8 +4,8 @@ import companiesData from "@/data/companies.json";
 import {
   findAlumniAtCompany,
   generateWarmPaths,
-  generateColdOutreach,
 } from "@/services/alumni-engine";
+import { generateColdOutreach } from "@/services/cold-outreach";
 
 interface CompanyData {
   id: string;
