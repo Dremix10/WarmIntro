@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Routes that call Claude API — expensive, tight limits
+// Routes that call Claude API — require auth + tight limits
 const AI_ROUTES = [
-  "/api/parse-resume",
   "/api/generate-outreach",
   "/api/find-alumni",
   "/api/coaching-tip",
@@ -12,12 +11,16 @@ const AI_ROUTES = [
   "/api/scrape-linkedin",
 ];
 
+// Routes that call Claude but allow guest access (no auth required)
+const GUEST_AI_ROUTES = ["/api/parse-resume"];
+
 // Auth routes — brute-force protection
 const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup"];
 
 // Rate limit tiers (requests per window)
 const RATE_LIMITS = {
   ai: { max: 10, windowMs: 60_000 },
+  guest_ai: { max: 3, windowMs: 60_000 },
   auth: { max: 5, windowMs: 60_000 },
   default: { max: 30, windowMs: 60_000 },
 };
@@ -37,6 +40,7 @@ function getClientIp(request: NextRequest): string {
 
 function getTier(pathname: string): keyof typeof RATE_LIMITS {
   if (AI_ROUTES.some((r) => pathname.startsWith(r))) return "ai";
+  if (GUEST_AI_ROUTES.some((r) => pathname.startsWith(r))) return "guest_ai";
   if (AUTH_ROUTES.some((r) => pathname.startsWith(r))) return "auth";
   return "default";
 }

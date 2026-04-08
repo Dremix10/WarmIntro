@@ -119,8 +119,13 @@ export function ResumeUpload() {
       });
       setProfile(res.profile);
       router.push("/profile");
-    } catch {
-      setError("Something went wrong parsing your resume. Please try again.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("Authentication")) {
+        setError("Rate limit reached for guests. Sign up with your Rice email for unlimited access.");
+      } else {
+        setError("Something went wrong parsing your resume. Try pasting the text instead, or sign up and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -174,7 +179,7 @@ export function ResumeUpload() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,application/pdf"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -201,9 +206,11 @@ export function ResumeUpload() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                   </svg>
                   <p className="text-sm font-medium text-slate-700">
-                    Drop your resume PDF here or <span className="text-emerald-600">browse</span>
+                    <span className="hidden sm:inline">Drop your resume PDF here or </span>
+                    <span className="sm:hidden">Tap to </span>
+                    <span className="text-emerald-600">choose a PDF</span>
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">PDF up to 10MB</p>
+                  <p className="mt-1 text-xs text-slate-400">PDF up to 10MB — works with Files, Google Drive, iCloud</p>
                 </>
               )}
             </div>
@@ -288,7 +295,8 @@ export function ResumeUpload() {
       )}
 
       <p className="text-center text-xs text-slate-400">
-        Claude AI will parse your resume to find the best alumni connections
+        Claude AI will parse your resume to find the best alumni connections.
+        {mode === "pdf" && <><br /><span className="sm:hidden">On mobile? Try <button type="button" onClick={() => setMode("text")} className="text-emerald-600 font-medium">pasting text</button> instead.</span></>}
       </p>
     </div>
   );
