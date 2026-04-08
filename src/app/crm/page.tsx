@@ -70,8 +70,8 @@ export default function CRMPage() {
   if (!profile) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
-        <p className="text-lg font-medium text-slate-700">Not logged in</p>
-        <button type="button" onClick={() => router.push("/")} className="mt-3 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Start over</button>
+        <p className="text-lg font-medium text-slate-700">Set up your profile first</p>
+        <button type="button" onClick={() => router.push("/")} className="mt-3 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Go Home</button>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export default function CRMPage() {
       <div className="mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600">Step 6 of 7</p>
+          <p className="text-sm font-medium text-emerald-600">Connections</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Relationship CRM</h1>
           <p className="mt-1 text-sm text-slate-500">
             Track all your networking connections across companies. Log progress, upload notes, get AI coaching.

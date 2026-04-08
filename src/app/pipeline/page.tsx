@@ -61,10 +61,10 @@ export default function PipelinePage() {
           <p className="text-sm text-slate-400">Select companies first to build your pipeline.</p>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/profile")}
             className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
           >
-            Start over
+            Set Up Profile
           </button>
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function PipelinePage() {
       <div className="mx-auto max-w-3xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Step 4 of 6</p>
+          <p className="text-sm font-medium text-emerald-600 mb-1">Your Pipeline</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Your Pipeline
           </h1>

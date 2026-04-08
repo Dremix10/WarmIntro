@@ -107,8 +107,8 @@ export default function OutreachPage() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
           <p className="text-lg font-medium text-slate-700">Not logged in</p>
-          <p className="text-sm text-slate-400">Upload your resume first.</p>
-          <button type="button" onClick={() => router.push("/")} className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">Start over</button>
+          <p className="text-sm text-slate-400">Set up your profile to get started.</p>
+          <button type="button" onClick={() => router.push("/")} className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">Go Home</button>
         </div>
       </div>
     );
@@ -137,7 +137,7 @@ export default function OutreachPage() {
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-bold text-slate-600">{company.logoPlaceholder}</div>
             )}
             <div>
-              <p className="text-sm font-medium text-emerald-600">Step 5 of 6</p>
+              <p className="text-sm font-medium text-emerald-600">Outreach</p>
               <h1 className="text-3xl font-bold tracking-tight text-slate-900">{company?.name ?? "Company"} Outreach</h1>
             </div>
           </div>

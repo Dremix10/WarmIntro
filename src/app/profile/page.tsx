@@ -20,7 +20,7 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-slate-50 py-12">
         <div className="mx-auto max-w-2xl px-6">
           <div className="text-center mb-8">
-            <p className="text-sm font-medium text-emerald-600 mb-1">{session ? "Step 2 of 6" : "Guest Preview"}</p>
+            <p className="text-sm font-medium text-emerald-600 mb-1">{session ? "Your Profile" : "Guest Preview"}</p>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Upload Your Resume</h1>
             <p className="mt-1 text-sm text-slate-500">
               {session ? "We'll parse your skills and find alumni at top companies." : "Try WarmIntro — upload a resume to see how it works."}
@@ -77,7 +77,7 @@ export default function ProfilePage() {
       <div className="mx-auto max-w-2xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Step 2 of 6</p>
+          <p className="text-sm font-medium text-emerald-600 mb-1">Your Profile</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Your Profile
           </h1>

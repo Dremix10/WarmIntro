@@ -5,12 +5,12 @@ import { useAppState } from "@/components/AppProvider";
 
 const STEPS = [
   { path: "/", label: "Home", step: 0 },
-  { path: "/profile", label: "Profile", step: 2 },
-  { path: "/companies", label: "Companies", step: 3 },
-  { path: "/pipeline", label: "Pipeline", step: 4 },
-  { path: "/outreach", label: "Outreach", step: 5, noLink: true },
-  { path: "/crm", label: "CRM", step: 6 },
-  { path: "/leaderboard", label: "Board", step: 7 },
+  { path: "/profile", label: "Profile", step: 1 },
+  { path: "/companies", label: "Companies", step: 2 },
+  { path: "/pipeline", label: "Pipeline", step: 3 },
+  { path: "/outreach", label: "Outreach", step: 4, noLink: true },
+  { path: "/crm", label: "CRM", step: 5 },
+  { path: "/leaderboard", label: "Board", step: 6 },
 ];
 
 export function NavHeader() {
@@ -20,15 +20,15 @@ export function NavHeader() {
 
   const isOutreach = pathname.startsWith("/outreach");
   const currentStep = isOutreach
-    ? 5
+    ? 4
     : STEPS.find((s) => s.path === pathname)?.step ?? 0;
 
   if (pathname === "/") return null;
 
   const canNavigate = (step: number): boolean => {
     if (step === 0) return true;
-    if (step === 2) return !!profile;
-    if (step >= 3) return !!profile;
+    if (step === 1) return !!profile;
+    if (step >= 2) return !!profile;
     return false;
   };
 
@@ -75,6 +75,11 @@ export function NavHeader() {
             );
           })}
         </nav>
+
+        {/* Mobile step indicator */}
+        <span className="sm:hidden text-xs font-medium text-slate-400">
+          {currentStep > 0 ? `${currentStep}/6` : ""}
+        </span>
 
         {/* Right side: XP + logout */}
         <div className="flex items-center gap-2">

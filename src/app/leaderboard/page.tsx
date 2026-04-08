@@ -125,7 +125,7 @@ export default function LeaderboardPage() {
           )}
 
           <div className="mb-8">
-            <p className="text-sm font-medium text-emerald-600 mb-1">Step 6 of 6</p>
+            <p className="text-sm font-medium text-emerald-600 mb-1">Leaderboard</p>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">{leaderboard.name}</h1>
             <p className="mt-1 text-sm text-slate-500">
               {updatedMembers.length} {updatedMembers.length === 1 ? "member" : "members"} competing
@@ -193,7 +193,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-slate-50 py-12">
       <div className="mx-auto max-w-lg px-6">
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Step 6 of 6</p>
+          <p className="text-sm font-medium text-emerald-600 mb-1">Leaderboard</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Leaderboard</h1>
           <p className="mt-1 text-sm text-slate-500">Compete with friends and classmates. Join an existing leaderboard or create your own.</p>
         </div>

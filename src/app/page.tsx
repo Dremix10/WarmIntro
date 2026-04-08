@@ -27,7 +27,7 @@ export default function HomePage() {
   }
 
   if (session && profile) {
-    router.push("/companies");
+    router.push("/profile");
     return null;
   }
 

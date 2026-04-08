@@ -15,14 +15,14 @@ export default function CompaniesPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
         <div className="text-center space-y-3">
-          <p className="text-lg font-medium text-slate-700">No companies loaded</p>
-          <p className="text-sm text-slate-400">Complete the previous steps first.</p>
+          <p className="text-lg font-medium text-slate-700">Pick your industries first</p>
+          <p className="text-sm text-slate-400">Select your target industries to see matching companies.</p>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/profile")}
             className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
           >
-            Start over
+            Go to Profile
           </button>
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function CompaniesPage() {
       <div className="mx-auto max-w-3xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Step 3 of 6</p>
+          <p className="text-sm font-medium text-emerald-600 mb-1">Select Companies</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Pick Your Target Companies
           </h1>

@@ -10,8 +10,8 @@ import type {
 } from "@/shared/types";
 import { supabase } from "@/lib/supabase-browser";
 import type { Session } from "@supabase/supabase-js";
+import { loadProfile } from "@/hooks/useApi";
 
-// Leaderboard types (not in shared/types.ts since it's frozen)
 export interface LeaderboardMember {
   id: string;
   name: string;
@@ -84,19 +84,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile | null>(null);
   const [selectedCompanies, setSelectedCompaniesState] = useState<Company[]>([]);
   const [allCompanies, setAllCompaniesState] = useState<Company[]>([]);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setAuthLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
   const [funnel, setFunnelState] = useState<FunnelState | null>(null);
   const [gameState, setGameStateState] = useState<GameState | null>(null);
   const [leaderboard, setLeaderboardState] = useState<Leaderboard | null>(null);
@@ -107,11 +94,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [connections, setConnectionsState] = useState<Record<string, TrackedConnection>>({});
   const [connectionNotes, setConnectionNotesState] = useState<Record<string, { summary: string; keyTakeaways: string[]; followUpActions: string[]; sentiment: string }>>({});
 
+  // Auth + profile hydration on mount and auth state changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s) {
+        hydrateProfile();
+      } else {
+        setAuthLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s && !profile) {
+        hydrateProfile();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function hydrateProfile() {
+    try {
+      const data = await loadProfile();
+      if (data.profile) {
+        setProfileState(data.profile);
+      }
+    } catch {
+      // Profile not found — that's ok, user hasn't set one up yet
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setSession(null);
     setProfileState(null);
+    setSelectedCompaniesState([]);
+    setAllCompaniesState([]);
+    setFunnelState(null);
+    setGameStateState(null);
+    setLeaderboardState(null);
+    setSentOutreach([]);
   }, []);
+
   const setProfile = useCallback((p: UserProfile) => setProfileState(p), []);
   const setSelectedCompanies = useCallback((c: Company[]) => setSelectedCompaniesState(c), []);
   const setAllCompanies = useCallback((c: Company[]) => setAllCompaniesState(c), []);
@@ -129,40 +157,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getSentCount = useCallback((companyId: string) => sentOutreach.filter((s) => s.companyId === companyId).length, [sentOutreach]);
 
   return (
-    <AppContext.Provider
-      value={{
-        session,
-        authLoading,
-        profile,
-        selectedCompanies,
-        allCompanies,
-        funnel,
-        gameState,
-        leaderboard,
-        isProfileShared,
-        sentOutreach,
-        companyAlumniCount,
-        alumniStages,
-        connections,
-        connectionNotes,
-        signOut,
-        setProfile,
-        setSelectedCompanies,
-        setAllCompanies,
-        setFunnel,
-        setGameState,
-        setLeaderboard,
-        setIsProfileShared,
-        addSentOutreach,
-        setCompanyAlumniCount,
-        setAlumniStage,
-        getAlumniStage,
-        addConnection,
-        setConnectionNote,
-        isSent,
-        getSentCount,
-      }}
-    >
+    <AppContext.Provider value={{
+      session, authLoading, profile, selectedCompanies, allCompanies, funnel, gameState,
+      leaderboard, isProfileShared, sentOutreach, companyAlumniCount, alumniStages,
+      connections, connectionNotes, signOut, setProfile, setSelectedCompanies, setAllCompanies,
+      setFunnel, setGameState, setLeaderboard, setIsProfileShared, addSentOutreach,
+      setCompanyAlumniCount, setAlumniStage, getAlumniStage, addConnection, setConnectionNote,
+      isSent, getSentCount,
+    }}>
       {children}
     </AppContext.Provider>
   );
@@ -170,8 +172,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useAppState(): AppState {
   const ctx = useContext(AppContext);
-  if (!ctx) {
-    throw new Error("useAppState must be used within AppProvider");
-  }
+  if (!ctx) throw new Error("useAppState must be used within AppProvider");
   return ctx;
 }
