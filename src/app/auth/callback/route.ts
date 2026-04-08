@@ -17,5 +17,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/?error=auth_failed", url.origin));
   }
 
-  return NextResponse.redirect(new URL("/profile", url.origin));
+  // Redirect to home — the landing page detects the session and handles
+  // LinkedIn auto-scrape or shows the appropriate next step
+  return NextResponse.redirect(new URL("/", url.origin));
 }

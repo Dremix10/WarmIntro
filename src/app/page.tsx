@@ -71,12 +71,18 @@ export default function HomePage() {
         </div>
 
         {!session ? (
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-            <h2 className="text-lg font-semibold text-slate-900 text-center mb-1">Get started</h2>
-            <p className="text-sm text-slate-500 text-center mb-5">
-              Sign up to find alumni connections at top companies.
-            </p>
-            <AuthForm onSuccess={() => {}} />
+          <div className="space-y-3">
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
+              <h2 className="text-lg font-semibold text-slate-900 text-center mb-1">Get started</h2>
+              <p className="text-sm text-slate-500 text-center mb-5">
+                Sign up to find alumni connections at top companies.
+              </p>
+              <AuthForm onSuccess={() => {}} />
+            </div>
+            <button type="button" onClick={() => router.push("/profile")}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors">
+              Try as guest — upload a resume to preview
+            </button>
           </div>
         ) : isLinkedIn && !profile ? (
           <LinkedInAutoSetup

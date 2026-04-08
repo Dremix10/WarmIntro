@@ -4,29 +4,36 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { ProfileCard } from "@/components/ProfileCard";
+import { ResumeUpload } from "@/components/ResumeUpload";
 import { findCompanies } from "@/hooks/useApi";
 import { INDUSTRIES } from "@/shared/constants";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, setAllCompanies } = useAppState();
+  const { session, profile, setAllCompanies } = useAppState();
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
-        <div className="text-center space-y-3">
-          <p className="text-lg font-medium text-slate-700">No profile found</p>
-          <p className="text-sm text-slate-400">Upload your resume first to get started.</p>
-          <button
-            type="button"
-            onClick={() => router.push("/")}
-            className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
-          >
-            Go back
-          </button>
+      <div className="min-h-screen bg-slate-50 py-12">
+        <div className="mx-auto max-w-2xl px-6">
+          <div className="text-center mb-8">
+            <p className="text-sm font-medium text-emerald-600 mb-1">{session ? "Step 2 of 6" : "Guest Preview"}</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Upload Your Resume</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {session ? "We'll parse your skills and find alumni at top companies." : "Try WarmIntro — upload a resume to see how it works."}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
+            <ResumeUpload />
+          </div>
+          {!session && (
+            <p className="text-center text-xs text-slate-400 mt-4">
+              <a href="/" className="text-emerald-600 font-medium hover:underline">Sign up</a> to save your progress and access all features.
+            </p>
+          )}
         </div>
       </div>
     );
