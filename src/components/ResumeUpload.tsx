@@ -4,6 +4,7 @@ import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { parseResume } from "@/hooks/useApi";
 import { useAppState } from "@/components/AppProvider";
+import { GoogleDrivePicker } from "@/components/GoogleDrivePicker";
 
 const SAMPLE_RESUME = `Alex Rivera
 Rice University — Mechanical Engineering, Class of 2027
@@ -182,15 +183,35 @@ export function ResumeUpload() {
         </>
       )}
 
-      {/* Google Drive — coming soon */}
+      {/* Google Drive picker */}
       {mode === "gdrive" && !hasResume && (
-        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-10">
-          <svg className="h-10 w-10 text-slate-300 mb-3" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm.58 1h8.42l5.5 10h-4.2l-4.3-7.28-.71-1.2-.71 1.2L7.99 14.5H3.79l5.5-10zM12 10.7l3.27 5.55H8.73L12 10.7zM7.49 15.5h3.7l-1.85 3.13L7.49 15.5zm5.32 0h3.7l-1.85 3.13-1.85-3.13z" />
-          </svg>
-          <p className="text-sm font-medium text-slate-500">Google Drive integration coming soon</p>
-          <p className="text-xs text-slate-400 mt-1">For now, download your resume from Drive and upload the PDF</p>
-        </div>
+        <GoogleDrivePicker
+          extracting={extracting}
+          onFilePicked={async (fileId, name, accessToken) => {
+            setExtracting(true);
+            setError(null);
+            setFileName(name);
+            try {
+              // Download the file from Google Drive using the OAuth token
+              const dlRes = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+              );
+              if (!dlRes.ok) throw new Error("Could not download file from Drive");
+              const blob = await dlRes.blob();
+              const file = new File([blob], name, { type: "application/pdf" });
+
+              // Send to our server for text extraction
+              const text = await extractPdfServerSide(file);
+              setResumeText(text);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Failed to import from Google Drive");
+              setFileName(null);
+            } finally {
+              setExtracting(false);
+            }
+          }}
+        />
       )}
 
       {/* Text paste */}

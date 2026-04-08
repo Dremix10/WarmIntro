@@ -1,146 +1,108 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-
-declare global {
-  interface Window {
-    google?: {
-      picker: {
-        PickerBuilder: new () => PickerBuilder;
-        ViewId: { DOCS: string };
-        Action: { PICKED: string; CANCEL: string };
-        Feature: { MULTISELECT_ENABLED: string };
-      };
-    };
-    gapi?: {
-      load: (api: string, callback: () => void) => void;
-      client: {
-        init: (config: { apiKey: string; discoveryDocs: string[] }) => Promise<void>;
-        getToken: () => { access_token: string } | null;
-      };
-      auth2?: {
-        getAuthInstance: () => {
-          signIn: (options: { scope: string }) => Promise<void>;
-          isSignedIn: { get: () => boolean };
-          currentUser: { get: () => { getAuthResponse: () => { access_token: string } } };
-        };
-      };
-    };
-  }
-
-  interface PickerBuilder {
-    setOAuthToken: (token: string) => PickerBuilder;
-    setDeveloperKey: (key: string) => PickerBuilder;
-    addView: (view: unknown) => PickerBuilder;
-    setCallback: (callback: (data: PickerResponse) => void) => PickerBuilder;
-    build: () => { setVisible: (visible: boolean) => void };
-  }
-
-  interface PickerResponse {
-    action: string;
-    docs?: Array<{
-      id: string;
-      name: string;
-      mimeType: string;
-      url: string;
-    }>;
-  }
-}
+import { useState, useEffect, useRef } from "react";
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? "";
+const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
-    const script = document.createElement("script");
-    script.src = src;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Failed to load ${src}`));
-    document.head.appendChild(script);
+    const s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(s);
   });
 }
 
 export function GoogleDrivePicker({
-  onFileSelected,
+  onFilePicked,
+  extracting,
 }: {
-  onFileSelected: (file: { id: string; name: string; accessToken: string }) => void;
+  onFilePicked: (fileId: string, fileName: string, accessToken: string) => void;
+  extracting: boolean;
 }) {
   const [loading, setLoading] = useState(false);
-  const [scriptsReady, setScriptsReady] = useState(false);
+  const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    async function loadAPIs() {
+    if (!API_KEY || !CLIENT_ID) return;
+
+    async function init() {
       try {
-        await Promise.all([
-          loadScript("https://apis.google.com/js/api.js"),
-          loadScript("https://accounts.google.com/gsi/client"),
-        ]);
-        setScriptsReady(true);
+        await loadScript("https://apis.google.com/js/api.js");
+        await loadScript("https://accounts.google.com/gsi/client");
+        await new Promise<void>((resolve) => window.gapi!.load("picker", resolve));
+        setReady(true);
       } catch {
         setError("Failed to load Google APIs");
       }
     }
-    loadAPIs();
+    init();
   }, []);
 
-  const openPicker = useCallback(async () => {
-    if (!scriptsReady || !window.google || !API_KEY) return;
+  const handleClick = () => {
+    if (!ready) return;
     setLoading(true);
     setError(null);
 
-    try {
-      // Get an OAuth token via Google Identity Services
-      const tokenClient = (window as unknown as {
-        google: {
-          accounts: {
-            oauth2: {
-              initTokenClient: (config: {
-                client_id: string;
-                scope: string;
-                callback: (response: { access_token?: string; error?: string }) => void;
-              }) => { requestAccessToken: () => void };
-            };
-          };
-        };
-      }).google.accounts.oauth2.initTokenClient({
-        client_id: "", // Not needed for Picker with API key only
-        scope: "https://www.googleapis.com/auth/drive.readonly",
-        callback: () => {},
-      });
+    // Request OAuth token via Google Identity Services
+    const tokenClient = window.google!.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: (response: { access_token?: string; error?: string }) => {
+        if (response.error || !response.access_token) {
+          setError("Google sign-in was cancelled or failed.");
+          setLoading(false);
+          return;
+        }
+        tokenRef.current = response.access_token;
+        openPicker(response.access_token);
+      },
+    });
 
-      // For Picker API with just an API key (no OAuth), we use a simpler approach
-      await new Promise<void>((resolve) => {
-        window.gapi!.load("picker", resolve);
-      });
+    tokenClient.requestAccessToken();
+  };
 
-      const view = new window.google!.picker.PickerBuilder()
-        .setDeveloperKey(API_KEY)
-        .addView(window.google!.picker.ViewId.DOCS)
-        .setCallback((data: PickerResponse) => {
-          if (data.action === window.google!.picker.Action.PICKED && data.docs?.[0]) {
-            const doc = data.docs[0];
-            onFileSelected({ id: doc.id, name: doc.name, accessToken: "" });
-          }
-        })
-        .build();
+  const openPicker = (accessToken: string) => {
+    const view = new window.google!.picker.PickerBuilder()
+      .setDeveloperKey(API_KEY)
+      .setOAuthToken(accessToken)
+      .addView(
+        new window.google!.picker.DocsView()
+          .setMimeTypes("application/pdf")
+          .setLabel("Your Resume PDFs")
+      )
+      .setCallback((data: { action: string; docs?: Array<{ id: string; name: string }> }) => {
+        if (data.action === "picked" && data.docs?.[0]) {
+          const doc = data.docs[0];
+          onFilePicked(doc.id, doc.name, accessToken);
+        }
+        setLoading(false);
+      })
+      .setTitle("Select your resume")
+      .build();
 
-      view.setVisible(true);
-    } catch (err) {
-      setError("Could not open Google Drive. Try uploading the PDF directly.");
-    } finally {
-      setLoading(false);
-    }
-  }, [scriptsReady, onFileSelected]);
+    view.setVisible(true);
+  };
+
+  if (!API_KEY || !CLIENT_ID) return null;
 
   return (
     <div className="space-y-3">
-      <button type="button" onClick={openPicker} disabled={loading || !scriptsReady}
+      <button type="button" onClick={handleClick} disabled={loading || !ready || extracting}
         className="w-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100 px-4 py-10 cursor-pointer transition-colors disabled:opacity-50">
-        {loading ? (
+        {loading || extracting ? (
           <>
             <div className="h-8 w-8 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent mb-3" />
-            <p className="text-sm font-medium text-slate-700">Opening Google Drive...</p>
+            <p className="text-sm font-medium text-slate-700">
+              {extracting ? "Reading your resume..." : "Opening Google Drive..."}
+            </p>
           </>
         ) : (
           <>
@@ -153,7 +115,7 @@ export function GoogleDrivePicker({
               <path d="m73.4 26.5-10.1-17.5c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 23.8h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
             </svg>
             <p className="text-sm font-medium text-slate-700">Browse Google Drive</p>
-            <p className="mt-1 text-xs text-slate-400">Select your resume PDF from Drive</p>
+            <p className="mt-1 text-xs text-slate-400">Select your resume PDF directly from Drive</p>
           </>
         )}
       </button>
