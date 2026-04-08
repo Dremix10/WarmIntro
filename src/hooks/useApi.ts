@@ -33,17 +33,29 @@ function randomDelay(): Promise<void> {
 
 import { supabase } from "@/lib/supabase-browser";
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
+// Cache the access token in memory to avoid async getSession() on every API call.
+// The auth state listener in AppProvider keeps this in sync.
+let cachedAccessToken: string | null = null;
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedAccessToken = session?.access_token ?? null;
+});
+
+// Eagerly populate on module load
+supabase.auth.getSession().then(({ data: { session } }) => {
+  cachedAccessToken = session?.access_token ?? null;
+});
+
+function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    headers["Authorization"] = `Bearer ${session.access_token}`;
+  if (cachedAccessToken) {
+    headers["Authorization"] = `Bearer ${cachedAccessToken}`;
   }
   return headers;
 }
 
 async function apiFetch<T>(url: string, body: unknown, method = "POST"): Promise<T> {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(url, {
     method,
     headers,
@@ -57,7 +69,7 @@ async function apiFetch<T>(url: string, body: unknown, method = "POST"): Promise
 }
 
 async function apiGet<T>(url: string): Promise<T> {
-  const headers = await getAuthHeaders();
+  const headers = getAuthHeaders();
   const res = await fetch(url, { headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Request failed" }));

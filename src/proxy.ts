@@ -71,7 +71,7 @@ function checkRateLimit(ip: string, tier: keyof typeof RATE_LIMITS): { allowed: 
 
 const MAX_BODY_SIZE = 64 * 1024; // 64KB
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Reject oversized payloads
