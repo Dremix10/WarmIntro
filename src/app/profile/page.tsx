@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
+import { track } from "@/lib/track";
 import { ProfileCard } from "@/components/ProfileCard";
 import { ResumeUpload } from "@/components/ResumeUpload";
 import { findCompanies } from "@/hooks/useApi";
@@ -57,12 +58,14 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
+      track("industry_selected", { industries: selectedIndustries });
       const res = await findCompanies({
         industries: selectedIndustries,
         university: profile.university,
         skills: profile.skills,
         roles: profile.targetRoles,
       });
+      track("companies_loaded", { count: res.companies.length });
       setAllCompanies(res.companies);
       router.push("/companies");
     } catch {

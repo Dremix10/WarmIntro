@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
+import { track } from "@/lib/track";
 import { CompanyCard } from "@/components/CompanyCard";
 import type { Company } from "@/shared/types";
 
@@ -40,6 +41,7 @@ export default function CompaniesPage() {
 
   const handleContinue = () => {
     const selected: Company[] = allCompanies.filter((c) => picked.has(c.id));
+    track("companies_selected", { count: selected.length, ids: selected.map((c) => c.id) });
     setSelectedCompanies(selected);
     router.push("/pipeline");
   };

@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { ResumeUpload } from "@/components/ResumeUpload";
 import { AuthForm } from "@/components/AuthForm";
 import { useAppState } from "@/components/AppProvider";
 import { useRouter } from "next/navigation";
+import { track } from "@/lib/track";
 
 const FUNNEL_STEPS = [
   { n: "100", label: "Outreach", color: "text-emerald-600" },
@@ -25,6 +27,8 @@ export default function HomePage() {
       </div>
     );
   }
+
+  useEffect(() => { track("page_view", { page: "home" }); }, []);
 
   if (session && profile) {
     router.push("/profile");

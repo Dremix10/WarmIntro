@@ -4,6 +4,7 @@ import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { parseResume } from "@/hooks/useApi";
 import { useAppState } from "@/components/AppProvider";
+import { track } from "@/lib/track";
 
 const SAMPLE_RESUME = `Alex Rivera
 Rice University — Mechanical Engineering, Class of 2027
@@ -96,8 +97,10 @@ export function ResumeUpload() {
     setLoading(true);
 
     try {
+      track("resume_upload", { method: mode, chars: text.length });
       const res = await parseResume({ resumeText: text, university: "Rice University" });
       setProfile(res.profile);
+      track("resume_parsed", { skills: res.profile.skills.length });
       router.push("/profile");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";

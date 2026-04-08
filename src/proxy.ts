@@ -19,11 +19,18 @@ const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup"];
 
 // Rate limit tiers (requests per window)
 const RATE_LIMITS = {
-  ai: { max: 10, windowMs: 60_000 },
-  guest_ai: { max: 3, windowMs: 60_000 },
-  auth: { max: 5, windowMs: 60_000 },
-  default: { max: 30, windowMs: 60_000 },
+  ai: { max: 5, windowMs: 60_000 },
+  guest_ai: { max: 2, windowMs: 60_000 },
+  auth: { max: 3, windowMs: 60_000 },
+  default: { max: 20, windowMs: 60_000 },
+  global: { max: 60, windowMs: 60_000 },
 };
+
+// User-Agent substrings that indicate automated tooling (case-insensitive match)
+const BOT_UA_PATTERNS = ["curl", "wget", "python-requests", "httpie", "postmanruntime"];
+
+// Routes exempt from bot UA checks (e.g. file upload endpoints)
+const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf"];
 
 interface RateLimitEntry {
   count: number;
@@ -89,6 +96,34 @@ export function proxy(request: NextRequest) {
   if (Math.random() < 0.01 || rateLimitMap.size > 10000) cleanupStaleEntries();
 
   const ip = getClientIp(request);
+
+  // Global per-IP rate limit — applies before any tier-specific check
+  const globalCheck = checkRateLimit(ip, "global");
+  if (!globalCheck.allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(globalCheck.retryAfter) },
+      }
+    );
+  }
+
+  // Bot detection — block requests with missing or suspicious User-Agent
+  const userAgent = request.headers.get("user-agent");
+  const isExemptRoute = BOT_CHECK_EXEMPT_ROUTES.some((r) => pathname.startsWith(r));
+
+  if (!isExemptRoute) {
+    if (!userAgent) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const uaLower = userAgent.toLowerCase();
+    if (BOT_UA_PATTERNS.some((pattern) => uaLower.includes(pattern))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const tier = getTier(pathname);
 
   // Auth gating: AI routes require an Authorization header

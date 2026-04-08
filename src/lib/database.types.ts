@@ -3,6 +3,36 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      events: {
+        Row: {
+          id: string;
+          event: string;
+          ip: string | null;
+          user_agent: string | null;
+          headers: Json;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event: string;
+          ip?: string | null;
+          user_agent?: string | null;
+          headers?: Json;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event?: string;
+          ip?: string | null;
+          user_agent?: string | null;
+          headers?: Json;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
+import { track } from "@/lib/track";
 
 export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
   const [mode, setMode] = useState<"signin" | "signup">("signup");
@@ -23,9 +24,11 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
       }
       const { error: err } = await supabase.auth.signUp({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
+      track("signup", { method: "email" });
     } else {
       const { error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
+      track("signin", { method: "email" });
     }
 
     setLoading(false);
