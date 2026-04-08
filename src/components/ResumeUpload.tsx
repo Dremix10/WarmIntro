@@ -4,7 +4,6 @@ import { useState, useRef, type DragEvent, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { parseResume } from "@/hooks/useApi";
 import { useAppState } from "@/components/AppProvider";
-import { GoogleDrivePicker } from "@/components/GoogleDrivePicker";
 
 const SAMPLE_RESUME = `Alex Rivera
 Rice University — Mechanical Engineering, Class of 2027
@@ -26,7 +25,7 @@ SolidWorks, Python, MATLAB, Lean Manufacturing, FEA, GD&T, CAD Design, Robotics
 INTERESTS
 Manufacturing Engineering, Process Engineering, Product Design, EV Industry`;
 
-type InputMode = "pdf" | "gdrive" | "text";
+type InputMode = "pdf" | "text";
 
 export function ResumeUpload() {
   const router = useRouter();
@@ -67,7 +66,7 @@ export function ResumeUpload() {
       const text = await extractPdfServerSide(file);
       setResumeText(text);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to read PDF. Try Google Drive or paste text.");
+      setError(err instanceof Error ? err.message : "Failed to read PDF. Try pasting text instead.");
       setFileName(null);
     } finally {
       setExtracting(false);
@@ -131,19 +130,18 @@ export function ResumeUpload() {
     <div className="w-full space-y-4">
       {/* Mode toggle */}
       <div className="flex rounded-lg bg-slate-100 p-1">
-        {([
-          { key: "pdf" as const, label: "Upload PDF" },
-          { key: "gdrive" as const, label: "Google Drive" },
-          { key: "text" as const, label: "Paste" },
-        ]).map((tab) => (
-          <button key={tab.key} type="button"
-            onClick={() => { setMode(tab.key); setError(null); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              mode === tab.key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-            }`}>
-            {tab.label}
-          </button>
-        ))}
+        <button type="button" onClick={() => { setMode("pdf"); setError(null); }}
+          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            mode === "pdf" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}>
+          Upload PDF
+        </button>
+        <button type="button" onClick={() => { setMode("text"); setError(null); }}
+          className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            mode === "text" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          }`}>
+          Paste Text
+        </button>
       </div>
 
       {/* PDF upload */}
@@ -169,9 +167,7 @@ export function ResumeUpload() {
                 <svg className="h-10 w-10 text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                 </svg>
-                <p className="text-sm font-medium text-slate-700">
-                  Tap to upload your resume PDF
-                </p>
+                <p className="text-sm font-medium text-slate-700">Tap to upload your resume PDF</p>
                 <p className="mt-1 text-xs text-slate-400">Works with Files, iCloud, Google Drive</p>
               </>
             )}
@@ -181,37 +177,6 @@ export function ResumeUpload() {
             Skip — use sample resume for demo
           </button>
         </>
-      )}
-
-      {/* Google Drive picker */}
-      {mode === "gdrive" && !hasResume && (
-        <GoogleDrivePicker
-          extracting={extracting}
-          onFilePicked={async (fileId, name, accessToken) => {
-            setExtracting(true);
-            setError(null);
-            setFileName(name);
-            try {
-              // Download the file from Google Drive using the OAuth token
-              const dlRes = await fetch(
-                `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-                { headers: { Authorization: `Bearer ${accessToken}` } }
-              );
-              if (!dlRes.ok) throw new Error("Could not download file from Drive");
-              const blob = await dlRes.blob();
-              const file = new File([blob], name, { type: "application/pdf" });
-
-              // Send to our server for text extraction
-              const text = await extractPdfServerSide(file);
-              setResumeText(text);
-            } catch (err) {
-              setError(err instanceof Error ? err.message : "Failed to import from Google Drive");
-              setFileName(null);
-            } finally {
-              setExtracting(false);
-            }
-          }}
-        />
       )}
 
       {/* Text paste */}
