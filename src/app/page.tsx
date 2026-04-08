@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ResumeUpload } from "@/components/ResumeUpload";
 import { AuthForm } from "@/components/AuthForm";
 import { useAppState } from "@/components/AppProvider";
 import { useRouter } from "next/navigation";
-import { INDUSTRIES } from "@/shared/constants";
-import { saveProfile, findCompanies } from "@/hooks/useApi";
+import { saveProfile, findCompanies, scrapeLinkedIn } from "@/hooks/useApi";
 import type { UserProfile } from "@/shared/types";
 
 const FUNNEL_STEPS = [
@@ -80,11 +79,9 @@ export default function HomePage() {
             <AuthForm onSuccess={() => {}} />
           </div>
         ) : isLinkedIn && !profile ? (
-          <LinkedInProfileSetup
+          <LinkedInAutoSetup
             name={linkedInName ?? ""}
             email={linkedInEmail ?? ""}
-            isProfileShared={isProfileShared}
-            setIsProfileShared={setIsProfileShared}
             onComplete={async (p) => {
               setProfile(p);
               const res = await findCompanies({
@@ -100,9 +97,7 @@ export default function HomePage() {
         ) : (
           <div className="space-y-4">
             <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-center">
-              <p className="text-sm text-emerald-700">
-                Signed in as <strong>{session.user.email}</strong>
-              </p>
+              <p className="text-sm text-emerald-700">Signed in as <strong>{session?.user.email}</strong></p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
@@ -133,149 +128,122 @@ export default function HomePage() {
           </div>
         )}
 
-        <p className="text-center text-xs text-slate-400 mt-6">
-          Built by Rice students, for Rice students.
-        </p>
+        <p className="text-center text-xs text-slate-400 mt-6">Built by Rice students, for Rice students.</p>
       </div>
     </div>
   );
 }
 
-function LinkedInProfileSetup({
-  name, email, isProfileShared, setIsProfileShared, onComplete,
+const LOADING_PHRASES = [
+  "Connecting to LinkedIn...",
+  "Scanning your profile...",
+  "Extracting your education...",
+  "Analyzing your experience...",
+  "Identifying your target industries...",
+  "Finding alumni at top companies...",
+  "Building your networking pipeline...",
+];
+
+function LinkedInAutoSetup({
+  name, email, onComplete,
 }: {
   name: string;
   email: string;
-  isProfileShared: boolean;
-  setIsProfileShared: (v: boolean) => void;
   onComplete: (profile: UserProfile) => Promise<void>;
 }) {
-  const [major, setMajor] = useState("");
-  const [gradYear, setGradYear] = useState("2027");
-  const [industry, setIndustry] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [phraseIndex, setPhraseIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [phase, setPhase] = useState<"scraping" | "loading-companies" | "error">("scraping");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!major || !industry) { setError("Please fill in all fields"); return; }
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPhraseIndex((i) => (i + 1) % LOADING_PHRASES.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
-    setSaving(true);
-    setError(null);
+  useEffect(() => {
+    let cancelled = false;
 
-    const profile: UserProfile = {
-      name,
-      email,
-      university: "Rice University",
-      graduationYear: parseInt(gradYear, 10),
-      major,
-      skills: [],
-      experience: [],
-      targetIndustries: [industry],
-      targetRoles: [],
-      resumeText: "",
-    };
+    async function run() {
+      try {
+        const { profile: scraped } = await scrapeLinkedIn(name, "Rice University");
 
-    try {
-      await saveProfile(profile);
-      onComplete(profile);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save profile");
-      setSaving(false);
+        if (cancelled) return;
+
+        const profile: UserProfile = {
+          name,
+          email,
+          university: "Rice University",
+          graduationYear: scraped?.graduationYear ?? 2027,
+          major: scraped?.major ?? "Undeclared",
+          skills: scraped?.skills ?? [],
+          experience: scraped?.experience ?? [],
+          targetIndustries: scraped?.targetIndustries ?? ["Technology"],
+          targetRoles: [],
+          resumeText: "",
+        };
+
+        await saveProfile(profile);
+
+        if (cancelled) return;
+        setPhase("loading-companies");
+        await onComplete(profile);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Something went wrong");
+        setPhase("error");
+      }
     }
-  };
 
-  if (showResumeUpload) {
+    run();
+    return () => { cancelled = true; };
+  }, [name, email, onComplete]);
+
+  if (phase === "error") {
     return (
-      <div className="space-y-4">
-        <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-center">
-          <p className="text-sm text-emerald-700">Welcome, <strong>{name}</strong></p>
-        </div>
-        <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">Upload your resume</h2>
-          <p className="text-sm text-slate-500 mb-4">This gives us your skills and experience for better alumni matching.</p>
-          <ResumeUpload />
-        </div>
-        <button type="button" onClick={() => setShowResumeUpload(false)}
-          className="w-full text-sm text-slate-500 hover:text-slate-700 py-2">
-          &larr; Back to quick setup
+      <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 text-center">
+        <p className="text-lg font-semibold text-slate-900 mb-2">Something went wrong</p>
+        <p className="text-sm text-red-500 mb-4">{error}</p>
+        <button type="button" onClick={() => window.location.reload()}
+          className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+          Try Again
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-center">
-        <p className="text-sm text-emerald-700">Welcome, <strong>{name}</strong></p>
-      </div>
-
-      <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
-        <h2 className="text-lg font-semibold text-slate-900 mb-1">Quick profile setup</h2>
-        <p className="text-sm text-slate-500 mb-5">
-          We pulled your name from LinkedIn. Just tell us a few more things to find your alumni connections.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Major</label>
-              <input type="text" value={major} onChange={(e) => setMajor(e.target.value)} placeholder="e.g. Mechanical Engineering" required
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Graduation Year</label>
-              <select value={gradYear} onChange={(e) => setGradYear(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
-                {["2025", "2026", "2027", "2028", "2029"].map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
+    <div className="rounded-2xl bg-white p-8 shadow-sm border border-slate-100">
+      <div className="flex flex-col items-center">
+        {/* Animated spinner */}
+        <div className="relative mb-6">
+          <div className="h-16 w-16 rounded-full border-4 border-slate-100" />
+          <div className="absolute inset-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-emerald-500" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl">
+              {phraseIndex < 3 ? "\uD83D\uDD17" : phraseIndex < 5 ? "\uD83D\uDD0D" : "\u2728"}
+            </span>
           </div>
+        </div>
 
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Target Industry</label>
-            <select value={industry} onChange={(e) => setIndustry(e.target.value)} required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
-              <option value="">Select an industry</option>
-              {INDUSTRIES.map((ind) => (
-                <option key={ind} value={ind}>{ind}</option>
-              ))}
-            </select>
-          </div>
+        <p className="text-lg font-semibold text-slate-900 mb-1">Welcome, {name}</p>
+        <p className="text-sm text-slate-500 mb-6">Setting up your profile automatically...</p>
 
-          {/* Resume sharing toggle */}
-          <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-            <div>
-              <p className="text-xs font-semibold text-slate-700">Share resume on Leaderboard?</p>
-              <p className="text-[10px] text-slate-400">{isProfileShared ? "Visible to opted-in members" : "Private"}</p>
-            </div>
-            <button type="button" onClick={() => setIsProfileShared(!isProfileShared)}
-              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${isProfileShared ? "bg-emerald-600" : "bg-slate-200"}`}>
-              <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${isProfileShared ? "translate-x-5" : "translate-x-0.5"}`} />
-            </button>
-          </div>
+        {/* Scrolling phrases */}
+        <div className="h-6 overflow-hidden">
+          <p key={phraseIndex} className="text-sm font-medium text-emerald-600 animate-pulse text-center">
+            {phase === "loading-companies" ? "Loading your companies..." : LOADING_PHRASES[phraseIndex]}
+          </p>
+        </div>
 
-          {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
-
-          <button type="submit" disabled={saving}
-            className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-            {saving ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Finding your alumni connections...
-              </span>
-            ) : "Find My Alumni Connections"}
-          </button>
-        </form>
-
-        <div className="mt-4 pt-4 border-t border-slate-100 text-center">
-          <button type="button" onClick={() => setShowResumeUpload(true)}
-            className="text-sm text-emerald-600 font-medium hover:underline">
-            Want better matches? Upload your resume instead
-          </button>
+        {/* Progress dots */}
+        <div className="flex gap-1.5 mt-4">
+          {LOADING_PHRASES.map((_, i) => (
+            <div key={i} className={`h-1.5 w-1.5 rounded-full transition-colors ${
+              i <= phraseIndex ? "bg-emerald-500" : "bg-slate-200"
+            }`} />
+          ))}
         </div>
       </div>
     </div>

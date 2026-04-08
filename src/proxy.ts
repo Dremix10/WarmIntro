@@ -9,6 +9,7 @@ const AI_ROUTES = [
   "/api/coaching-tip",
   "/api/summarize-recording",
   "/api/generate-followup",
+  "/api/scrape-linkedin",
 ];
 
 // Auth routes — brute-force protection

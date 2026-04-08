@@ -236,3 +236,16 @@ export async function loadProfile(): Promise<{
 export async function saveProfile(profile: UserProfile): Promise<{ success: boolean; referralCode: string }> {
   return apiFetch("/api/profile", { profile });
 }
+
+export async function scrapeLinkedIn(name: string, university: string): Promise<{
+  profile: {
+    major: string;
+    graduationYear: number;
+    targetIndustries: string[];
+    skills: string[];
+    experience: { company: string; role: string; duration: string; highlights: string[] }[];
+    linkedinUrl: string;
+  } | null;
+}> {
+  return apiFetch("/api/scrape-linkedin", { name, university });
+}
