@@ -33,7 +33,6 @@ export function ResumeUpload() {
   const [mode, setMode] = useState<InputMode>("pdf");
   const [resumeText, setResumeText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
-  const [gdriveUrl, setGdriveUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -69,28 +68,6 @@ export function ResumeUpload() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to read PDF. Try Google Drive or paste text.");
       setFileName(null);
-    } finally {
-      setExtracting(false);
-    }
-  };
-
-  const handleGoogleDrive = async () => {
-    if (!gdriveUrl.trim()) { setError("Paste your Google Drive sharing link."); return; }
-    setError(null);
-    setExtracting(true);
-
-    try {
-      const res = await fetch("/api/extract-pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: gdriveUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setResumeText(data.text);
-      setFileName("Google Drive PDF");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not fetch from Google Drive.");
     } finally {
       setExtracting(false);
     }
@@ -143,7 +120,6 @@ export function ResumeUpload() {
   const clearFile = () => {
     setFileName(null);
     setResumeText("");
-    setGdriveUrl("");
     setError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -206,26 +182,14 @@ export function ResumeUpload() {
         </>
       )}
 
-      {/* Google Drive */}
+      {/* Google Drive — coming soon */}
       {mode === "gdrive" && !hasResume && (
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs text-slate-500 mb-2">
-              Open your resume in Google Drive, click <strong>Share</strong>, set to <strong>&quot;Anyone with the link&quot;</strong>, then paste the link below.
-            </p>
-            <input type="url" value={gdriveUrl} onChange={(e) => { setGdriveUrl(e.target.value); setError(null); }}
-              placeholder="https://drive.google.com/file/d/..."
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow" />
-          </div>
-          <button type="button" onClick={handleGoogleDrive} disabled={!gdriveUrl.trim() || extracting}
-            className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-            {extracting ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Fetching from Google Drive...
-              </span>
-            ) : "Import Resume"}
-          </button>
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-10">
+          <svg className="h-10 w-10 text-slate-300 mb-3" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7.71 3.5L1.15 15l4.58 7.5h13.54l4.58-7.5L17.29 3.5H7.71zm.58 1h8.42l5.5 10h-4.2l-4.3-7.28-.71-1.2-.71 1.2L7.99 14.5H3.79l5.5-10zM12 10.7l3.27 5.55H8.73L12 10.7zM7.49 15.5h3.7l-1.85 3.13L7.49 15.5zm5.32 0h3.7l-1.85 3.13-1.85-3.13z" />
+          </svg>
+          <p className="text-sm font-medium text-slate-500">Google Drive integration coming soon</p>
+          <p className="text-xs text-slate-400 mt-1">For now, download your resume from Drive and upload the PDF</p>
         </div>
       )}
 

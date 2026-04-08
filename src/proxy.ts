@@ -74,7 +74,7 @@ function checkRateLimit(ip: string, tier: keyof typeof RATE_LIMITS): { allowed: 
   return { allowed: true, retryAfter: 0 };
 }
 
-const MAX_BODY_SIZE = 64 * 1024; // 64KB
+const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB (PDF uploads)
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
