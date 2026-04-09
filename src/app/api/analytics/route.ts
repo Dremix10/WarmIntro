@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const secret = url.searchParams.get("secret");
 
-  if (secret !== "warmintro2026") {
+  if (secret !== process.env.ANALYTICS_SECRET) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
