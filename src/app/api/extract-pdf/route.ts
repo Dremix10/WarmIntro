@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { PDFParse } from "pdf-parse";
 
 export async function POST(request: Request) {
   try {
@@ -12,26 +13,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
     }
 
-    const pdfBuffer = await file.arrayBuffer();
-    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(pdfBuffer) }).promise;
-    const pages: string[] = [];
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
 
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      const text = content.items
-        .map((item) => ("str" in item ? item.str : ""))
-        .join(" ");
-      pages.push(text);
+    const text = result.text?.trim();
+    if (!text) {
+      return NextResponse.json({ error: "Could not extract text from this PDF." }, { status: 400 });
     }
 
-    const fullText = pages.join("\n\n").trim();
-    if (!fullText) {
-      return NextResponse.json({ error: "Could not extract text from this PDF. It might be a scanned image." }, { status: 400 });
-    }
-
-    return NextResponse.json({ text: fullText });
+    return NextResponse.json({ text });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to extract PDF text";
     return NextResponse.json({ error: message }, { status: 500 });

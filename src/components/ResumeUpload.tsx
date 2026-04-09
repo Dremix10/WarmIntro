@@ -41,17 +41,12 @@ export function ResumeUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const extractTextFromPdf = async (file: File): Promise<string> => {
-    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.legacy.js";
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const pages: string[] = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
-    }
-    return pages.join("\n\n");
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Failed to extract text");
+    return data.text;
   };
 
   const handlePdfFile = async (file: File) => {

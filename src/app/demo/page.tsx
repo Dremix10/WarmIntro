@@ -53,20 +53,14 @@ export default function DemoPage() {
     if (file.size > 10 * 1024 * 1024) { setError("File too large (max 10MB)."); return; }
     setError(null); setExtracting(true); setFileName(file.name);
     try {
-      const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.legacy.js";
-      const buf = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-      const pages: string[] = [];
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
-      }
-      const text = pages.join("\n\n").trim();
-      if (!text) { setError("Could not extract text. Try pasting instead."); setFileName(null); }
-      else setResumeText(text);
-    } catch (err) { trackError("pdf_extract", err); setError("Failed to read PDF."); setFileName(null); }
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to extract text");
+      if (!data.text?.trim()) { setError("Could not extract text. Try pasting instead."); setFileName(null); }
+      else setResumeText(data.text);
+    } catch (err) { trackError("pdf_extract", err); setError("Failed to read PDF. Try pasting your resume text."); setFileName(null); }
     finally { setExtracting(false); }
   };
 
