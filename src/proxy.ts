@@ -30,7 +30,7 @@ const RATE_LIMITS = {
 const BOT_UA_PATTERNS = ["curl", "wget", "python-requests", "httpie", "postmanruntime"];
 
 // Routes exempt from bot UA checks (e.g. file upload endpoints)
-const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf"];
+const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf", "/api/analytics", "/api/admin"];
 
 interface RateLimitEntry {
   count: number;
