@@ -41,8 +41,11 @@ export function ResumeUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const extractTextFromPdf = async (file: File): Promise<string> => {
+    // Read into fresh Blob to avoid Safari FormData issues
+    const arrayBuffer = await file.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: "application/pdf" });
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", blob, file.name);
     const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Failed to extract text");

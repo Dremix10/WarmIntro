@@ -53,8 +53,11 @@ export default function DemoPage() {
     if (file.size > 10 * 1024 * 1024) { setError("File too large (max 10MB)."); return; }
     setError(null); setExtracting(true); setFileName(file.name);
     try {
+      // Read file into a fresh Blob to avoid Safari FormData issues
+      const arrayBuffer = await file.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", blob, file.name);
       const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to extract text");
