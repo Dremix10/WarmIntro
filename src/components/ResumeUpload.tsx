@@ -40,13 +40,18 @@ export function ResumeUpload() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const extractPdfServerSide = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error ?? "Failed to extract text");
-    return data.text as string;
+  const extractTextFromPdf = async (file: File): Promise<string> => {
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.legacy.js";
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages: string[] = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push(content.items.map((item) => ("str" in item ? item.str : "")).join(" "));
+    }
+    return pages.join("\n\n");
   };
 
   const handlePdfFile = async (file: File) => {
@@ -64,7 +69,7 @@ export function ResumeUpload() {
     setFileName(file.name);
 
     try {
-      const text = await extractPdfServerSide(file);
+      const text = await extractTextFromPdf(file);
       setResumeText(text);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to read PDF. Try pasting text instead.");
