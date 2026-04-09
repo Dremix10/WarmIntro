@@ -33,6 +33,40 @@ export interface Database {
         };
         Relationships: [];
       };
+      pilot_signups: {
+        Row: {
+          id: string;
+          email: string;
+          name: string | null;
+          university: string | null;
+          major: string | null;
+          graduation_year: number | null;
+          skills: Json;
+          target_industries: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name?: string | null;
+          university?: string | null;
+          major?: string | null;
+          graduation_year?: number | null;
+          skills?: Json;
+          target_industries?: Json;
+          created_at?: string;
+        };
+        Update: {
+          email?: string;
+          name?: string | null;
+          university?: string | null;
+          major?: string | null;
+          graduation_year?: number | null;
+          skills?: Json;
+          target_industries?: Json;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;

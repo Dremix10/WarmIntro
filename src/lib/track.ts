@@ -10,3 +10,9 @@ export function track(event: string, metadata?: Record<string, unknown>) {
     }
   });
 }
+
+export function trackError(step: string, err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack?.slice(0, 500) : undefined;
+  track("demo_error", { step, error: message, stack });
+}

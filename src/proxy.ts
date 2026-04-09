@@ -3,8 +3,6 @@ import type { NextRequest } from "next/server";
 
 // Routes that call Claude API — require auth + tight limits
 const AI_ROUTES = [
-  "/api/generate-outreach",
-  "/api/find-alumni",
   "/api/coaching-tip",
   "/api/summarize-recording",
   "/api/generate-followup",
@@ -12,7 +10,7 @@ const AI_ROUTES = [
 ];
 
 // Routes that call Claude but allow guest access (no auth required)
-const GUEST_AI_ROUTES = ["/api/parse-resume"];
+const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate-outreach"];
 
 // Auth routes — brute-force protection
 const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup"];
@@ -20,7 +18,7 @@ const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup"];
 // Rate limit tiers (requests per window)
 const RATE_LIMITS = {
   ai: { max: 5, windowMs: 60_000 },
-  guest_ai: { max: 2, windowMs: 60_000 },
+  guest_ai: { max: 5, windowMs: 60_000 },
   auth: { max: 3, windowMs: 60_000 },
   default: { max: 20, windowMs: 60_000 },
   global: { max: 60, windowMs: 60_000 },

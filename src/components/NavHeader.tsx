@@ -23,7 +23,7 @@ export function NavHeader() {
     ? 4
     : STEPS.find((s) => s.path === pathname)?.step ?? 0;
 
-  if (pathname === "/") return null;
+  if (pathname === "/" || pathname === "/demo") return null;
 
   const canNavigate = (step: number): boolean => {
     if (step === 0) return true;
