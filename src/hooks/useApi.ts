@@ -249,3 +249,19 @@ export async function scrapeLinkedIn(name: string, university: string): Promise<
 }> {
   return apiFetch("/api/scrape-linkedin", { name, university });
 }
+
+export async function saveSelectedCompanies(companies: Company[]): Promise<void> {
+  // Save to Supabase — delete old selections, insert new ones
+  const headers = getAuthHeaders();
+  if (!headers["Authorization"]) return; // guest mode, don't persist
+
+  await fetch("/api/companies/selected", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ companies }),
+  });
+}
+
+export async function loadSelectedCompanies(): Promise<{ companies: Company[] }> {
+  return apiGet("/api/companies/selected");
+}

@@ -10,7 +10,7 @@ import type {
 } from "@/shared/types";
 import { supabase } from "@/lib/supabase-browser";
 import type { Session } from "@supabase/supabase-js";
-import { loadProfile } from "@/hooks/useApi";
+import { loadProfile, loadSelectedCompanies } from "@/hooks/useApi";
 
 export interface LeaderboardMember {
   id: string;
@@ -120,6 +120,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data = await loadProfile();
       if (data.profile) {
         setProfileState(data.profile);
+      }
+      // Also load selected companies
+      try {
+        const { companies } = await loadSelectedCompanies();
+        if (companies && companies.length > 0) {
+          setSelectedCompaniesState(companies);
+        }
+      } catch {
+        // companies not saved yet — that's fine
       }
     } catch {
       // Profile not found — that's ok, user hasn't set one up yet

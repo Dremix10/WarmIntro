@@ -31,7 +31,7 @@ export default function HomePage() {
   useEffect(() => { track("page_view", { page: "home" }); }, []);
 
   if (session && profile) {
-    router.push("/profile");
+    router.push(profile.targetIndustries.length > 0 ? "/companies" : "/profile");
     return null;
   }
 
