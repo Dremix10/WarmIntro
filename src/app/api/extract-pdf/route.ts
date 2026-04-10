@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PDFParse } from "pdf-parse";
+import { extractText } from "unpdf";
 
 export async function POST(request: Request) {
   try {
@@ -14,10 +14,9 @@ export async function POST(request: Request) {
     }
 
     const buffer = new Uint8Array(await file.arrayBuffer());
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
+    const { text: pages } = await extractText(buffer);
+    const text = pages.join("\n\n").trim();
 
-    const text = result.text?.trim();
     if (!text) {
       return NextResponse.json({ error: "Could not extract text from this PDF." }, { status: 400 });
     }
