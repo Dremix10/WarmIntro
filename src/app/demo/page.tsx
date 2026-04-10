@@ -81,15 +81,27 @@ export default function DemoPage() {
       if (!parseRes.ok) throw new Error((await parseRes.json()).error);
       const { profile: p } = await parseRes.json() as { profile: UserProfile };
       setProfile(p);
-      track("demo_parsed", { name: p.name, skills: p.skills?.length });
+      track("demo_parsed", { name: p.name, major: p.major, skills: p.skills?.length, industries: p.targetIndustries, roles: p.targetRoles });
 
       // Step 2: Find companies
+      // First try with parsed industries, fall back to all industries if no good matches
+      let allCompanies: Company[] = [];
       const compRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: p.targetIndustries, university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
-      if (!compRes.ok) throw new Error((await compRes.json()).error);
-      const { companies: allCompanies } = await compRes.json() as { companies: Company[] };
+      if (compRes.ok) {
+        const data = await compRes.json() as { companies: Company[] };
+        allCompanies = data.companies;
+      }
+      // If no matches or very low scores, search across all industries
+      if (allCompanies.length < 3 || (allCompanies[0]?.warmthScore ?? 0) < 20) {
+        const fallbackRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: [], university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json() as { companies: Company[] };
+          allCompanies = fallbackData.companies;
+        }
+      }
       const top3 = allCompanies.slice(0, 3);
       setCompanies(top3);
-      track("demo_companies_found", { count: top3.length });
+      track("demo_companies_found", { count: top3.length, names: top3.map((c: Company) => c.name), industries: p.targetIndustries });
 
       // Step 3: Find alumni — ALL 3 IN PARALLEL
       const alumniResults = await Promise.all(

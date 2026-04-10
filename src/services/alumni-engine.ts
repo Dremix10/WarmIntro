@@ -156,17 +156,19 @@ export async function generateWarmPaths(
 
   const prompt = `Generate warm introduction paths for a ${university} ${userMajor} student (class of ${userGradYear}) reaching out to these alumni.
 
+IMPORTANT: The "sharedBackground" field lists the ALUMNI's background, NOT the student's. Do NOT claim the student is in a club or organization unless their major (${userMajor}) or university (${university}) directly matches. The student's only confirmed connection is attending ${university} and studying ${userMajor}.
+
 ALUMNI:
 ${JSON.stringify(alumniSummaries, null, 2)}
 
 For each alumni, return a JSON array with objects matching:
 {
   "alumniId": string,
-  "narrative": string (2-3 sentences explaining the connection and why this is a good contact),
-  "suggestedOpener": string (a natural, personalized opening message for LinkedIn or email, 1-2 sentences)
+  "narrative": string (2-3 sentences: why this alumni is a good contact for someone studying ${userMajor}. Focus on university connection and role relevance — do NOT claim shared club memberships unless the student's major is directly related),
+  "suggestedOpener": string (a natural LinkedIn connection request, 1-2 sentences. Mention ${university} as the shared connection. Do NOT reference clubs the student may not be in)
 }
 
-Make narratives specific to shared backgrounds. Mention shared clubs, majors, or proximity in graduation year. Keep openers conversational and genuine — not salesy.`;
+Keep openers conversational and genuine — not salesy. Only mention confirmed shared connections (same university, similar major if applicable).`;
 
   const paths = await askClaudeJSON<{ narrative: string; suggestedOpener: string }[]>(prompt, {
     maxTokens: 2048,
