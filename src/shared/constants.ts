@@ -5,6 +5,7 @@ export const INDUSTRIES = [
   "Healthcare & Biotech",
   "Energy & Sustainability",
   "Consumer & Retail",
+  "Design & Architecture",
 ] as const;
 
 export const FUNNEL_STAGES = [

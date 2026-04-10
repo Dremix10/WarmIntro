@@ -75,7 +75,7 @@ Return JSON:
 {
   "major": string (their field of study — look for mentions of major, department, school, or degree),
   "graduationYear": number (current year is 2026. Estimate from class year, freshman/sophomore/junior/senior status, or "Class of XXXX". Freshman=2029, Sophomore=2028, Junior=2027, Senior=2026),
-  "targetIndustries": string[] (infer 1-3 from their major, projects, and experience. Choose ONLY from: "Automotive & Manufacturing", "Technology", "Finance & Consulting", "Healthcare & Biotech", "Energy & Sustainability", "Consumer & Retail"),
+  "targetIndustries": string[] (infer 1-3 from their major, projects, and experience. Choose ONLY from: "Automotive & Manufacturing", "Technology", "Finance & Consulting", "Healthcare & Biotech", "Energy & Sustainability", "Consumer & Retail", "Design & Architecture"),
   "skills": string[] (extract ALL skills, tools, technologies, programming languages, and competencies mentioned across all results. Include inferred skills from activities like competitive programming, hackathons, research. Max 15),
   "experience": [{"company": string, "role": string, "duration": string, "highlights": string[]}] (extract ALL work experience, research positions, teaching roles, club leadership, hackathon projects, and competitions found. Each should be a separate entry. Use "Unknown" for duration if not mentioned)
 }

@@ -26,6 +26,7 @@ For targetIndustries, infer from their experience and skills. Choose from:
 - "Healthcare & Biotech"
 - "Energy & Sustainability"
 - "Consumer & Retail"
+- "Design & Architecture"
 
 For targetRoles, infer 3-5 realistic internship titles based on their major, skills, and experience.
 Extract ALL skills mentioned, including tools, software, methodologies, and certifications.

@@ -713,5 +713,104 @@
     "logoPlaceholder": "TG",
     "alumniCount": 1,
     "warmthScore": 38
+  },
+  {
+    "id": "gensler",
+    "name": "Gensler",
+    "industry": "Design & Architecture",
+    "location": "Houston, TX",
+    "size": "enterprise",
+    "description": "World's largest architecture and design firm, creating transformative spaces across workplace, mixed-use, hospitality, and urban design.",
+    "logoPlaceholder": "G",
+    "alumniCount": 8,
+    "warmthScore": 85
+  },
+  {
+    "id": "som",
+    "name": "Skidmore, Owings & Merrill (SOM)",
+    "industry": "Design & Architecture",
+    "location": "New York, NY",
+    "size": "enterprise",
+    "description": "Global architecture and engineering firm known for iconic skyscrapers and sustainable design, including One World Trade Center and Burj Khalifa.",
+    "logoPlaceholder": "SOM",
+    "alumniCount": 5,
+    "warmthScore": 78
+  },
+  {
+    "id": "aecom",
+    "name": "AECOM",
+    "industry": "Design & Architecture",
+    "location": "Dallas, TX",
+    "size": "enterprise",
+    "description": "Infrastructure consulting firm delivering architecture, engineering, and construction management for major public and private projects worldwide.",
+    "logoPlaceholder": "AE",
+    "alumniCount": 6,
+    "warmthScore": 75
+  },
+  {
+    "id": "hks",
+    "name": "HKS Architects",
+    "industry": "Design & Architecture",
+    "location": "Dallas, TX",
+    "size": "mid",
+    "description": "Architecture firm specializing in sports venues, healthcare facilities, and corporate campuses. Designed AT&T Stadium and multiple Olympic venues.",
+    "logoPlaceholder": "HKS",
+    "alumniCount": 4,
+    "warmthScore": 70
+  },
+  {
+    "id": "perkins-will",
+    "name": "Perkins&Will",
+    "industry": "Design & Architecture",
+    "location": "Chicago, IL",
+    "size": "enterprise",
+    "description": "Architecture and design firm focused on sustainability, healthcare, education, and science buildings. Known for research-driven design approach.",
+    "logoPlaceholder": "PW",
+    "alumniCount": 3,
+    "warmthScore": 65
+  },
+  {
+    "id": "lake-flato",
+    "name": "Lake|Flato Architects",
+    "industry": "Design & Architecture",
+    "location": "San Antonio, TX",
+    "size": "mid",
+    "description": "AIA Firm Award-winning Texas architecture practice known for sustainable, regionally responsive design rooted in landscape and climate.",
+    "logoPlaceholder": "LF",
+    "alumniCount": 3,
+    "warmthScore": 68
+  },
+  {
+    "id": "foster-partners",
+    "name": "Foster + Partners",
+    "industry": "Design & Architecture",
+    "location": "London, UK",
+    "size": "enterprise",
+    "description": "Global architecture studio led by Norman Foster, known for Apple Park, Bloomberg HQ, and pioneering sustainable high-tech architecture.",
+    "logoPlaceholder": "F+",
+    "alumniCount": 2,
+    "warmthScore": 60
+  },
+  {
+    "id": "bjarke-ingels-group",
+    "name": "BIG (Bjarke Ingels Group)",
+    "industry": "Design & Architecture",
+    "location": "New York, NY",
+    "size": "mid",
+    "description": "Architecture firm blending pragmatism and bold vision. Known for innovative projects like CopenHill, The Dryline, and Google's Mountain View campus.",
+    "logoPlaceholder": "BIG",
+    "alumniCount": 2,
+    "warmthScore": 62
+  },
+  {
+    "id": "page-architects",
+    "name": "Page",
+    "industry": "Design & Architecture",
+    "location": "Houston, TX",
+    "size": "mid",
+    "description": "Texas-based architecture firm with deep Houston roots. Designs corporate, institutional, and cultural projects across the Southwest.",
+    "logoPlaceholder": "PG",
+    "alumniCount": 5,
+    "warmthScore": 72
   }
 ]
