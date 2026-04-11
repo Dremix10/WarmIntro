@@ -98,10 +98,11 @@ export default function DemoPage() {
       setProfile(p);
       track("demo_parsed", { name: p.name, major: p.major, skills: p.skills?.length, industries: p.targetIndustries, roles: p.targetRoles });
 
-      // Use only the primary industry for demo — keeps results focused
-      const primaryIndustry = p.targetIndustries.slice(0, 1);
+      // Use all inferred industries but fetch primarily from the first
+      const allIndustries = p.targetIndustries;
       let allCompanies: Company[] = [];
-      const compRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: primaryIndustry, university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
+      // Fetch from primary industry first
+      const compRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: allIndustries.slice(0, 1), university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
       if (compRes.ok) {
         const data = await compRes.json() as { companies: Company[] };
         allCompanies = data.companies;
@@ -228,9 +229,19 @@ export default function DemoPage() {
         {/* Results */}
         {step === "results" && (
           <div className="space-y-4 sm:space-y-5">
-            <div className="text-center mb-2">
+            {/* Industry categories header */}
+            <div className="text-center mb-1">
               <p className="text-sm font-medium text-emerald-600">Based on your resume</p>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Your Top Alumni Connections</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Your Top Alumni Connections</h2>
+              {profile?.targetIndustries && profile.targetIndustries.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-2 mt-3">
+                  {profile.targetIndustries.map((ind) => (
+                    <span key={ind} className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
+                      {ind}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {companies.map((company) => {
@@ -264,12 +275,16 @@ export default function DemoPage() {
                           LinkedIn
                         </a>
                       </div>
-                      <p className="text-xs text-slate-500 mb-2">{path.narrative}</p>
-                      <div className="rounded-lg bg-slate-50 p-3">
-                        <p className="text-sm text-slate-700 leading-relaxed mb-2">&ldquo;{path.suggestedOpener}&rdquo;</p>
+                      <p className="text-xs text-slate-500 mb-3">{path.narrative}</p>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                        <p className="text-sm text-slate-700 leading-relaxed">&ldquo;{path.suggestedOpener}&rdquo;</p>
                         <button type="button" onClick={() => handleCopy(path.suggestedOpener, path.alumni.id)}
-                          className="w-full sm:w-auto rounded-md bg-white border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 active:bg-emerald-100 transition-colors">
-                          {copied === path.alumni.id ? "Copied!" : "Copy message"}
+                          className={`mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+                            copied === path.alumni.id
+                              ? "bg-emerald-600 text-white"
+                              : "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800"
+                          }`}>
+                          {copied === path.alumni.id ? "Copied to clipboard!" : "Copy connection message"}
                         </button>
                       </div>
                     </div>
@@ -278,19 +293,22 @@ export default function DemoPage() {
               );
             })}
 
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 p-5 sm:p-6 text-center text-white">
-              <p className="text-lg sm:text-xl font-bold mb-1">Imagine this on autopilot.</p>
-              <p className="text-emerald-100 text-sm mb-4 sm:mb-5">An AI agent in your inbox — finds people, writes messages, follows up.</p>
+            {/* CTA */}
+            <div className="rounded-2xl bg-slate-900 p-6 sm:p-8 text-center">
+              <p className="text-2xl sm:text-3xl font-bold text-white mb-2">Get 50 more connections free.</p>
+              <p className="text-slate-400 text-sm sm:text-base mb-6 max-w-md mx-auto">
+                Drop your email and we&apos;ll send you a full list of alumni at companies matched to your resume — plus an AI agent that messages them for you.
+              </p>
               <div className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com"
-                  className="flex-1 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-white/50" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@rice.edu"
+                  className="flex-1 rounded-xl bg-slate-800 border border-slate-700 px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
                 <button type="button" onClick={handleSignup}
-                  className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 active:bg-emerald-100 transition-colors whitespace-nowrap">
-                  Join Pilot
+                  className="rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-white hover:bg-emerald-400 active:bg-emerald-600 transition-colors whitespace-nowrap">
+                  Get early access
                 </button>
               </div>
-              {signupError && <p className="text-sm text-red-200 mt-2">{signupError}</p>}
-              <p className="text-xs text-emerald-200 mt-3">We&apos;ll reach out when it&apos;s ready.</p>
+              {signupError && <p className="text-sm text-red-400 mt-2">{signupError}</p>}
+              <p className="text-xs text-slate-500 mt-4">Launching next week. Your resume data stays private.</p>
             </div>
           </div>
         )}
