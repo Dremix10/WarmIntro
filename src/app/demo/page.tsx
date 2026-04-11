@@ -98,8 +98,10 @@ export default function DemoPage() {
       setProfile(p);
       track("demo_parsed", { name: p.name, major: p.major, skills: p.skills?.length, industries: p.targetIndustries, roles: p.targetRoles });
 
+      // Use only the primary industry for demo — keeps results focused
+      const primaryIndustry = p.targetIndustries.slice(0, 1);
       let allCompanies: Company[] = [];
-      const compRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: p.targetIndustries, university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
+      const compRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: primaryIndustry, university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
       if (compRes.ok) {
         const data = await compRes.json() as { companies: Company[] };
         allCompanies = data.companies;
