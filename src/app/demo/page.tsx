@@ -2,45 +2,52 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { track, trackError } from "@/lib/track";
-import type { UserProfile, Company, WarmPath } from "@/shared/types";
+import type { UserProfile } from "@/shared/types";
 
-type Step = "upload" | "working" | "results" | "signup" | "done";
+type Step = "upload" | "working" | "results" | "done";
+
+interface FoundPerson {
+  name: string;
+  role: string;
+  company: string;
+  linkedinUrl: string;
+  narrative: string;
+  suggestedOpener: string;
+  category: string;
+}
 
 const PROGRESS_MESSAGES = [
   "Analyzing your resume...",
-  "Identifying your strengths...",
-  "Finding top companies...",
-  "Searching for alumni...",
-  "Generating connection messages...",
+  "Identifying your target roles...",
+  "Finding real people on LinkedIn...",
+  "Writing personalized messages...",
   "Almost ready...",
 ];
 
-function copyToClipboard(text: string): boolean {
-  // Modern API
+function copyToClipboard(text: string) {
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(text).catch(() => {});
-    return true;
+    return;
   }
-  // Fallback for mobile Safari
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  try { document.execCommand("copy"); return true; }
-  catch { return false; }
-  finally { document.body.removeChild(textarea); }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch {}
+  document.body.removeChild(ta);
 }
 
 export default function DemoPage() {
   const [step, setStep] = useState<Step>("upload");
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [alumniByCompany, setAlumniByCompany] = useState<Record<string, WarmPath[]>>({});
+  const [categories, setCategories] = useState<{ name: string; reason: string }[]>([]);
+  const [people, setPeople] = useState<FoundPerson[]>([]);
   const [progressIdx, setProgressIdx] = useState(0);
   const [email, setEmail] = useState("");
   const [signupError, setSignupError] = useState<string | null>(null);
+  const [signedUp, setSignedUp] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
   const [resumeText, setResumeText] = useState("");
@@ -70,14 +77,14 @@ export default function DemoPage() {
     if (file.size > 10 * 1024 * 1024) { setError("File too large (max 10MB)."); return; }
     setError(null); setExtracting(true); setFileName(file.name);
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const formData = new FormData();
-      formData.append("file", blob, file.name);
-      const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
+      const ab = await file.arrayBuffer();
+      const blob = new Blob([ab], { type: "application/pdf" });
+      const fd = new FormData();
+      fd.append("file", blob, file.name);
+      const res = await fetch("/api/extract-pdf", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to extract text");
-      if (!data.text?.trim()) { setError("Could not extract text. Try pasting instead."); setFileName(null); }
+      if (!data.text?.trim()) { setError("Could not extract text."); setFileName(null); }
       else setResumeText(data.text);
     } catch (err) { trackError("pdf_extract", err); setError("Failed to read PDF. Try pasting your resume text."); setFileName(null); }
     finally { setExtracting(false); }
@@ -92,47 +99,20 @@ export default function DemoPage() {
     track("demo_start");
 
     try {
+      // Step 1: Parse resume
       const parseRes = await fetch("/api/parse-resume", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ resumeText: text, university: "Rice University" }) });
       if (!parseRes.ok) throw new Error((await parseRes.json()).error);
       const { profile: p } = await parseRes.json() as { profile: UserProfile };
       setProfile(p);
       track("demo_parsed", { name: p.name, major: p.major, skills: p.skills?.length, industries: p.targetIndustries, roles: p.targetRoles });
 
-      // Use all inferred industries but fetch primarily from the first
-      const allIndustries = p.targetIndustries;
-      let allCompanies: Company[] = [];
-      // Fetch from primary industry first
-      const compRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: allIndustries.slice(0, 1), university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
-      if (compRes.ok) {
-        const data = await compRes.json() as { companies: Company[] };
-        allCompanies = data.companies;
-      }
-      if (allCompanies.length < 3 || (allCompanies[0]?.warmthScore ?? 0) < 20) {
-        const fallbackRes = await fetch("/api/find-companies", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ industries: [], university: "Rice University", skills: p.skills, roles: p.targetRoles }) });
-        if (fallbackRes.ok) {
-          const fallbackData = await fallbackRes.json() as { companies: Company[] };
-          allCompanies = fallbackData.companies;
-        }
-      }
-      const top3 = allCompanies.slice(0, 3);
-      setCompanies(top3);
-      track("demo_companies_found", { count: top3.length, names: top3.map((c: Company) => c.name), industries: p.targetIndustries });
-
-      const alumniResults = await Promise.all(
-        top3.map(async (company) => {
-          try {
-            const res = await fetch("/api/find-alumni", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ companyId: company.id, university: "Rice University", userMajor: p.major, userGradYear: p.graduationYear }) });
-            if (!res.ok) return { id: company.id, paths: [] as WarmPath[] };
-            const data = await res.json();
-            return { id: company.id, paths: (data.warmPaths ?? []).slice(0, 2) as WarmPath[] };
-          } catch { return { id: company.id, paths: [] as WarmPath[] }; }
-        })
-      );
-
-      const results: Record<string, WarmPath[]> = {};
-      for (const r of alumniResults) results[r.id] = r.paths;
-      setAlumniByCompany(results);
-      track("demo_results_shown", { companiesWithAlumni: alumniResults.filter((r) => r.paths.length > 0).length });
+      // Step 2: Find real people matched to their roles
+      const findRes = await fetch("/api/find-people", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: p.name, major: p.major, graduationYear: p.graduationYear, targetRoles: p.targetRoles, targetIndustries: p.targetIndustries, university: "Rice University" }) });
+      if (!findRes.ok) throw new Error((await findRes.json()).error);
+      const { categories: cats, people: ppl } = await findRes.json();
+      setCategories(cats);
+      setPeople(ppl);
+      track("demo_results_shown", { categories: cats.map((c: { name: string }) => c.name), peopleFound: ppl.length });
       setStep("results");
     } catch (err) {
       trackError("demo_flow", err);
@@ -144,7 +124,7 @@ export default function DemoPage() {
   const handleCopy = (text: string, id: string) => {
     copyToClipboard(text);
     setCopied(id);
-    track("demo_copy_message", { alumniId: id });
+    track("demo_copy_message", { person: id });
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -155,9 +135,15 @@ export default function DemoPage() {
       const res = await fetch("/api/pilot-signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, name: profile?.name, university: profile?.university, major: profile?.major, graduationYear: profile?.graduationYear, skills: profile?.skills, targetIndustries: profile?.targetIndustries }) });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       track("demo_pilot_signup", { email });
-      setStep("done");
+      setSignedUp(true);
     } catch (err) { setSignupError(err instanceof Error ? err.message : "Something went wrong."); trackError("signup", err); }
   };
+
+  // Group people by category
+  const groupedByCategory = categories.map((cat) => ({
+    ...cat,
+    people: people.filter((p) => p.category === cat.name),
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -167,7 +153,7 @@ export default function DemoPage() {
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
             Warm<span className="text-emerald-600">Intro</span>
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-slate-500">Find alumni at your dream companies in 60 seconds</p>
+          <p className="mt-2 text-sm sm:text-base text-slate-500">Find real people to connect with in 60 seconds</p>
         </div>
 
         {/* Upload */}
@@ -201,7 +187,7 @@ export default function DemoPage() {
 
             <button type="button" onClick={runDemo} disabled={!resumeText.trim() || extracting}
               className="w-full rounded-xl bg-emerald-600 px-6 py-4 text-base font-semibold text-white hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 transition-colors">
-              Find My Alumni Connections
+              Find My Connections
             </button>
 
             <p className="text-center text-xs text-slate-400">No account needed. Results in ~30 seconds.</p>
@@ -229,100 +215,95 @@ export default function DemoPage() {
         {/* Results */}
         {step === "results" && (
           <div className="space-y-4 sm:space-y-5">
-            {/* Industry categories header */}
             <div className="text-center mb-1">
-              <p className="text-sm font-medium text-emerald-600">Based on your resume</p>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Your Top Alumni Connections</h2>
-              {profile?.targetIndustries && profile.targetIndustries.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-2 mt-3">
-                  {profile.targetIndustries.map((ind) => (
-                    <span key={ind} className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
-                      {ind}
-                    </span>
-                  ))}
-                </div>
-              )}
+              <p className="text-sm font-medium text-emerald-600">{profile?.major} &middot; {profile?.university}</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">People You Should Connect With</h2>
             </div>
 
-            {companies.map((company) => {
-              const paths = alumniByCompany[company.id] ?? [];
-              return (
-                <div key={company.id} className="rounded-2xl bg-white shadow-sm border border-slate-100 overflow-hidden">
-                  <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-3">
-                    <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs sm:text-sm font-bold text-slate-600">{company.logoPlaceholder}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{company.name}</p>
-                      <p className="text-xs text-slate-400">{company.industry}</p>
-                    </div>
-                    <div className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">{company.warmthScore}%</div>
+            {/* Category pills */}
+            {categories.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2">
+                {categories.map((cat) => (
+                  <div key={cat.name} className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5">
+                    <p className="text-xs font-semibold text-emerald-700">{cat.name}</p>
                   </div>
+                ))}
+              </div>
+            )}
 
-                  {paths.length === 0 ? (
-                    <div className="px-4 sm:px-5 py-4 text-sm text-slate-400 italic">No alumni found at this company yet.</div>
-                  ) : paths.map((path) => (
-                    <div key={path.alumni.id} className="px-4 sm:px-5 py-4 border-b border-slate-50 last:border-0">
-                      <div className="flex items-start gap-3 mb-2">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">
-                          {path.alumni.name.split(" ").map((n) => n[0]).join("")}
+            {/* People grouped by category */}
+            {groupedByCategory.map((group) => (
+              <div key={group.name}>
+                <div className="flex items-center gap-2 mb-3 mt-2">
+                  <h3 className="text-sm font-bold text-slate-800">{group.name}</h3>
+                  <p className="text-xs text-slate-400">{group.reason}</p>
+                </div>
+
+                <div className="space-y-3">
+                  {group.people.length === 0 ? (
+                    <div className="rounded-xl bg-white border border-slate-100 px-4 py-4 text-sm text-slate-400 italic">Searching for more connections...</div>
+                  ) : group.people.map((person) => (
+                    <div key={person.linkedinUrl} className="rounded-xl bg-white shadow-sm border border-slate-100 overflow-hidden">
+                      <div className="px-4 sm:px-5 py-4">
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-700">
+                            {person.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-slate-900">{person.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{person.role}{person.company !== "Unknown" ? ` at ${person.company}` : ""}</p>
+                          </div>
+                          <a href={person.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                            onClick={() => track("demo_linkedin_click", { person: person.name })}
+                            className="shrink-0 rounded-lg bg-[#0A66C2] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#004182] active:bg-[#003366] transition-colors">
+                            LinkedIn
+                          </a>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900">{path.alumni.name}</p>
-                          <p className="text-xs text-slate-500 truncate">{path.alumni.currentRole}</p>
+                        <p className="text-xs text-slate-500 mb-3">{person.narrative}</p>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+                          <p className="text-sm text-slate-700 leading-relaxed">&ldquo;{person.suggestedOpener}&rdquo;</p>
+                          <button type="button" onClick={() => handleCopy(person.suggestedOpener, person.linkedinUrl)}
+                            className={`mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+                              copied === person.linkedinUrl
+                                ? "bg-emerald-700 text-white"
+                                : "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800"
+                            }`}>
+                            {copied === person.linkedinUrl ? "Copied to clipboard!" : "Copy connection message"}
+                          </button>
                         </div>
-                        <a href={path.alumni.linkedinUrl} target="_blank" rel="noopener noreferrer"
-                          onClick={() => track("demo_linkedin_click", { alumni: path.alumni.name, company: company.name })}
-                          className="shrink-0 rounded-lg bg-[#0A66C2] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#004182] active:bg-[#003366] transition-colors">
-                          LinkedIn
-                        </a>
-                      </div>
-                      <p className="text-xs text-slate-500 mb-3">{path.narrative}</p>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
-                        <p className="text-sm text-slate-700 leading-relaxed">&ldquo;{path.suggestedOpener}&rdquo;</p>
-                        <button type="button" onClick={() => handleCopy(path.suggestedOpener, path.alumni.id)}
-                          className={`mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
-                            copied === path.alumni.id
-                              ? "bg-emerald-600 text-white"
-                              : "bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800"
-                          }`}>
-                          {copied === path.alumni.id ? "Copied to clipboard!" : "Copy connection message"}
-                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
 
             {/* CTA */}
             <div className="rounded-2xl bg-slate-900 p-6 sm:p-8 text-center">
-              <p className="text-2xl sm:text-3xl font-bold text-white mb-2">Get 50 more connections free.</p>
-              <p className="text-slate-400 text-sm sm:text-base mb-6 max-w-md mx-auto">
-                Drop your email and we&apos;ll send you a full list of alumni at companies matched to your resume — plus an AI agent that messages them for you.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@rice.edu"
-                  className="flex-1 rounded-xl bg-slate-800 border border-slate-700 px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
-                <button type="button" onClick={handleSignup}
-                  className="rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-white hover:bg-emerald-400 active:bg-emerald-600 transition-colors whitespace-nowrap">
-                  Get early access
-                </button>
-              </div>
-              {signupError && <p className="text-sm text-red-400 mt-2">{signupError}</p>}
-              <p className="text-xs text-slate-500 mt-4">Launching next week. Your resume data stays private.</p>
+              {signedUp ? (
+                <>
+                  <p className="text-2xl sm:text-3xl font-bold text-white mb-2">You&apos;re on the list!</p>
+                  <p className="text-slate-400 text-sm">We&apos;ll send you 50 more connections next week.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-2xl sm:text-3xl font-bold text-white mb-2">Get 50 more connections free.</p>
+                  <p className="text-slate-400 text-sm sm:text-base mb-6 max-w-md mx-auto">
+                    Drop your email and next week we&apos;ll send you a full list matched to your resume — plus an AI agent that messages them for you.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com"
+                      className="flex-1 rounded-xl bg-slate-800 border border-slate-700 px-4 py-3.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+                    <button type="button" onClick={handleSignup}
+                      className="rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-white hover:bg-emerald-400 active:bg-emerald-600 transition-colors whitespace-nowrap">
+                      Get early access
+                    </button>
+                  </div>
+                  {signupError && <p className="text-sm text-red-400 mt-2">{signupError}</p>}
+                  <p className="text-xs text-slate-500 mt-4">Launching next week. Your data stays private.</p>
+                </>
+              )}
             </div>
-          </div>
-        )}
-
-        {/* Done */}
-        {step === "done" && (
-          <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-6 sm:p-8 text-center">
-            <p className="text-3xl mb-3">&#x1F389;</p>
-            <p className="text-xl font-bold text-emerald-900 mb-2">You&apos;re on the list!</p>
-            <p className="text-sm text-emerald-700">We&apos;ll reach out when the pilot is ready.</p>
-            <button type="button" onClick={() => setStep("results")}
-              className="mt-4 rounded-xl border border-emerald-300 px-5 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 transition-colors">
-              Back to your results
-            </button>
           </div>
         )}
 

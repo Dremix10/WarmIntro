@@ -10,7 +10,7 @@ const AI_ROUTES = [
 ];
 
 // Routes that call Claude but allow guest access (no auth required)
-const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate-outreach"];
+const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate-outreach", "/api/find-people"];
 
 // Auth routes — brute-force protection
 const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup"];
