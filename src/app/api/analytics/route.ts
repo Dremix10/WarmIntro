@@ -40,6 +40,10 @@ export async function GET(request: Request) {
     .from("pilot_signups")
     .select("*", { count: "exact", head: true });
 
+  const { count: demoSessionCount } = await supabase
+    .from("demo_sessions")
+    .select("*", { count: "exact", head: true });
+
   // Demo funnel
   const demoFunnel = {
     views: counts["demo_view"] ?? 0,
@@ -57,6 +61,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     totalUsers: userCount ?? 0,
     pilotSignups: pilotCount ?? 0,
+    demoSessions: demoSessionCount ?? 0,
     demoFunnel,
     allTime: counts,
     today: todayCounts,

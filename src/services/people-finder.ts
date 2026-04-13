@@ -58,11 +58,17 @@ export async function findRealPeopleForRole(
     seenUrls.add(r.link);
 
     const name = extractNameFromTitle(r.title);
-    // Extract role and company from title/snippet
+
+    // Skip truncated names (e.g. "Phil C.") or single-word names — likely bad data
+    if (name.length < 4 || !name.includes(" ") || name.endsWith(".")) continue;
+
+    // Validate LinkedIn slug — skip if it looks auto-generated or broken
+    const slug = r.link.split("linkedin.com/in/")[1]?.split("?")[0]?.replace(/\/$/, "");
+    if (!slug || slug.length < 3) continue;
+
     const titleParts = r.title.split(" - ");
     const headline = titleParts[1]?.trim() ?? r.snippet.slice(0, 100);
 
-    // Try to extract company from headline
     const atMatch = headline.match(/(?:at|@)\s+(.+?)(?:\s*[|·\-]|$)/i);
     const company = atMatch?.[1]?.trim() ?? "";
 

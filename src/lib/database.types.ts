@@ -33,6 +33,38 @@ export interface Database {
         };
         Relationships: [];
       };
+      demo_sessions: {
+        Row: {
+          id: string;
+          name: string | null;
+          major: string | null;
+          university: string | null;
+          graduation_year: number | null;
+          skills: Json;
+          target_roles: Json;
+          target_industries: Json;
+          resume_text: string | null;
+          categories: Json;
+          people_found: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name?: string | null;
+          major?: string | null;
+          university?: string | null;
+          graduation_year?: number | null;
+          skills?: Json;
+          target_roles?: Json;
+          target_industries?: Json;
+          resume_text?: string | null;
+          categories?: Json;
+          people_found?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["demo_sessions"]["Insert"]>;
+        Relationships: [];
+      };
       pilot_signups: {
         Row: {
           id: string;

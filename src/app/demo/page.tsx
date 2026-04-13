@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, type ChangeEvent } from "react";
 import { track, trackError } from "@/lib/track";
+import { supabase } from "@/lib/supabase-browser";
 import type { UserProfile } from "@/shared/types";
 
 type Step = "upload" | "working" | "results" | "done";
@@ -113,6 +114,21 @@ export default function DemoPage() {
       setCategories(cats);
       setPeople(ppl);
       track("demo_results_shown", { categories: cats.map((c: { name: string }) => c.name), peopleFound: ppl.length });
+
+      // Save full session including resume
+      supabase.from("demo_sessions").insert({
+        name: p.name,
+        major: p.major,
+        university: p.university,
+        graduation_year: p.graduationYear,
+        skills: JSON.parse(JSON.stringify(p.skills)),
+        target_roles: JSON.parse(JSON.stringify(p.targetRoles)),
+        target_industries: JSON.parse(JSON.stringify(p.targetIndustries)),
+        resume_text: text,
+        categories: JSON.parse(JSON.stringify(cats)),
+        people_found: JSON.parse(JSON.stringify(ppl)),
+      }).then(() => {});
+
       setStep("results");
     } catch (err) {
       trackError("demo_flow", err);
