@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import { AppProvider } from "@/components/AppProvider";
 import { NavHeader } from "@/components/NavHeader";
 import "./globals.css";
@@ -14,10 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "WarmIntro — Recruiting Relationship Engine",
+  title: "Alma — The warm-intro engine for Brown & Rice students",
   description:
-    "Transform cold applications into warm introductions with AI-powered networking.",
+    "Alma reads your resume, finds alumni at companies where you'd thrive, and drafts the outreach you'd actually send. One hour a week is enough.",
 };
 
 export default function RootLayout({
@@ -28,9 +34,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-[#EAE3D2] text-[#14182A]">
         <AppProvider>
           <NavHeader />
           {children}

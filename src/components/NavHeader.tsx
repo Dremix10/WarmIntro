@@ -10,7 +10,8 @@ const STEPS = [
   { path: "/pipeline", label: "Pipeline", step: 3 },
   { path: "/outreach", label: "Outreach", step: 4, noLink: true },
   { path: "/crm", label: "CRM", step: 5 },
-  { path: "/leaderboard", label: "Board", step: 6 },
+  { path: "/network", label: "Grove", step: 6 },
+  { path: "/leaderboard", label: "Board", step: 7 },
 ];
 
 export function NavHeader() {
@@ -23,7 +24,7 @@ export function NavHeader() {
     ? 4
     : STEPS.find((s) => s.path === pathname)?.step ?? 0;
 
-  if (pathname === "/" || pathname === "/demo") return null;
+  if (pathname === "/" || pathname === "/demo" || pathname.startsWith("/design-lab")) return null;
 
   const canNavigate = (step: number): boolean => {
     if (step === 0) return true;
@@ -38,62 +39,59 @@ export function NavHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-slate-200">
-      <div className="mx-auto max-w-5xl px-6 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <button type="button" onClick={() => router.push("/")}
-          className="text-lg font-bold tracking-tight text-slate-900 hover:text-emerald-600 transition-colors">
-          Warm<span className="text-emerald-600">Intro</span>
+    <header className="sticky top-0 z-40 border-b border-[#D9CFB5] bg-[#EAE3D2]/90 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)] hover:text-[#2E5A88] transition-colors"
+        >
+          alma
         </button>
 
-        {/* Step indicators */}
-        <nav className="hidden sm:flex items-center gap-1">
+        <nav className="hidden items-center gap-1 sm:flex">
           {STEPS.filter((s) => s.step > 0).map((s) => {
             const active = currentStep === s.step;
-            const completed = currentStep > s.step;
             const navigable = canNavigate(s.step);
-
             return (
-              <button key={s.path} type="button"
+              <button
+                key={s.path}
+                type="button"
                 onClick={() => navigable && !("noLink" in s && s.noLink) && router.push(s.path)}
                 disabled={!navigable || ("noLink" in s && !!s.noLink)}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  active ? "bg-emerald-50 text-emerald-700"
-                    : completed ? "text-emerald-600 hover:bg-emerald-50 cursor-pointer"
-                    : navigable ? "text-slate-400 hover:text-slate-600 cursor-pointer"
-                    : "text-slate-300 cursor-default"
-                }`}>
-                <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
-                  active ? "bg-emerald-600 text-white"
-                    : completed ? "bg-emerald-100 text-emerald-600"
-                    : "bg-slate-100 text-slate-400"
-                }`}>
-                  {completed ? "\u2713" : s.step}
-                </span>
-                <span className="hidden md:inline">{s.label}</span>
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  active
+                    ? "bg-[#1B3B5F] text-white"
+                    : navigable
+                    ? "text-[#5C6472] hover:text-[#1B3B5F] hover:bg-white"
+                    : "text-[#8A8674] cursor-default"
+                }`}
+              >
+                {s.label}
               </button>
             );
           })}
         </nav>
 
-        {/* Mobile step indicator */}
-        <span className="sm:hidden text-xs font-medium text-slate-400">
-          {currentStep > 0 ? `${currentStep}/6` : ""}
+        <span className="text-[10px] font-medium text-[#5C6472] sm:hidden">
+          {currentStep > 0 ? `${currentStep}/7` : ""}
         </span>
 
-        {/* Right side: XP + logout */}
         <div className="flex items-center gap-2">
           {gameState && gameState.xp > 0 && (
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1">
-              <span className="text-xs font-bold text-emerald-600">{gameState.xp} XP</span>
+            <div className="flex items-center gap-2 rounded-full border border-[#D9CFB5] bg-white px-3 py-1">
+              <span className="text-xs font-semibold tabular-nums text-[#1B3B5F]">{gameState.xp} xp</span>
               {gameState.streak > 0 && (
-                <span className="text-xs text-amber-500">&#x1F525;{gameState.streak}</span>
+                <span className="text-xs text-[#B08100]">&#x1F525; {gameState.streak}</span>
               )}
             </div>
           )}
           {session && (
-            <button type="button" onClick={handleSignOut}
-              className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="rounded-full border border-[#D9CFB5] bg-white px-3 py-1 text-xs font-medium text-[#5C6472] hover:border-[#2E5A88] hover:text-[#1B3B5F] transition-colors"
+            >
               Sign out
             </button>
           )}

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ScenePreview } from "./_landing/ScenePreview";
-import { FunnelMath } from "./_landing/FunnelMath";
+import { ScenePreview } from "./_parts/ScenePreview";
+import { FunnelMath } from "./_parts/FunnelMath";
 
 const STEPS = [
   {
@@ -27,19 +27,19 @@ const STEPS = [
 
 const PREVIEWS = [
   {
-    href: "/pipeline",
+    href: "/design-lab/pipeline-hybrid",
     eyebrow: "Pipeline",
     title: "Your journey, in one page.",
     body: "Distance to your offer, today’s three tasks, where the pipeline is heating up.",
   },
   {
-    href: "/network",
+    href: "/design-lab/network",
     eyebrow: "Archipelago",
     title: "Your network, as a place.",
     body: "Every company is an island. Every intro builds a little more of a home standing on it.",
   },
   {
-    href: "/recap",
+    href: "/design-lab/recap",
     eyebrow: "Sunday letter",
     title: "A read, not a dashboard.",
     body: "Each Sunday, one page in Alma’s voice. What moved, what to do next, what to notice.",
@@ -71,7 +71,7 @@ const FAQ = [
 
 export default function LandingTemplate() {
   return (
-    <div className="bg-[#EAE3D2] text-[#14182A]">
+    <div className="fixed inset-0 z-50 overflow-auto bg-[#EAE3D2] text-[#14182A]">
       <TopBar />
       <Hero />
       <Divider />
@@ -98,6 +98,7 @@ function TopBar() {
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
           <a href="#how" className="hover:text-[#1B3B5F]">How it works</a>
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
+          <a href="/design-lab" className="hidden text-[#2E5A88] hover:underline md:inline">&larr; lab</a>
           <button type="button" className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]">
             Log in
           </button>

@@ -2,8 +2,10 @@ import { Board } from "./_parts/Board";
 
 export default function LeaderboardTemplate() {
   return (
-    <div className="bg-[#EAE3D2] text-[#14182A]">
-      <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">        <Hero />
+    <div className="fixed inset-0 z-50 overflow-auto bg-[#EAE3D2] text-[#14182A]">
+      <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">
+        <Header />
+        <Hero />
         <Board />
 
         <section className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">

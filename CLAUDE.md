@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-WarmIntro transforms job searching from cold applications into a strategic networking pipeline with gamified progress tracking. Target: Rice University students seeking internships.
+**Alma** (formerly WarmIntro) transforms job searching from cold applications into a strategic networking pipeline with gamified progress tracking. Target: Brown and Rice University students seeking internships. Cofounders: one Brown student, one Rice student.
 
 **Core flow:** Resume upload → Claude parses profile → 30+ companies ranked by alumni connections → user picks favorites → system finds alumni at those companies → Claude drafts personalized outreach → funnel dashboard tracks pipeline with XP/badges/streaks.
 
 **The funnel math:** 100 outreach → 30 replies → 15 coffees → 6 referrals → 3 interviews → 1 offer.
+
+**Product voice:** Alma means *leap* in Greek. The app is framed as a friend and mentor — calm, optimistic, professional × personal. Mentor quotes live in italic Fraunces. The CRM is also surfaced as an archipelago of islands (one per company) where every connection is a construction stage (logs → foundation → walls → roof → home). See `FRONTEND_HANDOFF.md` for the complete visual system and `BACKEND_REQUESTS.md` for the current backlog.
 
 ## Commands
 
@@ -72,13 +74,18 @@ No database. Seed data in `src/data/` as JSON files: `alumni.json` (Rice alumni)
 
 ## Page routing
 
-1. `/` → upload resume → `/profile`
-2. `/profile` → review + pick industry → `/companies`
-3. `/companies` → select favorites → `/pipeline`
+1. `/` → marketing landing (funnel math, how it works, FAQ)
+2. `/profile` → review parsed profile + pick industries
+3. `/companies` → select favorite companies
 4. `/pipeline` → funnel hub → click company → `/outreach/[id]`
 5. `/outreach/[id]` → draft + send → back to `/pipeline`
-6. `/crm` → track connections across companies (kanban view)
-7. `/leaderboard` → compete with classmates
+6. `/crm` → track connections (kanban + list, filter/sort)
+7. `/network` → archipelago view of your network (islands + construction stages)
+8. `/quests` → weekly quests + milestone feed
+9. `/recap` → Sunday letter from Alma
+10. `/cohort` → aggregate numbers across your class (non-competitive)
+11. `/leaderboard` → class competition
+12. `/design-lab/*` → reference designs for staged UI migration (see `FRONTEND_HANDOFF.md`)
 
 ## Coding conventions
 
@@ -87,7 +94,8 @@ No database. Seed data in `src/data/` as JSON files: `alumni.json` (Rice alumni)
 - File naming: kebab-case for services/utilities, PascalCase for React components
 - Keep files under 200 lines — extract components/modules when approaching limit
 - All API routes validate required fields before processing
-- Tailwind CSS: emerald primary, slate neutrals, amber for streaks. `rounded-xl` cards, `shadow-sm` default
+- Tailwind CSS palette: warm stone body (`#EAE3D2`), Aegean blue primary (`#1B3B5F` / `#2E5A88`), terracotta accent (`#C86B4F`), ochre for streaks only (`#E8B339`). `rounded-2xl` cards on cream/white, hairline borders `#D9CFB5`.
+- Typography: **Fraunces** (variable serif) for display + big tabular numbers + Alma's italic mentor voice. **Geist Sans** for UI body text.
 
 ## Key domain terms
 
