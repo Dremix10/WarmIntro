@@ -2,6 +2,28 @@
 
 > For: backend cofounder. Last updated: 2026-04-23.
 
+## IB pivot (2026-04-23)
+
+We niched to **investment banking** for the YC application. UI is now tailored for Brown/Rice students breaking into IB. **Same brand, same design system, same page structure** — just a few smart swaps:
+
+- **Landing copy** niches to IB (hero, funnel math, FAQ all rewritten)
+- **Funnel math** updated: 120 calls → 40 responses → 20 coffees → 8 referrals → 4 first rounds → 2 superdays → 1 offer
+- **Profile "Target Groups" picker** replaces industries — M&A, TMT, Healthcare, Consumer, Industrials, Energy, FIG, Sponsors, LevFin, Restructuring, Real Estate, ECM/DCM
+- **Companies = banks**, tiered (Bulge Bracket / Elite Boutique / Middle Market). Shortlist now: Morgan Stanley, Goldman Sachs, Evercore, Centerview, JPMorgan, PJT. Browse has 24 more.
+- **CRM stages extended**: sent → replied → coffee → referral → **firstRound → superday** → offer (added two stages to match real IB funnel)
+- **NEW: `<TimelineBanner />` component** (`src/components/TimelineBanner.tsx`) — the signature IB-specific UI. Shows the 6-phase 2026 cycle (Prep → Networking → Apps → First Rounds → Superdays → Offers) with current phase highlighted and days-to-next-milestone. Dropped into `/design-lab/pipeline-hybrid`. Add to the real `/pipeline` during migration.
+
+**Archipelago stage glyphs unchanged** — logs / foundation / walls / roof / home still work; `firstRound`, `superday`, `offer` all map to "home" visually (sub-stage granularity lives in /crm where it matters).
+
+**What the cofounder needs to add on the backend for IB** (see BACKEND_REQUESTS.md for full detail):
+- **Bank+group tree** as a first-class data model (firm → group → banker), replaces the generic "industry" string
+- **IB recruiting calendar** config (phase dates + per-bank app-open dates) driving `<TimelineBanner />`
+- **Deal tracker** per banker — what deals have they worked on, for networking-call prep
+- **Technical prep tracker** (DCF, LBO, M&A, accounting) — stretch goal for v1
+
+---
+
+
 You're picking this up to wire the backend. This doc tells you what the frontend looks like now, what's mock, what uses real state, and what backend work each page needs.
 
 ---

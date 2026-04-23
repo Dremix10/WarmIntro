@@ -5,23 +5,23 @@ import { FunnelMath } from "./_landing/FunnelMath";
 const STEPS = [
   {
     n: "01",
-    title: "Read you like a mentor",
-    body: "Alma reads your resume and tells you honestly what you’re strong at, where alumni density will carry you furthest, and which three industries actually fit.",
+    title: "Know the calendar cold",
+    body: "IB recruiting runs on a fixed clock — calls in the fall, apps Sept/Oct, superdays by January. Alma shows you where you are and what's next, so you never miss the window.",
   },
   {
     n: "02",
-    title: "Find the warm path",
-    body: "For every company on your shortlist, Alma surfaces alumni with shared majors, clubs, or classes — and a warmth score so you never write to a stranger.",
+    title: "Find the bankers who'll take your call",
+    body: "For every bank and group, Alma surfaces alumni with shared majors, clubs, or classes — and a warmth score so you never write to a stranger. Prioritized by who replies.",
   },
   {
     n: "03",
-    title: "Draft what you’d actually send",
+    title: "Draft what you'd actually send",
     body: "Short, specific, student-voiced. No AI tells. No em-dashes. Three tones to pick from. You edit a line, hit copy, send from your own inbox.",
   },
   {
     n: "04",
-    title: "Track without the spreadsheet",
-    body: "Pipeline dashboard, CRM kanban, weekly Sunday recap. Alma handles the admin. You show up for an hour, three times a week.",
+    title: "Track every call through superday",
+    body: "Pipeline dashboard, CRM kanban, weekly Sunday recap. Stages mapped to the real IB funnel — call → coffee → referral → first round → superday → offer.",
   },
 ];
 
@@ -49,7 +49,7 @@ const PREVIEWS = [
 const FAQ = [
   {
     q: "Is Alma a jobs board?",
-    a: "No. Alma doesn’t list openings — it helps you reach the humans behind them. The best internships are never on a board.",
+    a: "No. Alma doesn't list applications — it helps you reach the bankers who decide who gets a first round. The offer is almost never won on the application form.",
   },
   {
     q: "Does Alma send emails for me?",
@@ -57,15 +57,19 @@ const FAQ = [
   },
   {
     q: "What does it cost?",
-    a: "Free through spring and summer 2026 for Brown and Rice students.",
+    a: "Free through the 2026 recruiting cycle for Brown and Rice students.",
   },
   {
-    q: "Do I need to study CS?",
-    a: "No. The funnel math works for any field with alumni. We’ve seen it work for consulting, product, design, econ, research.",
+    q: "I'm not a finance major. Does that matter?",
+    a: "No. Every year students break in from econ, stats, math, CS, history, engineering, even art. What matters is the calls, the GPA, and a clear story for why banking. Alma helps with all three.",
+  },
+  {
+    q: "Which banks do you cover?",
+    a: "All of them — Bulge Bracket (GS, MS, JPM, BAML, Citi, Barclays, DB, UBS), Elite Boutiques (Evercore, Centerview, Lazard, Moelis, PJT, Guggenheim, Perella, Greenhill, Qatalyst), Middle Market (Jefferies, Houlihan Lokey, Raymond James, William Blair, Baird, Piper Sandler). Pick a tier, pick a group, go.",
   },
   {
     q: "Will recruiters see I used AI?",
-    a: "No. Alma’s drafts are written to sound like a student, not a bot. You make them yours with small edits.",
+    a: "No. Alma's drafts are written to sound like a student, not a bot. You make them yours with small edits. The system prompt explicitly bans em-dashes and AI tells.",
   },
 ];
 
@@ -111,14 +115,14 @@ function Hero() {
   return (
     <section className="mx-auto max-w-5xl px-6 pt-16 pb-20 md:pt-24 md:pb-28">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
-        For Brown &amp; Rice students &middot; spring ’26
+        Investment banking &middot; for Brown &amp; Rice students &middot; 2026 cycle
       </p>
       <h1 className="mt-5 max-w-3xl text-5xl leading-[1.02] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[68px]">
-        Every warm intro starts with <span className="italic text-[#2E5A88]">one leap</span>.
+        The warm-intro engine for students breaking into <span className="italic text-[#2E5A88]">investment banking</span>.
       </h1>
       <p className="mt-6 max-w-xl text-base leading-relaxed text-[#4A5260] md:text-lg">
-        Alma reads your resume, finds alumni at the companies where you’d thrive, and drafts the
-        outreach you’d actually send. One hour a week is enough.
+        Alma reads your resume, finds alumni at every bank and coverage group, drafts the call
+        requests you'd actually send, and tracks you through superday. One hour a week is enough.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
         <button
@@ -147,13 +151,14 @@ function FunnelSection() {
   return (
     <section className="mx-auto max-w-4xl px-6 py-20">
       <div className="text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">The math no one tells you</p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">The IB funnel, honestly</p>
         <h2 className="mx-auto mt-4 max-w-2xl text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
-          It takes ~100 warm intros to get one offer. <span className="italic text-[#2E5A88]">Most students do zero.</span>
+          It takes ~120 networking calls to land one offer. <span className="italic text-[#2E5A88]">Consistency wins.</span>
         </h2>
         <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260] md:text-base">
-          Recruiting is lonely because the math is honest. Referrals are worth 10× a cold application.
-          But the funnel is real — you need consistent reaches, not a hero week.
+          Banking recruiting is a filter, not a lottery. Referrals convert 10× better than the cold
+          portal. The math is simple — you just need to keep showing up for sixteen weeks, not crush
+          a single day.
         </p>
       </div>
 
@@ -240,7 +245,7 @@ function ForWho() {
     <section className="mx-auto max-w-4xl px-6 py-20 text-center">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">Built for you</p>
       <h2 className="mx-auto mt-4 max-w-2xl text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
-        For the student who’s tired of the <span className="italic text-[#2E5A88]">cold-apply carousel</span>.
+        For students who refuse to lose recruiting <span className="italic text-[#2E5A88]">to bad organization</span>.
       </h2>
       <p className="mx-auto mt-4 max-w-xl text-sm text-[#4A5260] md:text-base">
         Alma is built by a Brown student and a Rice student who know what it’s like to lose

@@ -5,7 +5,8 @@ const STAGE_STYLES: Record<Stage, { label: string; bg: string; text: string }> =
   replied: { label: "Replied", bg: "bg-[#FDEFE7]", text: "text-[#C86B4F]" },
   coffee: { label: "Coffee", bg: "bg-[#F0F4FA]", text: "text-[#1B3B5F]" },
   referral: { label: "Referral", bg: "bg-[#EAF0E7]", text: "text-[#4D6A4A]" },
-  interview: { label: "Interview", bg: "bg-[#FFF8E8]", text: "text-[#B08100]" },
+  firstRound: { label: "1st Round", bg: "bg-[#FFF8E8]", text: "text-[#B08100]" },
+  superday: { label: "Superday", bg: "bg-[#2E5A88]", text: "text-white" },
   offer: { label: "Offer", bg: "bg-[#1B3B5F]", text: "text-white" },
 };
 

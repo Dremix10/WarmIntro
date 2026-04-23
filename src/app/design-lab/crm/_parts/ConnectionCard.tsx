@@ -1,4 +1,4 @@
-export type Stage = "sent" | "replied" | "coffee" | "referral" | "interview" | "offer";
+export type Stage = "sent" | "replied" | "coffee" | "referral" | "firstRound" | "superday" | "offer";
 export type University = "Brown" | "Rice" | "Other";
 
 export type Connection = {

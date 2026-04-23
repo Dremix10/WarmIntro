@@ -4,62 +4,62 @@ import { BrowseSection } from "./_parts/BrowseSection";
 const SHORTLIST = [
   {
     rank: 1,
-    name: "Linear",
-    logo: "L",
-    why: "12 Brown alumni, 3 in product. Your React + TypeScript work is a direct match for their design-engineer roles.",
-    alumni: 12,
-    roles: 4,
-    tags: ["SaaS", "Dev tools"],
+    name: "Morgan Stanley",
+    logo: "MS",
+    why: "18 Brown alumni across TMT, M&A, and Sponsors. Known for the strongest tech-student conversion among BBs. Your CS background fits TMT cleanly.",
+    alumni: 18,
+    roles: 6,
+    tags: ["Bulge Bracket", "TMT", "M&A"],
     warmth: "strong" as const,
   },
   {
     rank: 2,
-    name: "Stripe",
-    logo: "S",
-    why: "8 alumni, 2 already replied to classmates last month. High-velocity hiring season starts next week.",
-    alumni: 8,
-    roles: 6,
-    tags: ["Fintech", "Infra"],
+    name: "Goldman Sachs",
+    logo: "GS",
+    why: "22 alumni, 4 VPs who respond to students. Most competitive BB but the Brown pipeline is strong. Start early, lead with TMT or Healthcare.",
+    alumni: 22,
+    roles: 5,
+    tags: ["Bulge Bracket", "TMT", "Healthcare"],
     warmth: "strong" as const,
   },
   {
     rank: 3,
-    name: "Figma",
-    logo: "F",
-    why: "6 alumni across design + eng. Your UI coursework and portfolio line up with their design-systems team.",
-    alumni: 6,
+    name: "Evercore",
+    logo: "EV",
+    why: "9 alumni at one of the top Elite Boutiques. M&A-focused, smaller class, higher per-capita comp. Responsive to networking when you lead with specifics.",
+    alumni: 9,
     roles: 3,
-    tags: ["Design", "SaaS"],
+    tags: ["Elite Boutique", "M&A"],
     warmth: "medium" as const,
   },
   {
     rank: 4,
-    name: "Notion",
-    logo: "N",
-    why: "5 alumni, 1 senior. Smaller alumni pool but unusually responsive — 60% reply rate from classmates.",
-    alumni: 5,
+    name: "Centerview Partners",
+    logo: "CV",
+    why: "4 alumni, but every one of them replied to a classmate last year. Smallest BB+EB tier — 30 summer analysts nationally. Pure M&A advisory.",
+    alumni: 4,
     roles: 2,
-    tags: ["SaaS", "Productivity"],
+    tags: ["Elite Boutique", "M&A"],
     warmth: "medium" as const,
   },
   {
     rank: 5,
-    name: "Ramp",
-    logo: "R",
-    why: "4 alumni, all ICs. Fast-growing with open generalist SWE internships that fit your CS/econ background.",
-    alumni: 4,
-    roles: 5,
-    tags: ["Fintech"],
+    name: "JPMorgan",
+    logo: "JPM",
+    why: "24 alumni across LevFin, M&A, and coverage. Biggest analyst class of any BB — easier entry, more structured training. Strong Brown presence in NYC.",
+    alumni: 24,
+    roles: 8,
+    tags: ["Bulge Bracket", "LevFin", "M&A"],
     warmth: "medium" as const,
   },
   {
     rank: 6,
-    name: "Vercel",
-    logo: "V",
-    why: "3 alumni, 1 warm contact via your clubs. Lean alumni but strong signal on the ones you have.",
-    alumni: 3,
+    name: "PJT Partners",
+    logo: "PJT",
+    why: "6 alumni, 2 in RSSG (Restructuring). If you're open to RX, PJT is the top shop. Even if not, their M&A group punches above its weight.",
+    alumni: 6,
     roles: 3,
-    tags: ["Dev tools", "Infra"],
+    tags: ["Elite Boutique", "Restructuring", "M&A"],
     warmth: "light" as const,
   },
 ];
@@ -74,9 +74,9 @@ export default function CompaniesTemplate() {
         <section className="mt-10">
           <div className="flex items-baseline justify-between">
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#5C6472]">
-              Alma’s shortlist &middot; 6 strong matches
+              Alma&rsquo;s shortlist &middot; 6 banks to start with
             </p>
-            <p className="text-xs text-[#5C6472]">ordered by alumni density × skill fit</p>
+            <p className="text-xs text-[#5C6472]">ordered by alumni density × group fit × reply rate</p>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -136,12 +136,12 @@ function Hero() {
     <div className="mt-12">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">For Kinsey · Brown CS ’27</p>
       <h1 className="mt-4 text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
-        Six companies where <span className="italic text-[#2E5A88]">you have a shot</span>.
+        Six banks where <span className="italic text-[#2E5A88]">you have a shot</span>.
       </h1>
       <p className="mt-4 max-w-2xl text-sm text-[#4A5260]">
-        Alma read your resume and ranked every company in our database. These six have the strongest
-        combination of alumni density, role fit, and active hiring right now. Pick the ones that
-        excite you — we’ll build the pipeline next.
+        Alma ranked every Bulge Bracket, Elite Boutique, and Middle Market shop against your
+        profile, your groups, and how often their Brown/Rice alumni actually reply. These six
+        are where your hours return the most. Pick them — we&rsquo;ll build the pipeline next.
       </p>
     </div>
   );

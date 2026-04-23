@@ -13,18 +13,18 @@ type Industry = {
 };
 
 const INDUSTRIES: Industry[] = [
-  { id: "devtools", name: "Developer Tools", icon: "{ }", companies: 24, alumni: 47, examples: ["Linear", "Vercel", "Retool", "Cursor", "Replit"], recommended: true },
-  { id: "infra", name: "Infrastructure & Cloud", icon: "☁", companies: 18, alumni: 32, examples: ["Cloudflare", "Datadog", "Snowflake", "Modal"], recommended: true },
-  { id: "ai", name: "AI & ML", icon: "✺", companies: 22, alumni: 28, examples: ["Anthropic", "OpenAI", "Perplexity", "Scale", "Hex"] },
-  { id: "fintech", name: "Fintech", icon: "$", companies: 30, alumni: 38, examples: ["Stripe", "Plaid", "Mercury", "Ramp", "Brex"] },
-  { id: "saas", name: "SaaS & Productivity", icon: "▣", companies: 28, alumni: 41, examples: ["Notion", "Asana", "Airtable", "Rippling"] },
-  { id: "design", name: "Design & Creative", icon: "◐", companies: 12, alumni: 19, examples: ["Figma", "Framer", "Arc"] },
-  { id: "data", name: "Data & Analytics", icon: "≋", companies: 16, alumni: 22, examples: ["Segment", "Hex", "Dbt Labs"] },
-  { id: "consumer", name: "Consumer & Social", icon: "◈", companies: 20, alumni: 34, examples: ["Discord", "Instagram", "BeReal"] },
-  { id: "healthtech", name: "Healthcare Tech", icon: "✚", companies: 14, alumni: 17, examples: ["Oscar", "Alto", "Tempus"] },
-  { id: "climate", name: "Climate", icon: "✿", companies: 11, alumni: 12, examples: ["Watershed", "Pachama"] },
-  { id: "robotics", name: "Robotics & Hardware", icon: "⚙", companies: 9, alumni: 8, examples: ["Boston Dynamics", "Skydio"] },
-  { id: "gaming", name: "Gaming", icon: "▷", companies: 8, alumni: 11, examples: ["Roblox", "Discord", "Riot"] },
+  { id: "mna", name: "M&A (Mergers & Acquisitions)", icon: "◆", companies: 25, alumni: 54, examples: ["GS M&A", "MS M&A", "Evercore", "Centerview", "Lazard"], recommended: true },
+  { id: "tmt", name: "TMT", icon: "◈", companies: 22, alumni: 48, examples: ["MS TMT", "Qatalyst", "GS TMT", "Allen & Co"], recommended: true },
+  { id: "healthcare", name: "Healthcare", icon: "✚", companies: 20, alumni: 32, examples: ["JPM Healthcare", "GS Healthcare", "Centerview", "Jefferies"] },
+  { id: "consumer", name: "Consumer & Retail", icon: "◐", companies: 18, alumni: 28, examples: ["BAML C&R", "Barclays", "Guggenheim"] },
+  { id: "industrials", name: "Industrials", icon: "▣", companies: 16, alumni: 22, examples: ["MS Industrials", "Evercore", "Baird", "Blair"] },
+  { id: "energy", name: "Energy & Power", icon: "⚡", companies: 14, alumni: 26, examples: ["GS Energy", "Citi", "RBC", "Tudor Pickering"] },
+  { id: "fig", name: "Financial Institutions (FIG)", icon: "$", companies: 17, alumni: 24, examples: ["MS FIG", "Keefe Bruyette", "Piper Sandler"] },
+  { id: "sponsors", name: "Financial Sponsors", icon: "◑", companies: 14, alumni: 31, examples: ["MS Sponsors", "JPM FSG", "Jefferies"] },
+  { id: "levfin", name: "Leveraged Finance", icon: "≋", companies: 12, alumni: 21, examples: ["JPM LevFin", "BAML LevFin", "Credit Suisse legacy"] },
+  { id: "restructuring", name: "Restructuring", icon: "◉", companies: 10, alumni: 17, examples: ["PJT RSSG", "Houlihan Lokey", "Lazard RX", "Evercore RX"] },
+  { id: "realestate", name: "Real Estate", icon: "▥", companies: 12, alumni: 14, examples: ["Eastdil Secured", "Newmark", "JLL"] },
+  { id: "ecm_dcm", name: "ECM / DCM", icon: "✺", companies: 14, alumni: 19, examples: ["GS ECM", "MS DCM", "Citi"] },
 ];
 
 const MAX = 3;

@@ -176,10 +176,10 @@ export default function ProfileTemplate() {
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">Alma’s take on you</p>
               <p className="mt-2 text-sm leading-relaxed text-[#14182A] font-[family-name:var(--font-fraunces)] italic">
-                “You’re a builder who ships. The Cloudflare internship plus the lab work puts you
-                in a rare bucket — systems-minded CS students who also care about craft. Dev tools and
-                infra are the sweet spot. Don’t undersell the teaching or the WICS leadership;
-                those open more doors than you’d expect.”
+                “You're positioned well for banking. 3.78 GPA clears the BB screen, the Cloudflare
+                intern is a real story to pitch, and WICS leadership is a strong narrative. TMT is
+                the obvious group given your CS background, but don't sleep on M&A or Healthcare —
+                your bullets convert there too. Start calls by Labor Day; apps open in September.”
               </p>
             </div>
           </div>
@@ -188,11 +188,11 @@ export default function ProfileTemplate() {
         <div className="mt-16">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">Next step</p>
           <h2 className="mt-3 text-3xl font-[family-name:var(--font-fraunces)] text-[#14182A]">
-            Where do you want to <span className="italic text-[#2E5A88]">land?</span>
+            Which <span className="italic text-[#2E5A88]">coverage groups?</span>
           </h2>
           <p className="mt-2 max-w-xl text-sm text-[#4A5260]">
-            Pick one to three industries. Alma will use this plus your profile to rank the 300+
-            companies in our database.
+            Pick one to three groups to focus on — M&amp;A, TMT, Healthcare, Restructuring, whatever
+            fits your story. Alma uses this to rank every bank and seed your networking list.
           </p>
         </div>
 

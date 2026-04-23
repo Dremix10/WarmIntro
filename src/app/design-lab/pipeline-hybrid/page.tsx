@@ -2,6 +2,7 @@ import { JourneyBar } from "./_parts/JourneyBar";
 import { Trajectory, TrajectoryAxis } from "./_parts/Trajectory";
 import { WeekDots } from "./_parts/WeekDots";
 import { ArchipelagoTeaser } from "./_parts/ArchipelagoTeaser";
+import { TimelineBanner } from "@/components/TimelineBanner";
 
 const TODAY = [
   { id: 1, title: "Send 3 outreach to Stripe", meta: "2 alumni surfaced this morning", cta: "Start" },
@@ -32,6 +33,10 @@ export default function PipelineHybrid() {
         <Hero />
 
         <section className="mt-10">
+          <TimelineBanner />
+        </section>
+
+        <section className="mt-6">
           <JourneyBar />
         </section>
 

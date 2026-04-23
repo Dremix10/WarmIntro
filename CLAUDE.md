@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**Alma** (formerly WarmIntro) transforms job searching from cold applications into a strategic networking pipeline with gamified progress tracking. Target: Brown and Rice University students seeking internships. Cofounders: one Brown student, one Rice student.
+**Alma** (formerly WarmIntro) transforms investment banking recruiting from cold applications into a strategic networking pipeline with gamified progress tracking. Target: Brown and Rice University students breaking into IB (Bulge Bracket, Elite Boutique, Middle Market). Cofounders: one Brown student, one Rice student. Currently applying to YC (spring 2026 cycle) — scope narrowed to IB to ship something deep rather than wide.
 
 **Core flow:** Resume upload → Claude parses profile → 30+ companies ranked by alumni connections → user picks favorites → system finds alumni at those companies → Claude drafts personalized outreach → funnel dashboard tracks pipeline with XP/badges/streaks.
 
-**The funnel math:** 100 outreach → 30 replies → 15 coffees → 6 referrals → 3 interviews → 1 offer.
+**The IB funnel math:** 120 networking calls → 40 responses → 20 coffees → 8 referrals → 4 first rounds → 2 superdays → 1 offer. Consistency over sixteen weeks (~8 calls/week), not hero days.
 
 **Product voice:** Alma means *leap* in Greek. The app is framed as a friend and mentor — calm, optimistic, professional × personal. Mentor quotes live in italic Fraunces. The CRM is also surfaced as an archipelago of islands (one per company) where every connection is a construction stage (logs → foundation → walls → roof → home). See `FRONTEND_HANDOFF.md` for the complete visual system and `BACKEND_REQUESTS.md` for the current backlog.
 

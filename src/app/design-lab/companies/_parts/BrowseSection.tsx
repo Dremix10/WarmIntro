@@ -8,40 +8,40 @@ type Company = {
   industry: string;
   alumni: number;
   roles: number;
-  size: "Startup" | "Growth" | "Enterprise";
+  size: "Bulge Bracket" | "Elite Boutique" | "Middle Market";
   hiring: boolean;
 };
 
 const BROWSE: Company[] = [
-  { name: "Rippling", industry: "SaaS", alumni: 7, roles: 5, size: "Growth", hiring: true },
-  { name: "Plaid", industry: "Fintech", alumni: 6, roles: 3, size: "Growth", hiring: true },
-  { name: "Anthropic", industry: "AI", alumni: 4, roles: 8, size: "Growth", hiring: true },
-  { name: "Scale AI", industry: "AI", alumni: 5, roles: 6, size: "Growth", hiring: true },
-  { name: "Airtable", industry: "SaaS", alumni: 4, roles: 2, size: "Growth", hiring: false },
-  { name: "Asana", industry: "SaaS", alumni: 3, roles: 2, size: "Enterprise", hiring: true },
-  { name: "Datadog", industry: "Infra", alumni: 6, roles: 4, size: "Enterprise", hiring: true },
-  { name: "Snowflake", industry: "Data", alumni: 5, roles: 5, size: "Enterprise", hiring: true },
-  { name: "Retool", industry: "Dev tools", alumni: 2, roles: 3, size: "Growth", hiring: true },
-  { name: "Mercury", industry: "Fintech", alumni: 3, roles: 2, size: "Growth", hiring: true },
-  { name: "Brex", industry: "Fintech", alumni: 4, roles: 3, size: "Growth", hiring: false },
-  { name: "Attio", industry: "SaaS", alumni: 2, roles: 2, size: "Startup", hiring: true },
-  { name: "OpenAI", industry: "AI", alumni: 3, roles: 7, size: "Growth", hiring: true },
-  { name: "Perplexity", industry: "AI", alumni: 2, roles: 4, size: "Startup", hiring: true },
-  { name: "Vanta", industry: "SaaS", alumni: 3, roles: 3, size: "Growth", hiring: true },
-  { name: "Modal", industry: "Infra", alumni: 1, roles: 2, size: "Startup", hiring: true },
-  { name: "Cursor", industry: "Dev tools", alumni: 1, roles: 3, size: "Startup", hiring: true },
-  { name: "Replit", industry: "Dev tools", alumni: 3, roles: 4, size: "Growth", hiring: true },
-  { name: "Supabase", industry: "Dev tools", alumni: 2, roles: 3, size: "Growth", hiring: true },
-  { name: "Hex", industry: "Data", alumni: 2, roles: 2, size: "Startup", hiring: false },
-  { name: "Segment", industry: "Data", alumni: 5, roles: 3, size: "Enterprise", hiring: true },
-  { name: "Vapi", industry: "AI", alumni: 1, roles: 2, size: "Startup", hiring: true },
-  { name: "Clay", industry: "SaaS", alumni: 2, roles: 4, size: "Startup", hiring: true },
-  { name: "Arc", industry: "Design", alumni: 2, roles: 1, size: "Startup", hiring: false },
+  { name: "Bank of America", industry: "M&A", alumni: 16, roles: 6, size: "Bulge Bracket", hiring: true },
+  { name: "Citi", industry: "M&A", alumni: 14, roles: 7, size: "Bulge Bracket", hiring: true },
+  { name: "Barclays", industry: "M&A", alumni: 11, roles: 5, size: "Bulge Bracket", hiring: true },
+  { name: "Deutsche Bank", industry: "LevFin", alumni: 7, roles: 4, size: "Bulge Bracket", hiring: true },
+  { name: "UBS", industry: "M&A", alumni: 9, roles: 4, size: "Bulge Bracket", hiring: true },
+  { name: "Lazard", industry: "M&A", alumni: 10, roles: 3, size: "Elite Boutique", hiring: true },
+  { name: "Moelis", industry: "M&A", alumni: 7, roles: 3, size: "Elite Boutique", hiring: true },
+  { name: "Guggenheim", industry: "Consumer", alumni: 5, roles: 2, size: "Elite Boutique", hiring: true },
+  { name: "Perella Weinberg", industry: "M&A", alumni: 4, roles: 2, size: "Elite Boutique", hiring: true },
+  { name: "Greenhill", industry: "M&A", alumni: 3, roles: 2, size: "Elite Boutique", hiring: false },
+  { name: "Qatalyst", industry: "TMT", alumni: 2, roles: 1, size: "Elite Boutique", hiring: true },
+  { name: "Allen & Company", industry: "TMT", alumni: 2, roles: 1, size: "Elite Boutique", hiring: false },
+  { name: "Rothschild & Co", industry: "M&A", alumni: 5, roles: 3, size: "Elite Boutique", hiring: true },
+  { name: "Jefferies", industry: "Sponsors", alumni: 12, roles: 6, size: "Middle Market", hiring: true },
+  { name: "Houlihan Lokey", industry: "Restructuring", alumni: 8, roles: 4, size: "Middle Market", hiring: true },
+  { name: "Raymond James", industry: "Industrials", alumni: 6, roles: 3, size: "Middle Market", hiring: true },
+  { name: "William Blair", industry: "TMT", alumni: 5, roles: 3, size: "Middle Market", hiring: true },
+  { name: "Baird", industry: "Consumer", alumni: 4, roles: 2, size: "Middle Market", hiring: true },
+  { name: "Piper Sandler", industry: "Healthcare", alumni: 5, roles: 3, size: "Middle Market", hiring: true },
+  { name: "Harris Williams", industry: "Industrials", alumni: 3, roles: 2, size: "Middle Market", hiring: false },
+  { name: "Lincoln International", industry: "Industrials", alumni: 2, roles: 2, size: "Middle Market", hiring: true },
+  { name: "Lincoln Intl M&A", industry: "M&A", alumni: 2, roles: 1, size: "Middle Market", hiring: true },
+  { name: "Rothschild NA", industry: "Healthcare", alumni: 3, roles: 2, size: "Elite Boutique", hiring: true },
+  { name: "RBC Capital Markets", industry: "Energy", alumni: 4, roles: 2, size: "Middle Market", hiring: true },
 ];
 
-const INDUSTRIES = ["All", "Fintech", "Dev tools", "SaaS", "AI", "Infra", "Design", "Data"];
-const ROLES = ["SWE", "Product", "Design", "Data", "Ops"];
-const SIZES: Company["size"][] = ["Startup", "Growth", "Enterprise"];
+const INDUSTRIES = ["All", "M&A", "TMT", "Healthcare", "Consumer", "Industrials", "Energy", "FIG", "Sponsors", "LevFin", "Restructuring"];
+const ROLES = ["Summer Analyst", "Full-Time Analyst", "Off-cycle"];
+const SIZES: Company["size"][] = ["Bulge Bracket", "Elite Boutique", "Middle Market"];
 const ALUMNI_STEPS = [0, 3, 5, 10];
 const PAGE_SIZE = 8;
 

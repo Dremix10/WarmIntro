@@ -7,6 +7,38 @@ Format: `[Date] · [Request] — why, acceptance notes`
 
 ---
 
+## P0 — IB-specific data model (post-pivot)
+
+### Bank + group + banker hierarchy
+- **Why:** the old schema uses a flat `Company` with a single `industry` string. IB needs three levels: **firm** (Morgan Stanley) → **group** (TMT, M&A, Healthcare, LevFin, Restructuring) → **banker** (analyst / associate / VP / MD, tagged to a group).
+- **What to build:**
+  - Tables: `firms` (id, name, tier: "bulge_bracket" | "elite_boutique" | "middle_market", logo), `groups` (id, firm_id, name, coverage_or_product: "coverage" | "product"), `bankers` (id, firm_id, group_id, name, title, grad_year, university, linkedin_url, email?)
+  - Migrate existing `Company` rows → seed with ~60 banks across BB/EB/MM
+  - Migrate existing `Alumni` → `bankers` with group assignment
+- **Acceptance:** `/companies` shortlist and browse query real firms with tier filter; `/outreach/[id]` opens a banker page showing their group + deals.
+
+### IB recruiting calendar config
+- **Why:** `<TimelineBanner />` currently hardcodes the 2026 cycle. Needs real dates per bank/year.
+- **What to build:**
+  - `recruiting_cycles` table: (year, phase_id, phase_label, start_date, end_date)
+  - `bank_milestones` table: (firm_id, year, milestone, date) — app-open dates, superday windows, offer deadlines per firm
+  - Endpoint `GET /api/calendar/current` → current phase + next 3 milestones with countdown
+- **Acceptance:** Timeline banner shows correct phase based on today's date + next milestone pulled from the database.
+
+### Deal tracker per banker
+- **Why:** networking calls go vastly better when the student knows a specific deal the banker worked on. "I saw you worked on X, can you tell me about..." beats "what do you do?" every time.
+- **What to build:**
+  - Scrape + manually curate: top 3–5 recent deals per senior banker (MergerMarket, press releases, bank tombstone pages)
+  - `banker_deals` table: (banker_id, deal_name, target, acquirer, value_usd, closed_on, notes)
+  - Surface on the `/outreach/[id]` page under the banker spotlight as "Recent deals"
+- **Acceptance:** 60%+ of VPs/MDs in the DB have at least one deal listed.
+
+### Group + tier as primary filters everywhere
+- Update `/companies` filter chips to use `tier` (BB/EB/MM) + `group` (M&A/TMT/etc) instead of a generic `industry` string.
+- Update `/profile` target picker to store `targetGroups: string[]` not `targetIndustries: string[]`.
+
+---
+
 ## P0 — blocks the pipeline narrative
 
 ### Outbound email send from Alma
@@ -47,6 +79,22 @@ Format: `[Date] · [Request] — why, acceptance notes`
   - Recompute on stage change (so replies bump warmth)
   - Surface through `loadProfile` / `connections` endpoints
 - **Acceptance:** `connection.warmth` is a stable numeric field every frontend can read.
+
+### IB stage model migration
+- **Why:** the funnel now has 7 stages (sent → replied → coffee → referral → **firstRound** → **superday** → offer). Existing DB likely has 5.
+- **What to change:**
+  - `TrackedConnection.stage` enum → `"sent" | "replied" | "coffee" | "referral" | "firstRound" | "superday" | "offer"`
+  - `FUNNEL_STAGES` in `src/shared/constants.ts` — targets updated to `120, 40, 20, 8, 4, 2, 1`
+  - Reply detection also needs to detect "superday invite" vs "first-round invite" language for auto-stage-bump (stretch; can stay manual at first)
+- **Acceptance:** CRM board renders 7 columns; archipelago still works (firstRound/superday/offer all map to "home" visually).
+
+### Technical prep tracker (stretch for v1)
+- **Why:** banking interviews have a huge technical component. Students need a prep surface: DCF, LBO, M&A accretion/dilution, accounting.
+- **What to build:**
+  - Question bank: ~150 ranked questions tagged by topic + difficulty
+  - Per-user progress: confidence 1–5 per topic; last practiced at
+  - Endpoint: `GET /api/prep/topics` + `POST /api/prep/attempt`
+- **Acceptance:** `/quests` shows a "Technical prep" panel with progress per topic.
 
 ### Quest engine
 - **Why:** `/quests` relies on quest records persisting across sessions. Without this the page is decorative.

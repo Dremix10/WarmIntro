@@ -182,7 +182,9 @@ export function Workspace() {
       {filtered.length === 0 ? (
         <EmptyState onClear={clearAll} />
       ) : view === "board" ? (
-        <BoardView connections={filtered} />
+        <div className="overflow-x-auto">
+          <BoardView connections={filtered} />
+        </div>
       ) : (
         <ListView connections={filtered} />
       )}
@@ -192,7 +194,7 @@ export function Workspace() {
 
 function BoardView({ connections }: { connections: Connection[] }) {
   return (
-    <section className="mt-6 grid grid-cols-6 gap-3">
+    <section className="mt-6 grid min-w-[960px] grid-cols-7 gap-2">
       {STAGES.map((s) => {
         const items = connections.filter((c) => c.stage === s.id);
         return <Column key={s.id} stage={s} items={items} />;
