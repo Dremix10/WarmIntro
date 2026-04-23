@@ -12,10 +12,10 @@ type Quest = {
 const QUESTS: Quest[] = [
   {
     id: "q1",
-    title: "Send 5 outreaches in Dev Tools",
-    why: "Your highest-conversion lane. Double down where it’s working.",
+    title: "Send 8 networking calls to TMT bankers",
+    why: "Your highest-conversion group. Morgan Stanley and Goldman TMT lead on Brown replies.",
     progress: 3,
-    target: 5,
+    target: 8,
     days: 4,
     reward: 50,
     color: "blue",
@@ -23,7 +23,7 @@ const QUESTS: Quest[] = [
   {
     id: "q2",
     title: "Re-open one conversation that went quiet",
-    why: "Priya went silent 5 days ago. A short one-liner tends to re-open the door.",
+    why: "Priya at Centerview went silent 5 days ago. A short one-liner with a specific deal reference tends to re-open the door.",
     progress: 0,
     target: 1,
     days: 4,
@@ -32,8 +32,8 @@ const QUESTS: Quest[] = [
   },
   {
     id: "q3",
-    title: "Prep 3 questions for Thursday’s coffee",
-    why: "Amir cleared 30 minutes for you. Show up ready.",
+    title: "Prep 3 specific questions for Thursday&rsquo;s coffee",
+    why: "Amir (MS TMT VP) cleared 30 minutes. Pull one recent deal he worked on, one question about the group, one about his path from Brown.",
     progress: 1,
     target: 3,
     days: 1,
@@ -53,33 +53,33 @@ type Milestone = {
 const MILESTONES: Milestone[] = [
   {
     title: "First stones laid",
-    note: "Maya wrote back at Linear. That’s your first foundation — no house is built without one.",
+    note: "Maya (MS TMT VP) wrote back. That&rsquo;s your first foundation — no house is built without one.",
     when: "yesterday",
     xp: 25,
     fresh: true,
   },
   {
     title: "Week of consistency",
-    note: "Seven days in a row. The math says you’re ahead of 80% of your cohort.",
+    note: "Seven days in a row. The math says you&rsquo;re ahead of 80% of your cohort.",
     when: "today",
     xp: 75,
     fresh: true,
   },
   {
     title: "Ten logs gathered",
-    note: "Ten outreaches sent. Raw materials are piling up across your islands. Keep stacking.",
+    note: "Ten call requests sent. Raw materials piling up across your bank islands. Keep stacking — the goal is 120 by November.",
     when: "3 days ago",
     xp: 20,
   },
   {
-    title: "Walls rising at Linear",
-    note: "Amir booked coffee · Thursday 2pm. Walls are going up on your biggest island.",
+    title: "Walls rising at Morgan Stanley",
+    note: "Amir (MS TMT VP) booked coffee · Thursday 2pm. Walls going up on your biggest island.",
     when: "2 days ago",
     xp: 50,
   },
   {
     title: "Came back",
-    note: "Took Saturday off and came right back Sunday. That’s the rhythm that wins this.",
+    note: "Took Saturday off and came right back Sunday. That&rsquo;s the rhythm that wins this.",
     when: "today",
     xp: 10,
     fresh: true,
@@ -90,7 +90,7 @@ const LOCKED = [
   { title: "25 logs stacked", progress: "23 / 25" },
   { title: "First roof framed (referral)", progress: "locked" },
   { title: "Three foundations in a week", progress: "2 / 3" },
-  { title: "First home standing (interview)", progress: "locked" },
+  { title: "First home standing (1st round)", progress: "locked" },
   { title: "30-day streak", progress: "day 7" },
 ];
 

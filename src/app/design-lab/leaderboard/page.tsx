@@ -2,10 +2,8 @@ import { Board } from "./_parts/Board";
 
 export default function LeaderboardTemplate() {
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-[#EAE3D2] text-[#14182A]">
-      <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">
-        <Header />
-        <Hero />
+    <div className="bg-[#EAE3D2] text-[#14182A]">
+      <div className="mx-auto max-w-4xl px-6 pt-8 pb-16">        <Hero />
         <Board />
 
         <section className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -84,7 +82,7 @@ function Hero() {
     <div className="mt-12">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">This week</p>
       <h1 className="mt-3 text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
-        You’re <span className="italic text-[#2E5A88]">#12</span> on Brown CS ’27.
+        You’re <span className="italic text-[#2E5A88]">#12</span> on Brown IB ’27.
       </h1>
       <p className="mt-3 max-w-xl text-sm text-[#4A5260]">
         48 students on the board, 37 active this week. The cohort is shipping — and so are you.

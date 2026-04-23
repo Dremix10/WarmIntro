@@ -1,21 +1,21 @@
 const AGGREGATE = [
-  { value: 342, label: "outreaches", delta: "+94 vs last week" },
-  { value: 98, label: "replies", delta: "29% cohort rate" },
-  { value: 18, label: "coffees booked", delta: "up from 11" },
-  { value: 4, label: "referrals", delta: "first of the season" },
+  { value: 542, label: "calls sent", delta: "+138 vs last week" },
+  { value: 168, label: "replies", delta: "31% cohort rate" },
+  { value: 44, label: "coffees booked", delta: "up from 28" },
+  { value: 8, label: "referrals", delta: "first of the season" },
 ];
 
 const GOALS = [
-  { label: "1,000 outreaches by May 15", current: 680, target: 1000 },
-  { label: "50 coffees booked by graduation", current: 32, target: 50 },
-  { label: "10 referrals earned", current: 6, target: 10 },
+  { label: "1,500 networking calls by Sept 30", current: 920, target: 1500 },
+  { label: "100 coffees booked by app deadline", current: 64, target: 100 },
+  { label: "20 referrals earned", current: 12, target: 20 },
 ];
 
 const SIGNALS = [
-  { text: "Someone from Brown CS ’27 just booked their first coffee at Stripe.", when: "2 hours ago" },
-  { text: "A classmate hit a 21-day streak — the longest in the cohort this semester.", when: "today" },
-  { text: "Three referrals came in from Ramp alumni this week.", when: "yesterday" },
-  { text: "Someone sent their 50th outreach. That’s halfway to the funnel math.", when: "2 days ago" },
+  { text: "Someone from Brown IB ’27 just booked their first coffee at Goldman Sachs.", when: "2 hours ago" },
+  { text: "A classmate hit a 21-day networking streak — the longest in the cohort this season.", when: "today" },
+  { text: "Three referrals came in from Morgan Stanley bankers this week.", when: "yesterday" },
+  { text: "Someone sent their 60th call request. That’s halfway to the funnel math.", when: "2 days ago" },
   { text: "Four classmates came back after a weekend break. The rhythm holds.", when: "today" },
 ];
 
@@ -27,14 +27,12 @@ export default function CohortTemplate() {
   const total = WEEK.reduce((a, b) => a + b, 0);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-[#EAE3D2] text-[#14182A]">
+    <div className="bg-[#EAE3D2] text-[#14182A]">
       <div className="mx-auto max-w-3xl px-6 pt-8 pb-16">
-        <Header />
-
         <div className="mt-12 text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">This week · together</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">This week &middot; together</p>
           <h1 className="mx-auto mt-4 max-w-2xl text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
-            Brown CS ’27 is <span className="italic text-[#2E5A88]">shipping.</span>
+            Brown IB &rsquo;27 is <span className="italic text-[#2E5A88]">shipping.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260]">
             No rankings here. Just the numbers we made together, and the small wins you might otherwise miss.
@@ -55,7 +53,7 @@ export default function CohortTemplate() {
 
         <section className="mt-6 rounded-2xl border border-[#D9CFB5] bg-white p-6">
           <div className="flex items-baseline justify-between">
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">Cohort heartbeat · 7 days</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">Cohort heartbeat &middot; 7 days</p>
             <p className="text-[10px] tabular-nums text-[#5C6472]">{total} active-person days</p>
           </div>
           <div className="mt-4 flex items-end justify-between gap-2">
@@ -77,12 +75,12 @@ export default function CohortTemplate() {
             })}
           </div>
           <p className="mt-5 border-t border-[#ECE5D0] pt-4 text-xs text-[#5C6472]">
-            Saturday was the cohort’s busiest day — most of your classmates used the weekend to catch up.
+            Saturday was the cohort&rsquo;s busiest day &mdash; most of your classmates used the weekend to catch up on networking calls.
           </p>
         </section>
 
         <section className="mt-8">
-          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6472]">Collective goals · spring ’26</p>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6472]">Collective goals &middot; 2026 cycle</p>
           <div className="mt-3 space-y-3">
             {GOALS.map((g) => {
               const pct = Math.min((g.current / g.target) * 100, 100);
@@ -109,17 +107,14 @@ export default function CohortTemplate() {
 
         <section className="mt-8 rounded-2xl border border-[#D9CFB5] bg-[#F4EDDB] p-6">
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">
-            Anonymous signals · what happened in the cohort
+            Anonymous signals &middot; what happened in the cohort
           </p>
           <div className="mt-4 space-y-4">
             {SIGNALS.map((s, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#2E5A88]" />
                 <div className="flex-1">
-                  <p
-                    className="text-sm leading-relaxed text-[#14182A]"
-                    dangerouslySetInnerHTML={{ __html: s.text }}
-                  />
+                  <p className="text-sm leading-relaxed text-[#14182A]">{s.text}</p>
                   <p className="mt-0.5 text-[11px] text-[#5C6472]">{s.when}</p>
                 </div>
               </div>
@@ -128,26 +123,11 @@ export default function CohortTemplate() {
         </section>
 
         <p className="mx-auto mt-12 max-w-md text-center text-sm font-[family-name:var(--font-fraunces)] italic text-[#5C6472]">
-          “You’re not the only one awake on a Sunday. Most of your cohort is in this with you.”
+          &ldquo;You&rsquo;re not the only one awake on a Sunday. Most of your cohort is in this with you.&rdquo;
           <br />
-          <span className="text-[11px] not-italic">— Alma</span>
+          <span className="text-[11px] not-italic">&mdash; Alma</span>
         </p>
       </div>
     </div>
-  );
-}
-
-function Header() {
-  return (
-    <header className="flex items-center justify-between">
-      <p className="text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">alma</p>
-      <nav className="flex items-center gap-6 text-sm text-[#5C6472]">
-        <span>Pipeline</span>
-        <span>Companies</span>
-        <span>CRM</span>
-        <span>Leaderboard</span>
-        <a href="/design-lab" className="text-[#2E5A88] hover:underline">&larr; lab</a>
-      </nav>
-    </header>
   );
 }

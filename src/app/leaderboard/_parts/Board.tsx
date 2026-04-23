@@ -17,7 +17,7 @@ type BoardKey = "cohort" | "brown" | "alma";
 type Range = "week" | "month" | "all";
 
 const BOARDS: { id: BoardKey; label: string; count: number; subtitle: string }[] = [
-  { id: "cohort", label: "Brown CS ’27", count: 48, subtitle: "your cohort" },
+  { id: "cohort", label: "Brown IB ’27", count: 48, subtitle: "your cohort" },
   { id: "brown", label: "Brown Alma", count: 312, subtitle: "all Brown students" },
   { id: "alma", label: "All Alma", count: 1847, subtitle: "every school" },
 ];
@@ -29,21 +29,21 @@ const RANGES: { id: Range; label: string }[] = [
 ];
 
 const COHORT_WEEK: Entry[] = [
-  { rank: 1, name: "Priya Shah", school: "Brown CS ’26", xp: 260, streak: 14, trend: "same" },
-  { rank: 2, name: "Dana Kim", school: "Brown CS ’27", xp: 230, streak: 11, trend: "up", trendAmount: 1 },
-  { rank: 3, name: "Marcus Lee", school: "Brown CS ’25", xp: 210, streak: 8, trend: "down", trendAmount: 1 },
-  { rank: 4, name: "Lena Cohen", school: "Brown CS ’27", xp: 195, streak: 6, trend: "up", trendAmount: 3 },
-  { rank: 5, name: "Arjun Rao", school: "Brown CS ’26", xp: 185, streak: 7, trend: "same" },
-  { rank: 6, name: "Camille Dubois", school: "Brown CS ’27", xp: 170, streak: 5, trend: "up", trendAmount: 2 },
-  { rank: 7, name: "Owen Park", school: "Brown CS ’27", xp: 160, streak: 9, trend: "down", trendAmount: 2 },
-  { rank: 8, name: "Ines Alonso", school: "Brown CS ’26", xp: 150, streak: 4, trend: "up", trendAmount: 4 },
-  { rank: 9, name: "Tariq Hassan", school: "Brown CS ’25", xp: 145, streak: 6, trend: "same" },
-  { rank: 10, name: "Sam Okafor", school: "Brown CS ’27", xp: 140, streak: 7, trend: "up", trendAmount: 7 },
-  { rank: 11, name: "Jordan Klein", school: "Brown CS ’27", xp: 130, streak: 9, trend: "down", trendAmount: 1 },
-  { rank: 12, name: "Kinsey Harper", school: "Brown CS ’27", xp: 120, streak: 7, trend: "up", trendAmount: 2, isYou: true },
-  { rank: 13, name: "Riya Sharma", school: "Brown CS ’27", xp: 115, streak: 5, trend: "same" },
-  { rank: 14, name: "Ben Torres", school: "Brown CS ’25", xp: 105, streak: 3, trend: "up", trendAmount: 1 },
-  { rank: 15, name: "Yara Mansour", school: "Brown CS ’26", xp: 95, streak: 4, trend: "down", trendAmount: 3 },
+  { rank: 1, name: "Priya Shah", school: "Brown IB ’26", xp: 260, streak: 14, trend: "same" },
+  { rank: 2, name: "Dana Kim", school: "Brown IB ’27", xp: 230, streak: 11, trend: "up", trendAmount: 1 },
+  { rank: 3, name: "Marcus Lee", school: "Brown IB ’25", xp: 210, streak: 8, trend: "down", trendAmount: 1 },
+  { rank: 4, name: "Lena Cohen", school: "Brown IB ’27", xp: 195, streak: 6, trend: "up", trendAmount: 3 },
+  { rank: 5, name: "Arjun Rao", school: "Brown IB ’26", xp: 185, streak: 7, trend: "same" },
+  { rank: 6, name: "Camille Dubois", school: "Brown IB ’27", xp: 170, streak: 5, trend: "up", trendAmount: 2 },
+  { rank: 7, name: "Owen Park", school: "Brown IB ’27", xp: 160, streak: 9, trend: "down", trendAmount: 2 },
+  { rank: 8, name: "Ines Alonso", school: "Brown IB ’26", xp: 150, streak: 4, trend: "up", trendAmount: 4 },
+  { rank: 9, name: "Tariq Hassan", school: "Brown IB ’25", xp: 145, streak: 6, trend: "same" },
+  { rank: 10, name: "Sam Okafor", school: "Brown IB ’27", xp: 140, streak: 7, trend: "up", trendAmount: 7 },
+  { rank: 11, name: "Jordan Klein", school: "Brown IB ’27", xp: 130, streak: 9, trend: "down", trendAmount: 1 },
+  { rank: 12, name: "Kinsey Harper", school: "Brown IB ’27", xp: 120, streak: 7, trend: "up", trendAmount: 2, isYou: true },
+  { rank: 13, name: "Riya Sharma", school: "Brown IB ’27", xp: 115, streak: 5, trend: "same" },
+  { rank: 14, name: "Ben Torres", school: "Brown IB ’25", xp: 105, streak: 3, trend: "up", trendAmount: 1 },
+  { rank: 15, name: "Yara Mansour", school: "Brown IB ’26", xp: 95, streak: 4, trend: "down", trendAmount: 3 },
 ];
 
 export function Board() {

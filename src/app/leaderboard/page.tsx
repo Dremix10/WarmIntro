@@ -71,8 +71,7 @@ function Header() {
         <span>Companies</span>
         <span>CRM</span>
         <span className="font-medium text-[#14182A]">Leaderboard</span>
-        <a href="/design-lab" className="text-[#2E5A88] hover:underline">&larr; lab</a>
-      </nav>
+        </nav>
     </header>
   );
 }
@@ -82,7 +81,7 @@ function Hero() {
     <div className="mt-12">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">This week</p>
       <h1 className="mt-3 text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
-        You’re <span className="italic text-[#2E5A88]">#12</span> on Brown CS ’27.
+        You’re <span className="italic text-[#2E5A88]">#12</span> on Brown IB ’27.
       </h1>
       <p className="mt-3 max-w-xl text-sm text-[#4A5260]">
         48 students on the board, 37 active this week. The cohort is shipping — and so are you.
