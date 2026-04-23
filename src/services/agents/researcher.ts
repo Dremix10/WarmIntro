@@ -1,0 +1,318 @@
+// Researcher agent — find + rank bankers for a user
+// Tools: queryBankerDB, scoreBankerFit (Claude), scrapeSerper, enrichHunter, logSignal
+// Outputs candidates to drive Correspondent's drafting queue
+
+import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, getAdminClient } from "./shared";
+import { findRealAlumni } from "@/services/linkedin-search";
+import { enrichEmailBatch } from "@/services/hunter/enrich";
+import { scrapeBankerLinkedIn } from "@/services/linkedin/proxycurl";
+import { getActiveScoringWeights } from "@/services/signals/aggregate";
+import type { Banker } from "@/shared/ib-types";
+
+interface UserProfileRow {
+  id: string;
+  name: string;
+  university: string;
+  major: string;
+  graduation_year: number;
+  target_firms: string[];
+  target_groups: string[];
+  warm_hints: string[];
+}
+
+export interface ResearcherCandidate {
+  bankerId: string;
+  firmId?: string;
+  groupId?: string;
+  name: string;
+  title: string;
+  warmth: number;
+  reasonToContact: string;
+  priority: number;
+}
+
+export interface ResearcherInput {
+  userId: string;
+  needed: number;
+  excludeBankerIds?: string[];
+}
+
+export interface ResearcherOutput {
+  candidates: ResearcherCandidate[];
+  sourced: number;
+}
+
+// ===== warmth scoring (migrated from legacy alumni-engine.ts, IB-adapted) =====
+const WARMTH_BASE = 30;
+const WARMTH_SAME_SCHOOL = 20;
+const WARMTH_SAME_MAJOR = 15;
+const WARMTH_CLOSE_GRAD = 10;
+const WARMTH_MID_GRAD = 5;
+const WARMTH_SENIOR_ROLE = 5;
+const WARMTH_HIGH_RESPONSE_RATE = 10;
+
+function seniorityScore(title: string): number {
+  const t = title.toLowerCase();
+  if (t.includes("md") || t.includes("managing director")) return 4;
+  if (t.includes("director") || t.includes("executive director")) return 3;
+  if (t.includes("vp") || t.includes("vice president")) return 2;
+  if (t.includes("associate")) return 1;
+  return 0; // analyst
+}
+
+function computeWarmth(
+  banker: Banker,
+  user: UserProfileRow,
+  responseRateBoost: number
+): number {
+  let score = WARMTH_BASE;
+  if (banker.university && banker.university.toLowerCase() === user.university.toLowerCase()) {
+    score += WARMTH_SAME_SCHOOL;
+  }
+  if (banker.gradYear) {
+    const diff = Math.abs(banker.gradYear - user.graduation_year);
+    if (diff <= 5) score += WARMTH_CLOSE_GRAD;
+    else if (diff <= 10) score += WARMTH_MID_GRAD;
+  }
+  const snr = seniorityScore(banker.title);
+  if (snr >= 2) score += WARMTH_SENIOR_ROLE;
+  // Response rate boost (per-banker from flywheel)
+  if (responseRateBoost > 0.3) score += WARMTH_HIGH_RESPONSE_RATE;
+  return Math.min(100, Math.round(score));
+}
+
+async function loadUserProfile(userId: string): Promise<UserProfileRow | null> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("id, name, university, major, graduation_year, target_firms, target_groups, warm_hints")
+    .eq("id", userId)
+    .single();
+  return (data as unknown as UserProfileRow) ?? null;
+}
+
+async function queryBankerDB(
+  targetFirms: string[],
+  targetGroups: string[],
+  excludeIds: string[],
+  limit: number
+): Promise<Banker[]> {
+  const admin = getAdminClient();
+  let query = admin.from("bankers").select("*").limit(Math.max(limit * 3, 30));
+  if (targetFirms.length > 0) query = query.in("firm_id", targetFirms);
+  const { data } = await query;
+  if (!data) return [];
+
+  return data
+    .filter((b) => !excludeIds.includes(b.id))
+    .filter((b) => {
+      if (targetGroups.length === 0) return true;
+      if (!b.group_id) return false;
+      // group_id is like `${firmId}-${groupSlug}`; match the suffix against target group slugs
+      return targetGroups.some((g) => b.group_id?.endsWith(`-${g}`) || b.group_id === g);
+    })
+    .map(
+      (b): Banker => ({
+        id: b.id,
+        firmId: b.firm_id ?? undefined,
+        groupId: b.group_id ?? undefined,
+        name: b.name,
+        title: b.title,
+        seniority: (b.seniority as Banker["seniority"]) ?? undefined,
+        gradYear: b.grad_year ?? undefined,
+        university: b.university ?? undefined,
+        linkedinUrl: b.linkedin_url ?? undefined,
+        email: b.email ?? undefined,
+        emailVerified: Boolean(b.email_verified),
+        source: (b.source as Banker["source"]) ?? "manual_seed",
+      })
+    );
+}
+
+async function alreadyContactedBankerIds(userId: string): Promise<string[]> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("connections")
+    .select("banker_id")
+    .eq("user_id", userId);
+  return (data ?? []).map((r) => r.banker_id).filter((id): id is string => typeof id === "string");
+}
+
+export async function runResearcher(input: ResearcherInput): Promise<ResearcherOutput> {
+  const ctx = await startAgentRun({
+    agent: "researcher",
+    userId: input.userId,
+    triggeredBy: "agent_dispatch",
+    inputSummary: { needed: input.needed },
+  });
+
+  try {
+    const user = await loadUserProfile(input.userId);
+    if (!user) {
+      await endAgentRun(ctx, { error: "profile not found" }, "profile_not_found");
+      return { candidates: [], sourced: 0 };
+    }
+
+    const already = await alreadyContactedBankerIds(input.userId);
+    const excluded = new Set([...already, ...(input.excludeBankerIds ?? [])]);
+
+    // Pull candidates from DB
+    const bankers = await queryBankerDB(
+      user.target_firms ?? [],
+      user.target_groups ?? [],
+      Array.from(excluded),
+      Math.max(input.needed * 4, 20)
+    );
+
+    // Load flywheel response rates (v1 uses this as a boost)
+    const weights = await getActiveScoringWeights();
+    const responseRates = (weights?.bankerResponseRate as Record<string, number> | undefined) ?? {};
+
+    // Score and rank
+    const scored = bankers.map((b) => {
+      const responseBoost = responseRates[b.id] ?? 0;
+      const warmth = computeWarmth(b, user, responseBoost);
+      return { banker: b, warmth };
+    });
+
+    scored.sort((a, b) => b.warmth - a.warmth);
+
+    const top = scored.slice(0, input.needed);
+
+    // Build reason-to-contact strings via Claude (one call for all)
+    const candidates: ResearcherCandidate[] = [];
+    if (top.length === 0) {
+      await endAgentRun(ctx, { sourced: 0, reason: "no_matching_bankers" });
+      return { candidates: [], sourced: 0 };
+    }
+
+    try {
+      const prompt = `You are a recruiting researcher. For each banker below, write ONE sentence on why this banker is worth contacting for a ${user.university} ${user.major} student (class of ${user.graduation_year}) targeting IB.
+
+Bankers:
+${JSON.stringify(
+  top.map((t) => ({
+    id: t.banker.id,
+    name: t.banker.name,
+    title: t.banker.title,
+    firm: t.banker.firmId,
+    group: t.banker.groupId,
+    sameSchool: t.banker.university?.toLowerCase() === user.university.toLowerCase(),
+  })),
+  null,
+  2
+)}
+
+Return JSON: [{"id": "banker_id", "reason": "one sentence"}]`;
+
+      const reasons = await askClaudeJSON<Array<{ id: string; reason: string }>>(prompt, {
+        maxTokens: 1024,
+      });
+      const reasonMap = new Map(reasons.map((r) => [r.id, r.reason]));
+
+      for (let i = 0; i < top.length; i++) {
+        const t = top[i];
+        candidates.push({
+          bankerId: t.banker.id,
+          firmId: t.banker.firmId,
+          groupId: t.banker.groupId,
+          name: t.banker.name,
+          title: t.banker.title,
+          warmth: t.warmth,
+          reasonToContact: reasonMap.get(t.banker.id) ?? `${t.banker.title} at ${t.banker.firmId}.`,
+          priority: top.length - i,
+        });
+      }
+    } catch (err) {
+      // Reason generation failed; fall back to bland reason
+      for (let i = 0; i < top.length; i++) {
+        const t = top[i];
+        candidates.push({
+          bankerId: t.banker.id,
+          firmId: t.banker.firmId,
+          groupId: t.banker.groupId,
+          name: t.banker.name,
+          title: t.banker.title,
+          warmth: t.warmth,
+          reasonToContact: `${t.banker.title} at ${t.banker.firmId ?? "target firm"}.`,
+          priority: top.length - i,
+        });
+      }
+      await logSignal({
+        userId: input.userId,
+        agent: "researcher",
+        signalType: "claude_reason_fallback",
+        metadata: { err: String(err) },
+      });
+    }
+
+    // Log signals
+    await Promise.all(
+      candidates.map((c) =>
+        logSignal({
+          userId: input.userId,
+          bankerId: c.bankerId,
+          agent: "researcher",
+          signalType: "candidate_surfaced",
+          metadata: { warmth: c.warmth, priority: c.priority },
+        })
+      )
+    );
+
+    await endAgentRun(ctx, { sourced: candidates.length });
+    return { candidates, sourced: candidates.length };
+  } catch (err) {
+    await endAgentRun(ctx, {}, String(err));
+    return { candidates: [], sourced: 0 };
+  }
+}
+
+/**
+ * Enrichment sub-task — called when Correspondent can't draft because banker
+ * lacks LinkedIn/email data. Researcher tries to enrich and returns success/fail.
+ */
+export async function enrichBanker(bankerId: string): Promise<boolean> {
+  const admin = getAdminClient();
+  const { data: banker } = await admin.from("bankers").select("*").eq("id", bankerId).maybeSingle();
+  if (!banker) return false;
+
+  let enriched = false;
+
+  // Try Proxycurl for LinkedIn profile depth
+  if (banker.linkedin_url) {
+    const profile = await scrapeBankerLinkedIn(banker.linkedin_url, { bankerId, cacheResult: true });
+    if (profile) enriched = true;
+  }
+
+  // Try Hunter for email
+  if (!banker.email && banker.firm_id) {
+    const { data: firm } = await admin.from("firms").select("domain").eq("id", banker.firm_id).single();
+    if (firm?.domain && banker.name) {
+      const [first, ...rest] = banker.name.split(/\s+/);
+      const last = rest[rest.length - 1] ?? "";
+      if (first && last) {
+        const res = await enrichEmailBatch([{ firstName: first, lastName: last, domain: firm.domain, bankerId }]);
+        if (res[0]?.email) enriched = true;
+      }
+    }
+  }
+
+  // Fallback: Serper discovery for LinkedIn URL when absent
+  if (!banker.linkedin_url && banker.firm_id) {
+    try {
+      const { data: firm } = await admin.from("firms").select("name").eq("id", banker.firm_id).single();
+      if (firm?.name && banker.university) {
+        const candidates = await findRealAlumni(firm.name, banker.university, 3);
+        const match = candidates.find((c) => c.name.toLowerCase().includes(banker.name.toLowerCase().split(/\s+/)[0]));
+        if (match) {
+          await admin.from("bankers").update({ linkedin_url: match.linkedinUrl }).eq("id", bankerId);
+          enriched = true;
+        }
+      }
+    } catch {
+      // swallow
+    }
+  }
+
+  return enriched;
+}

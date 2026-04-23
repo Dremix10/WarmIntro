@@ -1,0 +1,287 @@
+// Correspondent agent — draft cold / followup / reply / thank-you emails
+// Uses findCommonGround tool; applies guardrails; Critic reviews the output
+
+import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, getAdminClient } from "./shared";
+import { applyGuardrails } from "@/services/guardrails";
+import type { CommonGroundAnchor, DraftType } from "@/shared/ib-types";
+
+export interface CorrespondentInput {
+  userId: string;
+  type: DraftType;
+  bankerId: string;
+  connectionId?: string;
+  threadContext?: {
+    previousMessageBodyPreview?: string;
+    daysSilent?: number;
+    incomingReplyBody?: string;
+  };
+  revisionFeedback?: string; // from Critic on re-draft
+}
+
+export interface CorrespondentOutput {
+  draftId?: string;
+  subject: string;
+  body: string;
+  anchors: CommonGroundAnchor[];
+  rejectedForNoAnchor?: boolean;
+  guardrailFlags: ReturnType<typeof applyGuardrails>["flags"];
+}
+
+// ===== findCommonGround tool =====
+interface UserContext {
+  name: string;
+  university: string;
+  major: string;
+  graduationYear: number;
+  storyOneLiner?: string;
+  clubs?: string[];
+  hometown?: string;
+  coursework?: string[];
+  warmHints: string[];
+}
+
+interface BankerContext {
+  name: string;
+  title: string;
+  firm: string;
+  group?: string;
+  university?: string;
+  gradYear?: number;
+  aboutSection?: string;
+  recentPosts: Array<{ content: string }>;
+  recentDeals: Array<{ name: string; description?: string }>;
+  pastPositions: Array<{ firm: string; role: string }>;
+  education: Array<{ school: string; degree?: string; activities?: string[] }>;
+  interests: string[];
+}
+
+export async function findCommonGround(
+  user: UserContext,
+  banker: BankerContext
+): Promise<CommonGroundAnchor[]> {
+  const prompt = `Find 2-3 genuine common-ground anchors between a college sophomore and a banker they're reaching out to. Rank by opener-value.
+
+STUDENT:
+${JSON.stringify(user, null, 2)}
+
+BANKER:
+${JSON.stringify(banker, null, 2)}
+
+Return JSON:
+[
+  {
+    "type": "shared_major" | "shared_club" | "shared_city" | "shared_hobby" | "banker_recent_post" | "banker_deal_area" | "shared_alma_mater_of_past_position" | "shared_coursework",
+    "detail": "one sentence, specific: what the overlap is",
+    "confidence": 0-1,
+    "openerAngle": "one sentence: how a natural 20-year-old student could reference this in the first line of an email"
+  }
+]
+
+Rules:
+- Only include ACTUAL overlaps you can verify from the data above. Don't invent.
+- If none high-confidence exists, return [].
+- Prefer specific overlaps (a deal the banker worked on that intersects student's interest area) over generic ones (both went to liberal arts college).
+- confidence: 0.9+ = nearly identical (same club, same hometown); 0.7-0.89 = strong connection (same field, shared major area); 0.5-0.69 = weaker but real.`;
+
+  try {
+    const anchors = await askClaudeJSON<CommonGroundAnchor[]>(prompt, { maxTokens: 1024 });
+    return Array.isArray(anchors) ? anchors.filter((a) => a.confidence >= 0.5) : [];
+  } catch (err) {
+    console.warn("[correspondent] findCommonGround failed", err);
+    return [];
+  }
+}
+
+async function getBankerContext(bankerId: string): Promise<BankerContext | null> {
+  const admin = getAdminClient();
+  const [{ data: banker }, { data: profile }, { data: deals }] = await Promise.all([
+    admin.from("bankers").select("*").eq("id", bankerId).single(),
+    admin.from("banker_profiles").select("*").eq("banker_id", bankerId).maybeSingle(),
+    admin.from("banker_deals").select("*").eq("banker_id", bankerId).limit(5),
+  ]);
+
+  if (!banker) return null;
+
+  let firmName: string | undefined;
+  if (banker.firm_id) {
+    const { data } = await admin.from("firms").select("name").eq("id", banker.firm_id).single();
+    firmName = data?.name;
+  }
+
+  return {
+    name: banker.name,
+    title: banker.title,
+    firm: firmName ?? banker.firm_id ?? "",
+    group: banker.group_id ?? undefined,
+    university: banker.university ?? undefined,
+    gradYear: banker.grad_year ?? undefined,
+    aboutSection: profile?.about_section ?? undefined,
+    recentPosts: ((profile?.recent_posts ?? []) as Array<{ content: string }>).slice(0, 5),
+    recentDeals: ((deals ?? []) as Array<{ deal_name: string; description?: string }>).map((d) => ({ name: d.deal_name, description: d.description })),
+    pastPositions: ((profile?.past_positions ?? []) as Array<{ firm: string; role: string }>).slice(0, 5),
+    education: ((profile?.education ?? []) as Array<{ school: string; degree?: string; activities?: string[] }>).slice(0, 3),
+    interests: (profile?.interests ?? []) as string[],
+  };
+}
+
+async function getUserContext(userId: string): Promise<UserContext | null> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("name, university, major, graduation_year, story_one_liner, warm_hints, skills, experience")
+    .eq("id", userId)
+    .single();
+  if (!data) return null;
+  return {
+    name: data.name,
+    university: data.university,
+    major: data.major,
+    graduationYear: data.graduation_year,
+    storyOneLiner: data.story_one_liner ?? undefined,
+    clubs: [], // resume parser stores these — extend when profile schema incorporates
+    warmHints: (data.warm_hints ?? []) as string[],
+  };
+}
+
+// ===== Drafting =====
+
+export async function runCorrespondent(input: CorrespondentInput): Promise<CorrespondentOutput> {
+  const ctx = await startAgentRun({
+    agent: "correspondent",
+    userId: input.userId,
+    triggeredBy: "agent_dispatch",
+    inputSummary: { type: input.type, bankerId: input.bankerId },
+  });
+
+  try {
+    const [user, banker] = await Promise.all([getUserContext(input.userId), getBankerContext(input.bankerId)]);
+    if (!user || !banker) {
+      await endAgentRun(ctx, { error: "missing context" }, "missing_context");
+      return { subject: "", body: "", anchors: [], rejectedForNoAnchor: false, guardrailFlags: { emDashesReplaced: 0, bannedWordsFound: [], bannedPhrasesFound: [], tooLong: false, tooShort: false } };
+    }
+
+    // Step 1: Find common ground (only for cold outreach; follow-ups and replies use prior thread)
+    let anchors: CommonGroundAnchor[] = [];
+    if (input.type === "cold") {
+      anchors = await findCommonGround(user, banker);
+      if (anchors.length === 0) {
+        // Researcher rejection path — bubble back
+        await logSignal({
+          userId: input.userId,
+          bankerId: input.bankerId,
+          agent: "correspondent",
+          signalType: "rejected_no_common_ground",
+          metadata: {},
+        });
+        await endAgentRun(ctx, { rejectedForNoAnchor: true });
+        return { subject: "", body: "", anchors: [], rejectedForNoAnchor: true, guardrailFlags: { emDashesReplaced: 0, bannedWordsFound: [], bannedPhrasesFound: [], tooLong: false, tooShort: false } };
+      }
+    }
+
+    // Step 2: Draft the email
+    const draftingPrompt = buildDraftPrompt(input, user, banker, anchors);
+    const drafted = await askClaudeJSON<{ subject: string; body: string }>(draftingPrompt, {
+      systemPrompt: systemPromptForType(input.type),
+      maxTokens: 1024,
+      skipCache: Boolean(input.revisionFeedback), // on revision, don't reuse cache
+    });
+
+    // Step 3: Apply guardrails
+    const { body: cleanedBody, flags } = applyGuardrails(drafted.body);
+
+    // Step 4: Persist as draft, pending_critic
+    const admin = getAdminClient();
+    const { data: draftRow } = await admin
+      .from("drafts")
+      .insert({
+        user_id: input.userId,
+        banker_id: input.bankerId,
+        connection_id: input.connectionId,
+        type: input.type,
+        subject: drafted.subject,
+        body: cleanedBody,
+        guardrail_flags: flags,
+        status: "pending_critic",
+        iteration_count: input.revisionFeedback ? 1 : 0,
+      })
+      .select("id")
+      .single();
+
+    await logSignal({
+      userId: input.userId,
+      bankerId: input.bankerId,
+      draftId: draftRow?.id,
+      agent: "correspondent",
+      signalType: "draft_created",
+      metadata: { type: input.type, anchors: anchors.map((a) => a.type) },
+    });
+
+    await endAgentRun(ctx, { draftId: draftRow?.id, anchorCount: anchors.length, guardrailFlags: flags });
+
+    return {
+      draftId: draftRow?.id,
+      subject: drafted.subject,
+      body: cleanedBody,
+      anchors,
+      rejectedForNoAnchor: false,
+      guardrailFlags: flags,
+    };
+  } catch (err) {
+    await endAgentRun(ctx, {}, String(err));
+    throw err;
+  }
+}
+
+// ===== Prompts =====
+
+const BASE_VOICE = `You are writing as a 20-year-old college sophomore reaching out to an investment banking professional. Sound like THEM, not like AI.
+
+Rules:
+- Short sentences are fine. Contractions are fine. Starting a sentence with "And" or "But" is fine.
+- NEVER use em-dashes (—). Use commas, periods, or separate sentences.
+- NEVER use: "I hope this email finds you well", "reaching out to", "please find attached", "at your earliest convenience", "cognizant", "leverage", "endeavor", "synergy", "furthermore", "accordingly", "aforementioned".
+- No formal sign-offs like "Sincerely" or "Regards". Use "Thanks," or "Best,".
+- Total email body should be 100-180 words. Tight. Respectful of the banker's time.
+- End with: Name\\nUniversity 'YY | Major\\nemail`;
+
+function systemPromptForType(type: DraftType): string {
+  switch (type) {
+    case "cold":
+      return `${BASE_VOICE}\n\nTASK: Write a cold outreach email. Open with the shared-ground anchor, make it specific. Middle: one brief sentence about who you are and why IB. Close: specific ask for 15 minutes.`;
+    case "followup":
+      return `${BASE_VOICE}\n\nTASK: Write a short polite follow-up to a prior email that went unanswered. Reference your prior note briefly. Add a NEW angle — something specific about their recent work or a question that's different from the first email. Don't be apologetic or desperate.`;
+    case "reply":
+      return `${BASE_VOICE}\n\nTASK: Write a reply to the banker's incoming message. Thank them briefly, address what they asked, confirm next step (suggest 2-3 time windows if they proposed a call).`;
+    case "thank_you":
+      return `${BASE_VOICE}\n\nTASK: Write a thank-you email within 24 hours of a coffee chat. Reference one specific thing they said, share what you're taking away, ask one follow-up question about it, and signal you'll stay in touch.`;
+  }
+}
+
+function buildDraftPrompt(
+  input: CorrespondentInput,
+  user: UserContext,
+  banker: BankerContext,
+  anchors: CommonGroundAnchor[]
+): string {
+  const parts: string[] = [];
+  parts.push(`STUDENT:\n${JSON.stringify(user, null, 2)}\n`);
+  parts.push(`BANKER:\n${JSON.stringify(banker, null, 2)}\n`);
+  if (anchors.length > 0) {
+    parts.push(`COMMON-GROUND ANCHORS (use the highest-confidence one for the opener):\n${JSON.stringify(anchors, null, 2)}\n`);
+  }
+  if (input.threadContext?.previousMessageBodyPreview) {
+    parts.push(`PRIOR MESSAGE (your previous outreach, paraphrase don't repeat):\n${input.threadContext.previousMessageBodyPreview.slice(0, 600)}\n`);
+  }
+  if (input.threadContext?.incomingReplyBody) {
+    parts.push(`INCOMING REPLY FROM BANKER:\n${input.threadContext.incomingReplyBody.slice(0, 800)}\n`);
+  }
+  if (input.threadContext?.daysSilent !== undefined) {
+    parts.push(`DAYS SINCE LAST CONTACT: ${input.threadContext.daysSilent}\n`);
+  }
+  if (input.revisionFeedback) {
+    parts.push(`REVISION FEEDBACK FROM CRITIC (address these specifically):\n${input.revisionFeedback}\n`);
+  }
+
+  parts.push(`Return JSON: {"subject": string, "body": string}`);
+  return parts.join("\n");
+}

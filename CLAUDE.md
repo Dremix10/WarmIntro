@@ -12,6 +12,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Product voice:** Alma means *leap* in Greek. The app is framed as a friend and mentor — calm, optimistic, professional × personal. Mentor quotes live in italic Fraunces. The CRM is also surfaced as an archipelago of islands (one per company) where every connection is a construction stage (logs → foundation → walls → roof → home). See `FRONTEND_HANDOFF.md` for the complete visual system and `BACKEND_REQUESTS.md` for the current backlog.
 
+## Canonical docs (read these before starting new work)
+
+- **Design spec:** `docs/superpowers/specs/2026-04-23-alma-ib-agent-design.md` — the agreed architecture for the IB wedge and the 6-agent system (Planner, Researcher, Correspondent, Critic, Watcher, Curator). Scope, user flow, agent prompts+tools+I/O, data model, integrations, delivery plan, YC narrative.
+- **Brainstorm that produced the spec:** `docs/superpowers/brainstorm/2026-04-23-alma-ib-brainstorm.md` — decisions chronologically with rationale. Useful when you need to understand *why* something is the way it is.
+- **Backend handoff for frontend cofounder:** `BACKEND_HANDOFF.md` — what the backend exposes (tables, endpoints, OAuth flow, agent behavior), what wiring is still needed on the UI side.
+- **Frontend handoff for backend cofounder:** `FRONTEND_HANDOFF.md` — what the frontend renders and what it expects from the backend.
+- **Backlog:** `BACKEND_REQUESTS.md` — running list of backend asks surfaced from frontend work.
+
+## The 6 agents (canonical — see spec Section 3)
+
+1. **Planner** (`src/services/agents/planner.ts`) — deterministic orchestrator, not an LLM call
+2. **Researcher** (`src/services/agents/researcher.ts`) — finds + ranks bankers
+3. **Correspondent** (`src/services/agents/correspondent.ts`) — drafts emails (cold / followup / reply / thank_you) with `findCommonGround` tool
+4. **Critic** (`src/services/agents/critic.ts`) — reviews every draft before send; 4-axis scoring; reject/revise loop max 3 iterations
+5. **Watcher** (`src/services/agents/watcher.ts`) — polls Gmail, classifies reply intent, advances stages
+6. **Curator** (`src/services/agents/curator.ts`) — 24/7 background data steward; schema-proposal authority
+
+Shared utilities in `src/services/agents/shared.ts`.
+
 ## Commands
 
 ```bash
@@ -25,7 +44,14 @@ npx tsc --noEmit     # Type-check only (no tests configured yet)
 
 Requires `.env.local` with:
 - `ANTHROPIC_API_KEY` — Claude API key (used by `src/services/claude.ts`)
-- `SERPER_API_KEY` — Google Serper API for LinkedIn profile lookups (gracefully degrades if missing)
+- `SERPER_API_KEY` — Google Serper fallback for LinkedIn search (gracefully degrades if missing)
+- `HUNTER_API_KEY` — Hunter.io email enrichment (Curator + Researcher; gracefully degrades)
+- `PROXYCURL_API_KEY` — Proxycurl LinkedIn profile scraping (Curator + Correspondent's `findCommonGround`; gracefully degrades)
+- `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` — Gmail OAuth (send + readonly + modify scopes)
+- `ALMA_CRON_SECRET` — bearer token protecting `/api/cron/*` endpoints
+- `SUPABASE_SERVICE_ROLE_KEY` — used server-side for service-role writes (bankers, signals, flywheel tables)
+
+Every service reads its env key with a graceful-degrade path — missing keys log a warning and return empty/safe defaults. The app boots without any of the optional keys.
 
 ## Architecture
 
@@ -44,12 +70,23 @@ Frontend (React Context)  →  useApi.ts  →  /api/* routes  →  services/*  �
 
 | Service | Purpose | Uses Claude? |
 |---|---|---|
-| `resume-parser.ts` | Extract structured UserProfile from resume text | Yes |
-| `company-matcher.ts` | Rank companies by skill/role match + alumni count | No (local scoring) |
-| `alumni-engine.ts` | Find alumni, compute warmth scores, generate warm paths | Yes |
-| `cold-outreach.ts` | Fallback when no alumni found — find real people via Serper | Yes |
-| `outreach-writer.ts` | Generate personalized email + LinkedIn drafts, follow-ups | Yes |
-| `linkedin-search.ts` | Find real LinkedIn profiles via Google Serper API | No |
+| `resume-parser.ts` | Extract structured UserProfile from resume text (Opus 4.7, Rice+Brown club list baked in) | Yes |
+| `agents/planner.ts` | Deterministic orchestrator; dispatches agents per user tick | No |
+| `agents/researcher.ts` | Find + rank bankers; reuses Serper/Proxycurl/Hunter | Yes |
+| `agents/correspondent.ts` | Draft emails with `findCommonGround` tool | Yes |
+| `agents/critic.ts` | Review drafts; 4-axis score; reject/revise loop | Yes |
+| `agents/watcher.ts` | Poll Gmail, classify intent, extract signals | Yes |
+| `agents/curator.ts` | 24/7 DB steward; enrichment + freshness + dedup + discovery | Yes |
+| `gmail/*` | OAuth, send, poll, thread-match | No |
+| `hunter/enrich.ts` | Email enrichment by name + domain | No |
+| `linkedin/proxycurl.ts` | Structured LinkedIn profile scrape | No |
+| `signals/{log,aggregate}.ts` | Flywheel writes + weekly batch | No |
+| `guardrails.ts` | Student-voice copy linting (no em-dashes, banned words) | No |
+| `linkedin-search.ts` *(legacy)* | Google Serper fallback | No |
+
+### Legacy services (from WarmIntro era)
+
+`alumni-engine.ts`, `cold-outreach.ts`, `outreach-writer.ts`, `people-finder.ts`, `company-matcher.ts`, `linkedin-profile-scraper.ts` — kept for backward compatibility on legacy routes. Warmth scoring logic from `alumni-engine.ts` is referenced by `agents/researcher.ts`; prompt patterns from `outreach-writer.ts` are evolved into `agents/correspondent.ts`. Legacy routes (`/api/find-alumni`, `/api/generate-outreach`, `/api/find-people`, etc.) still work but new flows should use the agents.
 
 ### Warmth scoring (alumni-engine.ts)
 
@@ -70,7 +107,19 @@ Multiple in-process Map caches (no external cache):
 
 ### Data layer
 
-No database. Seed data in `src/data/` as JSON files: `alumni.json` (Rice alumni), `companies.json` (50+ companies), `internships.json` (30+ listings), `email-domains.json` (company→domain mapping). Mock data for leaderboard in `src/data/mock-leaderboard.ts`.
+Supabase Postgres. Full schema in `supabase/migrations/`. Key tables:
+
+**IB domain (global, public-read):** `firms`, `groups`, `bankers`, `banker_profiles`, `banker_deals`.
+
+**User-scoped (RLS: owner only):** `profiles` (extended with `target_firms`, `target_groups`, `warm_hints`, `story_one_liner`, Gmail OAuth tokens), `connections` (7-stage IB pipeline: sent→replied→coffee→referral→first_round→superday→offer), `trust_levels` (per-capability C/B/A + preferred_send_time), `agent_runs`, `drafts`, `critic_reviews`, `signals`.
+
+**Flywheel (public-read):** `scoring_weights`, `critic_calibration`, `flywheel_releases`.
+
+**Curator's authority:** `schema_proposals` (admin-gated v1).
+
+Migrations: `001_initial_schema.sql`, `002_events_table.sql`, `003_alma_ib_schema.sql`, `004_alma_agents_flywheel.sql`. Apply via Supabase MCP or dashboard.
+
+Seed data: `src/data/` holds legacy JSON (`alumni.json`, `companies.json`, etc.) and `src/data/seed/firms-groups.ts` holds the BB/EB/MM seed used by the Curator to populate `firms` + `groups` on first run.
 
 ## Page routing
 
@@ -99,9 +148,16 @@ No database. Seed data in `src/data/` as JSON files: `alumni.json` (Rice alumni)
 
 ## Key domain terms
 
-- **Warm path** — the connection narrative between user and alumni
-- **Warmth score** — 0-100 rating of connection strength
-- **Funnel stage** — one of: Outreach → Coffee Chat → Referral → Interview → Offer
+- **Warm path** — the connection narrative between user and banker (formerly alumni)
+- **Warmth score** — 0-100 rating of connection strength (same school, same club, shared city, shared interests)
+- **Trust gradient** — per-user, per-capability C (copilot, drafts only) → B (preview-veto) → A (autopilot). Auto-graduates via approvals, manual toggle always available.
+- **Common ground** — ranked anchors the Correspondent finds between user and banker (shared_major, shared_club, shared_city, shared_hobby, banker_recent_post, banker_deal_area, shared_alma_mater)
+- **Flywheel release** — weekly Sunday batch-computed update to scoring weights + critic calibration, published with a "what changed" summary
+- **Funnel stage (IB)** — one of: sent → replied → coffee → referral → first_round → superday → offer (or closed_lost)
+- **Coverage group** — M&A, TMT, Healthcare, Consumer, Industrials, FIG, Energy, Real Estate, Sponsors
+- **Product group** — LevFin, Restructuring, ECM, DCM
+- **Tier** — Bulge Bracket (BB), Elite Boutique (EB), Middle Market (MM)
+- **SA2028** — Summer 2028 analyst position (class of '29 junior-summer internship; Alma's ICP targets this)
 - **XP** — experience points: outreach_sent (10), reply_received (25), coffee_booked (50), referral_earned (100)
 
 ## Security
@@ -117,3 +173,7 @@ No database. Seed data in `src/data/` as JSON files: `alumni.json` (Rice alumni)
 - In-memory rate limiting is per-serverless-instance (not globally shared). Upgrade to Upstash Redis if abuse is observed.
 - Unauthenticated fallback still exists in `update-funnel/route.ts` for the transition period.
 - `find-companies` route is intentionally unauthenticated (no Claude call, used before profile setup).
+- Gmail OAuth app is in Google **Testing mode** for launch (≤ 100 test users, no verification required). Verification submission happens post-YC.
+- Rice + Brown alumni directory access is pending (both founders have formally asked their schools). Design treats it as a bonus `ContactSource`, never a launch gate.
+- Curator schema-proposal authority is admin-gated for v1 (all proposals land in `schema_proposals` as `pending` — Dremix approves manually). Autonomous execution is a post-launch decision.
+- Agents ship with graceful env degradation: without `ANTHROPIC_API_KEY` / `HUNTER_API_KEY` / `PROXYCURL_API_KEY` / Google OAuth creds, they log warnings and return safe defaults. The app boots regardless.
