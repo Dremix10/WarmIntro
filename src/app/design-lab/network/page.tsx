@@ -1,27 +1,25 @@
 import { Archipelago, StageGlyph } from "./_parts/Archipelago";
 
 const LEGEND = [
-  { stage: "sent" as const, label: "Outreach sent", detail: "logs gathered" },
+  { stage: "sent" as const, label: "Call request sent", detail: "logs gathered" },
   { stage: "replied" as const, label: "They replied", detail: "stones laid" },
-  { stage: "coffee" as const, label: "Coffee shared", detail: "walls rising" },
+  { stage: "coffee" as const, label: "Coffee or call done", detail: "walls rising" },
   { stage: "referral" as const, label: "They referred you", detail: "roof framed" },
-  { stage: "interview" as const, label: "Interview scheduled", detail: "a whitewashed home stands" },
+  { stage: "interview" as const, label: "In the interview process", detail: "a whitewashed home stands" },
 ];
 
 export default function ArchipelagoTemplate() {
   return (
-    <div className="fixed inset-0 z-50 overflow-auto bg-gradient-to-b from-[#F2ECDB] via-[#EAE3D2] to-[#E4DAC2] text-[#14182A]">
+    <div className="bg-gradient-to-b from-[#F2ECDB] via-[#EAE3D2] to-[#E4DAC2] text-[#14182A]">
       <div className="mx-auto max-w-5xl px-6 pt-8 pb-16">
-        <Header />
-
         <div className="mt-12 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">Your archipelago</p>
           <h1 className="mx-auto mt-4 max-w-2xl text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
             <span className="italic text-[#2E5A88]">Twelve crossings</span>, so far.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-[#4A5260]">
-            <span className="italic">Alma</span> means leap. Every person on this map is a crossing
-            you made. On each island you’re building a home, stone by stone — logs, foundation,
+            <span className="italic">Alma</span> means leap. Every banker on this map is a crossing
+            you made. On each bank you&rsquo;re building a home, stone by stone — logs, foundation,
             walls, roof, and finally a whitewashed home standing against the sea.
           </p>
         </div>
@@ -52,9 +50,9 @@ export default function ArchipelagoTemplate() {
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <InsightCard label="Largest island" value="Linear" detail="4 intros · foundations poured, walls up" />
-          <InsightCard label="Longest leap" value="Notion" detail="Priya &middot; stones freshly laid" />
-          <InsightCard label="Closest to home" value="Ramp" detail="Leila &middot; home finished" />
+          <InsightCard label="Largest island" value="Morgan Stanley" detail="4 bankers · foundations poured, walls up" />
+          <InsightCard label="Longest leap" value="Centerview" detail="Priya &middot; stones freshly laid" />
+          <InsightCard label="Closest to home" value="Evercore" detail="Leila &middot; in the interview process" />
         </div>
 
         <p className="mx-auto mt-12 max-w-md text-center text-sm font-[family-name:var(--font-fraunces)] italic text-[#5C6472]">
@@ -76,7 +74,7 @@ function Header() {
         <span>Companies</span>
         <span>CRM</span>
         <span>Leaderboard</span>
-        <a href="/design-lab" className="text-[#2E5A88] hover:underline">&larr; lab</a>
+        
       </nav>
     </header>
   );

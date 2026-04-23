@@ -4,17 +4,17 @@ export function ArchipelagoTeaser() {
   return (
     <section className="mt-8">
       <Link
-        href="/design-lab/network"
+        href="/network"
         className="group flex items-stretch gap-5 overflow-hidden rounded-2xl border border-[#D9CFB5] bg-gradient-to-br from-[#F4EDDB] via-[#EFE5C8] to-[#E3D4A8] p-5 transition-colors hover:border-[#2E5A88]"
       >
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6472]">Your archipelago</p>
           <p className="mt-2 text-lg font-[family-name:var(--font-fraunces)] italic text-[#14182A]">
-            12 crossings across 5 islands.
+            12 crossings across 5 banks.
           </p>
           <p className="mt-1 text-sm text-[#4A5260]">
-            Ramp has a <span className="font-semibold text-[#1B3B5F]">home standing</span>. Linear’s
-            walls are rising. Come see what you’ve built.
+            Evercore has a <span className="font-semibold text-[#1B3B5F]">home standing</span>. Morgan
+            Stanley&rsquo;s walls are rising. Come see what you&rsquo;ve built.
           </p>
           <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#1B3B5F] group-hover:underline">
             View map <span aria-hidden>→</span>

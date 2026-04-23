@@ -53,16 +53,15 @@ export const STAGE_LABEL: Record<Stage, string> = {
 };
 
 const CLUSTERS: ClusterLabel[] = [
-  { id: "devtools", label: "DEV TOOLS", x: 260, y: 112 },
-  { id: "fintech", label: "FINTECH", x: 650, y: 150 },
-  { id: "saas", label: "SAAS", x: 990, y: 100 },
+  { id: "bb", label: "BULGE BRACKET", x: 410, y: 112 },
+  { id: "eb", label: "ELITE BOUTIQUE", x: 935, y: 112 },
 ];
 
 export const ISLANDS: Island[] = [
   {
-    id: "linear",
-    company: "Linear",
-    cluster: "Dev Tools",
+    id: "ms",
+    company: "Morgan Stanley",
+    cluster: "Bulge Bracket",
     cx: 260,
     cy: 270,
     rotation: -6,
@@ -78,16 +77,16 @@ export const ISLANDS: Island[] = [
       ridge: "M -72 -12 C -40 -30 10 -34 60 -18",
     },
     markers: [
-      { name: "Maya Chen", role: "Senior PM", stage: "replied", warmth: 88, dx: -58, dy: -12, fresh: true },
-      { name: "Alex Park", role: "Staff Engineer", stage: "replied", warmth: 76, dx: 16, dy: -32 },
-      { name: "Amir Shah", role: "Eng Lead", stage: "coffee", warmth: 81, dx: 62, dy: 6 },
-      { name: "Sam Okafor", role: "Frontend Eng", stage: "sent", warmth: 63, dx: -22, dy: 22 },
+      { name: "Maya Chen", role: "VP, TMT", stage: "replied", warmth: 88, dx: -58, dy: -12, fresh: true },
+      { name: "Alex Park", role: "Associate, M&A", stage: "replied", warmth: 76, dx: 16, dy: -32 },
+      { name: "Amir Shah", role: "VP, TMT", stage: "coffee", warmth: 81, dx: 62, dy: 6 },
+      { name: "Sam Okafor", role: "Analyst, TMT", stage: "sent", warmth: 63, dx: -22, dy: 22 },
     ],
   },
   {
-    id: "stripe",
-    company: "Stripe",
-    cluster: "Fintech",
+    id: "gs",
+    company: "Goldman Sachs",
+    cluster: "Bulge Bracket",
     cx: 560,
     cy: 340,
     rotation: 5,
@@ -103,15 +102,15 @@ export const ISLANDS: Island[] = [
       ridge: "M -70 -18 C -30 -34 20 -32 70 -12",
     },
     markers: [
-      { name: "Jamie Wu", role: "Senior SWE", stage: "sent", warmth: 78, dx: -62, dy: -4 },
-      { name: "Taylor Reese", role: "PM", stage: "coffee", warmth: 74, dx: 6, dy: -32 },
-      { name: "Ben Torres", role: "Staff PM", stage: "referral", warmth: 79, dx: 66, dy: 8 },
+      { name: "Jamie Wu", role: "VP, TMT", stage: "sent", warmth: 78, dx: -62, dy: -4 },
+      { name: "Taylor Reese", role: "Associate, M&A", stage: "coffee", warmth: 74, dx: 6, dy: -32 },
+      { name: "Ben Torres", role: "VP, Healthcare", stage: "referral", warmth: 79, dx: 66, dy: 8 },
     ],
   },
   {
-    id: "ramp",
-    company: "Ramp",
-    cluster: "Fintech",
+    id: "evercore",
+    company: "Evercore",
+    cluster: "Elite Boutique",
     cx: 770,
     cy: 270,
     rotation: -3,
@@ -126,14 +125,14 @@ export const ISLANDS: Island[] = [
       ridge: "M -48 -18 C -12 -28 30 -24 52 -8",
     },
     markers: [
-      { name: "Dana Kim", role: "Senior SWE", stage: "referral", warmth: 82, dx: -32, dy: -16 },
-      { name: "Leila Haddad", role: "Hiring Manager", stage: "interview", warmth: 70, dx: 30, dy: 12 },
+      { name: "Dana Kim", role: "MD, M&A", stage: "referral", warmth: 82, dx: -32, dy: -16 },
+      { name: "Leila Haddad", role: "HR Campus Lead", stage: "interview", warmth: 70, dx: 30, dy: 12 },
     ],
   },
   {
-    id: "notion",
-    company: "Notion",
-    cluster: "SaaS",
+    id: "centerview",
+    company: "Centerview",
+    cluster: "Elite Boutique",
     cx: 965,
     cy: 235,
     rotation: 4,
@@ -148,14 +147,14 @@ export const ISLANDS: Island[] = [
       ridge: "M -44 -20 C -8 -30 30 -26 52 -10",
     },
     markers: [
-      { name: "Priya Venkat", role: "Product Designer", stage: "replied", warmth: 72, dx: -24, dy: -10, fresh: true },
-      { name: "Nina Ortiz", role: "PM", stage: "sent", warmth: 68, dx: 26, dy: 12 },
+      { name: "Priya Venkat", role: "Associate, M&A", stage: "replied", warmth: 72, dx: -24, dy: -10, fresh: true },
+      { name: "Nina Ortiz", role: "Associate, Healthcare", stage: "sent", warmth: 68, dx: 26, dy: 12 },
     ],
   },
   {
-    id: "figma",
-    company: "Figma",
-    cluster: "SaaS",
+    id: "pjt",
+    company: "PJT Partners",
+    cluster: "Elite Boutique",
     cx: 1075,
     cy: 440,
     rotation: -8,
@@ -165,7 +164,7 @@ export const ISLANDS: Island[] = [
     details: {
       vegetation: [{ cx: -8, cy: -10, rx: 20, ry: 7, rot: -6, opacity: 0.5 }],
     },
-    markers: [{ name: "Ravi Patel", role: "Design Eng", stage: "sent", warmth: 71, dx: 0, dy: -2 }],
+    markers: [{ name: "Ravi Patel", role: "Associate, RSSG", stage: "sent", warmth: 71, dx: 0, dy: -2 }],
   },
 ];
 
