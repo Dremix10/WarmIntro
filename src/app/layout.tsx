@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased bg-[#EAE3D2]`}
     >
       <body className="min-h-full flex flex-col bg-[#EAE3D2] text-[#14182A]">
         <AppProvider>

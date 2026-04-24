@@ -27,6 +27,7 @@ export interface PlannerOutput {
   sent: number;
   savedToDrafts: number;
   escalations: number;
+  needsSetup?: boolean;
 }
 
 interface ProfileRow {
@@ -70,15 +71,22 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
   const admin = getAdminClient();
 
   try {
-    // 1. Load state
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("id, gmail_connected_at, gmail_email")
-      .eq("id", input.userId)
-      .single();
+    // 1. Load state via REST (admin client JS SDK returns null intermittently in serverless)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const profileRes = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?select=id,gmail_connected_at,gmail_email,target_firms&id=eq.${input.userId}`,
+      { headers: { apikey: serviceKey ?? "", Authorization: `Bearer ${serviceKey ?? ""}` } }
+    );
+    const profiles = profileRes.ok ? ((await profileRes.json()) as Array<ProfileRow & { target_firms?: string[] }>) : [];
+    const profile = profiles[0];
     if (!profile) {
-      await endAgentRun(ctx, { error: "profile not found" }, "profile_not_found");
-      return out;
+      await endAgentRun(ctx, { error: "profile not found — user must complete /setup" }, "profile_not_found");
+      return { ...out, needsSetup: true } as PlannerOutput;
+    }
+    if (!profile.target_firms || profile.target_firms.length === 0) {
+      await endAgentRun(ctx, { error: "no target_firms — user must complete /setup" }, "setup_incomplete");
+      return { ...out, needsSetup: true } as PlannerOutput;
     }
     const p = profile as unknown as ProfileRow;
 

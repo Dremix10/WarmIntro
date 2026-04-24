@@ -250,6 +250,11 @@ export default function TodayPage() {
                   method: "POST",
                   headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
                 });
+                const json = await res.json().catch(() => ({}));
+                if (json?.result?.needsSetup) {
+                  window.location.href = "/setup";
+                  return;
+                }
                 if (res.ok) load();
               }}
               className="rounded-xl bg-[#2E5A88] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
