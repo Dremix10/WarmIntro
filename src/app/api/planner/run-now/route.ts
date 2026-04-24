@@ -14,7 +14,14 @@ export async function POST(request: Request) {
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   try {
-    const result = await runPlanner({ userId: ctx.user.id, triggeredBy: "user_command" });
+    // Cap per-invocation work so we stay under Vercel's 60s function limit.
+    // Cron jobs run with the full 5-candidate budget; user-triggered runs
+    // go smaller and finish fast.
+    const result = await runPlanner({
+      userId: ctx.user.id,
+      triggeredBy: "user_command",
+      maxCandidates: 2,
+    });
     return NextResponse.json({ ok: true, result });
   } catch (err) {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });

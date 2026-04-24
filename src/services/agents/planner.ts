@@ -15,6 +15,7 @@ const MAX_PENDING_DRAFTS_PER_USER = 5;
 export interface PlannerInput {
   userId: string;
   triggeredBy: "cron" | "event" | "user_command";
+  maxCandidates?: number; // cap per-run work to stay under Vercel function timeout
 }
 
 export interface PlannerOutput {
@@ -117,7 +118,8 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
       .is("sent_at", null);
 
     const pending = pendingCount ?? 0;
-    const needed = Math.max(0, MAX_PENDING_DRAFTS_PER_USER - pending);
+    const batchCap = input.maxCandidates ?? MAX_PENDING_DRAFTS_PER_USER;
+    const needed = Math.max(0, Math.min(MAX_PENDING_DRAFTS_PER_USER - pending, batchCap));
 
     // 3. Dispatch Researcher if queue has room
     let plannerNudges: Array<{ hint: string; metadata: Record<string, unknown> }> = [];
