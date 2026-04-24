@@ -97,18 +97,46 @@ async function queryBankerDB(
   excludeIds: string[],
   limit: number
 ): Promise<Banker[]> {
-  const admin = getAdminClient();
-  let query = admin.from("bankers").select("*").limit(Math.max(limit * 3, 30));
-  if (targetFirms.length > 0) query = query.in("firm_id", targetFirms);
-  const { data } = await query;
-  if (!data) return [];
+  // Direct REST — @supabase/supabase-js admin client intermittently returns
+  // empty arrays in Edge/serverless runtimes even with service role. Same
+  // workaround we applied in /api/setup/firms.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return [];
 
-  return data
+  const rowLimit = Math.max(limit * 3, 30);
+  let endpoint = `${url}/rest/v1/bankers?select=*&limit=${rowLimit}`;
+  if (targetFirms.length > 0) {
+    endpoint += `&firm_id=in.(${targetFirms.map((f) => `"${f}"`).join(",")})`;
+  }
+
+  const res = await fetch(endpoint, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  if (!res.ok) {
+    console.warn(`[researcher.queryBankerDB] rest fetch failed ${res.status}`);
+    return [];
+  }
+  const rows = (await res.json()) as Array<{
+    id: string;
+    firm_id: string | null;
+    group_id: string | null;
+    name: string;
+    title: string;
+    seniority: string | null;
+    grad_year: number | null;
+    university: string | null;
+    linkedin_url: string | null;
+    email: string | null;
+    email_verified: boolean;
+    source: string | null;
+  }>;
+
+  return rows
     .filter((b) => !excludeIds.includes(b.id))
     .filter((b) => {
       if (targetGroups.length === 0) return true;
       if (!b.group_id) return false;
-      // group_id is like `${firmId}-${groupSlug}`; match the suffix against target group slugs
       return targetGroups.some((g) => b.group_id?.endsWith(`-${g}`) || b.group_id === g);
     })
     .map(
