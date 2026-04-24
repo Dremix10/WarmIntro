@@ -2,10 +2,13 @@
 // Scopes: send + readonly + modify (for label assignment)
 // Testing mode for launch (≤100 users); public mode post-YC.
 
+// Minimal Gmail scopes. send = outbound. readonly = Watcher detects replies.
+// We explicitly avoid gmail.modify / gmail.compose to keep the consent screen
+// short and trust-inspiring. Trust-level-C drafts stay in our /today UI instead
+// of being written to the user's Gmail Drafts folder.
 const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/gmail.modify",
   "https://www.googleapis.com/auth/userinfo.email",
   "openid",
 ];

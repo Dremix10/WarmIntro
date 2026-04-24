@@ -57,25 +57,71 @@ export default function SetupPage() {
   );
 }
 
+const SETUP_STORAGE_KEY = "alma-setup-progress-v1";
+
+interface PersistedSetupState {
+  step: Step;
+  resumeText: string;
+  fileName: string | null;
+  parsed: ExtractedProfile | null;
+  targetFirms: string[];
+  targetGroups: string[];
+  story: string;
+  trust: Trust;
+  preferredTime: string;
+}
+
+function loadPersisted(): PersistedSetupState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SETUP_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as PersistedSetupState) : null;
+  } catch {
+    return null;
+  }
+}
+
 function SetupInner() {
   const { session, authLoading, profile } = useAppState();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<Step>("upload");
-  const [resumeText, setResumeText] = useState("");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const persisted = typeof window !== "undefined" ? loadPersisted() : null;
+  const [step, setStep] = useState<Step>(persisted?.step ?? "upload");
+  const [resumeText, setResumeText] = useState(persisted?.resumeText ?? "");
+  const [fileName, setFileName] = useState<string | null>(persisted?.fileName ?? null);
   const [uploading, setUploading] = useState(false);
-  const [parsed, setParsed] = useState<ExtractedProfile | null>(null);
+  const [parsed, setParsed] = useState<ExtractedProfile | null>(persisted?.parsed ?? null);
   const [firms, setFirms] = useState<Firm[]>([]);
-  const [targetFirms, setTargetFirms] = useState<Set<string>>(new Set());
-  const [targetGroups, setTargetGroups] = useState<Set<string>>(new Set());
-  const [story, setStory] = useState("");
-  const [trust, setTrust] = useState<Trust>("C");
-  const [preferredTime, setPreferredTime] = useState("07:00");
+  const [targetFirms, setTargetFirms] = useState<Set<string>>(new Set(persisted?.targetFirms ?? []));
+  const [targetGroups, setTargetGroups] = useState<Set<string>>(new Set(persisted?.targetGroups ?? []));
+  const [story, setStory] = useState(persisted?.story ?? "");
+  const [trust, setTrust] = useState<Trust>(persisted?.trust ?? "C");
+  const [preferredTime, setPreferredTime] = useState(persisted?.preferredTime ?? "07:00");
   const [gmailConnected, setGmailConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Persist state to sessionStorage on every change so OAuth redirect doesn't lose progress
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const state: PersistedSetupState = {
+        step,
+        resumeText,
+        fileName,
+        parsed,
+        targetFirms: Array.from(targetFirms),
+        targetGroups: Array.from(targetGroups),
+        story,
+        trust,
+        preferredTime,
+      };
+      sessionStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // sessionStorage full or blocked — silently skip
+    }
+  }, [step, resumeText, fileName, parsed, targetFirms, targetGroups, story, trust, preferredTime]);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -233,6 +279,8 @@ function SetupInner() {
 
     setSaving(false);
     setStep("done");
+    // Clear persisted setup state once saved to DB
+    try { sessionStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
     setTimeout(() => router.push("/today"), 1200);
   }
 

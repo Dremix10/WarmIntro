@@ -96,9 +96,16 @@ const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "dc118@ric
 // Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself)
 const GATE_BYPASS_PREFIXES = [
   "/coming-soon",
+  "/demo", // public-facing demo for lead capture
   "/login", // testers sign in here
+  "/privacy",
+  "/terms",
   "/api/pilot-signup",
   "/api/extract-pdf", // pre-auth resume upload
+  "/api/parse-resume", // guest-safe parse
+  "/api/find-people", // guest-safe demo people finder
+  "/api/find-companies", // legacy, safe
+  "/api/setup/firms", // public reference data — seeded firms+groups
   "/api/cron",
   "/api/auth",
   "/api/analytics",
@@ -160,8 +167,8 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
     );
   }
 
-  // For pages: redirect to /coming-soon
-  return NextResponse.redirect(new URL("/coming-soon", origin));
+  // For pages: redirect to /demo so non-testers get value + lead capture
+  return NextResponse.redirect(new URL("/demo", origin));
 }
 
 export async function proxy(request: NextRequest) {
