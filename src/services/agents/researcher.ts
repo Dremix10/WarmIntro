@@ -82,13 +82,20 @@ function computeWarmth(
 }
 
 async function loadUserProfile(userId: string): Promise<UserProfileRow | null> {
-  const admin = getAdminClient();
-  const { data } = await admin
-    .from("profiles")
-    .select("id, name, university, major, graduation_year, target_firms, target_groups, warm_hints")
-    .eq("id", userId)
-    .single();
-  return (data as unknown as UserProfileRow) ?? null;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+
+  const res = await fetch(
+    `${url}/rest/v1/profiles?select=id,name,university,major,graduation_year,target_firms,target_groups,warm_hints&id=eq.${userId}`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+  );
+  if (!res.ok) {
+    console.warn(`[researcher.loadUserProfile] rest ${res.status}`);
+    return null;
+  }
+  const rows = (await res.json()) as UserProfileRow[];
+  return rows[0] ?? null;
 }
 
 async function queryBankerDB(
