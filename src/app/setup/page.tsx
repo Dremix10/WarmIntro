@@ -263,20 +263,27 @@ function SetupInner() {
     const { data: { session: s } } = await supabase.auth.getSession();
     const auth = { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" };
 
-    await fetch("/api/setup/profile", {
+    const profileRes = await fetch("/api/setup/profile", {
       method: "POST",
       headers: auth,
       body: JSON.stringify({
         name: parsed.name,
         major: parsed.major,
         graduationYear: parsed.graduationYear,
+        university: parsed.university,
         targetFirms: Array.from(targetFirms),
         targetGroups: Array.from(targetGroups),
         storyOneLiner: story || parsed.storyOneLiner || undefined,
       }),
     });
+    if (!profileRes.ok) {
+      const err = await profileRes.json().catch(() => ({ error: "unknown" }));
+      setError(`Couldn't save profile: ${err.error ?? profileRes.status}`);
+      setSaving(false);
+      return;
+    }
 
-    await fetch("/api/setup/trust", {
+    const trustRes = await fetch("/api/setup/trust", {
       method: "POST",
       headers: auth,
       body: JSON.stringify({
@@ -286,6 +293,12 @@ function SetupInner() {
         preferredSendTime: preferredTime,
       }),
     });
+    if (!trustRes.ok) {
+      const err = await trustRes.json().catch(() => ({ error: "unknown" }));
+      setError(`Couldn't save trust settings: ${err.error ?? trustRes.status}`);
+      setSaving(false);
+      return;
+    }
 
     // Kick off the Planner immediately so the user doesn't stare at an empty queue
     fetch("/api/planner/run-now", {
