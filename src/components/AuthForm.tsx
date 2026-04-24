@@ -17,8 +17,9 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
     setError(null);
 
     if (mode === "signup") {
-      if (!email.endsWith("@rice.edu")) {
-        setError("Early access is limited to @rice.edu emails");
+      const lower = email.toLowerCase().trim();
+      if (!lower.endsWith("@rice.edu") && !lower.endsWith("@brown.edu")) {
+        setError("Early access is limited to @rice.edu and @brown.edu emails");
         setLoading(false);
         return;
       }
@@ -40,9 +41,9 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="your-netid@rice.edu" required
+            placeholder="you@rice.edu or you@brown.edu" required
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow" />
-          <p className="text-xs text-slate-400 mt-1">Early access for Rice University students</p>
+          <p className="text-xs text-slate-400 mt-1">Early access for Rice and Brown students</p>
         </div>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           placeholder="Password (6+ characters)" required minLength={6}

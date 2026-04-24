@@ -87,7 +87,7 @@ const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB (PDF uploads)
 // Private-beta gate — blocks public access except for allowlisted testers.
 // Disable by setting TESTING_GATE_ENABLED=false in env.
 const TESTING_GATE_ENABLED = process.env.TESTING_GATE_ENABLED !== "false";
-const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "dremixc10@gmail.com,evangelos.paraskeva@gmail.com")
+const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
