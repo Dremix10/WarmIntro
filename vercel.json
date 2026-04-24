@@ -4,6 +4,7 @@
     { "path": "/api/cron/curator-hot", "schedule": "*/30 * * * *" },
     { "path": "/api/cron/daily-sweep", "schedule": "0 11 * * *" },
     { "path": "/api/cron/weekly-flywheel", "schedule": "0 23 * * 0" },
-    { "path": "/api/cron/night-preview", "schedule": "*/30 * * * *" }
+    { "path": "/api/cron/night-preview", "schedule": "*/30 * * * *" },
+    { "path": "/api/cron/sentinel", "schedule": "*/30 * * * *" }
   ]
 }

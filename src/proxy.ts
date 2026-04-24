@@ -84,8 +84,83 @@ function checkRateLimit(ip: string, tier: keyof typeof RATE_LIMITS): { allowed: 
 
 const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB (PDF uploads)
 
+// Private-beta gate — blocks public access except for allowlisted testers.
+// Disable by setting TESTING_GATE_ENABLED=false in env.
+const TESTING_GATE_ENABLED = process.env.TESTING_GATE_ENABLED !== "false";
+const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "dremixc10@gmail.com,evangelos.paraskeva@gmail.com")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+
+// Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself)
+const GATE_BYPASS_PREFIXES = [
+  "/coming-soon",
+  "/api/pilot-signup",
+  "/api/extract-pdf", // pre-auth resume upload
+  "/api/cron",
+  "/api/auth",
+  "/api/analytics",
+  "/auth/callback",
+];
+
+// Gate passthrough API pattern — these run after Supabase auth check and emit a 403 if email isn't whitelisted
+function isGatedApiRoute(pathname: string): boolean {
+  if (!pathname.startsWith("/api/")) return false;
+  return !GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
+function getSessionEmailFromCookie(request: NextRequest): string | null {
+  // Supabase auth cookie: sb-<project-ref>-auth-token (base64-encoded JSON array)
+  const cookies = request.cookies;
+  for (const cookie of cookies.getAll()) {
+    if (cookie.name.startsWith("sb-") && cookie.name.endsWith("-auth-token")) {
+      try {
+        const raw = cookie.value.startsWith("base64-") ? cookie.value.slice(7) : cookie.value;
+        const decoded = typeof atob === "function" ? atob(raw) : Buffer.from(raw, "base64").toString("utf8");
+        const parsed = JSON.parse(decoded);
+        const email = parsed?.user?.email ?? parsed?.[0]?.user?.email;
+        return typeof email === "string" ? email.toLowerCase() : null;
+      } catch {
+        continue;
+      }
+    }
+  }
+  return null;
+}
+
+function checkTestingGate(request: NextRequest): NextResponse | null {
+  if (!TESTING_GATE_ENABLED) return null;
+
+  const { pathname, origin } = request.nextUrl;
+
+  // Always allow the gate page itself + bypass routes + Next internals
+  if (pathname === "/coming-soon" || GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return null;
+  }
+
+  const email = getSessionEmailFromCookie(request);
+  if (email && TESTING_ALLOWED_EMAILS.includes(email)) {
+    return null; // whitelisted tester, let through
+  }
+
+  // For API routes: 403 JSON
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      { error: "Private beta. Contact founders for access." },
+      { status: 403 }
+    );
+  }
+
+  // For pages: redirect to /coming-soon
+  return NextResponse.redirect(new URL("/coming-soon", origin));
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Private-beta gate runs FIRST — everything else is inside the gate
+  const gate = checkTestingGate(request);
+  if (gate) return gate;
 
   // Reject oversized payloads
   const contentLength = request.headers.get("content-length");
@@ -97,6 +172,11 @@ export function proxy(request: NextRequest) {
   if (Math.random() < 0.01 || rateLimitMap.size > 10000) cleanupStaleEntries();
 
   const ip = getClientIp(request);
+
+  // Only do IP-based rate limiting for API routes
+  if (!pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
 
   // Rate-limit exempt routes (cron) skip both global and tier checks
   if (RATE_LIMIT_EXEMPT_ROUTES.some((r) => pathname.startsWith(r))) {
@@ -160,5 +240,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: ["/api/:path*", "/((?!coming-soon|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)).*)"],
 };
