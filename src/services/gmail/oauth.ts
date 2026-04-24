@@ -2,12 +2,16 @@
 // Scopes: send + readonly + modify (for label assignment)
 // Testing mode for launch (≤100 users); public mode post-YC.
 
-// Minimal Gmail scopes. send = outbound. readonly = Watcher detects replies.
-// We explicitly avoid gmail.modify / gmail.compose to keep the consent screen
-// short and trust-inspiring. Trust-level-C drafts stay in our /today UI instead
-// of being written to the user's Gmail Drafts folder.
+// Gmail scopes.
+// - gmail.compose: save drafts to user's Gmail Drafts folder AND send. This is
+//   a superset of gmail.send, so we use it instead of requesting both. It does
+//   NOT grant read access to other email — only drafts Alma creates.
+// - gmail.readonly: Watcher detects replies to emails Alma sent. We only ever
+//   query for threads tied to message-ids Alma created, never unrelated email.
+//   Scope granularity in Gmail is coarse, so code discipline is what matters —
+//   every Gmail API call Alma makes is logged to `signals` for user audit.
 const GMAIL_SCOPES = [
-  "https://www.googleapis.com/auth/gmail.send",
+  "https://www.googleapis.com/auth/gmail.compose",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/userinfo.email",
   "openid",

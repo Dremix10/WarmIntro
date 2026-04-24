@@ -158,14 +158,24 @@ function SetupInner() {
   }, [profile]);
 
   async function loadFirms() {
-    if (!session) return;
-    const { data: { session: s } } = await supabase.auth.getSession();
-    const res = await fetch("/api/setup/firms", {
-      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-    });
-    if (res.ok) {
-      const json = (await res.json()) as { firms: Firm[] };
+    try {
+      const res = await fetch("/api/setup/firms");
+      if (!res.ok) {
+        setError(`Couldn't load banks (HTTP ${res.status}). Try refreshing in a few seconds.`);
+        return;
+      }
+      const json = (await res.json()) as { firms: Firm[]; error?: string };
+      if (json.error) {
+        setError(`Couldn't load banks: ${json.error}. Contact founders.`);
+        return;
+      }
+      if (!json.firms || json.firms.length === 0) {
+        setError("No banks in database yet. The Curator agent seeds on first daily run. Contact founders if this persists.");
+        return;
+      }
       setFirms(json.firms);
+    } catch (err) {
+      setError(`Network error loading banks: ${String(err)}`);
     }
   }
 
