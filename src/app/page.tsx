@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ScenePreview } from "./_landing/ScenePreview";
 import { FunnelMath } from "./_landing/FunnelMath";
+import { AuthAwareLogin } from "@/components/AuthAwareLogin";
 
 const STEPS = [
   {
@@ -102,9 +103,7 @@ function TopBar() {
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
           <a href="#how" className="hover:text-[#1B3B5F]">How it works</a>
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
-          <a href="/login" className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]">
-            Log in
-          </a>
+          <AuthAwareLogin className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]" />
         </nav>
       </div>
     </header>

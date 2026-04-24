@@ -356,8 +356,7 @@ export default function DemoPage() {
         )}
 
         <p className="mt-12 text-center text-xs text-[#14182A]/40">
-          Built by{" "}
-          <a href="/login" className="underline hover:text-[#2E5A88]">Rice &amp; Brown students</a>.
+          Already a tester? <a href="/login" className="underline hover:text-[#2E5A88]">Sign in</a>
           <span className="mx-2">·</span>
           <a href="/privacy" className="underline hover:text-[#2E5A88]">Privacy</a>
           <span className="mx-2">·</span>
