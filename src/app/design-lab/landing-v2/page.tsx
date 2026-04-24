@@ -4,6 +4,7 @@ import { GradientOrb } from "@/components/GradientOrb";
 import { GrainOverlay } from "@/components/GrainOverlay";
 import { LogoMarquee } from "@/components/LogoMarquee";
 import { StickyUploadCTA } from "@/components/StickyUploadCTA";
+import { AuthAwareLogin } from "@/components/AuthAwareLogin";
 import { AnimatedHeadline } from "./_parts/AnimatedHeadline";
 import { FunnelMathAnimated } from "./_parts/FunnelMathAnimated";
 import { ScenePreviewTilted } from "./_parts/ScenePreviewTilted";
@@ -113,15 +114,7 @@ function TopBar() {
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
           <a href="#how" className="hover:text-[#1B3B5F]">How it works</a>
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
-          <a href="/design-lab" className="hidden text-[#2E5A88] hover:underline md:inline">
-            &larr; lab
-          </a>
-          <button
-            type="button"
-            className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
-          >
-            Log in
-          </button>
+          <AuthAwareLogin className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]" />
         </nav>
       </div>
     </header>
@@ -155,12 +148,12 @@ function Hero() {
           className="mt-8 flex flex-wrap items-center gap-3 opacity-0"
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1750ms forwards", pointerEvents: "auto" }}
         >
-          <button
-            type="button"
+          <a
+            href="/demo"
             className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           >
             Upload your resume →
-          </button>
+          </a>
           <a
             href="#how"
             className="rounded-full border border-[#D9CFB5] bg-white px-5 py-3 text-sm font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
@@ -339,18 +332,18 @@ function ClosingCTA() {
           Three minutes to set up. One hour a week to maintain. One offer to change the year.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="button"
+          <a
+            href="/demo"
             className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           >
             Upload your resume →
-          </button>
-          <button
-            type="button"
+          </a>
+          <a
+            href="mailto:founders@alma.careers"
             className="rounded-full border border-[#D9CFB5] bg-white px-5 py-3 text-sm font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
           >
             Talk to a founder
-          </button>
+          </a>
         </div>
       </Reveal>
     </section>
@@ -373,9 +366,9 @@ function Footer() {
           alma &middot; built at Brown &amp; Rice
         </p>
         <div className="flex flex-wrap items-center gap-5">
-          <a href="#" className="hover:text-[#1B3B5F]">About</a>
-          <a href="#" className="hover:text-[#1B3B5F]">Privacy</a>
-          <a href="#" className="hover:text-[#1B3B5F]">Contact</a>
+          <a href="#how" className="hover:text-[#1B3B5F]">About</a>
+          <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>
+          <a href="mailto:founders@alma.careers" className="hover:text-[#1B3B5F]">Contact</a>
           <span className="text-[#8A8674]">2026 cycle</span>
         </div>
       </div>
