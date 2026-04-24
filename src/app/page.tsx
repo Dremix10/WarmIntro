@@ -102,9 +102,9 @@ function TopBar() {
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
           <a href="#how" className="hover:text-[#1B3B5F]">How it works</a>
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
-          <button type="button" className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]">
+          <a href="/login" className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]">
             Log in
-          </button>
+          </a>
         </nav>
       </div>
     </header>
@@ -125,12 +125,12 @@ function Hero() {
         requests you'd actually send, and tracks you through superday. One hour a week is enough.
       </p>
       <div className="mt-8 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+        <a
+          href="/demo"
           className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
         >
           Upload your resume →
-        </button>
+        </a>
         <a
           href="#how"
           className="rounded-full border border-[#D9CFB5] bg-white px-5 py-3 text-sm font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
@@ -314,18 +314,18 @@ function ClosingCTA() {
         Three minutes to set up. One hour a week to maintain. One offer to change the year.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <button
-          type="button"
+        <a
+          href="/demo"
           className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
         >
           Upload your resume →
-        </button>
-        <button
-          type="button"
+        </a>
+        <a
+          href="mailto:founders@alma.careers"
           className="rounded-full border border-[#D9CFB5] bg-white px-5 py-3 text-sm font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
         >
           Talk to a founder
-        </button>
+        </a>
       </div>
     </section>
   );
@@ -345,9 +345,9 @@ function Footer() {
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-xs text-[#5C6472]">
         <p className="italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">alma &middot; built at Brown &amp; Rice</p>
         <div className="flex flex-wrap items-center gap-5">
-          <a href="#" className="hover:text-[#1B3B5F]">About</a>
-          <a href="#" className="hover:text-[#1B3B5F]">Privacy</a>
-          <a href="#" className="hover:text-[#1B3B5F]">Contact</a>
+          <a href="#how" className="hover:text-[#1B3B5F]">About</a>
+          <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>
+          <a href="mailto:founders@alma.careers" className="hover:text-[#1B3B5F]">Contact</a>
           <span className="text-[#8A8674]">spring ’26 alpha</span>
         </div>
       </div>
