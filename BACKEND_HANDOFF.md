@@ -38,13 +38,25 @@ The backend for Alma IB is live. This doc tells you what it exposes, what env it
 |---|---|---|
 | Claude API | `ANTHROPIC_API_KEY` | Agents log warnings, resume parser returns empty profile. |
 | Hunter.io | `HUNTER_API_KEY` | Email enrichment returns null. |
-| Proxycurl | `PROXYCURL_API_KEY` | **Proxycurl shut down 2025-01 after LinkedIn lawsuit.** Code left in place but returns null without a key. Correspondent falls back to Serper snippets via `linkedin-search.ts`. For a drop-in replacement post-launch: NinjaPear (Proxycurl's successor), Apollo.io, People Data Labs, or Coresignal — each has a similar "profile by URL" endpoint; wrap one in `services/linkedin/proxycurl.ts` to preserve the `scrapeBankerLinkedIn` interface. |
+| Proxycurl | `PROXYCURL_API_KEY` | **Proxycurl shut down 2025-01 after LinkedIn lawsuit.** Code left in place but returns null without a key. Correspondent falls back to Serper snippets via `linkedin-search.ts`. Post-launch replacement plan below. |
 | Gmail OAuth | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` | OAuth flow returns 503. Users can't connect Gmail. |
 | Serper (legacy fallback) | `SERPER_API_KEY` | LinkedIn search returns empty. |
 | Supabase service role (for agents writing across users) | `SUPABASE_SERVICE_ROLE_KEY` | Admin client throws — agents fail loudly. |
 | Cron protection | `ALMA_CRON_SECRET` | If set, cron endpoints require `Authorization: Bearer ${secret}`. If unset, cron is open (dev only). |
 
 Graceful degradation is the rule: every integration boots without its key and logs a single warning.
+
+### Post-launch LinkedIn data wiring (Proxycurl replacement)
+
+**Recommendation: People Data Labs (PDL).** Free tier: 100 credits/month, enough to validate fit on ~100 bankers. Paid: ~$50/mo for more credits. Post-lawsuit safe (licensed dataset, not scraped from LinkedIn). Same "profile by LinkedIn URL" pattern as Proxycurl.
+
+Implementation when ready (~2 hours):
+1. Create `services/linkedin/pdl.ts` with the same exports as the current `proxycurl.ts` — `scrapeBankerLinkedIn(linkedinUrl, opts)` returning a `BankerProfile` and `discoverBankersAtFirm(firmName, groupName, limit)` returning candidates.
+2. PDL endpoint: `POST https://api.peopledatalabs.com/v5/person/enrich` with `linkedin_url` param. Map their response fields into `BankerProfile` (education, experience, skills, interests all map cleanly).
+3. Swap the imports in `services/agents/researcher.ts`, `correspondent.ts`, `curator.ts` from `@/services/linkedin/proxycurl` to `@/services/linkedin/pdl`.
+4. Add `PDL_API_KEY` to env.
+
+Alternatives considered: **Apollo.io** (consolidates email + profile into one API, but forces Hunter migration — extra work for v1), **Clay.com** (aggregator, too expensive for launch), **NinjaPear** (Nubela's pivot post-Proxycurl, but it's focused on B2B company data, not individuals — wrong fit for our banker graph).
 
 ### Cron schedule (`vercel.json`)
 
