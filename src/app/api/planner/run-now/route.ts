@@ -14,13 +14,14 @@ export async function POST(request: Request) {
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   try {
-    // Cap per-invocation work so we stay under Vercel's 60s function limit.
-    // Cron jobs run with the full 5-candidate budget; user-triggered runs
-    // go smaller and finish fast.
+    // Cap per-invocation work HARD to stay under Vercel's 60s function limit.
+    // Each candidate is 2-3 Claude calls (Correspondent + Critic) × up to 3
+    // iterations = up to ~30s per candidate. 1 candidate fits comfortably.
+    // Cron jobs run with full 5-candidate budget since they have longer budget.
     const result = await runPlanner({
       userId: ctx.user.id,
       triggeredBy: "user_command",
-      maxCandidates: 2,
+      maxCandidates: 1,
     });
     return NextResponse.json({ ok: true, result });
   } catch (err) {
