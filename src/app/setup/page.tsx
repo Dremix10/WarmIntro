@@ -287,11 +287,19 @@ function SetupInner() {
       }),
     });
 
+    // Kick off the Planner immediately so the user doesn't stare at an empty queue
+    fetch("/api/planner/run-now", {
+      method: "POST",
+      headers: auth,
+    }).catch(() => {
+      /* non-fatal — cron will catch up next tick */
+    });
+
     setSaving(false);
     setStep("done");
     // Clear persisted setup state once saved to DB
     try { sessionStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
-    setTimeout(() => router.push("/today"), 1200);
+    setTimeout(() => router.push("/today"), 1800);
   }
 
   if (authLoading) {

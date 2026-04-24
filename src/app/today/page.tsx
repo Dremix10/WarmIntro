@@ -239,9 +239,24 @@ export default function TodayPage() {
         {data.drafts.length === 0 && (
           <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Nothing queued yet.</p>
-            <p className="text-sm text-[#14182A]/70">
+            <p className="text-sm text-[#14182A]/70 mb-5">
               Alma is researching bankers based on your target firms. New drafts land here around {data.trust?.preferred_send_time ?? "07:00"}.
             </p>
+            <button
+              type="button"
+              onClick={async () => {
+                const { data: { session: s } } = await supabase.auth.getSession();
+                const res = await fetch("/api/planner/run-now", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+                });
+                if (res.ok) load();
+              }}
+              className="rounded-xl bg-[#2E5A88] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
+            >
+              Run Alma now
+            </button>
+            <p className="mt-3 text-[10px] text-[#14182A]/40 italic">Kicks off Researcher + Correspondent immediately. Takes 20-60 sec.</p>
           </div>
         )}
 
