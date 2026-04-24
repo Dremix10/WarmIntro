@@ -38,7 +38,7 @@ The backend for Alma IB is live. This doc tells you what it exposes, what env it
 |---|---|---|
 | Claude API | `ANTHROPIC_API_KEY` | Agents log warnings, resume parser returns empty profile. |
 | Hunter.io | `HUNTER_API_KEY` | Email enrichment returns null. |
-| Proxycurl | `PROXYCURL_API_KEY` | LinkedIn scrape returns null. Correspondent falls back to sparse banker context. |
+| Proxycurl | `PROXYCURL_API_KEY` | **Proxycurl shut down 2025-01 after LinkedIn lawsuit.** Code left in place but returns null without a key. Correspondent falls back to Serper snippets via `linkedin-search.ts`. For a drop-in replacement post-launch: NinjaPear (Proxycurl's successor), Apollo.io, People Data Labs, or Coresignal — each has a similar "profile by URL" endpoint; wrap one in `services/linkedin/proxycurl.ts` to preserve the `scrapeBankerLinkedIn` interface. |
 | Gmail OAuth | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` | OAuth flow returns 503. Users can't connect Gmail. |
 | Serper (legacy fallback) | `SERPER_API_KEY` | LinkedIn search returns empty. |
 | Supabase service role (for agents writing across users) | `SUPABASE_SERVICE_ROLE_KEY` | Admin client throws — agents fail loudly. |

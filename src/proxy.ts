@@ -27,8 +27,11 @@ const RATE_LIMITS = {
 // User-Agent substrings that indicate automated tooling (case-insensitive match)
 const BOT_UA_PATTERNS = ["curl", "wget", "python-requests", "httpie", "postmanruntime"];
 
-// Routes exempt from bot UA checks (e.g. file upload endpoints)
-const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf", "/api/analytics", "/api/admin"];
+// Routes exempt from bot UA checks (cron runs as a bot by design; uploads; analytics)
+const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf", "/api/analytics", "/api/admin", "/api/cron"];
+
+// Routes that bypass rate limiting entirely (authenticated crons on fixed schedules)
+const RATE_LIMIT_EXEMPT_ROUTES = ["/api/cron"];
 
 interface RateLimitEntry {
   count: number;
@@ -94,6 +97,11 @@ export function proxy(request: NextRequest) {
   if (Math.random() < 0.01 || rateLimitMap.size > 10000) cleanupStaleEntries();
 
   const ip = getClientIp(request);
+
+  // Rate-limit exempt routes (cron) skip both global and tier checks
+  if (RATE_LIMIT_EXEMPT_ROUTES.some((r) => pathname.startsWith(r))) {
+    return NextResponse.next();
+  }
 
   // Global per-IP rate limit — applies before any tier-specific check
   const globalCheck = checkRateLimit(ip, "global");
