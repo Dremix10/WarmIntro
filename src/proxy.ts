@@ -125,6 +125,24 @@ async function getSessionEmailFromCookie(request: NextRequest, response: NextRes
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return null;
 
+  // Path 1: Authorization: Bearer — for programmatic API consumers (test harness, future mobile)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    if (token) {
+      try {
+        const { data } = await fetch(`${supabaseUrl}/auth/v1/user`, {
+          headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` },
+        }).then((r) => r.json()).then((d) => ({ data: { user: d } }));
+        const email = (data?.user as { email?: string } | null)?.email;
+        if (email) return email.toLowerCase();
+      } catch {
+        // fall through to cookie path
+      }
+    }
+  }
+
+  // Path 2: SSR cookie-backed session — default browser flow
   try {
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
