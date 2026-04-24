@@ -64,6 +64,9 @@ export default function ComingSoonPage() {
         {status === "err" && <p className="text-sm text-[#C86B4F] mt-3">{message}</p>}
 
         <p className="mt-10 text-xs text-[#14182A]/40">Built by Rice and Brown students.</p>
+        <p className="mt-2 text-xs text-[#14182A]/40">
+          Testers: <a href="/login" className="underline hover:text-[#2E5A88]">sign in</a>.
+        </p>
       </div>
     </div>
   );

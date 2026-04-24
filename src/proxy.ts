@@ -95,6 +95,7 @@ const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "dremixc10
 // Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself)
 const GATE_BYPASS_PREFIXES = [
   "/coming-soon",
+  "/login", // testers sign in here
   "/api/pilot-signup",
   "/api/extract-pdf", // pre-auth resume upload
   "/api/cron",
