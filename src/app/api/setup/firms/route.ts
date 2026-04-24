@@ -1,16 +1,31 @@
 // GET /api/setup/firms — list all firms + groups for the onboarding bank picker
+// Uses direct Supabase REST (service-role) to avoid any @supabase/supabase-js
+// RLS bypass weirdness in Edge runtime. Firms/groups are public reference data.
 
 import { NextResponse } from "next/server";
-import { getUser } from "@/lib/auth";
 
-export async function GET(request: Request) {
-  const ctx = await getUser(request);
-  if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+export async function GET() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    return NextResponse.json({ error: "supabase_env_missing" }, { status: 500 });
+  }
 
-  const [{ data: firms }, { data: groups }] = await Promise.all([
-    ctx.supabase.from("firms").select("id, name, tier, logo_url, domain").order("tier", { ascending: true }),
-    ctx.supabase.from("groups").select("id, firm_id, name, kind"),
+  const headers = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+
+  const [firmsRes, groupsRes] = await Promise.all([
+    fetch(`${url}/rest/v1/firms?select=id,name,tier,logo_url,domain&order=tier.asc`, { headers }),
+    fetch(`${url}/rest/v1/groups?select=id,firm_id,name,kind`, { headers }),
   ]);
 
-  return NextResponse.json({ firms: firms ?? [], groups: groups ?? [] });
+  if (!firmsRes.ok) {
+    return NextResponse.json(
+      { error: "firms_fetch_failed", status: firmsRes.status, detail: await firmsRes.text() },
+      { status: 500 }
+    );
+  }
+
+  const firms = await firmsRes.json();
+  const groups = groupsRes.ok ? await groupsRes.json() : [];
+  return NextResponse.json({ firms, groups });
 }

@@ -421,7 +421,7 @@ async function incrementApprovalCount(userId: string, cap: TrustCapability): Pro
   if (cap === "send_new_email") updates.approvals_count_new = (current?.approvals_count_new ?? 0) + 1;
   else if (cap === "send_followup") updates.approvals_count_followup = (current?.approvals_count_followup ?? 0) + 1;
   else updates.approvals_count_reply = (current?.approvals_count_reply ?? 0) + 1;
-  await admin.from("trust_levels").update(updates).eq("user_id", userId);
+  await admin.from("trust_levels").update(updates as never).eq("user_id", userId);
 }
 
 async function checkAndGraduate(userId: string, trust: TrustLevelsRow): Promise<void> {

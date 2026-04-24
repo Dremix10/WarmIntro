@@ -175,6 +175,11 @@ Three capabilities, each independently at C / B / A:
 
 ## Things that need your attention (or ours, together)
 
+### UX gaps flagged during testing (need to build)
+
+- **Forgot password flow on `/login`.** Currently no way to reset a lost password from the UI — requires dev to run the Supabase admin API. Should add "Forgot password?" link that calls `supabase.auth.resetPasswordForEmail(email)` and sends a recovery email.
+- **Account settings page.** No in-app UI to change password, change email, update target firms/groups, toggle trust gradient, set preferred send time, view Gmail connection status, or sign out from within the app. Currently `/today` has limited trust controls only. Proposed: `/account` page with password-change, profile edits, Gmail status + disconnect, privacy toggles, sign-out.
+
 ### Safe for you to do solo
 
 1. Wire `/pipeline` funnel numbers from real `connections` stage counts. Endpoint: `/api/today` already exposes `stageCounts` for the current user.

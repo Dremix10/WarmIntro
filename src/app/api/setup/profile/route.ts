@@ -29,6 +29,6 @@ export async function POST(request: Request) {
   if (body.graduationYear) updates.graduation_year = body.graduationYear;
   updates.updated_at = new Date().toISOString();
 
-  await ctx.supabase.from("profiles").update(updates).eq("id", ctx.user.id);
+  await ctx.supabase.from("profiles").update(updates as never).eq("id", ctx.user.id);
   return NextResponse.json({ ok: true });
 }
