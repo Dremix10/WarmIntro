@@ -3,9 +3,9 @@
 import type { LeaderboardMember } from "@/components/AppProvider";
 
 const RANK_STYLES: Record<number, string> = {
-  1: "bg-amber-400 text-white",
-  2: "bg-slate-300 text-white",
-  3: "bg-amber-600 text-white",
+  1: "bg-[#F0C865] text-white",
+  2: "bg-[#C7BC9F] text-white",
+  3: "bg-[#B08100] text-white",
 };
 
 interface LeaderboardTableProps {
@@ -18,9 +18,9 @@ export function LeaderboardTable({ members, canViewProfiles, onMemberClick }: Le
   const sorted = [...members].sort((a, b) => b.xp - a.xp);
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+    <div className="rounded-2xl bg-white border border-[#ECE5D0] shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="grid grid-cols-12 gap-2 px-5 py-3 bg-slate-50 border-b border-slate-100 text-xs font-semibold uppercase tracking-wider text-slate-400">
+      <div className="grid grid-cols-12 gap-2 px-5 py-3 bg-[#FBF7EC] border-b border-[#ECE5D0] text-xs font-semibold uppercase tracking-wider text-[#8A8674]">
         <div className="col-span-1">#</div>
         <div className="col-span-5">Player</div>
         <div className="col-span-2 text-right">XP</div>
@@ -29,7 +29,7 @@ export function LeaderboardTable({ members, canViewProfiles, onMemberClick }: Le
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-[#ECE5D0]">
         {sorted.map((member, i) => {
           const rank = i + 1;
           const isUser = member.isCurrentUser;
@@ -40,14 +40,14 @@ export function LeaderboardTable({ members, canViewProfiles, onMemberClick }: Le
               key={member.id}
               onClick={() => isClickable && onMemberClick(member)}
               className={`grid grid-cols-12 gap-2 items-center px-5 py-3 transition-colors ${
-                isUser ? "bg-emerald-50/50" : "hover:bg-slate-50"
+                isUser ? "bg-[#F4EDDB]/50" : "hover:bg-[#FBF7EC]"
               } ${isClickable ? "cursor-pointer" : ""}`}
             >
               {/* Rank */}
               <div className="col-span-1">
                 <span
                   className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                    RANK_STYLES[rank] ?? "bg-slate-100 text-slate-500"
+                    RANK_STYLES[rank] ?? "bg-[#F4EDDB] text-[#5C6472]"
                   }`}
                 >
                   {rank}
@@ -60,8 +60,8 @@ export function LeaderboardTable({ members, canViewProfiles, onMemberClick }: Le
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                       isUser
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-slate-100 text-slate-600"
+                        ? "bg-[#EAE3D2] text-[#0F2A45]"
+                        : "bg-[#F4EDDB] text-[#4A5260]"
                     }`}
                   >
                     {member.name.split(" ").map((n) => n[0]).join("")}
@@ -69,42 +69,42 @@ export function LeaderboardTable({ members, canViewProfiles, onMemberClick }: Le
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className={`text-sm font-medium truncate ${
-                        isUser ? "text-emerald-700" : isClickable ? "text-slate-800 hover:text-emerald-600" : "text-slate-800"
+                        isUser ? "text-[#0F2A45]" : isClickable ? "text-[#1F2330] hover:text-[#1B3B5F]" : "text-[#1F2330]"
                       }`}>
                         {member.name}
                       </p>
-                      {isUser && <span className="text-xs text-emerald-500 shrink-0">(you)</span>}
+                      {isUser && <span className="text-xs text-[#2E5A88] shrink-0">(you)</span>}
                       {!isUser && member.profileShared && (
                         <span className="shrink-0 rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-500">
                           Resume
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400">{member.levelName}</p>
+                    <p className="text-xs text-[#8A8674]">{member.levelName}</p>
                   </div>
                 </div>
               </div>
 
               {/* XP */}
               <div className="col-span-2 text-right">
-                <span className={`text-sm font-bold ${isUser ? "text-emerald-600" : "text-slate-700"}`}>
+                <span className={`text-sm font-bold ${isUser ? "text-[#1B3B5F]" : "text-[#2A2F3B]"}`}>
                   {member.xp.toLocaleString()}
                 </span>
               </div>
 
               {/* Outreach */}
               <div className="col-span-2 text-right">
-                <span className="text-sm text-slate-600">{member.outreachSent}</span>
+                <span className="text-sm text-[#4A5260]">{member.outreachSent}</span>
               </div>
 
               {/* Streak */}
               <div className="col-span-2 text-right">
                 {member.streak > 0 ? (
-                  <span className="text-sm text-amber-500 font-medium">
+                  <span className="text-sm text-[#E8B339] font-medium">
                     &#x1F525; {member.streak}
                   </span>
                 ) : (
-                  <span className="text-sm text-slate-300">--</span>
+                  <span className="text-sm text-[#A8A494]">--</span>
                 )}
               </div>
             </div>

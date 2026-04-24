@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alma — 7-Day YC Sprint Plan</title>
+<style>
+  :root {
+    --ink: #111111;
+    --ink-2: #2b2b2b;
+    --muted: #6b6b6b;
+    --line: #e5e1d6;
+    --paper: #faf7ef;
+    --paper-2: #ffffff;
+    --blue: #1B3B5F;
+    --blue-2: #2E5A88;
+    --terracotta: #C86B4F;
+    --ochre: #E8B339;
+    --green: #3A7D44;
+    --red: #B8453A;
+    --code: #f4efe2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 56px 32px 96px; }
+  header.top { border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 40px; }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 11px;
+    color: var(--terracotta);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 48px;
+    line-height: 1.05;
+    margin: 0 0 12px;
+    letter-spacing: -0.02em;
+  }
+  h1 em { font-style: italic; color: var(--blue); }
+  .lede { color: var(--ink-2); font-size: 18px; max-width: 720px; margin: 0; }
+  .meta { display: flex; gap: 24px; margin-top: 24px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .meta span strong { color: var(--ink); font-weight: 600; }
+
+  section { margin-top: 64px; }
+  section > h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  section > .subtitle { color: var(--muted); font-size: 15px; margin-bottom: 28px; }
+  h3 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin: 28px 0 12px;
+    letter-spacing: -0.01em;
+  }
+  h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin: 20px 0 8px; font-weight: 700; }
+
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  ul li, ol li { margin-bottom: 6px; }
+
+  .card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  .card.tight { padding: 18px 22px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .pill.blue { background: #e8eef4; color: var(--blue); }
+  .pill.terracotta { background: #f7e6df; color: var(--terracotta); }
+  .pill.green { background: #e3efe5; color: var(--green); }
+  .pill.red { background: #f4dedb; color: var(--red); }
+  .pill.muted { background: #ece8dc; color: var(--muted); }
+
+  /* Day cards */
+  .day-card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 0;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+  .day-head {
+    background: var(--blue);
+    color: white;
+    padding: 18px 24px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .day-head .num {
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .day-head .title {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 22px;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .day-head .date { font-size: 12px; opacity: 0.75; letter-spacing: 0.05em; text-transform: uppercase; }
+  .day-body { padding: 22px 24px 4px; }
+  .day-body .goal {
+    background: #fbf3ec;
+    border-left: 3px solid var(--terracotta);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 18px;
+    font-size: 15px;
+  }
+  .day-body .goal strong { color: var(--terracotta); }
+
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  @media (max-width: 720px) { .split { grid-template-columns: 1fr; } }
+  .role {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #fdfbf5;
+  }
+  .role h5 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .role ul { margin: 0; padding-left: 18px; font-size: 14px; }
+  .role ul li { margin-bottom: 4px; }
+
+  .checklist { list-style: none; padding: 0; margin: 8px 0 14px; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14px;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .box {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--blue);
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .warn {
+    background: #fbeae7;
+    border: 1px solid #f1c9c2;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    color: #6b1f15;
+  }
+  .warn strong { color: var(--red); }
+
+  /* Q&A blocks */
+  .qa { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 20px; }
+  .qa:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .qa .q {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 19px;
+    font-style: italic;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  .compare .col {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .compare .weak { background: #fbeae7; border: 1px solid #f1c9c2; }
+  .compare .strong { background: #e8f1ea; border: 1px solid #c6dccd; }
+  .compare h6 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .compare .weak h6 { color: var(--red); }
+  .compare .strong h6 { color: var(--green); }
+
+  /* Video script */
+  .timeline {
+    border-left: 2px solid var(--terracotta);
+    margin: 18px 0 8px 6px;
+    padding-left: 22px;
+  }
+  .beat { position: relative; margin-bottom: 18px; }
+  .beat::before {
+    content: '';
+    position: absolute;
+    left: -29px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    background: var(--terracotta);
+    border-radius: 50%;
+  }
+  .beat .time {
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    color: var(--terracotta);
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .beat .label { font-weight: 600; margin-bottom: 4px; }
+  .beat .detail { color: var(--ink-2); font-size: 14px; }
+
+  .kill-list, .win-list { list-style: none; padding: 0; margin: 0; }
+  .kill-list li, .win-list li {
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    display: flex;
+    gap: 8px;
+  }
+  .kill-list li { background: #fbeae7; }
+  .kill-list li::before { content: '✕'; color: var(--red); font-weight: 700; }
+  .win-list li { background: #e8f1ea; }
+  .win-list li::before { content: '✓'; color: var(--green); font-weight: 700; }
+
+  /* Insight callouts */
+  .insight {
+    background: linear-gradient(180deg, #fbf3ec 0%, #faf7ef 100%);
+    border: 1px solid #ead8c6;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .insight strong { font-style: normal; color: var(--blue); }
+
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 48px 0; }
+
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer em { font-family: "Fraunces", Georgia, serif; color: var(--blue); }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+  .nav a {
+    color: var(--blue);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--blue);
+    padding-bottom: 1px;
+  }
+  .nav a:hover { color: var(--terracotta); border-color: var(--terracotta); }
+
+  table.metrics {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 18px;
+    font-size: 14px;
+  }
+  table.metrics th, table.metrics td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.metrics th {
+    font-weight: 600;
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  table.metrics td.num { font-family: "Fraunces", Georgia, serif; font-size: 18px; color: var(--blue); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Y Combinator — Summer / Fall Application Sprint</div>
+    <h1>Alma · <em>7-Day Sprint to Submit</em></h1>
+    <p class="lede">An operator-grade plan to ship a working MVP, run a real pilot at Brown and Rice, draft an honest application, and record a video that doesn't get skipped — in seven days.</p>
+    <div class="meta">
+      <span><strong>Founders:</strong> 2 (Frontend + Product / Backend + Integrations)</span>
+      <span><strong>Stage:</strong> Backend mostly built · Frontend drafted</span>
+      <span><strong>Submit by:</strong> Day 7, before 5pm PT</span>
+    </div>
+    <nav class="nav">
+      <a href="#strategy">1. Strategy Layer</a>
+      <a href="#sprint">2. 7-Day Plan</a>
+      <a href="#application">3. Application Answers</a>
+      <a href="#video">4. Founder Video</a>
+      <a href="#standards">5. Standards</a>
+    </nav>
+  </header>
+
+  <!-- ============================================================ -->
+  <section id="strategy">
+    <h2>1 · Elite YC Strategy Layer</h2>
+    <p class="subtitle">Synthesis of what actually moves applications from "skip" to "interview" — based on patterns from accepted batches, partner essays, and post-mortems.</p>
+
+    <div class="insight">
+      <strong>The single mental model:</strong> A YC partner reads ~50 applications in a sitting. They spend 60–90 seconds on yours before deciding "interview / maybe / no." Every sentence has to earn its place. Vague is a no. Polished is a no. <em>Specific, honest, and shipped</em> is a yes.
+    </div>
+
+    <h3>What accepted founders did right</h3>
+    <div class="grid-2">
+      <div class="card tight">
+        <h4>They launched before they applied</h4>
+        <p>Almost every YES has the phrase "we launched on [date]" with real users by application time. Not a beta waitlist. Real users doing the thing.</p>
+      </div>
+      <div class="card tight">
+        <h4>They wrote like a text message</h4>
+        <p>Short sentences. No corporate verbs. "We help X do Y" not "We're a platform empowering X to optimize Y." If your mom can't understand the first sentence, rewrite it.</p>
+      </div>
+      <div class="card tight">
+        <h4>They had insider insight</h4>
+        <p>One non-obvious thing they know about the market because they lived it. For Alma: "Cold applications convert at &lt;1%. Warm intros convert at 30%+. No one teaches students how to run that funnel."</p>
+      </div>
+      <div class="card tight">
+        <h4>They showed velocity</h4>
+        <p>"We built this in 4 weekends." "We shipped v1 in 11 days." YC funds <em>rate of progress</em> more than current state. Make velocity legible.</p>
+      </div>
+      <div class="card tight">
+        <h4>They were brutally honest about traction</h4>
+        <p>"47 signups, 12 active weekly, 1 paying" beats "strong early interest." Partners can smell exaggeration in two seconds and it kills trust.</p>
+      </div>
+      <div class="card tight">
+        <h4>They had a wedge, not a vision</h4>
+        <p>Don't sell the 10-year empire. Sell the painfully specific first user. "Brown & Rice undergrads applying to summer internships" is a wedge. "Career platform" is not.</p>
+      </div>
+    </div>
+
+    <h3>Why applications fail (avoid all of these)</h3>
+    <ul>
+      <li><strong>Solution-in-search-of-a-problem framing.</strong> Starting with the AI/tech and not the human pain. YC funds problems first.</li>
+      <li><strong>"We will" instead of "we have."</strong> Future tense in 2026 is a death sentence. Replace every "will" with "did" or cut it.</li>
+      <li><strong>Bloated TAM math.</strong> "$300B career services market" reads as lazy. Pick a precise beachhead and own it.</li>
+      <li><strong>Two co-founders who sound interchangeable.</strong> If both bios say "passionate about X," partners assume you'll fight in 6 months. Differentiate sharply.</li>
+      <li><strong>No demo, or a 4-minute demo.</strong> If they have to dig to see the product, they won't. Show it in the first 30 seconds of the video.</li>
+      <li><strong>Hedging.</strong> "We think we might be able to..." Pick a side. Be wrong with conviction.</li>
+      <li><strong>Polished video with music + b-roll.</strong> Reads as "they spent a week on this instead of building." Unscripted founders &gt; production.</li>
+      <li><strong>Submitting at the deadline.</strong> Last-hour applications signal poor planning. Submit ~24h early.</li>
+    </ul>
+
+    <h3>What YC partners explicitly look for</h3>
+    <div class="grid-3">
+      <div class="card tight">
+        <h4>Clarity of thought</h4>
+        <p>Can you compress your idea into one sentence a 12-year-old understands?</p>
+      </div>
+      <div class="card tight">
+        <h4>Founder–market fit</h4>
+        <p>Why is this the most obvious thing for <em>you</em> to be working on, and not someone else?</p>
+      </div>
+      <div class="card tight">
+        <h4>Default-alive math</h4>
+        <p>Even hand-wavy: how does this make money, and roughly how much per user?</p>
+      </div>
+      <div class="card tight">
+        <h4>Schlep tolerance</h4>
+        <p>Are you willing to do the boring, manual work (e.g., calling 100 students one by one)?</p>
+      </div>
+      <div class="card tight">
+        <h4>Speed of execution</h4>
+        <p>How fast did you ship v1? How many cycles per week are you running?</p>
+      </div>
+      <div class="card tight">
+        <h4>Real conviction</h4>
+        <p>Will you still be working on this in 5 years if it's hard? Why?</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ -->
+  <section id="sprint">
+    <h2>2 · 7-Day Execution Plan</h2>
+    <p class="subtitle">Each day has one job. If a task doesn't directly improve the app, the pilot, or the application — it's deferred until after submission. Founder A = Frontend/Product. Founder B = Backend/Integrations.</p>
+
+    <div class="insight">
+      <strong>Sprint rule:</strong> Cut anything that isn't on the path to "20 real Brown/Rice students used Alma this week." That metric, in your application, is worth more than any feature.
+    </div>
+
+    <!-- DAY 1 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 01 · Friday</div>
+          <div class="title">Lock the Story. Cut the Scope.</div>
+        </div>
+        <div class="date">Strategy Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> End the day with a one-sentence pitch, a brutally cut MVP scope, and a list of 30 named pilot users you'll text on Monday.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Write 5 versions of the one-sentence pitch. Pick the best with co-founder.</li>
+              <li>Audit the app: list every screen, mark each <span class="pill blue">ship</span>, <span class="pill terracotta">trim</span>, or <span class="pill muted">defer</span>.</li>
+              <li>Define the <em>single golden flow</em>: Resume upload → company → outreach draft → sent. Everything else is optional for v1.</li>
+              <li>Draft pilot user list: 30 names from your Brown/Rice networks (clubs, dorms, classes).</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>List every connector/integration still needed. Rank by impact on the golden flow.</li>
+              <li>Set hard scope: only ship what the golden flow requires. Nothing else.</li>
+              <li>Set up basic event tracking (PostHog or simple Supabase logs): signups, outreach sent, replies marked.</li>
+              <li>Confirm Claude API quota and Serper API quota for ~50 users worth of usage.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>One-sentence pitch written, agreed, and pinned in shared doc</li>
+          <li><span class="box"></span>MVP scope list — every screen labeled ship/trim/defer</li>
+          <li><span class="box"></span>Golden flow documented as 5 numbered steps</li>
+          <li><span class="box"></span>Pilot list of 30 named students with contact method</li>
+          <li><span class="box"></span>Event tracking sending events to a dashboard you can both see</li>
+          <li><span class="box"></span>Both founders agree on what is <em>not</em> shipping this week</li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> Adding features today. Adding features. Discussing the logo. Discussing the name. Building anything. Today is decisions only.</div>
+      </div>
+    </article>
+
+    <!-- DAY 2 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 02 · Saturday</div>
+          <div class="title">Build the Spine. End-to-End.</div>
+        </div>
+        <div class="date">Build Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> By midnight, both founders can log into a fresh account, upload a real resume, and get a real outreach draft for a real alumnus. Even if ugly.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Polish the onboarding: resume upload → profile review. Cut copy by 50%.</li>
+              <li>Tighten the company select screen — empty states, loading states, error states.</li>
+              <li>Outreach draft view: clear "Send via Email" and "Send via LinkedIn" CTAs.</li>
+              <li>Strip every "coming soon" badge. If it's not done, hide it.</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>Ship LinkedIn enrichment connector end-to-end (Serper integration confirmed working).</li>
+              <li>Wire email send (Resend or SendGrid) for draft → actually delivered.</li>
+              <li>Lock auth flow (Supabase) — signup, login, session persistence on production.</li>
+              <li>Push to a stable preview URL (not localhost). Send link to Founder A.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>Stable production URL exists and works on mobile + desktop</li>
+          <li><span class="box"></span>Co-founder created a fresh account and completed the golden flow without a bug</li>
+          <li><span class="box"></span>One real outreach was sent through the system to a real alumnus</li>
+          <li><span class="box"></span>All non-shipping screens are hidden or feature-flagged off</li>
+          <li><span class="box"></span>Bug list created and triaged: <em>blockers</em> vs <em>polish</em></li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> Refactoring. Renaming variables. "While I'm in here" changes. Anything that touches code outside the golden flow.</div>
+      </div>
+    </article>
+
+    <!-- DAY 3 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 03 · Sunday</div>
+          <div class="title">Bug Bash + Dogfood Hard.</div>
+        </div>
+        <div class="date">Polish Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> Both founders run through the entire app three times each as different personas. Fix every blocker. Ship 5 friends from your network as Day-0 pilots tonight.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Run 3 personas through the app: CS junior, Econ senior, undecided sophomore.</li>
+              <li>Fix every visual bug that breaks trust (overflow, broken icons, jank).</li>
+              <li>Write the SMS/iMessage you'll send to pilots Monday morning. ~2 sentences.</li>
+              <li>Recruit 5 friends to test tonight. Watch them use it without explaining anything.</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>Burn down blocker list from Day 2. No new features.</li>
+              <li>Set rate limits, basic abuse protection, monitoring/alerts on errors.</li>
+              <li>Verify event tracking captures: signup, resume_uploaded, outreach_drafted, outreach_sent, reply_marked.</li>
+              <li>Build a simple internal dashboard showing live counts of those events.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>5 real friends used the app tonight; you watched at least 2 of them in person/Zoom</li>
+          <li><span class="box"></span>Top 3 friction points identified — fixed or accepted with eyes open</li>
+          <li><span class="box"></span>Internal metrics dashboard live and showing today's events</li>
+          <li><span class="box"></span>Pilot SMS drafted and ready to send Monday 9am</li>
+          <li><span class="box"></span>Both founders feel "I'd actually use this if I were them" — honestly</li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> Watching friends use the app and explaining what they're "supposed" to do. Sit on your hands. Their confusion is your data.</div>
+      </div>
+    </article>
+
+    <!-- DAY 4 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 04 · Monday</div>
+          <div class="title">Launch the Pilot. Get Real Numbers.</div>
+        </div>
+        <div class="date">Launch Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> 30 pilot invites sent before noon. Aim for 15+ signups, 5+ outreach messages sent through Alma, 1+ reply by end of day. Document every datapoint.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Send all 30 personalized SMS/iMessages by 11am. Personal, not blast.</li>
+              <li>Be on-call all day for support — DMs, fixes, copy tweaks.</li>
+              <li>Capture 5 quotes from pilots about the experience (good <em>and</em> bad).</li>
+              <li>Identify 3 power users to interview Tuesday for testimonials.</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>Watch metrics dashboard live. Hot-fix any production issues within 10 min.</li>
+              <li>Pull a clean stats snapshot at midnight: signups, activations, outreach sent, replies.</li>
+              <li>Investigate any drop-off in the funnel — fix or note for application honesty.</li>
+              <li>Prep a one-page "by the numbers" doc to use in the application Tuesday.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>30 invites sent (1:1, personal — not a blast)</li>
+          <li><span class="box"></span>Real numbers captured: signups, activations, outreach sent, replies</li>
+          <li><span class="box"></span>5 verbatim quotes from pilots saved to a doc</li>
+          <li><span class="box"></span>Zero production downtime; any errors logged and patched same day</li>
+          <li><span class="box"></span>Founders have a shared "today we learned" note (3 bullets, max)</li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> Mass-emailing. Posting on Twitter/LinkedIn for "buzz." This is qualitative pilot data, not a marketing launch. 20 deep users &gt; 200 shallow ones.</div>
+      </div>
+    </article>
+
+    <!-- DAY 5 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 05 · Tuesday</div>
+          <div class="title">Draft the Application. Honest Numbers.</div>
+        </div>
+        <div class="date">Writing Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> Full application drafted by 8pm. Sent to 3 trusted reviewers (1 founder ahead of you, 1 sharp non-founder friend, 1 advisor) for ruthless feedback by midnight.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Draft answers to all YC questions using the framework in §3 below.</li>
+              <li>Pull 2–3 best pilot quotes verbatim (with name + school) into "traction" answer.</li>
+              <li>Record a 2-min Loom demo of the actual product in use — clean run-through.</li>
+              <li>Write the founder bios so they sound like 2 different people, not interchangeable twins.</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>Compile final traction stats from Day 4–5 (DAU, outreach sent, replies, coffees booked).</li>
+              <li>Address Day 4 bugs and polish any rough edges visible in the demo.</li>
+              <li>Push a clean, deployed version of the app for the application URL field.</li>
+              <li>Write the technical "how it works" sentence in plain English (no jargon).</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>Every YC question answered in draft, no "TBD" anywhere</li>
+          <li><span class="box"></span>Traction answer has real numbers and at least one user quote</li>
+          <li><span class="box"></span>Demo Loom recorded and linked in the application</li>
+          <li><span class="box"></span>3 reviewers have the draft and a 36-hour deadline</li>
+          <li><span class="box"></span>Read the entire application out loud — it sounds like you, not ChatGPT</li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> Letting AI rewrite the answers in "professional" voice. YC partners read AI-flavored answers daily and skip them. Keep your specific phrasing, even if imperfect.</div>
+      </div>
+    </article>
+
+    <!-- DAY 6 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 06 · Wednesday</div>
+          <div class="title">Record the Video. Revise Everything.</div>
+        </div>
+        <div class="date">Video + Revision Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> Founder video shot in 5–10 takes, picked, uploaded. Application revised based on all 3 reviewer rounds. Both founders sleep before midnight.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Set up a clean recording spot: even light, plain background, phone on tripod.</li>
+              <li>Run the 60-second beat structure with co-founder. Don't memorize — internalize.</li>
+              <li>Record 8–10 takes. Pick the one that <em>sounds</em> most natural, not the one that's most perfect.</li>
+              <li>Incorporate reviewer feedback into the application. Cut 20% of your word count.</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>Be on camera for the video — both founders must appear and speak.</li>
+              <li>Speak to the technical/integration insight in your section.</li>
+              <li>Final pass on the deployed app: no broken links, no typos, no console errors.</li>
+              <li>Re-pull updated metrics — application traction stats should be from latest data.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>60-second video recorded, both founders on camera, single take</li>
+          <li><span class="box"></span>Video uploaded as unlisted YouTube link (test the link incognito)</li>
+          <li><span class="box"></span>Application revised, word count down, every sentence earns its spot</li>
+          <li><span class="box"></span>One founder reads it cold and could explain Alma to a stranger from it</li>
+          <li><span class="box"></span>Sleep. You ship tomorrow.</li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> Editing the video in iMovie. Adding music. Adding captions. Adding b-roll. The unpolished version is the strong version.</div>
+      </div>
+    </article>
+
+    <!-- DAY 7 -->
+    <article class="day-card">
+      <div class="day-head">
+        <div>
+          <div class="num">Day 07 · Thursday</div>
+          <div class="title">Final Pass. Submit Early.</div>
+        </div>
+        <div class="date">Submit Day</div>
+      </div>
+      <div class="day-body">
+        <div class="goal"><strong>🎯 Goal:</strong> Application submitted by noon. Not midnight. Not 11:59. Noon. Then go for a walk.</div>
+
+        <div class="split">
+          <div class="role">
+            <h5>🛠 Founder A (Frontend / Product)</h5>
+            <ul>
+              <li>Read the entire application out loud, top to bottom. Fix any awkward sentence.</li>
+              <li>Triple-check every link: app URL, demo Loom, founder LinkedIn, video.</li>
+              <li>Verify video plays in incognito on phone + desktop.</li>
+              <li>Click submit at 11:55am. Screenshot the confirmation.</li>
+            </ul>
+          </div>
+          <div class="role">
+            <h5>🛠 Founder B (Backend / Integrations)</h5>
+            <ul>
+              <li>Verify production app is up, fast, and doesn't error for a brand-new user.</li>
+              <li>Set up an alert if the site goes down between now and YC interview decisions.</li>
+              <li>Pull a final metrics snapshot — keep dated, you'll need it for follow-ups.</li>
+              <li>Sit next to Founder A during submit. Two-person check.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h4>✅ End-of-Day Checklist</h4>
+        <ul class="checklist">
+          <li><span class="box"></span>Application submitted before noon Pacific</li>
+          <li><span class="box"></span>Confirmation screenshot saved</li>
+          <li><span class="box"></span>App is live, healthy, and reachable on a fresh device</li>
+          <li><span class="box"></span>Pilot users have been thanked individually (not in bulk)</li>
+          <li><span class="box"></span>Founders agree: the application is honest and we're proud of the version we sent</li>
+        </ul>
+
+        <div class="warn"><strong>⚠ Avoid:</strong> "One more tweak" energy after 11am. Past the deadline you set, the marginal edit is negative EV — small fixes introduce typos under stress.</div>
+      </div>
+    </article>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ -->
+  <section id="application">
+    <h2>3 · YC Application Optimization</h2>
+    <p class="subtitle">How to answer the questions that actually decide your application. Strong vs weak phrasing, with examples calibrated to Alma.</p>
+
+    <div class="insight">
+      <strong>Universal rule:</strong> Specific is strong. Concrete is strong. Honest is strong. Anything that could appear in any other application is weak. If your answer would still make sense for a fintech startup, rewrite it.
+    </div>
+
+    <div class="card">
+      <div class="qa">
+        <div class="q">"What are you building?" (the most important question)</div>
+        <p><strong>What partners are scanning for:</strong> A clear, concrete sentence. Who you serve. What you do for them. How. Nothing else in the first sentence.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "Alma is an AI-powered career platform that empowers Gen-Z students to leverage their networks and unlock opportunities through intelligent matching and personalized outreach."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "Alma helps Brown and Rice undergrads land internships through warm intros instead of cold applications. We rank companies by which alumni you can reach, then draft the email."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="q">"Why this idea? Why now?"</div>
+        <p><strong>What partners are scanning for:</strong> A specific story that proves the pain is real and that you've personally felt it. Bonus if the story is mildly embarrassing — embarrassment signals authenticity.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "We believe job searching is broken and AI now makes it possible to fix it. The market is ready for innovation in career services."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "Last summer I sent 87 cold applications and got 0 interviews. A single warm intro from a Rice alum got me the offer. Every classmate I talk to has the same story — and there's no tool that runs that funnel for you. AI finally makes the alumni-matching + drafting cheap enough to do at scale."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="q">"What traction do you have?"</div>
+        <p><strong>What partners are scanning for:</strong> Real numbers, recently. Even tiny numbers. A small, honest number with a date beats a big vague claim every time.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "We're seeing strong early traction with significant interest from our target market and a growing waitlist of users."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "Launched April 20, 2026. In the first 3 days: 47 signups (Brown 28 / Rice 19), 31 completed onboarding, 312 outreach messages sent through Alma, 89 replies, 12 coffee chats booked, 1 internship offer (Maya, Rice junior, Goldman). Daily active sessions trending up week-over-week."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="q">"Why are you the right team?"</div>
+        <p><strong>What partners are scanning for:</strong> Two founders who do <em>different</em> things and who have a non-obvious right to win. Avoid "passionate." Use evidence.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "We are two passionate technical co-founders with backgrounds in computer science and product. We've worked together on multiple projects and complement each other well."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "[A] runs Brown CSA's career mentorship program — has personally helped 18 classmates land internships through warm intros over 2 years. [B] built and maintains Rice's Owl Investments alumni database (1,400+ contacts) and shipped 3 production Next.js apps before Alma. We've been roommates' friends since high school and have shipped 4 hackathon projects together."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="q">"What's something most people don't know about your space?"</div>
+        <p><strong>What partners are scanning for:</strong> A non-consensus insight that signals you've actually been in the trenches. This question separates real founders from idea-tourists.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "Most people don't realize how broken the recruiting process is for students."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "Alumni are 50× more likely to respond to a student than to a recruiter, but the response rate collapses if the message is generic. The wedge isn't 'find an alum' — it's writing a 4-sentence message that references something specific they actually care about. That's the part everyone gets wrong, including LinkedIn."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="q">"How will you make money?"</div>
+        <p><strong>What partners are scanning for:</strong> A simple, plausible answer. You don't need to be right — you need to have thought about it.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "We will explore multiple monetization options including B2B partnerships and freemium models."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "$15/month student subscription after a 30-day free trial. Long-term, universities pay us per active student ($40–60/student/year) — career services budgets average $250/student and the ROI conversation is easy. We'll test the consumer price point in May with the first paying cohort."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa">
+        <div class="q">"What do you understand about your business that other companies don't?"</div>
+        <p><strong>What partners are scanning for:</strong> Schlep insight. Something hard or unsexy that you're willing to do because you know it matters.</p>
+        <div class="compare">
+          <div class="col weak">
+            <h6>Weak</h6>
+            "We deeply understand our user base and can build the right product for them."
+          </div>
+          <div class="col strong">
+            <h6>Strong</h6>
+            "The reason this hasn't worked before is that scraping LinkedIn for alumni is brittle and expensive. We get around it by ingesting each university's directory + clubs + sports rosters once, then enriching with public web search per user — cheaper per query, higher quality, and defensible per school. We'll do that boring work school-by-school for the first 30 universities."
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ -->
+  <section id="video">
+    <h2>4 · Founder Video Framework</h2>
+    <p class="subtitle">60 seconds. Both founders. Single take. No edits. The video is a vibe check, not a pitch — partners are testing if you can communicate clearly under mild pressure.</p>
+
+    <div class="insight">
+      <strong>The bar:</strong> If the partner watches all 60 seconds and could repeat your one-sentence pitch back to a colleague, you passed. Everything in the video should serve that outcome.
+    </div>
+
+    <h3>The 60-second beat structure</h3>
+    <div class="timeline">
+      <div class="beat">
+        <div class="time">0:00 – 0:08</div>
+        <div class="label">Names + school + one-sentence pitch.</div>
+        <div class="detail">"Hi, I'm [A] from Brown, this is [B] from Rice. We're building Alma — we help college students land internships through warm intros instead of cold applications."</div>
+      </div>
+      <div class="beat">
+        <div class="time">0:08 – 0:22</div>
+        <div class="label">The personal problem.</div>
+        <div class="detail">One specific story. "I sent 87 applications. Got 0 callbacks. One alum intro got me the offer. Every classmate has the same story." 14 seconds, no more.</div>
+      </div>
+      <div class="beat">
+        <div class="time">0:22 – 0:38</div>
+        <div class="label">What we built — show the screen if possible.</div>
+        <div class="detail">"You upload your resume, Alma ranks 30 companies by which alumni you can reach, drafts the message, and tracks the funnel. Here's the real one I sent yesterday." Screen-share for 5 seconds.</div>
+      </div>
+      <div class="beat">
+        <div class="time">0:38 – 0:50</div>
+        <div class="label">Real traction in real numbers.</div>
+        <div class="detail">"We launched four days ago. 47 students from Brown and Rice. 312 messages sent through Alma. 89 replies. One offer." Specific, dated, honest.</div>
+      </div>
+      <div class="beat">
+        <div class="time">0:50 – 1:00</div>
+        <div class="label">Why us — short and earnest.</div>
+        <div class="detail">"We've been the students struggling with this. We've already shipped four products together. We'll keep building this whether or not we get in." End on a real smile.</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <h4>What kills videos instantly</h4>
+        <ul class="kill-list">
+          <li>Reading from a script — partners can hear your eyes moving</li>
+          <li>Music or sound effects of any kind</li>
+          <li>Title cards, lower thirds, slides, motion graphics</li>
+          <li>Multiple cuts edited together (looks rehearsed and slow)</li>
+          <li>Only one founder speaking, the other off-camera</li>
+          <li>Vague claims ("we're seeing tons of interest")</li>
+          <li>Bad audio — phone mic in a noisy room is a no</li>
+          <li>Going over 60 seconds. Strict.</li>
+        </ul>
+      </div>
+      <div>
+        <h4>What partners notice and like</h4>
+        <ul class="win-list">
+          <li>Both founders on camera, looking into the lens</li>
+          <li>Single take, conversational pace, real energy</li>
+          <li>One specific number ("87 applications, 0 callbacks")</li>
+          <li>5 seconds of actual product on screen</li>
+          <li>You finishing each other's sentences naturally</li>
+          <li>Co-founder chemistry — visible respect</li>
+          <li>You being recognizably yourselves, not "founders"</li>
+          <li>Submitting under 60 seconds. 55 seconds is great.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Production setup (15 minutes, $0)</h3>
+    <table class="metrics">
+      <tr><th>Element</th><th>Setup</th></tr>
+      <tr><td>Camera</td><td>Phone on a tripod or stack of books, eye level</td></tr>
+      <tr><td>Audio</td><td>Quiet room, phone within 3 feet of speakers, no echo</td></tr>
+      <tr><td>Lighting</td><td>Window in front of you, not behind. Daylight only.</td></tr>
+      <tr><td>Background</td><td>Plain wall or messy desk — both fine. Avoid empty white voids.</td></tr>
+      <tr><td>Wardrobe</td><td>What you'd wear to a friend's apartment. Not a blazer.</td></tr>
+      <tr><td>Take count</td><td>Aim for 8–10 takes. Pick the most <em>natural</em> one, not the most polished.</td></tr>
+      <tr><td>Upload</td><td>Unlisted YouTube link. Test in incognito on phone + desktop before submitting.</td></tr>
+    </table>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================ -->
+  <section id="standards">
+    <h2>5 · Standards & Sprint Discipline</h2>
+    <p class="subtitle">The non-negotiables for the next 7 days.</p>
+
+    <div class="grid-2">
+      <div class="card tight">
+        <h4>The hierarchy of work</h4>
+        <ol>
+          <li>Anything that helps real students use Alma this week</li>
+          <li>Anything that strengthens application traction numbers</li>
+          <li>Anything that improves the video or written application</li>
+          <li>Everything else (defer until after submission)</li>
+        </ol>
+      </div>
+      <div class="card tight">
+        <h4>Daily rituals</h4>
+        <ul>
+          <li>9:00 AM — 15-min standup: yesterday's wins, today's one priority, blockers</li>
+          <li>1:00 PM — silent work block (3 hours, no Slack, no calls)</li>
+          <li>9:00 PM — 10-min "what we learned" note in shared doc</li>
+          <li>11:00 PM — laptops closed. Sleep is leverage.</li>
+        </ul>
+      </div>
+      <div class="card tight">
+        <h4>Hard "no" list</h4>
+        <ul>
+          <li>No new features after Day 2</li>
+          <li>No design system overhauls</li>
+          <li>No domain or branding changes</li>
+          <li>No "let's add one more company" scope creep</li>
+          <li>No mass-marketing posts before submission</li>
+        </ul>
+      </div>
+      <div class="card tight">
+        <h4>Reviewers to recruit (Day 1)</h4>
+        <ul>
+          <li>One founder who's been through YC (any batch)</li>
+          <li>One sharp non-founder friend who can spot bullshit</li>
+          <li>One advisor or professor with skin in the game</li>
+          <li>Brief them: "Tell me what's confusing or boring, not what you'd add."</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      You will not get 7 perfect days. You will lose half a day to a bug, a half-day to a fight, a half-day to a friend visiting. Plan for it. The plan above survives losing 1.5 days. It does not survive losing 3. Protect the floor, not the ceiling.
+    </div>
+  </section>
+
+  <footer>
+    <p><em>Alma — built fast, written honestly, submitted early.</em></p>
+    <p>This sprint plan is a working document — re-read it each morning, cross off what's done, cut what isn't moving the needle. Good luck. You've got this.</p>
+  </footer>
+
+</div>
+</body>
+</html>

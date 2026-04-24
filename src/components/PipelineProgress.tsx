@@ -34,21 +34,21 @@ export function PipelineProgress({
   const nextAction = getNextAction(stage);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Pipeline Progress</p>
+    <div className="rounded-xl border border-[#D9CFB5] bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[#8A8674] mb-3">Pipeline Progress</p>
       <div className="flex items-center gap-1">
         {PIPELINE_STAGES.map((s, i) => {
           const done = isDone(s.id, stage);
           return (
             <div key={s.id} className="flex items-center gap-1 flex-1">
               <div className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium w-full justify-center ${
-                done ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-50 text-slate-400 border border-slate-100"
+                done ? "bg-[#F4EDDB] text-[#0F2A45] border border-[#D9CFB5]" : "bg-[#FBF7EC] text-[#8A8674] border border-[#ECE5D0]"
               }`}>
                 <span>{done ? "\u2705" : s.icon}</span>
                 <span className="hidden sm:inline">{s.label}</span>
               </div>
               {i < PIPELINE_STAGES.length - 1 && (
-                <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <svg className="h-4 w-4 shrink-0 text-[#A8A494]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               )}
@@ -70,14 +70,14 @@ export function PipelineProgress({
         <button
           type="button"
           onClick={() => router.push("/crm")}
-          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium text-[#4A5260] hover:bg-[#FBF7EC] transition-colors"
         >
           View in CRM &rarr;
         </button>
       )}
       {stage === "referral" && (
         <div className="mt-2 text-center">
-          <p className="text-sm font-semibold text-emerald-600">{"\uD83C\uDF89"} Full pipeline complete! Ready for interview.</p>
+          <p className="text-sm font-semibold text-[#1B3B5F]">{"\uD83C\uDF89"} Full pipeline complete! Ready for interview.</p>
         </div>
       )}
     </div>

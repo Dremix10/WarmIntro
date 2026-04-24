@@ -53,7 +53,7 @@ export const IB_FUNNEL_TARGETS = {
   offers: 1,
 };
 
-// Stage XP values (carried forward from WarmIntro)
+// Stage XP values (carried forward from pre-pivot funnel)
 export const STAGE_XP: Record<string, number> = {
   sent: 10,
   replied: 25,

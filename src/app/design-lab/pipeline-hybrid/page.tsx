@@ -5,24 +5,24 @@ import { ArchipelagoTeaser } from "./_parts/ArchipelagoTeaser";
 import { TimelineBanner } from "@/components/TimelineBanner";
 
 const TODAY = [
-  { id: 1, title: "Send 3 outreach to Stripe", meta: "2 alumni surfaced this morning", cta: "Start" },
-  { id: 2, title: "Follow up with Maya (Linear)", meta: "Replied 2h ago — strike while warm", cta: "Draft reply" },
-  { id: 3, title: "Prep for Thursday coffee with Amir", meta: "Linear, 2pm · review notes", cta: "Open" },
+  { id: 1, title: "Send 3 calls to Goldman TMT", meta: "2 alumni surfaced this morning", cta: "Start" },
+  { id: 2, title: "Follow up with Maya (Morgan Stanley)", meta: "Replied 2h ago — strike while warm", cta: "Draft reply" },
+  { id: 3, title: "Prep for Thursday coffee with Amir", meta: "Morgan Stanley TMT · 2pm · review notes", cta: "Open" },
 ];
 
 const COMPANIES = [
-  { name: "Stripe", sent: 4, total: 8, replies: 2, next: "Reply to Maya", kind: "live" as const },
-  { name: "Linear", sent: 5, total: 6, replies: 3, next: "Coffee Thu 2pm", kind: "live" as const },
-  { name: "Notion", sent: 3, total: 9, replies: 1, next: "Follow up", kind: "idle" as const },
-  { name: "Figma", sent: 2, total: 12, replies: 0, next: "Send 3 more", kind: "attention" as const },
-  { name: "Rippling", sent: 0, total: 10, replies: 0, next: "Pick first alum", kind: "attention" as const },
+  { name: "Morgan Stanley", sent: 5, total: 6, replies: 3, next: "Coffee Thu 2pm", kind: "live" as const },
+  { name: "Goldman Sachs", sent: 4, total: 8, replies: 2, next: "Reply to Jamie", kind: "live" as const },
+  { name: "JPMorgan", sent: 3, total: 9, replies: 1, next: "Follow up", kind: "idle" as const },
+  { name: "Evercore", sent: 2, total: 4, replies: 0, next: "Send 2 more", kind: "attention" as const },
+  { name: "PJT Partners", sent: 0, total: 3, replies: 0, next: "Pick first banker", kind: "attention" as const },
 ];
 
 const ACTIVITY = [
-  { xp: 25, text: "Maya (Linear) replied to your note", when: "2h ago" },
-  { xp: 10, text: "Sent outreach to Figma", when: "6h ago" },
-  { xp: 50, text: "Coffee booked with Amir (Linear)", when: "yesterday" },
-  { xp: 10, text: "Sent outreach to Linear", when: "yesterday" },
+  { xp: 25, text: "Maya (Morgan Stanley) replied to your note", when: "2h ago" },
+  { xp: 10, text: "Sent call request to Evercore", when: "6h ago" },
+  { xp: 50, text: "Coffee booked with Amir (Morgan Stanley)", when: "yesterday" },
+  { xp: 10, text: "Sent call request to JPMorgan", when: "yesterday" },
 ];
 
 export default function PipelineHybrid() {
@@ -180,7 +180,7 @@ function Sidecar() {
     <div className="rounded-2xl border border-[#D9CFB5] bg-[#F4EDDB] p-6">
       <p className="text-xs font-medium uppercase tracking-[0.16em] text-[#5C6472]">Alma says</p>
       <p className="mt-3 text-sm leading-relaxed text-[#14182A] font-[family-name:var(--font-fraunces)] italic">
-        “Linear’s warming up — three replies and a coffee this week. Spend your energy there before chasing Figma.”
+        &ldquo;Morgan Stanley is warming up &mdash; three replies and a coffee this week. Spend your energy there before chasing PJT.&rdquo;
       </p>
       <div className="mt-5 grid grid-cols-3 gap-2 border-t border-[#D9CFB5] pt-4">
         <MiniStat label="sent" value="23" />

@@ -41,17 +41,17 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
         <div>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="your-netid@rice.edu" required
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow" />
-          <p className="text-xs text-slate-400 mt-1">Early access for Rice University students</p>
+            className="w-full rounded-xl border border-[#D9CFB5] bg-white px-4 py-3 text-sm text-[#1F2330] placeholder:text-[#8A8674] focus:border-[#2E5A88] focus:outline-none focus:ring-2 focus:ring-[#2E5A88]/20 transition-shadow" />
+          <p className="text-xs text-[#8A8674] mt-1">Early access for Rice University students</p>
         </div>
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           placeholder="Password (6+ characters)" required minLength={6}
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-shadow" />
+          className="w-full rounded-xl border border-[#D9CFB5] bg-white px-4 py-3 text-sm text-[#1F2330] placeholder:text-[#8A8674] focus:border-[#2E5A88] focus:outline-none focus:ring-2 focus:ring-[#2E5A88]/20 transition-shadow" />
 
         {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
 
         <button type="submit" disabled={loading}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors">
+          className="w-full rounded-xl bg-[#1B3B5F] px-4 py-3 text-sm font-semibold text-white hover:bg-[#2E5A88] disabled:opacity-50 transition-colors">
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -61,21 +61,21 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
         </button>
       </form>
 
-      <p className="text-center text-xs text-slate-400">
+      <p className="text-center text-xs text-[#8A8674]">
         {mode === "signup" ? (
           <>Already have an account?{" "}
-            <button type="button" onClick={() => { setMode("signin"); setError(null); }} className="text-emerald-600 font-medium hover:underline">Sign in</button>
+            <button type="button" onClick={() => { setMode("signin"); setError(null); }} className="text-[#1B3B5F] font-medium hover:underline">Sign in</button>
           </>
         ) : (
           <>Need an account?{" "}
-            <button type="button" onClick={() => { setMode("signup"); setError(null); }} className="text-emerald-600 font-medium hover:underline">Sign up</button>
+            <button type="button" onClick={() => { setMode("signup"); setError(null); }} className="text-[#1B3B5F] font-medium hover:underline">Sign up</button>
           </>
         )}
       </p>
 
-      <p className="text-center text-[10px] text-slate-400">
+      <p className="text-center text-[10px] text-[#8A8674]">
         By signing up you agree to our{" "}
-        <a href="/privacy" className="text-slate-500 hover:underline">Privacy Policy</a>.
+        <a href="/privacy" className="text-[#5C6472] hover:underline">Privacy Policy</a>.
       </p>
     </div>
   );

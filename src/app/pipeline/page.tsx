@@ -55,14 +55,14 @@ export default function PipelinePage() {
 
   if (!profile || selectedCompanies.length === 0) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FBF7EC]">
         <div className="text-center space-y-3">
-          <p className="text-lg font-medium text-slate-700">No pipeline yet</p>
-          <p className="text-sm text-slate-400">Select companies first to build your pipeline.</p>
+          <p className="text-lg font-medium text-[#2A2F3B]">No pipeline yet</p>
+          <p className="text-sm text-[#8A8674]">Select companies first to build your pipeline.</p>
           <button
             type="button"
             onClick={() => router.push("/profile")}
-            className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+            className="rounded-xl bg-[#1B3B5F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2E5A88] transition-colors"
           >
             Set Up Profile
           </button>
@@ -73,15 +73,15 @@ export default function PipelinePage() {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-[#FBF7EC] py-12">
       <div className="mx-auto max-w-3xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Your Pipeline</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <p className="text-sm font-medium text-[#1B3B5F] mb-1">Your Pipeline</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#14182A]">
             Your Pipeline
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#5C6472]">
             Track your networking progress across {selectedCompanies.length} {selectedCompanies.length === 1 ? "company" : "companies"}.
           </p>
         </div>
@@ -90,11 +90,11 @@ export default function PipelinePage() {
         {earnedBadges.length > 0 && (
           <div className="fixed top-6 right-6 z-50 space-y-2">
             {earnedBadges.map((b) => (
-              <div key={b.id} className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 shadow-lg animate-bounce">
+              <div key={b.id} className="flex items-center gap-3 rounded-xl bg-[#FFF8E8] border border-[#F0DD8E] px-4 py-3 shadow-lg animate-bounce">
                 <AchievementBadge badge={b} animate />
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">Badge Earned!</p>
-                  <p className="text-xs text-amber-600">{b.name}</p>
+                  <p className="text-sm font-semibold text-[#7A5500]">Badge Earned!</p>
+                  <p className="text-xs text-[#B08100]">{b.name}</p>
                 </div>
               </div>
             ))}
@@ -104,9 +104,9 @@ export default function PipelinePage() {
         {/* COMPANIES FIRST — the primary action */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-slate-900">Start Here &mdash; Pick a Company</h2>
+            <h2 className="text-lg font-semibold text-[#14182A]">Start Here &mdash; Pick a Company</h2>
           </div>
-          <p className="text-sm text-slate-500 mb-4">Click any company to find alumni connections and draft personalized outreach messages.</p>
+          <p className="text-sm text-[#5C6472] mb-4">Click any company to find alumni connections and draft personalized outreach messages.</p>
           <div className="space-y-3">
             {selectedCompanies.map((company) => {
               const sentCount = getSentCount(company.id);
@@ -117,25 +117,25 @@ export default function PipelinePage() {
                 <div
                   key={company.id}
                   onClick={() => router.push(`/outreach/${company.id}`)}
-                  className="rounded-xl bg-white border border-slate-100 shadow-sm px-5 py-4 hover:shadow-md hover:border-emerald-200 cursor-pointer transition-all group"
+                  className="rounded-xl bg-white border border-[#ECE5D0] shadow-sm px-5 py-4 hover:shadow-md hover:border-[#2E5A88] cursor-pointer transition-all group"
                 >
                   <div className="flex items-center gap-4">
                     {/* Logo */}
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F4EDDB] text-sm font-bold text-[#4A5260] group-hover:bg-[#F4EDDB] group-hover:text-[#0F2A45] transition-colors">
                       {company.logoPlaceholder}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">{company.name}</p>
+                      <p className="text-sm font-semibold text-[#14182A] group-hover:text-[#0F2A45] transition-colors">{company.name}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <AlumniBadge count={company.alumniCount} university={profile.university} />
-                        <span className="text-xs text-slate-400">{company.openInternships.length} open roles</span>
+                        <span className="text-xs text-[#8A8674]">{company.openInternships.length} open roles</span>
                       </div>
                     </div>
 
                     {/* CTA */}
-                    <div className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white group-hover:bg-emerald-700 transition-colors shrink-0">
+                    <div className="flex items-center gap-1 rounded-lg bg-[#1B3B5F] px-3 py-1.5 text-xs font-semibold text-white group-hover:bg-[#2E5A88] transition-colors shrink-0">
                       <span>{sentCount > 0 ? "Continue Outreach" : "Find Alumni & Draft Outreach"}</span>
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -146,13 +146,13 @@ export default function PipelinePage() {
                   {/* Per-company progress bar */}
                   {sentCount > 0 && (
                     <div className="flex items-center gap-2 mt-3">
-                      <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="h-1.5 flex-1 rounded-full bg-[#F4EDDB] overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-emerald-500 transition-all"
+                          className="h-full rounded-full bg-[#2E5A88] transition-all"
                           style={{ width: `${progress}%` }}
                         />
                       </div>
-                      <span className="text-[11px] font-medium text-emerald-600 shrink-0">
+                      <span className="text-[11px] font-medium text-[#1B3B5F] shrink-0">
                         {sentCount}/{totalAlumni} contacted
                       </span>
                     </div>
@@ -171,8 +171,8 @@ export default function PipelinePage() {
 
         {/* Badges */}
         {localGame.badges.length > 0 && (
-          <div className="rounded-2xl bg-white border border-slate-100 shadow-sm px-6 py-4 mb-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Badges</p>
+          <div className="rounded-2xl bg-white border border-[#ECE5D0] shadow-sm px-6 py-4 mb-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#8A8674] mb-3">Badges</p>
             <div className="flex flex-wrap gap-2">
               {localGame.badges.map((badge) => (
                 <AchievementBadge key={badge.id} badge={badge} />
@@ -187,16 +187,16 @@ export default function PipelinePage() {
         {/* Recent activity */}
         {localGame.recentActions.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h2>
-            <div className="rounded-2xl bg-white border border-slate-100 shadow-sm divide-y divide-slate-100">
+            <h2 className="text-lg font-semibold text-[#14182A] mb-4">Recent Activity</h2>
+            <div className="rounded-2xl bg-white border border-[#ECE5D0] shadow-sm divide-y divide-[#ECE5D0]">
               {localGame.recentActions.slice(0, 5).map((action, i) => (
                 <div key={i} className="flex items-center gap-3 px-5 py-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-bold text-emerald-600">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F4EDDB] text-xs font-bold text-[#1B3B5F]">
                     +{action.xpGained}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-700 truncate">{action.description}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-sm text-[#2A2F3B] truncate">{action.description}</p>
+                    <p className="text-xs text-[#8A8674]">
                       {new Date(action.timestamp).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -216,17 +216,17 @@ export default function PipelinePage() {
           <button
             type="button"
             onClick={() => router.push("/leaderboard")}
-            className="w-full rounded-xl bg-white border border-slate-200 shadow-sm p-5 text-left hover:border-emerald-300 hover:shadow-md transition-all"
+            className="w-full rounded-xl bg-white border border-[#D9CFB5] shadow-sm p-5 text-left hover:border-[#2E5A88] hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-xl">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFF8E8] text-xl">
                 &#x1F3C6;
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-900">Leaderboard</p>
-                <p className="text-xs text-slate-500">Compete with classmates — join or create a board</p>
+                <p className="text-sm font-semibold text-[#14182A]">Leaderboard</p>
+                <p className="text-xs text-[#5C6472]">Compete with classmates — join or create a board</p>
               </div>
-              <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="h-5 w-5 text-[#8A8674]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </div>

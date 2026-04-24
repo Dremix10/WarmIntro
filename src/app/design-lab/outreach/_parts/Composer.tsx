@@ -7,41 +7,42 @@ type Tone = "casual" | "warm" | "formal";
 
 const EMAIL_DRAFTS: Record<Tone, { subject: string; body: string }> = {
   casual: {
-    subject: "Fellow Brown CS — quick question about Linear",
+    subject: "Fellow Brown alum — quick question about MS TMT",
     body: `Hi Maya,
 
-Kinsey here — I'm a Brown CS junior and I saw you're on the product team at Linear. I've been using Linear for my side projects all year and the attention to detail is wild in the best way.
+Kinsey here, a Brown junior recruiting for summer analyst. Saw you're a VP on Morgan Stanley TMT and noticed you worked on the recent software deal that just closed.
 
-I'm exploring summer SWE internships in developer tools and Linear is at the top of my list. Would you be open to a 15-minute chat about what your product team looks for, and what your first year was like?
+I'm trying to understand the difference between M&A on the TMT coverage side versus product-software-specific work, and what a first-year analyst actually does in TMT day-to-day.
 
-Totally fine if not — I know schedules get nuts. Either way, thanks for building something I actually want to use.
+Would you be open to a 15-minute call in the next couple of weeks? Totally fine if schedules don't line up.
 
-— Kinsey`,
+Thanks either way,
+Kinsey`,
   },
   warm: {
-    subject: "Brown CS reaching out — would love your perspective",
+    subject: "Brown alum reaching out — would love your perspective",
     body: `Hi Maya,
 
-I'm Kinsey, a CS junior at Brown — I noticed you're at Linear and thought I'd reach out.
+I'm Kinsey, a Brown junior recruiting for summer analyst. I came across your profile and was drawn to your path — Brown Econ to MS TMT, now covering software M&A. That's the exact arc I'm trying to understand right now.
 
-I've been thinking a lot about product-engineering crossover roles this year, and Linear's the team I keep coming back to. Your craft shows up in the product in a way that's hard to fake. I'd love to hear how you ended up there from Brown, and what the path from CS student to senior PM looked like.
+I've been learning the technicals and building a story for why banking, but the coverage-versus-product question for TMT is where I'm still getting my bearings. I'd love to hear how you made the choice, and what surprised you about your first year.
 
-Would you be open to a 15-minute coffee or call in the next couple of weeks? Happy to work around your schedule.
+Would you have 15 minutes for a call in the next couple of weeks? I'll work around your schedule.
 
-Thanks for considering it either way, Maya.
+Thanks for considering it, Maya.
 
 — Kinsey Harper
-Brown CS '27`,
+Brown &rsquo;27`,
   },
   formal: {
-    subject: "Brown CS alumna outreach — informational interview request",
+    subject: "Brown alumna outreach — networking call request",
     body: `Dear Maya,
 
-My name is Kinsey Harper, and I am a junior at Brown University studying Computer Science. I came across your profile while researching Linear, where you serve as a Senior Product Manager.
+My name is Kinsey Harper, and I am a junior at Brown University recruiting for summer analyst programs. I came across your profile while researching Morgan Stanley's TMT group, where you serve as a Vice President.
 
-As I explore internship opportunities for Summer 2026, I've become particularly interested in developer-tools companies where engineering and product craft are closely linked. I would greatly appreciate the opportunity to speak with you for 15 minutes about your experience at Linear and your path from Brown.
+As I prepare for the 2026 cycle, I've become particularly interested in the TMT coverage group and would greatly value your perspective on the path from Brown to Morgan Stanley, and on what distinguishes a strong summer analyst in your group.
 
-If your schedule permits, I would be grateful for the chance to connect in the next two to three weeks.
+If your schedule permits, I would be grateful for the chance to speak with you for 15 minutes in the next two to three weeks.
 
 Thank you for your time and consideration.
 
@@ -51,9 +52,9 @@ Kinsey Harper`,
 };
 
 const LINKEDIN_DRAFTS: Record<Tone, string> = {
-  casual: `Hey Maya! Brown CS junior here. I use Linear daily and the craft blows me away. Exploring dev-tools internships for the summer — would you be up for a quick 15 min to trade notes? Totally fine if not.`,
-  warm: `Hi Maya — Kinsey from Brown CS. I keep coming back to Linear in my research on dev-tools internships, and your path from Brown → senior PM is exactly the kind of story I'd love to learn from. Would you have 15 minutes for a call in the next couple of weeks?`,
-  formal: `Hello Maya, I am a junior at Brown CS researching Summer 2026 internships in developer tools. Would you be willing to speak for 15 minutes about your experience at Linear? I would value your perspective.`,
+  casual: `Hey Maya! Brown junior here recruiting for summer analyst. I saw your work on the recent MS TMT software deal — would love to pick your brain for 15 minutes on coverage vs product work at Morgan Stanley. Totally fine if you're slammed.`,
+  warm: `Hi Maya &mdash; Kinsey, Brown &rsquo;27. Your path from Brown Econ to MS TMT is exactly the arc I'm trying to understand as I recruit for summer analyst. Would you have 15 minutes for a networking call in the next couple of weeks?`,
+  formal: `Hello Maya, I am a junior at Brown recruiting for summer analyst programs in investment banking. Would you be willing to speak for 15 minutes about your experience at Morgan Stanley TMT and your path from Brown? I would value your perspective.`,
 };
 
 export function Composer() {

@@ -18,10 +18,10 @@ export const FUNNEL_STAGES = [
 
 export const LEVELS = [
   { level: 1, name: "Networking Novice",     minXP: 0 },
-  { level: 2, name: "Connection Seeker",     minXP: 100 },
-  { level: 3, name: "Coffee Chat Champion",  minXP: 300 },
-  { level: 4, name: "Referral Hunter",       minXP: 600 },
-  { level: 5, name: "Warm Intro Master",     minXP: 1000 },
+  { level: 2, name: "Connector",             minXP: 100 },
+  { level: 3, name: "Coffee Chat Regular",   minXP: 300 },
+  { level: 4, name: "Referral Earner",       minXP: 600 },
+  { level: 5, name: "Mentor",                minXP: 1000 },
 ] as const;
 
 export const XP_VALUES = {

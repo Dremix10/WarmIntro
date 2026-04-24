@@ -20,14 +20,14 @@ export function ProfileModal({ profile, memberName, onClose }: ProfileModalProps
       {/* Modal */}
       <div className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between bg-emerald-600 px-6 py-4 rounded-t-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-[#1B3B5F] px-6 py-4 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
               {memberName.split(" ").map((n) => n[0]).join("")}
             </div>
             <div>
               <h2 className="text-base font-semibold text-white">{memberName}</h2>
-              <p className="text-xs text-emerald-100">
+              <p className="text-xs text-[#EAE3D2]">
                 {profile.university} &middot; {profile.major} &middot; Class of {profile.graduationYear}
               </p>
             </div>
@@ -43,17 +43,17 @@ export function ProfileModal({ profile, memberName, onClose }: ProfileModalProps
           </button>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-[#ECE5D0]">
           {/* Skills */}
           <div className="px-6 py-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A8674] mb-2">
               Skills
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {profile.skills.map((skill) => (
                 <span
                   key={skill}
-                  className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+                  className="rounded-full bg-[#F4EDDB] px-2.5 py-1 text-xs font-medium text-[#2A2F3B]"
                 >
                   {skill}
                 </span>
@@ -63,7 +63,7 @@ export function ProfileModal({ profile, memberName, onClose }: ProfileModalProps
 
           {/* Experience */}
           <div className="px-6 py-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A8674] mb-3">
               Experience
             </h3>
             <div className="space-y-4">
@@ -71,14 +71,14 @@ export function ProfileModal({ profile, memberName, onClose }: ProfileModalProps
                 <div key={`${exp.company}-${exp.role}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">{exp.role}</p>
-                      <p className="text-sm text-slate-500">{exp.company}</p>
+                      <p className="text-sm font-semibold text-[#1F2330]">{exp.role}</p>
+                      <p className="text-sm text-[#5C6472]">{exp.company}</p>
                     </div>
-                    <span className="shrink-0 text-xs text-slate-400">{exp.duration}</span>
+                    <span className="shrink-0 text-xs text-[#8A8674]">{exp.duration}</span>
                   </div>
                   <ul className="mt-1.5 space-y-0.5">
                     {exp.highlights.map((h, i) => (
-                      <li key={i} className="text-xs text-slate-500 pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-slate-300">
+                      <li key={i} className="text-xs text-[#5C6472] pl-3 relative before:content-['•'] before:absolute before:left-0 before:text-[#A8A494]">
                         {h}
                       </li>
                     ))}
@@ -90,14 +90,14 @@ export function ProfileModal({ profile, memberName, onClose }: ProfileModalProps
 
           {/* Target roles */}
           <div className="px-6 py-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A8674] mb-2">
               Target Roles
             </h3>
             <div className="flex flex-wrap gap-1.5">
               {profile.targetRoles.map((role) => (
                 <span
                   key={role}
-                  className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
+                  className="rounded-full bg-[#F4EDDB] px-2.5 py-1 text-xs font-medium text-[#0F2A45]"
                 >
                   {role}
                 </span>
@@ -107,7 +107,7 @@ export function ProfileModal({ profile, memberName, onClose }: ProfileModalProps
 
           {/* Target industries */}
           <div className="px-6 py-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#8A8674] mb-2">
               Target Industries
             </h3>
             <div className="flex flex-wrap gap-1.5">

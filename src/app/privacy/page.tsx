@@ -1,48 +1,53 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — WarmIntro",
+  title: "Privacy Policy — Alma",
 };
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-slate-50 py-16">
+    <div className="min-h-screen bg-[#EAE3D2] py-16">
       <div className="mx-auto max-w-2xl px-6">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-slate-400 mb-8">Last updated: April 2026</p>
+        <h1 className="mb-2 text-3xl font-[family-name:var(--font-fraunces)] tracking-tight text-[#14182A]">
+          Privacy Policy
+        </h1>
+        <p className="mb-8 text-sm text-[#8A8674]">Last updated: April 2026</p>
 
-        <div className="space-y-6 text-sm text-slate-700 leading-relaxed">
-          <Section title="What WarmIntro Is">
+        <div className="space-y-6 text-sm leading-relaxed text-[#2A2F3B]">
+          <Section title="What Alma Is">
             <p>
-              WarmIntro is a networking tool that helps university students find alumni at target companies
-              and generate personalized outreach. It is built by Rice University students.
+              Alma is a networking tool that helps Brown and Rice University students break into
+              investment banking — finding alumni bankers, drafting outreach, and tracking the pipeline
+              from a first networking call through superday.
             </p>
           </Section>
 
           <Section title="Data We Collect">
-            <ul className="list-disc pl-5 space-y-1">
+            <ul className="list-disc space-y-1 pl-5">
               <li><strong>Account info</strong> — email address and password (or LinkedIn profile if you sign in with LinkedIn)</li>
-              <li><strong>Resume data</strong> — name, university, major, skills, work experience, and target roles (parsed from your uploaded resume)</li>
-              <li><strong>Usage data</strong> — companies you select, outreach you send, pipeline progress, and XP/badges</li>
+              <li><strong>Resume data</strong> — name, university, major, skills, work experience, and target coverage groups (parsed from your uploaded resume)</li>
+              <li><strong>Usage data</strong> — banks you select, outreach you send, pipeline progress, and XP/badges</li>
               <li><strong>Connection notes</strong> — any coffee chat notes or transcripts you upload for AI analysis</li>
+              <li><strong>Gmail data (opt-in)</strong> — if you connect Gmail for Alma to send + track replies, we access only messages related to your Alma threads</li>
             </ul>
           </Section>
 
           <Section title="How We Use Your Data">
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Match you with alumni at your target companies</li>
-              <li>Generate personalized outreach drafts using AI</li>
-              <li>Track your networking pipeline and gamification progress</li>
-              <li>Summarize coffee chat notes and provide coaching tips</li>
-              <li>Power the leaderboard (only if you opt in to resume sharing)</li>
+            <ul className="list-disc space-y-1 pl-5">
+              <li>Match you with alumni bankers at your target banks and groups</li>
+              <li>Generate personalized networking call requests using AI</li>
+              <li>Track your pipeline through the IB funnel (calls → replies → coffee → referral → first round → superday → offer)</li>
+              <li>Summarize coffee chat notes and provide coaching</li>
+              <li>Power the cohort leaderboard (only if you opt in to resume sharing)</li>
             </ul>
           </Section>
 
           <Section title="Third-Party Services">
-            <ul className="list-disc pl-5 space-y-1">
+            <ul className="list-disc space-y-1 pl-5">
               <li><strong>Supabase</strong> — database and authentication (your data is stored with row-level security so only you can access it)</li>
-              <li><strong>Anthropic (Claude API)</strong> — AI text generation for resume parsing, outreach drafts, coaching tips, and note summaries. Your prompts are sent to Claude but are not used to train their models.</li>
-              <li><strong>Google Serper API</strong> — LinkedIn profile lookups to find real alumni at companies</li>
+              <li><strong>Anthropic (Claude API)</strong> — AI text generation for resume parsing, outreach drafts, coaching, and note summaries. Your prompts are sent to Claude but are not used to train their models.</li>
+              <li><strong>Google OAuth + Gmail API</strong> — if you opt in, used to send outreach and detect replies</li>
+              <li><strong>Hunter.io + Proxycurl + Google Serper</strong> — banker email lookup and LinkedIn enrichment</li>
               <li><strong>Vercel</strong> — application hosting</li>
             </ul>
           </Section>
@@ -51,7 +56,7 @@ export default function PrivacyPage() {
             <p>
               We do not sell your data. We do not share your personal information with third parties
               except as needed to provide the service (the APIs listed above). If you opt in to
-              resume sharing on the leaderboard, other opted-in members can see your parsed resume data.
+              resume sharing on the cohort leaderboard, other opted-in classmates can see your parsed resume data.
             </p>
           </Section>
 
@@ -59,27 +64,30 @@ export default function PrivacyPage() {
             <p>
               Your data is stored in Supabase with row-level security — only your authenticated account
               can read or modify your data. Passwords are hashed by Supabase Auth. All connections use HTTPS.
+              OAuth tokens are encrypted at rest.
             </p>
           </Section>
 
           <Section title="Your Rights">
-            <ul className="list-disc pl-5 space-y-1">
+            <ul className="list-disc space-y-1 pl-5">
               <li>You can delete your account and all associated data at any time</li>
               <li>You can export your data by contacting us</li>
-              <li>You can opt out of resume sharing on the leaderboard</li>
+              <li>You can opt out of resume sharing on the cohort leaderboard</li>
+              <li>You can revoke Gmail access at any time from your Google account settings</li>
             </ul>
           </Section>
 
           <Section title="Contact">
             <p>
-              Questions about this policy? Reach out to the WarmIntro team at Rice University.
+              Questions about this policy? Reach out to the Alma team — we&rsquo;re Brown and Rice
+              students ourselves.
             </p>
           </Section>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-slate-200">
-          <a href="/" className="text-sm text-emerald-600 font-medium hover:underline">
-            &larr; Back to WarmIntro
+        <div className="mt-12 border-t border-[#D9CFB5] pt-6">
+          <a href="/" className="text-sm font-medium text-[#1B3B5F] hover:underline">
+            &larr; Back to Alma
           </a>
         </div>
       </div>
@@ -90,7 +98,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-base font-semibold text-slate-900 mb-2">{title}</h2>
+      <h2 className="mb-2 text-base font-semibold text-[#14182A]">{title}</h2>
       {children}
     </div>
   );

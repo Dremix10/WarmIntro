@@ -69,9 +69,9 @@ export default function CRMPage() {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
-        <p className="text-lg font-medium text-slate-700">Set up your profile first</p>
-        <button type="button" onClick={() => router.push("/")} className="mt-3 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Go Home</button>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FBF7EC]">
+        <p className="text-lg font-medium text-[#2A2F3B]">Set up your profile first</p>
+        <button type="button" onClick={() => router.push("/")} className="mt-3 rounded-xl bg-[#1B3B5F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2E5A88]">Go Home</button>
       </div>
     );
   }
@@ -82,58 +82,58 @@ export default function CRMPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-[#FBF7EC] py-12">
       <div className="mx-auto max-w-6xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600">Connections</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Relationship CRM</h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="text-sm font-medium text-[#1B3B5F]">Connections</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#14182A]">Relationship CRM</h1>
+          <p className="mt-1 text-sm text-[#5C6472]">
             Track all your networking connections across companies. Log progress, upload notes, get AI coaching.
           </p>
         </div>
 
         {/* XP Toast */}
         {xpToast !== null && (
-          <div className="fixed top-6 right-6 z-50 animate-bounce rounded-xl bg-emerald-600 px-4 py-2.5 shadow-lg">
+          <div className="fixed top-6 right-6 z-50 animate-bounce rounded-xl bg-[#1B3B5F] px-4 py-2.5 shadow-lg">
             <p className="text-sm font-bold text-white">+{xpToast} XP!</p>
           </div>
         )}
 
         {/* AI Coaching Tip */}
         {(coachingTip || loadingTip) && (
-          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="mb-6 rounded-xl border border-[#D9CFB5] bg-[#F4EDDB] p-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl">{"\uD83E\uDDE0"}</span>
               <div className="flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">AI Coach</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#1B3B5F] mb-1">AI Coach</p>
                 {loadingTip ? (
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-                    <p className="text-sm text-emerald-700">Generating coaching tip...</p>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2E5A88] border-t-transparent" />
+                    <p className="text-sm text-[#0F2A45]">Generating coaching tip...</p>
                   </div>
                 ) : coachingTip ? (
                   <>
-                    <p className="text-sm text-emerald-800">{coachingTip.tip}</p>
-                    <p className="mt-2 text-xs font-semibold text-emerald-700">Next: {coachingTip.nextAction}</p>
+                    <p className="text-sm text-[#0F2A45]">{coachingTip.tip}</p>
+                    <p className="mt-2 text-xs font-semibold text-[#0F2A45]">Next: {coachingTip.nextAction}</p>
                   </>
                 ) : null}
               </div>
               {coachingTip && (
-                <button type="button" onClick={() => setCoachingTip(null)} className="text-emerald-400 hover:text-emerald-600 text-lg">&times;</button>
+                <button type="button" onClick={() => setCoachingTip(null)} className="text-[#3F6FA3] hover:text-[#1B3B5F] text-lg">&times;</button>
               )}
             </div>
           </div>
         )}
 
         {/* Email Integration */}
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mb-6 rounded-xl border border-[#D9CFB5] bg-white p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-2xl">{"\uD83D\uDCE7"}</span>
               <div>
-                <p className="text-sm font-semibold text-slate-700">Email Integration</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-sm font-semibold text-[#2A2F3B]">Email Integration</p>
+                <p className="text-xs text-[#8A8674]">
                   {emailConnected
                     ? "Connected — auto-tracking replies and scheduling"
                     : "Connect your email to auto-detect replies and track conversations"}
@@ -141,8 +141,8 @@ export default function CRMPage() {
               </div>
             </div>
             {emailConnected ? (
-              <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="flex items-center gap-1.5 rounded-full bg-[#F4EDDB] border border-[#D9CFB5] px-3 py-1 text-xs font-medium text-[#0F2A45]">
+                <span className="h-2 w-2 rounded-full bg-[#2E5A88] animate-pulse" />
                 Connected to Gmail
               </span>
             ) : (
@@ -150,11 +150,11 @@ export default function CRMPage() {
                 type="button"
                 onClick={handleConnectEmail}
                 disabled={connectingEmail}
-                className="flex items-center gap-2 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 rounded-lg bg-white border border-[#C7BC9F] px-4 py-2 text-sm font-medium text-[#2A2F3B] hover:bg-[#FBF7EC] disabled:opacity-50 transition-colors"
               >
                 {connectingEmail ? (
                   <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#8A8674] border-t-transparent" />
                     Connecting...
                   </>
                 ) : (
@@ -170,15 +170,15 @@ export default function CRMPage() {
           </div>
 
           {emailConnected && connList.length > 0 && (
-            <div className="mt-3 border-t border-slate-100 pt-3 space-y-2">
-              <p className="text-xs font-medium text-slate-500">Recent activity detected:</p>
+            <div className="mt-3 border-t border-[#ECE5D0] pt-3 space-y-2">
+              <p className="text-xs font-medium text-[#5C6472]">Recent activity detected:</p>
               {connList.slice(0, 2).map((c) => (
-                <div key={c.alumniId} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <div key={c.alumniId} className="flex items-center justify-between rounded-lg bg-[#FBF7EC] px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    <span className="text-xs text-slate-600">Reply from <strong>{c.alumniName}</strong> at {c.companyName}</span>
+                    <span className="h-2 w-2 rounded-full bg-[#2E5A88]" />
+                    <span className="text-xs text-[#4A5260]">Reply from <strong>{c.alumniName}</strong> at {c.companyName}</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">Just now</span>
+                  <span className="text-[10px] text-[#8A8674]">Just now</span>
                 </div>
               ))}
             </div>
@@ -187,14 +187,14 @@ export default function CRMPage() {
 
         {/* Empty state */}
         {connList.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-12 text-center">
+          <div className="rounded-xl border border-[#D9CFB5] bg-white p-12 text-center">
             <span className="text-4xl">{"\uD83D\uDCCB"}</span>
-            <p className="mt-3 text-lg font-medium text-slate-700">No connections yet</p>
-            <p className="mt-1 text-sm text-slate-400">Send outreach from the pipeline to start tracking connections here.</p>
+            <p className="mt-3 text-lg font-medium text-[#2A2F3B]">No connections yet</p>
+            <p className="mt-1 text-sm text-[#8A8674]">Send outreach from the pipeline to start tracking connections here.</p>
             <button
               type="button"
               onClick={() => router.push("/pipeline")}
-              className="mt-4 rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+              className="mt-4 rounded-xl bg-[#1B3B5F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2E5A88] transition-colors"
             >
               Go to Pipeline
             </button>
@@ -205,8 +205,8 @@ export default function CRMPage() {
               <div key={stage.id}>
                 <div className="flex items-center gap-2 mb-3">
                   <span>{stage.icon}</span>
-                  <h3 className="text-sm font-semibold text-slate-700">{stage.label}</h3>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                  <h3 className="text-sm font-semibold text-[#2A2F3B]">{stage.label}</h3>
+                  <span className="rounded-full bg-[#F4EDDB] px-2 py-0.5 text-[10px] font-bold text-[#5C6472]">
                     {stage.connections.length}
                   </span>
                 </div>
@@ -223,8 +223,8 @@ export default function CRMPage() {
                     />
                   ))}
                   {stage.connections.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-200 p-4 text-center">
-                      <p className="text-xs text-slate-400">No connections at this stage</p>
+                    <div className="rounded-xl border border-dashed border-[#D9CFB5] p-4 text-center">
+                      <p className="text-xs text-[#8A8674]">No connections at this stage</p>
                     </div>
                   )}
                 </div>

@@ -135,16 +135,16 @@ export function ResumeUpload() {
   return (
     <div className="w-full space-y-4">
       {/* Mode toggle */}
-      <div className="flex rounded-lg bg-slate-100 p-1">
+      <div className="flex rounded-lg bg-[#F4EDDB] p-1">
         <button type="button" onClick={() => { setMode("pdf"); setError(null); }}
           className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            mode === "pdf" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            mode === "pdf" ? "bg-white text-[#14182A] shadow-sm" : "text-[#5C6472] hover:text-[#2A2F3B]"
           }`}>
           Upload PDF
         </button>
         <button type="button" onClick={() => { setMode("text"); setError(null); }}
           className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            mode === "text" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            mode === "text" ? "bg-white text-[#14182A] shadow-sm" : "text-[#5C6472] hover:text-[#2A2F3B]"
           }`}>
           Paste Text
         </button>
@@ -161,25 +161,25 @@ export function ResumeUpload() {
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
             className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-10 cursor-pointer transition-colors ${
-              dragging ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100"
+              dragging ? "border-[#2E5A88] bg-[#F4EDDB]" : "border-[#D9CFB5] bg-[#FBF7EC] hover:border-[#C7BC9F] hover:bg-[#F4EDDB]"
             }`}>
             {extracting ? (
               <>
-                <span className="h-8 w-8 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent mb-3" />
-                <p className="text-sm font-medium text-slate-700">Reading your resume...</p>
+                <span className="h-8 w-8 animate-spin rounded-full border-3 border-[#2E5A88] border-t-transparent mb-3" />
+                <p className="text-sm font-medium text-[#2A2F3B]">Reading your resume...</p>
               </>
             ) : (
               <>
-                <svg className="h-10 w-10 text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <svg className="h-10 w-10 text-[#8A8674] mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                 </svg>
-                <p className="text-sm font-medium text-slate-700">Tap to upload your resume PDF</p>
-                <p className="mt-1 text-xs text-slate-400">Works with Files, iCloud, Google Drive</p>
+                <p className="text-sm font-medium text-[#2A2F3B]">Tap to upload your resume PDF</p>
+                <p className="mt-1 text-xs text-[#8A8674]">Works with Files, iCloud, Google Drive</p>
               </>
             )}
           </div>
           <button type="button" onClick={handleUseSample}
-            className="w-full rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+            className="w-full rounded-lg bg-[#F4EDDB] px-3 py-2 text-xs font-medium text-[#5C6472] hover:bg-[#ECE5D0] hover:text-[#2A2F3B] transition-colors">
             Skip — use sample resume for demo
           </button>
         </>
@@ -192,10 +192,10 @@ export function ResumeUpload() {
             onChange={(e) => { setResumeText(e.target.value); setError(null); }}
             placeholder="Paste your resume text here..."
             rows={8}
-            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none transition-shadow" />
+            className="w-full rounded-xl border border-[#D9CFB5] bg-white px-4 py-3 text-sm text-[#1F2330] placeholder:text-[#8A8674] shadow-sm focus:border-[#2E5A88] focus:outline-none focus:ring-2 focus:ring-[#2E5A88]/20 resize-none transition-shadow" />
           {!resumeText && (
             <button type="button" onClick={handleUseSample}
-              className="absolute bottom-3 right-3 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+              className="absolute bottom-3 right-3 rounded-lg bg-[#F4EDDB] px-3 py-1.5 text-xs font-medium text-[#5C6472] hover:bg-[#ECE5D0] hover:text-[#2A2F3B] transition-colors">
               Use sample
             </button>
           )}
@@ -204,16 +204,16 @@ export function ResumeUpload() {
 
       {/* File loaded state */}
       {hasResume && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <svg className="h-6 w-6 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <div className="flex items-center gap-3 rounded-xl border border-[#D9CFB5] bg-[#F4EDDB] px-4 py-3">
+          <svg className="h-6 w-6 text-[#1B3B5F] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-emerald-800 truncate">{fileName ?? "Resume ready"}</p>
-            <p className="text-xs text-emerald-600">{resumeText.length.toLocaleString()} characters extracted</p>
+            <p className="text-sm font-medium text-[#0F2A45] truncate">{fileName ?? "Resume ready"}</p>
+            <p className="text-xs text-[#1B3B5F]">{resumeText.length.toLocaleString()} characters extracted</p>
           </div>
           <button type="button" onClick={clearFile}
-            className="rounded-lg p-1.5 text-emerald-400 hover:bg-emerald-100 hover:text-emerald-600 transition-colors">
+            className="rounded-lg p-1.5 text-[#3F6FA3] hover:bg-[#EAE3D2] hover:text-[#1B3B5F] transition-colors">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
@@ -224,16 +224,16 @@ export function ResumeUpload() {
       {error && <p className="text-sm text-red-500 font-medium">{error}</p>}
 
       {loading ? (
-        <div className="w-full rounded-xl bg-emerald-600 px-6 py-4 text-center">
+        <div className="w-full rounded-xl bg-[#1B3B5F] px-6 py-4 text-center">
           <div className="flex items-center justify-center gap-3">
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             <span className="text-sm font-semibold text-white">Analyzing your resume with AI...</span>
           </div>
-          <p className="mt-1.5 text-xs text-emerald-200">Extracting skills, experience, and finding matches. ~10 seconds.</p>
+          <p className="mt-1.5 text-xs text-[#BFCFDE]">Extracting skills, experience, and finding matches. ~10 seconds.</p>
         </div>
       ) : (
         <button type="button" onClick={handleSubmit} disabled={extracting || !hasResume}
-          className="w-full rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          className="w-full rounded-xl bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#2E5A88] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
           Analyze Resume &amp; Find Connections
         </button>
       )}

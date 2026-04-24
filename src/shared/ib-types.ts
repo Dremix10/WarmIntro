@@ -1,5 +1,5 @@
 // Alma IB types — bank hierarchy, agents, trust gradient, drafts, signals
-// Complements legacy types in ./types.ts (kept for WarmIntro-era routes)
+// Complements legacy types in ./types.ts (kept for pre-pivot routes)
 
 export type FirmTier = "bulge_bracket" | "elite_boutique" | "middle_market";
 export type GroupKind = "coverage" | "product" | "region";

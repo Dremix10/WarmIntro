@@ -15,7 +15,7 @@ export function AttentionRow({ onFresh, onQuiet, onUpcoming, freshCount, quietCo
         onClick={onFresh}
         variant="fresh"
         title={`${freshCount} fresh repl${freshCount === 1 ? "y" : "ies"}`}
-        line="Act today — Maya Chen at Linear"
+        line="Act today — Maya Chen at Morgan Stanley"
         hint="Filter fresh →"
       />
       <Card

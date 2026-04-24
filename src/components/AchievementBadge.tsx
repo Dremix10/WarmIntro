@@ -24,15 +24,15 @@ export function AchievementBadge({ badge, animate = false }: AchievementBadgePro
         visible ? "opacity-100 scale-100" : "opacity-0 scale-50"
       } ${
         badge.earned
-          ? "bg-amber-50 text-amber-700 border border-amber-200 shadow-sm"
-          : "bg-slate-50 text-slate-400 border border-slate-100 opacity-50"
+          ? "bg-[#FFF8E8] text-[#8A6200] border border-[#F0DD8E] shadow-sm"
+          : "bg-[#FBF7EC] text-[#8A8674] border border-[#ECE5D0] opacity-50"
       }`}
     >
       <span className={`text-sm ${badge.earned && animate ? "animate-bounce" : ""}`}>
         {badge.icon}
       </span>
       <span>{badge.name}</span>
-      {badge.earned && <span className="text-amber-500">&#10003;</span>}
+      {badge.earned && <span className="text-[#E8B339]">&#10003;</span>}
     </div>
   );
 }

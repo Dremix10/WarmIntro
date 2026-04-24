@@ -2,33 +2,33 @@ import { Composer } from "./_parts/Composer";
 import { AlumniRail } from "./_parts/AlumniRail";
 
 const COMPANY = {
-  name: "Linear",
-  logo: "L",
+  name: "Morgan Stanley",
+  logo: "MS",
   rank: 1,
-  alumni: 12,
-  contacted: 4,
-  roles: 4,
+  alumni: 18,
+  contacted: 5,
+  roles: 6,
 };
 
 const SELECTED = {
   name: "Maya Chen",
-  role: "Senior Product Manager",
-  team: "Product · Core",
+  role: "VP, Technology M&A",
+  team: "TMT Group",
   university: "Brown",
-  classOf: 2019,
-  major: "Computer Science",
+  classOf: 2016,
+  major: "Economics",
   avatar: "M",
   warmth: 88,
   warmthLabel: "strongest match",
-  location: "San Francisco, CA",
+  location: "New York, NY",
   sharedPoints: [
-    "Same major — Brown CS",
-    "Active in Brown CS Slack",
+    "Brown alum, same concentration",
+    "Former WICS member (you both)",
     "Replied to a classmate last month",
-    "Part of WICS (you both)",
+    "Covered 3 recent tech M&A deals",
   ],
   story:
-    "Maya majored in CS at Brown four years ahead of you and still shows up in the CS Slack — that’s rare. A classmate reached out last month and got a 20-minute coffee. She’s not a cold contact; she’s an older sibling waiting to be asked.",
+    "Maya graduated from Brown Econ nine years ahead of you, now a VP on the Morgan Stanley TMT M&A team. She replied to a classmate last month and did a 20-minute call. She&rsquo;s not a cold contact &mdash; she&rsquo;s an older sibling waiting to be asked, with live deal context you can pull on.",
 };
 
 export default function OutreachTemplate() {
@@ -71,7 +71,7 @@ function Breadcrumb() {
     <p className="mt-10 text-xs font-medium text-[#5C6472]">
       <span className="hover:text-[#1B3B5F] cursor-pointer">Pipeline</span>
       <span className="mx-2 text-[#D9CFB5]">/</span>
-      <span className="hover:text-[#1B3B5F] cursor-pointer">Linear</span>
+      <span className="hover:text-[#1B3B5F] cursor-pointer">Morgan Stanley</span>
       <span className="mx-2 text-[#D9CFB5]">/</span>
       <span className="text-[#14182A]">Maya Chen</span>
     </p>

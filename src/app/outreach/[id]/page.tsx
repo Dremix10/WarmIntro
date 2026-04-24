@@ -104,11 +104,11 @@ export default function OutreachPage() {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FBF7EC]">
         <div className="text-center space-y-3">
-          <p className="text-lg font-medium text-slate-700">Not logged in</p>
-          <p className="text-sm text-slate-400">Set up your profile to get started.</p>
-          <button type="button" onClick={() => router.push("/")} className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">Go Home</button>
+          <p className="text-lg font-medium text-[#2A2F3B]">Not logged in</p>
+          <p className="text-sm text-[#8A8674]">Set up your profile to get started.</p>
+          <button type="button" onClick={() => router.push("/")} className="rounded-xl bg-[#1B3B5F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2E5A88] transition-colors">Go Home</button>
         </div>
       </div>
     );
@@ -117,12 +117,12 @@ export default function OutreachPage() {
   const selectedAlumni = warmPaths.find((w) => w.alumni.id === selectedAlumniId);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-[#FBF7EC] py-12">
       <div className="mx-auto max-w-5xl px-6">
         {/* Sticky top bar */}
-        <div className="sticky top-0 z-20 -mx-6 mb-6 bg-slate-50/90 backdrop-blur-sm px-6 py-3 border-b border-slate-200">
+        <div className="sticky top-0 z-20 -mx-6 mb-6 bg-[#FBF7EC]/90 backdrop-blur-sm px-6 py-3 border-b border-[#D9CFB5]">
           <div className="flex items-center justify-between">
-            <button type="button" onClick={() => router.push("/pipeline")} className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition-colors">
+            <button type="button" onClick={() => router.push("/pipeline")} className="flex items-center gap-1.5 rounded-lg bg-white border border-[#D9CFB5] px-3 py-1.5 text-sm font-medium text-[#4A5260] hover:bg-[#FBF7EC] shadow-sm transition-colors">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
               Back to Pipeline
             </button>
@@ -134,45 +134,45 @@ export default function OutreachPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3">
             {company && (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-bold text-slate-600">{company.logoPlaceholder}</div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F4EDDB] text-lg font-bold text-[#4A5260]">{company.logoPlaceholder}</div>
             )}
             <div>
-              <p className="text-sm font-medium text-emerald-600">Outreach</p>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">{company?.name ?? "Company"} Outreach</h1>
+              <p className="text-sm font-medium text-[#1B3B5F]">Outreach</p>
+              <h1 className="text-3xl font-bold tracking-tight text-[#14182A]">{company?.name ?? "Company"} Outreach</h1>
             </div>
           </div>
-          <p className="mt-2 text-sm text-slate-500">Select an alumni to generate a personalized outreach draft. Edit, copy, and mark as sent.</p>
+          <p className="mt-2 text-sm text-[#5C6472]">Select an alumni to generate a personalized outreach draft. Edit, copy, and mark as sent.</p>
         </div>
 
         <Confetti active={showConfetti} />
 
         {xpToast !== null && (
-          <div className="fixed top-6 right-6 z-50 animate-bounce rounded-xl bg-emerald-600 px-4 py-2.5 shadow-lg">
+          <div className="fixed top-6 right-6 z-50 animate-bounce rounded-xl bg-[#1B3B5F] px-4 py-2.5 shadow-lg">
             <p className="text-sm font-bold text-white">+{xpToast} XP!</p>
           </div>
         )}
 
         {/* AI Coaching Tip */}
         {(coachingTip || loadingTip) && (
-          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="mb-6 rounded-xl border border-[#D9CFB5] bg-[#F4EDDB] p-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl">{"\uD83E\uDDE0"}</span>
               <div className="flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">AI Coach</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#1B3B5F] mb-1">AI Coach</p>
                 {loadingTip ? (
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
-                    <p className="text-sm text-emerald-700">Generating coaching tip...</p>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2E5A88] border-t-transparent" />
+                    <p className="text-sm text-[#0F2A45]">Generating coaching tip...</p>
                   </div>
                 ) : coachingTip ? (
                   <>
-                    <p className="text-sm text-emerald-800">{coachingTip.tip}</p>
-                    <p className="mt-2 text-xs font-semibold text-emerald-700">Next: {coachingTip.nextAction}</p>
+                    <p className="text-sm text-[#0F2A45]">{coachingTip.tip}</p>
+                    <p className="mt-2 text-xs font-semibold text-[#0F2A45]">Next: {coachingTip.nextAction}</p>
                   </>
                 ) : null}
               </div>
               {coachingTip && (
-                <button type="button" onClick={() => setCoachingTip(null)} className="text-emerald-400 hover:text-emerald-600 text-lg">&times;</button>
+                <button type="button" onClick={() => setCoachingTip(null)} className="text-[#3F6FA3] hover:text-[#1B3B5F] text-lg">&times;</button>
               )}
             </div>
           </div>
@@ -181,14 +181,14 @@ export default function OutreachPage() {
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#8A8674] mb-3">
               {loadingAlumni ? "Finding connections..." : `Connections at ${company?.name ?? "this company"}`}
             </h2>
             {loadingAlumni ? (
               <LoadingCard message="Searching for alumni connections..." count={3} />
             ) : warmPaths.length === 0 ? (
-              <div className="rounded-xl bg-white border border-slate-200 p-6 text-center">
-                <p className="text-sm text-slate-500">No connections found for this company.</p>
+              <div className="rounded-xl bg-white border border-[#D9CFB5] p-6 text-center">
+                <p className="text-sm text-[#5C6472]">No connections found for this company.</p>
               </div>
             ) : (
               <AlumniList warmPaths={warmPaths} selectedAlumniId={selectedAlumniId} isSent={isSent} onSelect={setSelectedAlumniId} />
@@ -196,24 +196,24 @@ export default function OutreachPage() {
           </div>
 
           <div className="lg:col-span-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#8A8674] mb-3">
               {loadingDrafts ? "Writing personalized drafts..." : "Outreach Drafts"}
             </h2>
             {loadingDrafts ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 rounded-xl bg-white border border-slate-200 p-6">
-                  <div className="h-6 w-6 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent" />
+                <div className="flex items-center gap-3 rounded-xl bg-white border border-[#D9CFB5] p-6">
+                  <div className="h-6 w-6 animate-spin rounded-full border-3 border-[#2E5A88] border-t-transparent" />
                   <div>
-                    <p className="text-sm font-medium text-slate-700">Claude is writing for {selectedAlumni?.alumni.name ?? "this contact"}...</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Crafting personalized outreach...</p>
+                    <p className="text-sm font-medium text-[#2A2F3B]">Claude is writing for {selectedAlumni?.alumni.name ?? "this contact"}...</p>
+                    <p className="text-xs text-[#8A8674] mt-0.5">Crafting personalized outreach...</p>
                   </div>
                 </div>
-                <div className="h-64 rounded-xl bg-white border border-slate-100 animate-pulse" />
-                <div className="h-32 rounded-xl bg-white border border-slate-100 animate-pulse" />
+                <div className="h-64 rounded-xl bg-white border border-[#ECE5D0] animate-pulse" />
+                <div className="h-32 rounded-xl bg-white border border-[#ECE5D0] animate-pulse" />
               </div>
             ) : drafts.length === 0 ? (
-              <div className="rounded-xl bg-white border border-slate-200 p-8 text-center">
-                <p className="text-sm text-slate-500">
+              <div className="rounded-xl bg-white border border-[#D9CFB5] p-8 text-center">
+                <p className="text-sm text-[#5C6472]">
                   {warmPaths.length === 0 ? "Select a company with connections to generate drafts." : "Select a connection to generate personalized drafts."}
                 </p>
               </div>

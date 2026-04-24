@@ -18,21 +18,21 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-slate-50 py-12">
+      <div className="min-h-screen bg-[#FBF7EC] py-12">
         <div className="mx-auto max-w-2xl px-6">
           <div className="text-center mb-8">
-            <p className="text-sm font-medium text-emerald-600 mb-1">{session ? "Your Profile" : "Guest Preview"}</p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Upload Your Resume</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {session ? "We'll parse your skills and find alumni at top companies." : "Try WarmIntro — upload a resume to see how it works."}
+            <p className="text-sm font-medium text-[#1B3B5F] mb-1">{session ? "Your Profile" : "Guest Preview"}</p>
+            <h1 className="text-3xl font-bold tracking-tight text-[#14182A]">Upload Your Resume</h1>
+            <p className="mt-1 text-sm text-[#5C6472]">
+              {session ? "We'll parse your resume and find alumni bankers at every BB, EB, and MM shop." : "Try Alma — upload a resume to see how it works."}
             </p>
           </div>
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-[#ECE5D0]">
             <ResumeUpload />
           </div>
           {!session && (
-            <p className="text-center text-xs text-slate-400 mt-4">
-              <a href="/" className="text-emerald-600 font-medium hover:underline">Sign up</a> to save your progress and access all features.
+            <p className="text-center text-xs text-[#8A8674] mt-4">
+              <a href="/" className="text-[#1B3B5F] font-medium hover:underline">Sign up</a> to save your progress and access all features.
             </p>
           )}
         </div>
@@ -76,15 +76,15 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-[#FBF7EC] py-12">
       <div className="mx-auto max-w-2xl px-6">
         {/* Header */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-emerald-600 mb-1">Your Profile</p>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          <p className="text-sm font-medium text-[#1B3B5F] mb-1">Your Profile</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#14182A]">
             Your Profile
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#5C6472]">
             Review your parsed resume and pick the industries you want to target.
           </p>
         </div>
@@ -94,10 +94,10 @@ export default function ProfilePage() {
 
         {/* Industry picker */}
         <div className="mt-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">
+          <h2 className="text-lg font-semibold text-[#14182A] mb-1">
             Target Industries
           </h2>
-          <p className="text-sm text-slate-500 mb-4">
+          <p className="text-sm text-[#5C6472] mb-4">
             Select the industries you want to explore. We&apos;ll find companies with alumni from {profile.university}.
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -110,8 +110,8 @@ export default function ProfilePage() {
                   onClick={() => toggleIndustry(industry)}
                   className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all ${
                     selected
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:shadow-sm"
+                      ? "border-[#2E5A88] bg-[#F4EDDB] text-[#0F2A45] shadow-sm"
+                      : "border-[#D9CFB5] bg-white text-[#2A2F3B] hover:border-[#C7BC9F] hover:shadow-sm"
                   }`}
                 >
                   {selected && <span className="mr-1.5">&#10003;</span>}
@@ -131,7 +131,7 @@ export default function ProfilePage() {
           type="button"
           onClick={handleContinue}
           disabled={loading || selectedIndustries.length === 0}
-          className="mt-6 w-full rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="mt-6 w-full rounded-xl bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#2E5A88] focus:outline-none focus:ring-2 focus:ring-[#2E5A88]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
