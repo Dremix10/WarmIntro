@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 // Routes that call Claude API — require auth + tight limits
 const AI_ROUTES = [
@@ -110,26 +111,30 @@ function isGatedApiRoute(pathname: string): boolean {
   return !GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-function getSessionEmailFromCookie(request: NextRequest): string | null {
-  // Supabase auth cookie: sb-<project-ref>-auth-token (base64-encoded JSON array)
-  const cookies = request.cookies;
-  for (const cookie of cookies.getAll()) {
-    if (cookie.name.startsWith("sb-") && cookie.name.endsWith("-auth-token")) {
-      try {
-        const raw = cookie.value.startsWith("base64-") ? cookie.value.slice(7) : cookie.value;
-        const decoded = typeof atob === "function" ? atob(raw) : Buffer.from(raw, "base64").toString("utf8");
-        const parsed = JSON.parse(decoded);
-        const email = parsed?.user?.email ?? parsed?.[0]?.user?.email;
-        return typeof email === "string" ? email.toLowerCase() : null;
-      } catch {
-        continue;
-      }
-    }
+async function getSessionEmailFromCookie(request: NextRequest, response: NextResponse): Promise<string | null> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll: () => request.cookies.getAll().map((c) => ({ name: c.name, value: c.value })),
+        setAll: (cookies) => {
+          for (const { name, value, options } of cookies) {
+            response.cookies.set({ name, value, ...options });
+          }
+        },
+      },
+    });
+    const { data } = await supabase.auth.getUser();
+    return data.user?.email?.toLowerCase() ?? null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
-function checkTestingGate(request: NextRequest): NextResponse | null {
+async function checkTestingGate(request: NextRequest): Promise<NextResponse | null> {
   if (!TESTING_GATE_ENABLED) return null;
 
   const { pathname, origin } = request.nextUrl;
@@ -139,7 +144,10 @@ function checkTestingGate(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  const email = getSessionEmailFromCookie(request);
+  // Prepare a response we can attach refreshed cookies to
+  const passthroughResponse = NextResponse.next();
+  const email = await getSessionEmailFromCookie(request, passthroughResponse);
+
   if (email && TESTING_ALLOWED_EMAILS.includes(email)) {
     return null; // whitelisted tester, let through
   }
@@ -156,11 +164,11 @@ function checkTestingGate(request: NextRequest): NextResponse | null {
   return NextResponse.redirect(new URL("/coming-soon", origin));
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Private-beta gate runs FIRST — everything else is inside the gate
-  const gate = checkTestingGate(request);
+  const gate = await checkTestingGate(request);
   if (gate) return gate;
 
   // Reject oversized payloads
