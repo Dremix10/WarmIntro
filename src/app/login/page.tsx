@@ -31,7 +31,9 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center mt-6 text-xs text-[#14182A]/40">
-          Not a tester yet? <a href="/coming-soon" className="underline hover:text-[#2E5A88]">Join the waitlist</a>.
+          <a href="/forgot-password" className="underline hover:text-[#2E5A88]">Forgot password</a>
+          <span className="mx-2">·</span>
+          Not a tester yet? <a href="/coming-soon" className="underline hover:text-[#2E5A88]">Join the waitlist</a>
         </p>
       </div>
     </div>

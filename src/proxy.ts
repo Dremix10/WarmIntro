@@ -98,6 +98,8 @@ const GATE_BYPASS_PREFIXES = [
   "/coming-soon",
   "/demo", // public-facing demo for lead capture
   "/login", // testers sign in here
+  "/forgot-password",
+  "/reset-password",
   "/privacy",
   "/terms",
   "/api/pilot-signup",
