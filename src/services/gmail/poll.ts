@@ -1,8 +1,7 @@
 // Poll Gmail for new messages since a timestamp, scoped to threads we've sent
 // Used by Watcher agent to detect replies
 
-import { getAdminClient } from "@/lib/supabase-admin";
-import { decryptToken, refreshAccessToken, encryptToken } from "./oauth";
+import { getAccessTokenForUser } from "./tokens";
 
 interface GmailMessage {
   id: string;
@@ -28,43 +27,6 @@ export interface InboxMessage {
   references?: string[];
   receivedAt: Date;
   snippet?: string;
-}
-
-async function getAccessTokenForUser(userId: string): Promise<string | null> {
-  const admin = getAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("gmail_refresh_token_encrypted, gmail_access_token_encrypted, gmail_token_expires_at")
-    .eq("id", userId)
-    .single();
-  if (!profile?.gmail_refresh_token_encrypted) return null;
-
-  const now = Date.now();
-  const expiresAt = profile.gmail_token_expires_at ? new Date(profile.gmail_token_expires_at).getTime() : 0;
-
-  if (profile.gmail_access_token_encrypted && expiresAt > now + 60_000) {
-    try {
-      return decryptToken(profile.gmail_access_token_encrypted);
-    } catch {
-      // fall through to refresh
-    }
-  }
-
-  try {
-    const refreshToken = decryptToken(profile.gmail_refresh_token_encrypted);
-    const refreshed = await refreshAccessToken(refreshToken);
-    if (!refreshed) return null;
-    await admin
-      .from("profiles")
-      .update({
-        gmail_access_token_encrypted: encryptToken(refreshed.accessToken),
-        gmail_token_expires_at: refreshed.expiresAt.toISOString(),
-      })
-      .eq("id", userId);
-    return refreshed.accessToken;
-  } catch {
-    return null;
-  }
 }
 
 function decodePart(data: string): string {

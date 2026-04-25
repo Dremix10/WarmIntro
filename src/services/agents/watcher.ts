@@ -1,13 +1,15 @@
 // Watcher agent — poll Gmail, detect replies, classify intent, advance stages, trigger follow-ups
 // Also handles meta-inbox (replies to Alma's night preview email)
 
-import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, getAdminClient, nudgePlanner } from "./shared";
+import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, nudgePlanner } from "./shared";
 import { pollInbox, type InboxMessage } from "@/services/gmail/poll";
 import { matchInboundToSentDraft } from "@/services/gmail/thread-match";
+import { restSelect, restUpdate, restInsert, eq, lt } from "@/lib/supabase-rest";
+import type { Json } from "@/lib/database.types";
 
 export interface WatcherInput {
   userId: string;
-  sinceTimestamp?: number; // defaults to last poll time
+  sinceTimestamp?: number;
   maxMessages?: number;
 }
 
@@ -19,13 +21,8 @@ export interface WatcherOutput {
 }
 
 type ReplyIntent =
-  | "interested"
-  | "polite_no"
-  | "request_time"
-  | "off_topic"
-  | "referral_offer"
-  | "decline_remove"
-  | "unknown";
+  | "interested" | "polite_no" | "request_time" | "off_topic"
+  | "referral_offer" | "decline_remove" | "unknown";
 
 interface ClassificationResult {
   intent: ReplyIntent;
@@ -50,21 +47,18 @@ export async function runWatcher(input: WatcherInput): Promise<WatcherOutput> {
     inputSummary: {},
   });
 
-  const admin = getAdminClient();
   let sinceTimestamp = input.sinceTimestamp;
   if (!sinceTimestamp) {
-    // Default: last successful watcher run for this user, or 1 day ago
-    const { data: lastRun } = await admin
-      .from("agent_runs")
-      .select("started_at")
-      .eq("agent", "watcher")
-      .eq("user_id", input.userId)
-      .order("started_at", { ascending: false })
-      .limit(2)
-      .maybeSingle();
+    const recent = await restSelect("agent_runs", {
+      select: "started_at",
+      filters: { agent: eq("watcher"), user_id: eq(input.userId) },
+      order: "started_at.desc",
+      limit: 2,
+    });
+    const lastRun = recent[1]; // skip the current run, take the one before
     const fallback = Date.now() - 24 * 60 * 60 * 1000;
     const lastTime = lastRun?.started_at ? new Date(lastRun.started_at).getTime() : fallback;
-    sinceTimestamp = Math.floor(lastTime / 1000) - 60; // buffer 1 min
+    sinceTimestamp = Math.floor(lastTime / 1000) - 60;
   }
 
   try {
@@ -84,15 +78,19 @@ export async function runWatcher(input: WatcherInput): Promise<WatcherOutput> {
       if (!match) continue;
       repliesMatched++;
 
-      // Classify reply
       const classification = await classifyReply(msg);
 
-      // Update connection stage
       if (classification.nextStage && match.connectionId) {
-        await admin
-          .from("connections")
-          .update({ stage: classification.nextStage, updated_at: new Date().toISOString(), silence_days: 0, needs_followup: false })
-          .eq("id", match.connectionId);
+        await restUpdate(
+          "connections",
+          {
+            stage: classification.nextStage,
+            updated_at: new Date().toISOString(),
+            silence_days: 0,
+            needs_followup: false,
+          },
+          { id: eq(match.connectionId) }
+        );
         stagesAdvanced++;
       }
 
@@ -106,32 +104,35 @@ export async function runWatcher(input: WatcherInput): Promise<WatcherOutput> {
         metadata: { intent: classification.intent, signals: classification.signals },
       });
 
-      // Side-effects: extract deals into banker_deals (Curator will dedup)
       if (classification.signals.dealsMentioned.length > 0 && match.bankerId) {
         for (const deal of classification.signals.dealsMentioned.slice(0, 3)) {
-          try {
-            await admin.from("banker_deals").insert({
-              banker_id: match.bankerId,
-              deal_name: deal,
-              source: "user_reply_extraction",
-              confidence: 0.6,
-            });
-          } catch {
-            // dedup happens in Curator
-          }
+          await restInsert("banker_deals", {
+            banker_id: match.bankerId,
+            deal_name: deal,
+            source: "user_reply_extraction",
+            confidence: 0.6,
+          });
         }
       }
 
-      // Nudge planner if a follow-up is needed (e.g., schedule a coffee confirmation)
       if (classification.followUpNeeded) {
-        await nudgePlanner(input.userId, "draft_reply", { bankerId: match.bankerId, connectionId: match.connectionId, incomingBody: msg.body });
+        await nudgePlanner(input.userId, "draft_reply", {
+          bankerId: match.bankerId,
+          connectionId: match.connectionId,
+          incomingBody: msg.body,
+        });
       }
     }
 
-    // Also sweep for silence → needs_followup
     const silenceUpdated = await detectSilenceAndFlag(input.userId);
 
-    await endAgentRun(ctx, { processed: inbox.length, repliesMatched, stagesAdvanced, metaInboxParsed, silenceFlagged: silenceUpdated });
+    await endAgentRun(ctx, {
+      processed: inbox.length,
+      repliesMatched,
+      stagesAdvanced,
+      metaInboxParsed,
+      silenceFlagged: silenceUpdated,
+    });
 
     return { processed: inbox.length, repliesMatched, stagesAdvanced, metaInboxParsed };
   } catch (err) {
@@ -153,21 +154,21 @@ Return JSON:
 {
   "intent": "interested" | "polite_no" | "request_time" | "off_topic" | "referral_offer" | "decline_remove" | "unknown",
   "signals": {
-    "dealsMentioned": string[] (names of deals/transactions they reference),
-    "bankersMentioned": string[] (other banker names they refer to),
-    "proposedTimes": string[] (explicit time/date windows they propose),
-    "referralTargets": string[] (names of people they offer to introduce),
-    "groupMentions": string[] (IB groups / coverage areas they mention)
+    "dealsMentioned": string[],
+    "bankersMentioned": string[],
+    "proposedTimes": string[],
+    "referralTargets": string[],
+    "groupMentions": string[]
   },
-  "nextStage": "replied" | "coffee" | "referral" | "closed_lost" (pick the strongest stage indicated),
-  "followUpNeeded": boolean (should Alma draft a response?)
+  "nextStage": "replied" | "coffee" | "referral" | "closed_lost",
+  "followUpNeeded": boolean
 }
 
 Rules:
-- "request_time" = they proposed meeting but no specific time yet → nextStage = replied, followUpNeeded = true
-- "interested" + proposed time = nextStage = coffee, followUpNeeded = true
-- "referral_offer" = they offered to introduce someone = nextStage = referral, followUpNeeded = true
-- "polite_no" or "decline_remove" = nextStage = closed_lost, followUpNeeded = false`;
+- "request_time" = proposed meeting, no time yet → nextStage = replied, followUpNeeded = true
+- "interested" + time = nextStage = coffee, followUpNeeded = true
+- "referral_offer" = nextStage = referral, followUpNeeded = true
+- "polite_no" / "decline_remove" = nextStage = closed_lost, followUpNeeded = false`;
 
   try {
     return await askClaudeJSON<ClassificationResult>(prompt, {
@@ -187,14 +188,10 @@ Rules:
 
 // Meta-inbox: detect replies to Alma's night-preview email and update trust_levels.tomorrow_override
 async function processMetaInboxIfMatches(msg: InboxMessage, userId: string): Promise<boolean> {
-  // Heuristic: subject starts with "Re: Tomorrow" AND the inbound In-Reply-To is alma-preview-*
   const isPreview = msg.inReplyTo?.includes("alma-preview") || msg.subject.toLowerCase().includes("tomorrow");
   if (!isPreview) return false;
 
-  // Parse intent from reply body (tokens OR plain English)
   const body = msg.body.toLowerCase();
-  const admin = getAdminClient();
-
   let override: Record<string, unknown> = {};
 
   if (/\bskip\b/.test(body)) override.skipDay = true;
@@ -208,10 +205,14 @@ async function processMetaInboxIfMatches(msg: InboxMessage, userId: string): Pro
   if (moreMatch) override.extraDrafts = parseInt(moreMatch[1], 10);
   if (/\bpreview\b/.test(body)) override.trustLevel = "B";
 
-  // If none of the known tokens fired, pass body to Claude for plain-English parsing
   if (Object.keys(override).length === 0) {
     try {
-      const parsed = await askClaudeJSON<{ sendTime?: string; extraDrafts?: number; skipDay?: boolean; trustLevel?: "C" | "B" | "A" }>(
+      const parsed = await askClaudeJSON<{
+        sendTime?: string;
+        extraDrafts?: number;
+        skipDay?: boolean;
+        trustLevel?: "C" | "B" | "A";
+      }>(
         `Parse this reply to a recruiting agent's night preview into structured overrides for tomorrow only.
 
 REPLY BODY:
@@ -227,7 +228,11 @@ Return JSON: {"sendTime"?: "HH:MM", "extraDrafts"?: number, "skipDay"?: boolean,
   }
 
   if (Object.keys(override).length > 0) {
-    await admin.from("trust_levels").update({ tomorrow_override: override as unknown as never, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    await restUpdate(
+      "trust_levels",
+      { tomorrow_override: override as Json, updated_at: new Date().toISOString() },
+      { user_id: eq(userId) }
+    );
     await logSignal({
       userId,
       agent: "watcher",
@@ -240,24 +245,25 @@ Return JSON: {"sendTime"?: "HH:MM", "extraDrafts"?: number, "skipDay"?: boolean,
 }
 
 async function detectSilenceAndFlag(userId: string): Promise<number> {
-  const admin = getAdminClient();
   const now = new Date();
   const SILENCE_DAYS_THRESHOLD = 7;
   const threshold = new Date(now.getTime() - SILENCE_DAYS_THRESHOLD * 24 * 60 * 60 * 1000).toISOString();
 
-  const { data: silent } = await admin
-    .from("connections")
-    .select("id, banker_id, updated_at")
-    .eq("user_id", userId)
-    .eq("stage", "sent")
-    .lt("updated_at", threshold)
-    .eq("needs_followup", false);
+  const silent = await restSelect("connections", {
+    select: "id, banker_id, updated_at",
+    filters: {
+      user_id: eq(userId),
+      stage: eq("sent"),
+      updated_at: lt(threshold),
+      needs_followup: eq(false),
+    },
+  });
 
-  if (!silent || silent.length === 0) return 0;
+  if (silent.length === 0) return 0;
 
   for (const c of silent) {
     const days = Math.floor((now.getTime() - new Date(c.updated_at ?? threshold).getTime()) / (24 * 60 * 60 * 1000));
-    await admin.from("connections").update({ needs_followup: true, silence_days: days }).eq("id", c.id);
+    await restUpdate("connections", { needs_followup: true, silence_days: days }, { id: eq(c.id) });
     await logSignal({
       userId,
       bankerId: c.banker_id ?? undefined,

@@ -1,52 +1,12 @@
 // Send an email via Gmail API as an authenticated user
 // Captures the Message-ID header for future reply-thread matching
 
-import { getAdminClient } from "@/lib/supabase-admin";
-import { decryptToken, refreshAccessToken, encryptToken } from "./oauth";
+import { getAccessTokenForUser } from "./tokens";
 
 export interface GmailSendResult {
   sentMessageId: string; // RFC 822 Message-ID from headers
   gmailThreadId: string;
   gmailMessageId: string;
-}
-
-async function getAccessTokenForUser(userId: string): Promise<string | null> {
-  const admin = getAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("gmail_refresh_token_encrypted, gmail_access_token_encrypted, gmail_token_expires_at")
-    .eq("id", userId)
-    .single();
-  if (!profile?.gmail_refresh_token_encrypted) return null;
-
-  const now = Date.now();
-  const expiresAt = profile.gmail_token_expires_at ? new Date(profile.gmail_token_expires_at).getTime() : 0;
-
-  if (profile.gmail_access_token_encrypted && expiresAt > now + 60_000) {
-    try {
-      return decryptToken(profile.gmail_access_token_encrypted);
-    } catch (err) {
-      console.warn("[gmail/send] access token decrypt failed, refreshing", err);
-    }
-  }
-
-  // Refresh
-  try {
-    const refreshToken = decryptToken(profile.gmail_refresh_token_encrypted);
-    const refreshed = await refreshAccessToken(refreshToken);
-    if (!refreshed) return null;
-    await admin
-      .from("profiles")
-      .update({
-        gmail_access_token_encrypted: encryptToken(refreshed.accessToken),
-        gmail_token_expires_at: refreshed.expiresAt.toISOString(),
-      })
-      .eq("id", userId);
-    return refreshed.accessToken;
-  } catch (err) {
-    console.warn("[gmail/send] refresh failed", err);
-    return null;
-  }
 }
 
 function buildMime(opts: { from: string; to: string; subject: string; body: string; messageId: string }): string {

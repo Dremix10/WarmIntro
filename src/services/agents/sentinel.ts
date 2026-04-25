@@ -1,7 +1,8 @@
 // Sentinel — monitoring agent. Watches agent errors + API credit balances; posts Telegram alerts.
 // Runs every 30 min via /api/cron/sentinel. Gracefully no-ops if TELEGRAM_BOT_TOKEN is absent.
 
-import { startAgentRun, endAgentRun, getAdminClient, logSignal } from "./shared";
+import { startAgentRun, endAgentRun, logSignal } from "./shared";
+import { restSelect, gte } from "@/lib/supabase-rest";
 
 export interface SentinelOutput {
   alertsSent: number;
@@ -60,24 +61,19 @@ export async function runSentinel(): Promise<SentinelOutput> {
   const out: SentinelOutput = { alertsSent: 0, errors: 0, creditWarnings: [] };
 
   try {
-    const admin = getAdminClient();
-
     // Check 1: agent errors in last 30 min
     const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-    const { data: errorRuns } = await admin
-      .from("agent_runs")
-      .select("agent, error, started_at")
-      .not("error", "is", null)
-      .gte("started_at", since)
-      .limit(10);
+    const errorRuns = await restSelect("agent_runs", {
+      select: "agent, error, started_at",
+      filters: { error: "not.is.null", started_at: gte(since) },
+      limit: 10,
+    });
 
-    if (errorRuns && errorRuns.length > 0) {
+    if (errorRuns.length > 0) {
       out.errors = errorRuns.length;
       const errorsBy: Record<string, number> = {};
       for (const r of errorRuns) errorsBy[r.agent] = (errorsBy[r.agent] ?? 0) + 1;
-      const summary = Object.entries(errorsBy)
-        .map(([a, n]) => `${a}: ${n}`)
-        .join(", ");
+      const summary = Object.entries(errorsBy).map(([a, n]) => `${a}: ${n}`).join(", ");
       const sent = await sendTelegram(`🔴 *Alma alerts* · last 30 min\n\nAgent errors: ${summary}\n\nFirst error: \`${String(errorRuns[0].error).slice(0, 200)}\``);
       if (sent) out.alertsSent++;
     }
@@ -94,14 +90,16 @@ export async function runSentinel(): Promise<SentinelOutput> {
     }
 
     // Check 3: any signals flagged as critical in last 30 min
-    const { data: criticalSignals } = await admin
-      .from("signals")
-      .select("signal_type, metadata, occurred_at")
-      .in("signal_type", ["critic_rejected_unresolvable_escalated", "planner_crash", "gmail_oauth_expired"])
-      .gte("occurred_at", since)
-      .limit(10);
+    const criticalSignals = await restSelect("signals", {
+      select: "signal_type, metadata, occurred_at",
+      filters: {
+        signal_type: `in.("critic_rejected_unresolvable_escalated","planner_crash","gmail_oauth_expired")`,
+        occurred_at: gte(since),
+      },
+      limit: 10,
+    });
 
-    if (criticalSignals && criticalSignals.length > 0) {
+    if (criticalSignals.length > 0) {
       const sent = await sendTelegram(`⚠️ *Alma critical signals*\n\n${criticalSignals.length} critical events in last 30 min. Check /agents.`);
       if (sent) out.alertsSent++;
     }

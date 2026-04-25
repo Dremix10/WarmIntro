@@ -1,7 +1,8 @@
 // Correspondent agent — draft cold / followup / reply / thank-you emails
 // Uses findCommonGround tool; applies guardrails; Critic reviews the output
 
-import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, getAdminClient } from "./shared";
+import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
+import { restSelectOne, restSelect, restInsert, eq } from "@/lib/supabase-rest";
 import { applyGuardrails } from "@/services/guardrails";
 import type { CommonGroundAnchor, DraftType } from "@/shared/ib-types";
 
@@ -93,19 +94,18 @@ Rules:
 }
 
 async function getBankerContext(bankerId: string): Promise<BankerContext | null> {
-  const admin = getAdminClient();
-  const [{ data: banker }, { data: profile }, { data: deals }] = await Promise.all([
-    admin.from("bankers").select("*").eq("id", bankerId).single(),
-    admin.from("banker_profiles").select("*").eq("banker_id", bankerId).maybeSingle(),
-    admin.from("banker_deals").select("*").eq("banker_id", bankerId).limit(5),
+  const [banker, profile, deals] = await Promise.all([
+    restSelectOne("bankers", { select: "*", filters: { id: eq(bankerId) } }),
+    restSelectOne("banker_profiles", { select: "*", filters: { banker_id: eq(bankerId) } }),
+    restSelect("banker_deals", { select: "*", filters: { banker_id: eq(bankerId) }, limit: 5 }),
   ]);
 
   if (!banker) return null;
 
   let firmName: string | undefined;
   if (banker.firm_id) {
-    const { data } = await admin.from("firms").select("name").eq("id", banker.firm_id).single();
-    firmName = data?.name;
+    const firm = await restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } });
+    firmName = firm?.name;
   }
 
   return {
@@ -117,7 +117,7 @@ async function getBankerContext(bankerId: string): Promise<BankerContext | null>
     gradYear: banker.grad_year ?? undefined,
     aboutSection: profile?.about_section ?? undefined,
     recentPosts: ((profile?.recent_posts ?? []) as Array<{ content: string }>).slice(0, 5),
-    recentDeals: ((deals ?? []) as Array<{ deal_name: string; description?: string }>).map((d) => ({ name: d.deal_name, description: d.description })),
+    recentDeals: deals.map((d) => ({ name: d.deal_name, description: d.description ?? undefined })),
     pastPositions: ((profile?.past_positions ?? []) as Array<{ firm: string; role: string }>).slice(0, 5),
     education: ((profile?.education ?? []) as Array<{ school: string; degree?: string; activities?: string[] }>).slice(0, 3),
     interests: (profile?.interests ?? []) as string[],
@@ -125,12 +125,10 @@ async function getBankerContext(bankerId: string): Promise<BankerContext | null>
 }
 
 async function getUserContext(userId: string): Promise<UserContext | null> {
-  const admin = getAdminClient();
-  const { data } = await admin
-    .from("profiles")
-    .select("name, university, major, graduation_year, story_one_liner, warm_hints, skills, experience")
-    .eq("id", userId)
-    .single();
+  const data = await restSelectOne("profiles", {
+    select: "name, university, major, graduation_year, story_one_liner, warm_hints, skills, experience",
+    filters: { id: eq(userId) },
+  });
   if (!data) return null;
   return {
     name: data.name,
@@ -138,7 +136,7 @@ async function getUserContext(userId: string): Promise<UserContext | null> {
     major: data.major,
     graduationYear: data.graduation_year,
     storyOneLiner: data.story_one_liner ?? undefined,
-    clubs: [], // resume parser stores these — extend when profile schema incorporates
+    clubs: [],
     warmHints: (data.warm_hints ?? []) as string[],
   };
 }
@@ -190,36 +188,32 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
     const { body: cleanedBody, flags } = applyGuardrails(drafted.body);
 
     // Step 4: Persist as draft, pending_critic
-    const admin = getAdminClient();
-    const { data: draftRow } = await admin
-      .from("drafts")
-      .insert({
-        user_id: input.userId,
-        banker_id: input.bankerId,
-        connection_id: input.connectionId,
-        type: input.type,
-        subject: drafted.subject,
-        body: cleanedBody,
-        guardrail_flags: flags,
-        status: "pending_critic",
-        iteration_count: input.revisionFeedback ? 1 : 0,
-      })
-      .select("id")
-      .single();
+    const inserted = await restInsert("drafts", {
+      user_id: input.userId,
+      banker_id: input.bankerId,
+      connection_id: input.connectionId,
+      type: input.type,
+      subject: drafted.subject,
+      body: cleanedBody,
+      guardrail_flags: flags,
+      status: "pending_critic",
+      iteration_count: input.revisionFeedback ? 1 : 0,
+    });
+    const draftId = inserted[0]?.id;
 
     await logSignal({
       userId: input.userId,
       bankerId: input.bankerId,
-      draftId: draftRow?.id,
+      draftId,
       agent: "correspondent",
       signalType: "draft_created",
       metadata: { type: input.type, anchors: anchors.map((a) => a.type) },
     });
 
-    await endAgentRun(ctx, { draftId: draftRow?.id, anchorCount: anchors.length, guardrailFlags: flags });
+    await endAgentRun(ctx, { draftId, anchorCount: anchors.length, guardrailFlags: flags });
 
     return {
-      draftId: draftRow?.id,
+      draftId,
       subject: drafted.subject,
       body: cleanedBody,
       anchors,

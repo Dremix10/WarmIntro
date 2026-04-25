@@ -2,11 +2,12 @@
 // Tools: queryBankerDB, scoreBankerFit (Claude), scrapeSerper, enrichHunter, logSignal
 // Outputs candidates to drive Correspondent's drafting queue
 
-import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, getAdminClient } from "./shared";
+import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { findRealAlumni } from "@/services/linkedin-search";
 import { enrichEmailBatch } from "@/services/hunter/enrich";
 import { scrapeBankerLinkedIn } from "@/services/linkedin/proxycurl";
 import { getActiveScoringWeights } from "@/services/signals/aggregate";
+import { restSelect, restSelectOne, restUpdate, eq } from "@/lib/supabase-rest";
 import type { Banker } from "@/shared/ib-types";
 
 interface UserProfileRow {
@@ -165,12 +166,11 @@ async function queryBankerDB(
 }
 
 async function alreadyContactedBankerIds(userId: string): Promise<string[]> {
-  const admin = getAdminClient();
-  const { data } = await admin
-    .from("connections")
-    .select("banker_id")
-    .eq("user_id", userId);
-  return (data ?? []).map((r) => r.banker_id).filter((id): id is string => typeof id === "string");
+  const rows = await restSelect("connections", {
+    select: "banker_id",
+    filters: { user_id: eq(userId) },
+  });
+  return rows.map((r) => r.banker_id).filter((id): id is string => typeof id === "string");
 }
 
 export async function runResearcher(input: ResearcherInput): Promise<ResearcherOutput> {
@@ -307,21 +307,18 @@ Return JSON: [{"id": "banker_id", "reason": "one sentence"}]`;
  * lacks LinkedIn/email data. Researcher tries to enrich and returns success/fail.
  */
 export async function enrichBanker(bankerId: string): Promise<boolean> {
-  const admin = getAdminClient();
-  const { data: banker } = await admin.from("bankers").select("*").eq("id", bankerId).maybeSingle();
+  const banker = await restSelectOne("bankers", { select: "*", filters: { id: eq(bankerId) } });
   if (!banker) return false;
 
   let enriched = false;
 
-  // Try Proxycurl for LinkedIn profile depth
   if (banker.linkedin_url) {
     const profile = await scrapeBankerLinkedIn(banker.linkedin_url, { bankerId, cacheResult: true });
     if (profile) enriched = true;
   }
 
-  // Try Hunter for email
   if (!banker.email && banker.firm_id) {
-    const { data: firm } = await admin.from("firms").select("domain").eq("id", banker.firm_id).single();
+    const firm = await restSelectOne("firms", { select: "domain", filters: { id: eq(banker.firm_id) } });
     if (firm?.domain && banker.name) {
       const [first, ...rest] = banker.name.split(/\s+/);
       const last = rest[rest.length - 1] ?? "";
@@ -332,15 +329,14 @@ export async function enrichBanker(bankerId: string): Promise<boolean> {
     }
   }
 
-  // Fallback: Serper discovery for LinkedIn URL when absent
   if (!banker.linkedin_url && banker.firm_id) {
     try {
-      const { data: firm } = await admin.from("firms").select("name").eq("id", banker.firm_id).single();
+      const firm = await restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } });
       if (firm?.name && banker.university) {
         const candidates = await findRealAlumni(firm.name, banker.university, 3);
         const match = candidates.find((c) => c.name.toLowerCase().includes(banker.name.toLowerCase().split(/\s+/)[0]));
         if (match) {
-          await admin.from("bankers").update({ linkedin_url: match.linkedinUrl }).eq("id", bankerId);
+          await restUpdate("bankers", { linkedin_url: match.linkedinUrl }, { id: eq(bankerId) });
           enriched = true;
         }
       }
