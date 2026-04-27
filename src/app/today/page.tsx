@@ -441,15 +441,37 @@ function GmailRequiredBanner() {
   );
 }
 
+// Progressive copy approximating Planner stages.  Real run-now is sequential
+// (Researcher → Correspondent → Critic per banker), so the timing is rough
+// but representative.
+const RUN_STAGES: Array<{ text: string; sub: string; afterMs: number }> = [
+  { text: "Finding alumni at your target firms…", sub: "Ranking by warmth (school, group, role).", afterMs: 0 },
+  { text: "Drafting personalized outreach…", sub: "Writing in your voice. No clichés, no em-dashes.", afterMs: 8000 },
+  { text: "Critic reviewing for tone + accuracy…", sub: "Rejecting anything generic. Up to 3 rewrite rounds.", afterMs: 22000 },
+  { text: "Almost there…", sub: "Saving drafts to your queue.", afterMs: 38000 },
+];
+
 function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
   const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [stageIdx, setStageIdx] = useState(0);
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div className="shrink-0 flex flex-col items-end">
+    <div
+      className="shrink-0 flex flex-col items-end relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <button
         type="button"
         disabled={state === "running"}
         onClick={async () => {
           setState("running");
+          setStageIdx(0);
+          // Schedule progressive stage transitions.
+          const timers = RUN_STAGES.slice(1).map((stage, i) =>
+            window.setTimeout(() => setStageIdx(i + 1), stage.afterMs)
+          );
           try {
             const { data: { session: s } } = await supabase.auth.getSession();
             const res = await fetch("/api/planner/run-now", {
@@ -457,6 +479,7 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
               headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
             });
             const json = await res.json().catch(() => ({}));
+            timers.forEach((t) => window.clearTimeout(t));
             if (json?.result?.needsSetup) {
               window.location.href = "/setup";
               return;
@@ -466,17 +489,48 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
             await onDone();
             setTimeout(() => setState("idle"), 2500);
           } catch {
+            timers.forEach((t) => window.clearTimeout(t));
             setState("error");
             setTimeout(() => setState("idle"), 2500);
           }
         }}
-        className="rounded-xl bg-[#2E5A88] text-white px-4 py-2 text-xs font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-60 whitespace-nowrap"
+        className="rounded-xl bg-[#2E5A88] text-white px-4 py-2 text-xs font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-80 whitespace-nowrap min-w-[120px]"
       >
-        {state === "running" ? "Running…" : state === "done" ? "Done ✓" : state === "error" ? "Retry" : "Run Alma now"}
+        {state === "running"
+          ? "Running…"
+          : state === "done"
+            ? "Done ✓"
+            : state === "error"
+              ? "Retry"
+              : "Run Alma now"}
       </button>
-      <p className="mt-1 text-[10px] text-[#14182A]/40 italic max-w-[140px] text-right leading-snug">
-        Researches + drafts. ~30s.
-      </p>
+
+      {/* Idle: short subtitle. Hover: full explainer card. */}
+      {state === "idle" && !hovered && (
+        <p className="mt-1 text-[10px] text-[#14182A]/50 italic max-w-[140px] text-right leading-snug">
+          Find alumni + draft 1 email. ~30s.
+        </p>
+      )}
+      {state === "idle" && hovered && (
+        <div className="absolute top-[calc(100%+6px)] right-0 z-20 w-72 rounded-xl bg-white border border-[#D9CFB5] shadow-lg p-4 text-left">
+          <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-2">What happens</p>
+          <ol className="space-y-2 text-xs text-[#14182A]/80">
+            <li><strong>1. Researcher</strong> picks 1 banker at your target firms — ranked by school, group, and role overlap.</li>
+            <li><strong>2. Correspondent</strong> drafts a short email referencing your real story + a real connection point.</li>
+            <li><strong>3. Critic</strong> reviews tone + factual accuracy. Rejects it if it sounds generic and asks for a rewrite. Max 3 rounds.</li>
+            <li><strong>4.</strong> The result lands in your queue below. You approve before anything sends.</li>
+          </ol>
+          <p className="mt-3 text-[10px] text-[#14182A]/50 italic">Takes 20–40 seconds. Cron also runs this at your daily send time.</p>
+        </div>
+      )}
+
+      {/* Running: progressive status */}
+      {state === "running" && (
+        <div className="mt-1 max-w-[200px] text-right">
+          <p className="text-[11px] text-[#2E5A88] font-medium leading-tight">{RUN_STAGES[stageIdx].text}</p>
+          <p className="text-[10px] text-[#14182A]/50 italic leading-snug mt-0.5">{RUN_STAGES[stageIdx].sub}</p>
+        </div>
+      )}
     </div>
   );
 }

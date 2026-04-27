@@ -7,7 +7,7 @@ import { findRealAlumni } from "@/services/linkedin-search";
 import { enrichEmailBatch } from "@/services/hunter/enrich";
 import { scrapeBankerLinkedIn } from "@/services/linkedin/proxycurl";
 import { getActiveScoringWeights } from "@/services/signals/aggregate";
-import { restSelect, restSelectOne, restUpdate, eq } from "@/lib/supabase-rest";
+import { restSelect, restSelectOne, restUpdate, eq, isNull } from "@/lib/supabase-rest";
 import type { Banker } from "@/shared/ib-types";
 
 interface UserProfileRow {
@@ -166,11 +166,28 @@ async function queryBankerDB(
 }
 
 async function alreadyContactedBankerIds(userId: string): Promise<string[]> {
-  const rows = await restSelect("connections", {
+  // 1. Bankers we already have a connection with (sent / replied / etc.)
+  const conns = await restSelect("connections", {
     select: "banker_id",
     filters: { user_id: eq(userId) },
   });
-  return rows.map((r) => r.banker_id).filter((id): id is string => typeof id === "string");
+  // 2. Bankers we have an *active* draft for (queued, in review, approved-not-sent).
+  //    Without this, a parallel run-now click or a cron-overlap can produce two
+  //    drafts to the same banker. Skipped/sent drafts don't block — the user
+  //    might want to retry a skipped one later.
+  const activeDrafts = await restSelect("drafts", {
+    select: "banker_id",
+    filters: {
+      user_id: eq(userId),
+      status: `in.("pending_critic","needs_revision","approved")`,
+      sent_at: isNull,
+    },
+  });
+  const ids = new Set<string>();
+  for (const r of [...conns, ...activeDrafts]) {
+    if (typeof r.banker_id === "string") ids.add(r.banker_id);
+  }
+  return Array.from(ids);
 }
 
 export async function runResearcher(input: ResearcherInput): Promise<ResearcherOutput> {
