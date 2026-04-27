@@ -128,7 +128,7 @@ function SetupInner() {
       router.push("/");
       return;
     }
-  }, [session, authLoading]);
+  }, [session?.user?.id, authLoading, router]);
 
   useEffect(() => {
     // Handle Gmail OAuth callback
@@ -146,7 +146,6 @@ function SetupInner() {
     loadFirms();
     checkGmail();
     if (profile) {
-      // User has an existing profile — prefill what we can
       setParsed({
         name: profile.name,
         email: profile.email,
@@ -155,7 +154,43 @@ function SetupInner() {
         graduationYear: profile.graduationYear,
       });
     }
-  }, [profile]);
+    // If user already completed setup, hydrate target_firms / target_groups /
+    // story so /setup acts as edit mode.
+    hydrateExistingPicks();
+  }, [profile?.name]);
+
+  async function hydrateExistingPicks() {
+    if (!session) return;
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("target_firms, target_groups, story_one_liner")
+        .eq("id", session.user.id)
+        .maybeSingle();
+      if (!data) return;
+      const tf: string[] = (data.target_firms ?? []) as string[];
+      const tg: string[] = (data.target_groups ?? []) as string[];
+      if (tf.length > 0) setTargetFirms(new Set(tf));
+      if (tg.length > 0) setTargetGroups(new Set(tg));
+      if (data.story_one_liner) setStory(data.story_one_liner);
+      // If the user has full picks already, skip them past the upload step
+      if (tf.length > 0 && parsed === null && !persisted) {
+        // Build a synthetic parsed object from profile so step 2 has data to render
+        if (profile) {
+          setParsed({
+            name: profile.name,
+            email: profile.email,
+            university: profile.university,
+            major: profile.major,
+            graduationYear: profile.graduationYear,
+          });
+        }
+        setStep("confirm");
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   async function loadFirms() {
     try {

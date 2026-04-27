@@ -49,7 +49,8 @@ export default function PrivacyActivityPage() {
       return;
     }
     if (session) load();
-  }, [authLoading, session]);
+    // Use user.id — token refresh shouldn't refetch.
+  }, [authLoading, session?.user?.id]);
 
   async function load() {
     setLoading(true);

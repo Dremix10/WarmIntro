@@ -46,7 +46,8 @@ export default function AgentsPage() {
       return;
     }
     if (session) load();
-  }, [session, authLoading]);
+    // Use user.id — Supabase token refresh on tab focus mints a new session ref.
+  }, [session?.user?.id, authLoading]);
 
   async function load() {
     setLoading(true);

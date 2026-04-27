@@ -32,7 +32,8 @@ export default function AccountPage() {
   useEffect(() => {
     if (!authLoading && !session) { router.push("/login"); return; }
     if (session) load();
-  }, [authLoading, session]);
+    // Use user.id — token refresh shouldn't refetch.
+  }, [authLoading, session?.user?.id]);
 
   async function load() {
     if (!session) return;
@@ -111,7 +112,15 @@ export default function AccountPage() {
             <Row label="Target groups" value={profile?.target_groups?.length ? profile.target_groups.join(", ") : "none yet"} />
             <Row label="Why IB" value={profile?.story_one_liner ?? "—"} />
           </div>
-          <a href="/setup" className="mt-3 inline-block text-xs text-[#2E5A88] hover:underline">Edit profile in /setup →</a>
+          <a
+            href="/setup"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#2E5A88] text-white px-4 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
+          >
+            Edit profile + targets →
+          </a>
+          <p className="mt-2 text-xs text-[#14182A]/50 italic">
+            Picks up where you are — change banks, groups, or your &ldquo;why IB&rdquo; sentence and re-run.
+          </p>
         </section>
 
         {/* Gmail */}

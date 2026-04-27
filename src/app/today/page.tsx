@@ -69,7 +69,9 @@ export default function TodayPage() {
       return;
     }
     if (session) load();
-  }, [session, authLoading]);
+    // Use user.id so token refreshes (which create a new session object) don't
+    // refetch and flash the loading state every time the tab regains focus.
+  }, [session?.user?.id, authLoading]);
 
   async function load() {
     if (!session) return;
