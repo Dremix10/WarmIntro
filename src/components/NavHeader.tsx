@@ -3,35 +3,32 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 
-const STEPS = [
-  { path: "/", label: "Home", step: 0 },
-  { path: "/profile", label: "Profile", step: 1 },
-  { path: "/companies", label: "Companies", step: 2 },
-  { path: "/pipeline", label: "Pipeline", step: 3 },
-  { path: "/outreach", label: "Outreach", step: 4, noLink: true },
-  { path: "/crm", label: "CRM", step: 5 },
-  { path: "/network", label: "Grove", step: 6 },
-  { path: "/leaderboard", label: "Board", step: 7 },
+const NAV_ITEMS = [
+  { path: "/today", label: "Today" },
+  { path: "/network", label: "Network" },
+  { path: "/pipeline", label: "Pipeline" },
+  { path: "/crm", label: "CRM" },
+  { path: "/agents", label: "Agents" },
+];
+
+const HIDE_NAV_ROUTES = [
+  "/",
+  "/demo",
+  "/coming-soon",
+  "/login",
+  "/forgot-password",
+  "/reset-password",
+  "/privacy",
+  "/terms",
 ];
 
 export function NavHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const { session, profile, gameState, signOut } = useAppState();
+  const { session, signOut } = useAppState();
 
-  const isOutreach = pathname.startsWith("/outreach");
-  const currentStep = isOutreach
-    ? 4
-    : STEPS.find((s) => s.path === pathname)?.step ?? 0;
-
-  if (pathname === "/" || pathname === "/demo" || pathname.startsWith("/design-lab")) return null;
-
-  const canNavigate = (step: number): boolean => {
-    if (step === 0) return true;
-    if (step === 1) return !!profile;
-    if (step >= 2) return !!profile;
-    return false;
-  };
+  // Hide on public marketing/auth/legal routes and any design-lab preview
+  if (HIDE_NAV_ROUTES.includes(pathname) || pathname.startsWith("/design-lab")) return null;
 
   const handleSignOut = async () => {
     await signOut();
@@ -40,60 +37,68 @@ export function NavHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#D9CFB5] bg-[#EAE3D2]/90 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <button
           type="button"
-          onClick={() => router.push("/")}
-          className="text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)] hover:text-[#2E5A88] transition-colors"
+          onClick={() => router.push(session ? "/today" : "/")}
+          className="shrink-0 text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)] hover:text-[#2E5A88] transition-colors"
         >
           alma
         </button>
 
-        <nav className="hidden items-center gap-1 sm:flex">
-          {STEPS.filter((s) => s.step > 0).map((s) => {
-            const active = currentStep === s.step;
-            const navigable = canNavigate(s.step);
-            return (
+        {session && (
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto scrollbar-hidden">
+            {NAV_ITEMS.map((s) => {
+              const active = pathname === s.path;
+              return (
+                <button
+                  key={s.path}
+                  type="button"
+                  onClick={() => router.push(s.path)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    active
+                      ? "bg-[#1B3B5F] text-white"
+                      : "text-[#5C6472] hover:text-[#1B3B5F] hover:bg-white"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              );
+            })}
+          </nav>
+        )}
+
+        <div className="flex shrink-0 items-center gap-2">
+          {session ? (
+            <>
               <button
-                key={s.path}
                 type="button"
-                onClick={() => navigable && !("noLink" in s && s.noLink) && router.push(s.path)}
-                disabled={!navigable || ("noLink" in s && !!s.noLink)}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                  active
-                    ? "bg-[#1B3B5F] text-white"
-                    : navigable
-                    ? "text-[#5C6472] hover:text-[#1B3B5F] hover:bg-white"
-                    : "text-[#8A8674] cursor-default"
+                onClick={() => router.push("/account")}
+                aria-label="Account"
+                className={`rounded-full p-2 transition-colors ${
+                  pathname.startsWith("/account") ? "bg-[#1B3B5F] text-white" : "text-[#5C6472] hover:bg-white hover:text-[#1B3B5F]"
                 }`}
               >
-                {s.label}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
               </button>
-            );
-          })}
-        </nav>
-
-        <span className="text-[10px] font-medium text-[#5C6472] sm:hidden">
-          {currentStep > 0 ? `${currentStep}/7` : ""}
-        </span>
-
-        <div className="flex items-center gap-2">
-          {gameState && gameState.xp > 0 && (
-            <div className="flex items-center gap-2 rounded-full border border-[#D9CFB5] bg-white px-3 py-1">
-              <span className="text-xs font-semibold tabular-nums text-[#1B3B5F]">{gameState.xp} xp</span>
-              {gameState.streak > 0 && (
-                <span className="text-xs text-[#B08100]">&#x1F525; {gameState.streak}</span>
-              )}
-            </div>
-          )}
-          {session && (
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="rounded-full border border-[#D9CFB5] bg-white px-3 py-1 text-xs font-medium text-[#5C6472] hover:border-[#2E5A88] hover:text-[#1B3B5F] transition-colors"
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="hidden sm:inline-flex rounded-full border border-[#D9CFB5] bg-white px-3 py-1 text-xs font-medium text-[#5C6472] hover:border-[#2E5A88] hover:text-[#1B3B5F] transition-colors"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <a
+              href="/login"
+              className="rounded-full border border-[#D9CFB5] bg-white px-3 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88] transition-colors"
             >
-              Sign out
-            </button>
+              Log in
+            </a>
           )}
         </div>
       </div>

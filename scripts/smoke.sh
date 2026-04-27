@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Black-box smoke test for Alma. Hits ~15 critical endpoints and reports pass/fail.
+# Usage: bash scripts/smoke.sh [BASE_URL]
+#   BASE_URL defaults to https://www.alma.careers
+# Exits non-zero on any failure (suitable for CI).
+
+set -uo pipefail
+
+BASE="${1:-https://www.alma.careers}"
+UA="alma-smoke/1.0"
+PASS=0
+FAIL=0
+FAILED_TESTS=()
+
+run() {
+  local name="$1"
+  local result="$2"
+  if [ "$result" = "1" ]; then
+    PASS=$((PASS + 1))
+    printf "  \033[32m✓\033[0m %s\n" "$name"
+  else
+    FAIL=$((FAIL + 1))
+    FAILED_TESTS+=("$name")
+    printf "  \033[31m✗\033[0m %s\n" "$name"
+  fi
+}
+
+http_code() {
+  curl -sI -H "User-Agent: $UA" --max-redirs 0 "$1" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '\r'
+}
+
+http_redirect() {
+  curl -sI -H "User-Agent: $UA" --max-redirs 0 "$1" 2>/dev/null | grep -i "^location:" | awk '{print $2}' | tr -d '\r'
+}
+
+http_body() {
+  curl -s -H "User-Agent: $UA" "$1" 2>/dev/null
+}
+
+echo ""
+echo "smoke: $BASE"
+echo ""
+
+# 1. Public routes
+echo "[public routes]"
+for p in /demo /login /coming-soon /privacy /terms /forgot-password /reset-password; do
+  CODE=$(http_code "$BASE$p")
+  if [ "$CODE" = "200" ]; then run "$p returns 200" 1; else run "$p returns 200 (got $CODE)" 0; fi
+done
+
+# 2. Root redirect to /demo
+echo ""
+echo "[gate]"
+LOC=$(http_redirect "$BASE/")
+if [ "$LOC" = "/demo" ]; then run "/ redirects unauth'd to /demo" 1; else run "/ redirects to /demo (got $LOC)" 0; fi
+
+# 3. Gated routes redirect to /demo
+for p in /today /setup /agents /account /account/privacy; do
+  LOC=$(http_redirect "$BASE$p")
+  if [ "$LOC" = "/demo" ]; then run "$p gated -> /demo" 1; else run "$p gated -> /demo (got $LOC)" 0; fi
+done
+
+# 4. Public APIs respond with valid JSON
+echo ""
+echo "[public APIs]"
+
+FIRMS=$(http_body "$BASE/api/setup/firms")
+COUNT=$(echo "$FIRMS" | python3 -c "import json,sys;d=json.load(sys.stdin);print(len(d.get('firms',[])))" 2>/dev/null)
+if [ -n "$COUNT" ] && [ "$COUNT" -ge 20 ]; then run "/api/setup/firms returns >=20 firms ($COUNT)" 1; else run "/api/setup/firms (got $COUNT)" 0; fi
+
+# 5. /api/parse-resume — guest endpoint, no auth needed
+PARSE=$(curl -s -X POST -H "User-Agent: $UA" -H "Content-Type: application/json" \
+  -d '{"resumeText":"Test User\nRice University\nB.S. Economics 2028","university":"Rice University"}' \
+  --max-time 25 "$BASE/api/parse-resume" 2>/dev/null)
+PARSED_NAME=$(echo "$PARSE" | python3 -c "import json,sys;print(json.load(sys.stdin).get('profile',{}).get('name',''))" 2>/dev/null)
+if [ -n "$PARSED_NAME" ]; then run "/api/parse-resume returns parsed profile" 1; else run "/api/parse-resume failed" 0; fi
+
+# 6. /api/pilot-signup — accepts unique email
+EMAIL="smoke-$(date +%s)-$RANDOM@example.com"
+SIGNUP=$(curl -s -X POST -H "User-Agent: $UA" -H "Content-Type: application/json" \
+  -d "{\"email\":\"$EMAIL\"}" "$BASE/api/pilot-signup" 2>/dev/null)
+SUCCESS=$(echo "$SIGNUP" | python3 -c "import json,sys;print(json.load(sys.stdin).get('success',False))" 2>/dev/null)
+if [ "$SUCCESS" = "True" ]; then run "/api/pilot-signup accepts new email" 1; else run "/api/pilot-signup failed" 0; fi
+
+# 7. Cron auth: rejects without secret
+echo ""
+echo "[cron auth]"
+UNAUTH_CRON=$(curl -s -X POST "$BASE/api/cron/sentinel" 2>/dev/null)
+if echo "$UNAUTH_CRON" | grep -q "unauthorized"; then run "/api/cron/sentinel rejects without secret" 1; else run "/api/cron/sentinel rejection" 0; fi
+
+# 8. Cron with secret returns valid output (only run if env has secret)
+if [ -n "${ALMA_CRON_SECRET:-}" ]; then
+  AUTH_CRON=$(curl -s -X POST -H "User-Agent: $UA" -H "Authorization: Bearer $ALMA_CRON_SECRET" "$BASE/api/cron/sentinel" --max-time 60 2>/dev/null)
+  if echo "$AUTH_CRON" | grep -q "alertsSent"; then run "/api/cron/sentinel runs with secret" 1; else run "/api/cron/sentinel auth failed" 0; fi
+fi
+
+# 9. Authenticated routes return 403 without auth (gate caught them with redirect — confirm API also)
+echo ""
+echo "[auth-gated APIs]"
+for p in /api/today /api/agents/runs /api/account/activity; do
+  CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: $UA" "$BASE$p" 2>/dev/null)
+  if [ "$CODE" = "307" ] || [ "$CODE" = "403" ] || [ "$CODE" = "401" ]; then run "$p denies unauth'd ($CODE)" 1; else run "$p denies unauth'd (got $CODE)" 0; fi
+done
+
+# Summary
+echo ""
+echo "──────────────────────────────"
+echo "  $PASS pass · $FAIL fail · $((PASS + FAIL)) total"
+if [ $FAIL -gt 0 ]; then
+  echo ""
+  echo "  Failures:"
+  for t in "${FAILED_TESTS[@]}"; do echo "    - $t"; done
+  echo ""
+  exit 1
+fi
+echo ""
+exit 0
