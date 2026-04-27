@@ -131,17 +131,36 @@ export default function NetworkPage() {
         </p>
 
         {bankers.length === 0 ? (
-          <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
-            <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">No crossings yet.</p>
-            <p className="text-sm text-[#14182A]/70 mb-5">
-              Run Alma from <a href="/today" className="underline text-[#2E5A88]">Today</a> to draft your first outreach. Every banker you contact lands here.
-            </p>
-            <a
-              href="/today"
-              className="inline-block rounded-xl bg-[#2E5A88] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
-            >
-              Go to Today
-            </a>
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-white p-8 border border-[#D9CFB5] text-center">
+              <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">No crossings yet.</p>
+              <p className="text-sm text-[#14182A]/70 mb-5">
+                Run Alma from <a href="/today" className="underline text-[#2E5A88]">Today</a> to draft your first outreach. Every banker you contact lands here.
+              </p>
+              <a
+                href="/today"
+                className="inline-block rounded-xl bg-[#2E5A88] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
+              >
+                Go to Today
+              </a>
+            </div>
+
+            {/* Sample preview — what your archipelago will look like once you start */}
+            <div className="opacity-60">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#14182A]/50 font-semibold mb-2 text-center">
+                Preview · Your firms once Alma starts working
+              </p>
+              <div className="space-y-3">
+                <SampleFirmCard firm="Goldman Sachs" bankers={[
+                  { name: "Sample banker, Analyst", stage: "draft" },
+                  { name: "Sample banker, Associate", stage: "sent" },
+                ]} />
+                <SampleFirmCard firm="Morgan Stanley" bankers={[
+                  { name: "Sample banker, VP", stage: "replied" },
+                  { name: "Sample banker, Analyst", stage: "coffee" },
+                ]} />
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -175,6 +194,27 @@ export default function NetworkPage() {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SampleFirmCard({ firm, bankers }: { firm: string; bankers: Array<{ name: string; stage: Stage }> }) {
+  return (
+    <div className="rounded-2xl bg-white border border-[#D9CFB5] border-dashed p-5">
+      <div className="flex items-baseline justify-between mb-3">
+        <p className="font-[family-name:var(--font-fraunces)] text-lg">{firm}</p>
+        <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50">{bankers.length} bankers</p>
+      </div>
+      <div className="space-y-2">
+        {bankers.map((b, i) => (
+          <div key={i} className="flex items-start justify-between gap-3 py-1.5">
+            <p className="text-sm text-[#14182A]/60 italic">{b.name}</p>
+            <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${STAGE_COLOR[b.stage]}`}>
+              {STAGE_LABEL[b.stage]}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

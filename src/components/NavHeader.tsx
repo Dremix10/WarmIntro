@@ -6,9 +6,7 @@ import { useAppState } from "@/components/AppProvider";
 const NAV_ITEMS = [
   { path: "/today", label: "Today" },
   { path: "/network", label: "Network" },
-  { path: "/pipeline", label: "Pipeline" },
   { path: "/crm", label: "CRM" },
-  { path: "/agents", label: "Agents" },
 ];
 
 const HIDE_NAV_ROUTES = [

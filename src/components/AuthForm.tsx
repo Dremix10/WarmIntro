@@ -34,6 +34,10 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
         setLoading(false);
         return;
       }
+      // Wipe any per-tab onboarding state from a previous user — without this,
+      // /setup hydrates the new account with the previous account's resume +
+      // firm picks (cross-account bleed via sessionStorage).
+      try { sessionStorage.removeItem("alma-setup-progress-v1"); } catch {}
       const { error: err } = await supabase.auth.signUp({ email, password });
       if (err) { setError(err.message); setLoading(false); return; }
       track("signup", { method: "email" });

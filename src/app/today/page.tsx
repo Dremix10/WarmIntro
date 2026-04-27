@@ -15,7 +15,7 @@ interface DraftWithBanker {
   status: "pending_critic" | "needs_revision" | "approved" | "rejected_unresolvable" | "sent" | "skipped" | "edited_by_user";
   iteration_count: number;
   scheduled_send_at: string | null;
-  bankers: { name: string; title: string; firms: { name: string } | null } | null;
+  bankers: { name: string; title: string; email: string | null; firms: { name: string } | null } | null;
 }
 
 interface TrustState {
@@ -74,9 +74,12 @@ export default function TodayPage() {
     // refetch and flash the loading state every time the tab regains focus.
   }, [session?.user?.id, authLoading]);
 
-  async function load() {
+  async function load(opts: { silent?: boolean } = {}) {
     if (!session) return;
-    setLoading(true);
+    // Skeleton flash only on the very first load. Subsequent refreshes
+    // (after run-now finishes, after approve/send) keep the existing UI
+    // visible and just swap data underneath — much smoother.
+    if (!opts.silent) setLoading(true);
     try {
       const { data: { session: s } } = await supabase.auth.getSession();
       const res = await fetch("/api/today", {
@@ -94,11 +97,11 @@ export default function TodayPage() {
     } catch (err) {
       setError(String(err));
     } finally {
-      setLoading(false);
+      if (!opts.silent) setLoading(false);
     }
   }
 
-  async function act(draftId: string, action: "approve" | "skip" | "send" | "stop", payload?: Record<string, unknown>) {
+  async function act(draftId: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>) {
     const { data: { session: s } } = await supabase.auth.getSession();
     await fetch(`/api/drafts/${draftId}/${action}`, {
       method: "POST",
@@ -108,7 +111,7 @@ export default function TodayPage() {
       },
       body: payload ? JSON.stringify(payload) : undefined,
     });
-    await load();
+    await load({ silent: true });
   }
 
   async function updateTrust(field: keyof TrustState, value: string | boolean): Promise<void> {
@@ -124,7 +127,7 @@ export default function TodayPage() {
       headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    await load();
+    await load({ silent: true });
   }
 
   if (authLoading || loading) {
@@ -156,7 +159,7 @@ export default function TodayPage() {
             </p>
           </div>
 
-          <RunAlmaNowButton onDone={load} />
+          <RunAlmaNowButton onDone={() => load({ silent: true })} />
         </div>
 
         {/* Gmail-required banner — drafts can't send without Gmail. Show this
@@ -287,11 +290,14 @@ export default function TodayPage() {
           </div>
         )}
 
-        {/* Recent activity */}
+        {/* Recent activity — collapsed by default; the queue is the focus. */}
         {data.recent.length > 0 && (
-          <div className="mt-8 rounded-2xl bg-white/60 p-5 border border-[#D9CFB5]">
-            <p className="text-xs uppercase tracking-wider text-[#14182A]/50 font-semibold mb-3">Recent</p>
-            <div className="space-y-1 text-xs text-[#14182A]/70">
+          <details className="mt-8 rounded-2xl bg-white/60 p-5 border border-[#D9CFB5] group">
+            <summary className="cursor-pointer flex items-center justify-between text-xs uppercase tracking-wider text-[#14182A]/50 font-semibold list-none">
+              <span>Recent activity ({data.recent.length})</span>
+              <span className="text-[#14182A]/40 group-open:rotate-180 transition-transform">▾</span>
+            </summary>
+            <div className="space-y-1 text-xs text-[#14182A]/70 mt-3">
               {data.recent.slice(0, 10).map((r, i) => (
                 <div key={i} className="flex justify-between gap-4">
                   <span className="truncate">{r.signal_type.replaceAll("_", " ")}</span>
@@ -299,7 +305,7 @@ export default function TodayPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </details>
         )}
       </div>
     </div>
@@ -313,7 +319,7 @@ function DraftCard({
   needsGmail,
 }: {
   draft: DraftWithBanker;
-  onAction: (id: string, action: "approve" | "skip" | "send" | "stop", payload?: Record<string, unknown>) => Promise<void>;
+  onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>) => Promise<void>;
   trustLevel: "C" | "B" | "A";
   needsGmail: boolean;
 }) {
@@ -355,20 +361,59 @@ function DraftCard({
       </button>
       {expanded && (
         <div className="p-4 border-t border-[#D9CFB5]">
+          {/* Recipient line — copyable so user can paste into their own client */}
+          {banker?.email && (
+            <div className="mb-3 flex items-center gap-2 text-xs text-[#14182A]/70">
+              <span className="text-[10px] uppercase tracking-wider text-[#14182A]/45">To:</span>
+              <code className="font-mono">{banker.email}</code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(banker.email ?? "")}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-[#EAE3D2] text-[#14182A]/60 hover:bg-[#D9CFB5]"
+                title="Copy address"
+              >
+                copy
+              </button>
+            </div>
+          )}
           <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[#14182A]/80">{draft.body}</pre>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             {draft.status === "approved" ? (
               <>
+                {/* Always-available manual path: copy the email + mark sent.
+                    Works without Gmail OAuth (Rice users, off-domain testers). */}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const text = `Subject: ${draft.subject ?? ""}\n\n${draft.body}`;
+                    await navigator.clipboard.writeText(text);
+                  }}
+                  className="rounded-lg border border-[#2E5A88] text-[#2E5A88] px-4 py-2 text-sm font-medium hover:bg-[#2E5A88]/10 transition-colors"
+                >
+                  Copy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("Mark as sent? This advances the pipeline as if you'd sent it.")) {
+                      onAction(draft.id, "mark_sent");
+                    }
+                  }}
+                  className="rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
+                >
+                  I sent it
+                </button>
+                {/* Auto-send via Gmail OAuth — only useful if Gmail is wired up */}
                 <button
                   type="button"
                   onClick={() => onAction(draft.id, "send")}
                   disabled={needsGmail}
-                  title={needsGmail ? "Connect Gmail to enable sending" : undefined}
-                  className="flex-1 rounded-lg bg-[#2E5A88] text-white py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:bg-[#5C6472] disabled:cursor-not-allowed"
+                  title={needsGmail ? "Connect Gmail to enable auto-send" : undefined}
+                  className="flex-1 min-w-[140px] rounded-lg bg-[#2E5A88] text-white py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:bg-[#5C6472] disabled:cursor-not-allowed"
                 >
-                  {needsGmail ? "Connect Gmail to send" : "Send now"}
+                  {needsGmail ? "Auto-send (needs Gmail)" : "Auto-send via Gmail"}
                 </button>
-                {draft.scheduled_send_at && (
+                {draft.scheduled_send_at && !needsGmail && (
                   <button
                     type="button"
                     onClick={() => onAction(draft.id, "stop")}
@@ -392,7 +437,7 @@ function DraftCard({
                   onClick={() => onAction(draft.id, "approve")}
                   className="flex-1 rounded-lg bg-[#2E5A88] text-white py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
                 >
-                  {trustLevel === "C" ? "Approve + save to Gmail" : trustLevel === "B" ? "Approve (sends in 30 min)" : "Approve + send"}
+                  {trustLevel === "C" ? "Looks good — make it ready" : trustLevel === "B" ? "Approve (sends in 30 min)" : "Approve + send"}
                 </button>
                 <button
                   type="button"

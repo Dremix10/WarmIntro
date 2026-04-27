@@ -53,6 +53,10 @@ export default function SetupPage() {
 const SETUP_STORAGE_KEY = "alma-setup-progress-v1";
 
 interface PersistedSetupState {
+  // Stamped with the user_id that wrote it. If the current session belongs to
+  // a different user, we ignore the persisted state — defense against stale
+  // sessionStorage bleeding from the previous account on the same browser.
+  userId?: string;
   step: Step;
   resumeText: string;
   fileName: string | null;
@@ -64,11 +68,17 @@ interface PersistedSetupState {
   preferredTime: string;
 }
 
-function loadPersisted(): PersistedSetupState | null {
+function loadPersisted(currentUserId: string | undefined): PersistedSetupState | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(SETUP_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as PersistedSetupState) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedSetupState;
+    if (parsed.userId && currentUserId && parsed.userId !== currentUserId) {
+      sessionStorage.removeItem(SETUP_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -78,7 +88,7 @@ function SetupInner() {
   const { session, authLoading, profile } = useAppState();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const persisted = typeof window !== "undefined" ? loadPersisted() : null;
+  const persisted = typeof window !== "undefined" ? loadPersisted(session?.user.id) : null;
   const [step, setStep] = useState<Step>(persisted?.step ?? "upload");
   const [resumeText, setResumeText] = useState(persisted?.resumeText ?? "");
   const [fileName, setFileName] = useState<string | null>(persisted?.fileName ?? null);
@@ -90,7 +100,9 @@ function SetupInner() {
   const [story, setStory] = useState(persisted?.story ?? "");
   const [trust, setTrust] = useState<Trust>(persisted?.trust ?? "C");
   const [preferredTime, setPreferredTime] = useState(persisted?.preferredTime ?? "07:00");
-  const [gmailConnected, setGmailConnected] = useState(false);
+  // 'unknown' on first render until checkGmail() resolves — avoids a flash of
+  // "Gmail not connected" on every refresh for users who already connected.
+  const [gmailConnected, setGmailConnected] = useState<boolean | "unknown">("unknown");
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   const [gmailPending, setGmailPending] = useState(false);
   const [bankInfo, setBankInfo] = useState<Firm | null>(null);
@@ -103,6 +115,7 @@ function SetupInner() {
     if (typeof window === "undefined") return;
     try {
       const state: PersistedSetupState = {
+        userId: session?.user.id,
         step,
         resumeText,
         fileName,
@@ -117,7 +130,7 @@ function SetupInner() {
     } catch {
       // sessionStorage full or blocked — silently skip
     }
-  }, [step, resumeText, fileName, parsed, targetFirms, targetGroups, story, trust, preferredTime]);
+  }, [session?.user.id, step, resumeText, fileName, parsed, targetFirms, targetGroups, story, trust, preferredTime]);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -154,7 +167,7 @@ function SetupInner() {
   // If user connects Gmail from the "Almost there" success screen, bounce
   // them to /today now that the launch gate is met.
   useEffect(() => {
-    if (step === "done" && gmailConnected) {
+    if (step === "done" && gmailConnected === true) {
       const id = setTimeout(() => router.push("/today"), 1500);
       return () => clearTimeout(id);
     }
@@ -284,6 +297,8 @@ function SetupInner() {
     if (data?.gmail_connected_at) {
       setGmailConnected(true);
       if (data.gmail_email) setGmailEmail(data.gmail_email);
+    } else {
+      setGmailConnected(false);
     }
   }
 
@@ -454,7 +469,7 @@ function SetupInner() {
     // Only auto-bounce to /today if Gmail is connected — otherwise the "done"
     // screen has a Connect Gmail call-to-action and we want the user to stay
     // until they finish that.
-    if (gmailConnected) {
+    if (gmailConnected === true) {
       setTimeout(() => router.push("/today"), 1800);
     }
   }
@@ -480,19 +495,29 @@ function SetupInner() {
         {/* Persistent Gmail status — visible on every step so users can connect
             Gmail any time, not just from step 1. */}
         <div className={`mb-6 rounded-xl border px-4 py-2.5 flex items-center justify-between gap-3 text-sm ${
-          gmailConnected
+          gmailConnected === true
             ? "bg-[#2E5A88]/5 border-[#2E5A88]/20"
-            : "bg-[#C86B4F]/5 border-[#C86B4F]/20"
+            : gmailConnected === false
+              ? "bg-[#C86B4F]/5 border-[#C86B4F]/20"
+              : "bg-white border-[#D9CFB5]"
         }`}>
           <div className="flex-1">
-            <p className={`font-medium ${gmailConnected ? "text-[#2E5A88]" : "text-[#14182A]"}`}>
-              {gmailConnected ? `Gmail: connected${gmailEmail ? ` as ${gmailEmail}` : ""}` : "Gmail: not connected"}
+            <p className={`font-medium ${
+              gmailConnected === true ? "text-[#2E5A88]"
+                : gmailConnected === false ? "text-[#14182A]"
+                : "text-[#14182A]/50"
+            }`}>
+              {gmailConnected === true
+                ? `Gmail: connected${gmailEmail ? ` as ${gmailEmail}` : ""}`
+                : gmailConnected === false
+                  ? "Gmail: not connected"
+                  : "Gmail: checking…"}
             </p>
-            {!gmailConnected && (
+            {gmailConnected === false && (
               <p className="text-xs text-[#14182A]/60 mt-0.5">Required for Alma to send. Opens in a new tab.</p>
             )}
           </div>
-          {!gmailConnected && (
+          {gmailConnected === false && (
             <button
               type="button"
               onClick={connectGmail}
@@ -744,14 +769,14 @@ function SetupInner() {
           </div>
         )}
 
-        {step === "done" && gmailConnected && (
+        {step === "done" && gmailConnected === true && (
           <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-3xl mb-2">You&apos;re set.</p>
             <p className="text-sm text-[#14182A]/70 italic">I&apos;ll line up your first drafts for {preferredTime} tomorrow.</p>
           </div>
         )}
 
-        {step === "done" && !gmailConnected && (
+        {step === "done" && gmailConnected === false && (
           <div className="rounded-2xl bg-white p-8 border-2 border-[#C86B4F]/30 text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-3xl mb-2">Almost there.</p>
             <p className="text-sm text-[#14182A]/70 mb-1">Profile saved. Alma can&apos;t draft outreach until Gmail is connected — that&apos;s the mailbox the messages send from.</p>

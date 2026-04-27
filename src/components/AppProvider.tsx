@@ -139,6 +139,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    // Clear per-tab onboarding state so the next user on this browser doesn't
+    // get hydrated with the previous user's resume / firms / story.
+    try {
+      sessionStorage.removeItem("alma-setup-progress-v1");
+    } catch {
+      // sessionStorage blocked — best-effort.
+    }
     setSession(null);
     setProfileState(null);
     setSelectedCompaniesState([]);
