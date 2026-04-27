@@ -98,6 +98,7 @@ function SetupInner() {
   const [trust, setTrust] = useState<Trust>(persisted?.trust ?? "C");
   const [preferredTime, setPreferredTime] = useState(persisted?.preferredTime ?? "07:00");
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,31 +165,38 @@ function SetupInner() {
     try {
       const { data } = await supabase
         .from("profiles")
-        .select("target_firms, target_groups, story_one_liner")
+        .select("name, email, university, major, graduation_year, target_firms, target_groups, story_one_liner, resume_text")
         .eq("id", session.user.id)
         .maybeSingle();
       if (!data) return;
+
       const tf: string[] = (data.target_firms ?? []) as string[];
       const tg: string[] = (data.target_groups ?? []) as string[];
       if (tf.length > 0) setTargetFirms(new Set(tf));
       if (tg.length > 0) setTargetGroups(new Set(tg));
       if (data.story_one_liner) setStory(data.story_one_liner);
-      // If the user has full picks already, skip them past the upload step
-      if (tf.length > 0 && parsed === null && !persisted) {
-        // Build a synthetic parsed object from profile so step 2 has data to render
-        if (profile) {
-          setParsed({
-            name: profile.name,
-            email: profile.email,
-            university: profile.university,
-            major: profile.major,
-            graduationYear: profile.graduationYear,
-          });
-        }
+
+      // If we have a saved resume, restore it so the user doesn't have to re-upload
+      if (data.resume_text && data.resume_text.trim() && !resumeText.trim()) {
+        setResumeText(data.resume_text);
+        setFileName("Saved resume");
+      }
+
+      // If we have a profile + picks already, jump to step 2 (or whichever later step)
+      // and synthesize a parsed object so the picker can render.
+      if ((tf.length > 0 || data.story_one_liner) && !persisted) {
+        setParsed({
+          name: data.name ?? "Student",
+          email: data.email ?? undefined,
+          university: data.university ?? "Rice University",
+          major: data.major ?? "Undeclared",
+          graduationYear: data.graduation_year ?? new Date().getFullYear() + 3,
+          storyOneLiner: data.story_one_liner ?? undefined,
+        });
         setStep("confirm");
       }
     } catch {
-      // ignore
+      // ignore — fresh users continue with step 1
     }
   }
 
@@ -216,8 +224,11 @@ function SetupInner() {
 
   async function checkGmail() {
     if (!session) return;
-    const { data } = await supabase.from("profiles").select("gmail_connected_at").eq("id", session.user.id).maybeSingle();
-    if (data?.gmail_connected_at) setGmailConnected(true);
+    const { data } = await supabase.from("profiles").select("gmail_connected_at, gmail_email").eq("id", session.user.id).maybeSingle();
+    if (data?.gmail_connected_at) {
+      setGmailConnected(true);
+      if (data.gmail_email) setGmailEmail(data.gmail_email);
+    }
   }
 
   async function handlePdf(file: File) {
@@ -309,6 +320,7 @@ function SetupInner() {
         targetFirms: Array.from(targetFirms),
         targetGroups: Array.from(targetGroups),
         storyOneLiner: story || parsed.storyOneLiner || undefined,
+        resumeText: resumeText || undefined,
       }),
     });
     if (!profileRes.ok) {
@@ -391,6 +403,11 @@ function SetupInner() {
               >
                 {uploading ? (
                   <p className="text-sm text-[#14182A]/70">Reading {fileName}...</p>
+                ) : fileName === "Saved resume" ? (
+                  <>
+                    <p className="text-sm text-[#2E5A88] font-medium">✓ Resume on file</p>
+                    <p className="text-xs text-[#14182A]/60 mt-1">Tap to upload a new one, or skip ahead.</p>
+                  </>
                 ) : fileName ? (
                   <p className="text-sm text-[#2E5A88] font-medium">{fileName}</p>
                 ) : (
@@ -402,13 +419,27 @@ function SetupInner() {
               </div>
 
               {error && <p className="mt-3 text-xs text-[#C86B4F]">{error}</p>}
+
+              {/* Skip-ahead button when user has saved resume */}
+              {fileName === "Saved resume" && resumeText.trim() && (
+                <button
+                  type="button"
+                  onClick={() => parsed ? setStep("confirm") : runParse(resumeText)}
+                  className="w-full mt-3 rounded-xl bg-[#1B3B5F] text-white py-3 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
+                >
+                  Continue with saved resume →
+                </button>
+              )}
             </div>
 
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">Connect Gmail</p>
               <p className="text-sm text-[#14182A]/70 mb-4">I&apos;ll draft and send from your real address. You always stay in control.</p>
               {gmailConnected ? (
-                <p className="text-sm text-[#2E5A88]">✓ Gmail connected</p>
+                <div>
+                  <p className="text-sm text-[#2E5A88] font-medium">✓ Gmail connected{gmailEmail ? ` as ${gmailEmail}` : ""}</p>
+                  <p className="text-xs text-[#14182A]/50 mt-1 italic">Manage in <a href="/account" className="underline hover:text-[#2E5A88]">/account</a></p>
+                </div>
               ) : (
                 <button
                   type="button"

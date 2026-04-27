@@ -14,6 +14,7 @@ interface SetupProfileRequest {
   major?: string;
   graduationYear?: number;
   university?: string;
+  resumeText?: string;
 }
 
 export async function POST(request: Request) {
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
   if (body.targetGroups) payload.target_groups = body.targetGroups;
   if (body.warmHints) payload.warm_hints = body.warmHints;
   if (body.storyOneLiner !== undefined) payload.story_one_liner = body.storyOneLiner;
+  if (body.resumeText !== undefined) payload.resume_text = body.resumeText;
 
   const { error } = await admin.from("profiles").upsert(payload as never, { onConflict: "id" });
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
+import { SkeletonToday } from "@/components/Skeleton";
 
 interface DraftWithBanker {
   id: string;
@@ -127,11 +128,7 @@ export default function TodayPage() {
   }
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2E5A88] border-t-transparent" />
-      </div>
-    );
+    return <SkeletonToday />;
   }
 
   if (error) {
@@ -145,7 +142,7 @@ export default function TodayPage() {
   const escalated = data.drafts.filter((d) => d.status === "rejected_unresolvable");
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A]">
+    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
         <div className="mb-8">

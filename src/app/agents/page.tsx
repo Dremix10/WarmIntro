@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
+import { SkeletonAgents } from "@/components/Skeleton";
 
 interface AgentRunRow {
   id: string;
@@ -71,15 +72,11 @@ export default function AgentsPage() {
   }
 
   if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2E5A88] border-t-transparent" />
-      </div>
-    );
+    return <SkeletonAgents />;
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A]">
+    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="max-w-4xl mx-auto px-6 py-10">
         <div className="mb-8">
           <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Behind the scenes</p>

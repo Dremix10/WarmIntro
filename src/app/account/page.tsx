@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
+import { SkeletonPage } from "@/components/Skeleton";
 
 interface ProfileSnapshot {
   name: string;
@@ -91,11 +92,11 @@ export default function AccountPage() {
   }
 
   if (authLoading || loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-3 border-[#2E5A88] border-t-transparent" /></div>;
+    return <SkeletonPage />;
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A]">
+    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="max-w-2xl mx-auto px-6 py-10">
         <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Account</p>
         <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-8">Your settings</h1>
