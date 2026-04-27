@@ -85,8 +85,11 @@ export async function parseResume(
   }
 
   const safeUniversity = sanitizeForPrompt(university, 200);
+  const universityHint = safeUniversity
+    ? `The student attends ${safeUniversity}.`
+    : `Extract the student's university directly from the resume text — it should be present. If you genuinely cannot tell, set university to "" and the user will edit it.`;
   const prompt = `Parse this resume and extract structured profile data.
-The student attends ${safeUniversity}.
+${universityHint}
 
 ${wrapUserData("resume", resumeText, 12000)}
 
@@ -127,7 +130,10 @@ Respond with ONLY valid JSON. No markdown, no code fences.`;
     return {
       name: parsed.name,
       email: email || parsed.email || undefined,
-      university,
+      // When no hint was passed, trust whatever the parser pulled out of the
+      // resume itself. Otherwise honor the hint (which came from the user's
+      // email domain).
+      university: university || parsed.university || "",
       graduationYear: parsed.graduationYear,
       major: parsed.major,
       skills: parsed.skills,

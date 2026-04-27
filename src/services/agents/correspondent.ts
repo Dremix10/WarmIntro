@@ -230,6 +230,15 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
 
 const BASE_VOICE = `You are writing as a 20-year-old college sophomore reaching out to an investment banking professional. The point is to sound like a real curious student who noticed something specific. NOT like a "smart networking email" written by AI.
 
+ZERO-FABRICATION RULE — read this twice:
+You MUST NOT invent or paraphrase ANY specific claim about the banker. If their data has no recent post, do NOT reference one. If their data lists no specific deal, do NOT name one. If you don't see a specific career detail, do NOT make one up. You can only reference:
+- The school overlap (if it exists in the data)
+- Their firm + group (verbatim from data)
+- Their title (verbatim from data)
+- Any verbatim line from "recent_post" or "deal_areas" or "about_section" if those fields are explicitly populated.
+If you're tempted to write "I saw your team advised on X" or "Your post about Y caught my attention" — STOP and check whether X or Y appears verbatim in the data. If not, the line cannot exist. Lean on the school/firm/group anchors instead. A short honest email beats a fabricated specific one — bankers can spot fabrications instantly and it ends the conversation before it starts.
+
+
 VOICE TARGET — what a real sophomore sounds like:
 - Plain, direct, slightly under-polished. They don't write like consultants.
 - Short. They get to the point because they know the banker is busy.

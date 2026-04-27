@@ -6,9 +6,9 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ParseResumeRequest;
 
-    if (!body.resumeText || !body.university) {
+    if (!body.resumeText) {
       return NextResponse.json(
-        { error: "resumeText and university are required" },
+        { error: "resumeText is required" },
         { status: 400 }
       );
     }
@@ -20,7 +20,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const profile = await parseResume(body.resumeText, body.university, body.email);
+    // university is a hint, not required — for @gmail.com or any non-school
+    // email, the parser extracts the school from the resume itself.
+    const profile = await parseResume(body.resumeText, body.university ?? "", body.email);
     const response: ParseResumeResponse = { profile };
 
     return NextResponse.json(response);
