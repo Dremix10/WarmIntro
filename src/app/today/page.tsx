@@ -145,14 +145,18 @@ export default function TodayPage() {
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
-        <div className="mb-8">
-          <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Today</p>
-          <h1 className="text-4xl font-[family-name:var(--font-fraunces)] font-medium">
-            Your queue
-          </h1>
-          <p className="mt-2 text-sm text-[#14182A]/70">
-            {approved.length} ready to send · {pending.length} in review · {escalated.length} need data
-          </p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Today</p>
+            <h1 className="text-4xl font-[family-name:var(--font-fraunces)] font-medium">
+              Your queue
+            </h1>
+            <p className="mt-2 text-sm text-[#14182A]/70">
+              {approved.length} ready to send · {pending.length} in review · {escalated.length} need data
+            </p>
+          </div>
+
+          <RunAlmaNowButton onDone={load} />
         </div>
 
         {/* Trust controls */}
@@ -371,6 +375,46 @@ function DraftCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
+  const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
+  return (
+    <div className="shrink-0 flex flex-col items-end">
+      <button
+        type="button"
+        disabled={state === "running"}
+        onClick={async () => {
+          setState("running");
+          try {
+            const { data: { session: s } } = await supabase.auth.getSession();
+            const res = await fetch("/api/planner/run-now", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+            });
+            const json = await res.json().catch(() => ({}));
+            if (json?.result?.needsSetup) {
+              window.location.href = "/setup";
+              return;
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            setState("done");
+            await onDone();
+            setTimeout(() => setState("idle"), 2500);
+          } catch {
+            setState("error");
+            setTimeout(() => setState("idle"), 2500);
+          }
+        }}
+        className="rounded-xl bg-[#2E5A88] text-white px-4 py-2 text-xs font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-60 whitespace-nowrap"
+      >
+        {state === "running" ? "Running…" : state === "done" ? "Done ✓" : state === "error" ? "Retry" : "Run Alma now"}
+      </button>
+      <p className="mt-1 text-[10px] text-[#14182A]/40 italic max-w-[140px] text-right leading-snug">
+        Researches + drafts. ~30s.
+      </p>
     </div>
   );
 }
