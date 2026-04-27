@@ -58,7 +58,7 @@ jobs:
           ALMA_CRON_SECRET: ${{ secrets.ALMA_CRON_SECRET }}
 
       - name: Run prod E2E user journey (white-box)
-        if: ${{ secrets.RUN_E2E_ON_PUSH != 'false' }}
+        if: ${{ vars.RUN_E2E_ON_PUSH != 'false' }}
         run: bash scripts/e2e-user-journey.sh
         env:
           BASE: https://www.alma.careers
