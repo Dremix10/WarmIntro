@@ -37,7 +37,8 @@ export default function ForgotPasswordPage() {
 
         {state === "sent" ? (
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center">
-            <p className="text-sm">Sent. Check your inbox for a link from Supabase Auth. If it doesn&apos;t arrive within a couple minutes, check spam — or ping us.</p>
+            <p className="text-sm">Reset link sent to <strong>{email}</strong>.</p>
+            <p className="text-xs text-[#14182A]/60 mt-2">If it&apos;s not in your inbox in a few minutes, check spam.</p>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="rounded-2xl bg-white p-6 border border-[#D9CFB5] space-y-3">

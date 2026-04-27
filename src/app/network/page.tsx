@@ -1,102 +1,181 @@
-import { Archipelago, StageGlyph } from "./_parts/Archipelago";
+"use client";
 
-const LEGEND = [
-  { stage: "sent" as const, label: "Call request sent", detail: "logs gathered" },
-  { stage: "replied" as const, label: "They replied", detail: "stones laid" },
-  { stage: "coffee" as const, label: "Coffee or call done", detail: "walls rising" },
-  { stage: "referral" as const, label: "They referred you", detail: "roof framed" },
-  { stage: "interview" as const, label: "In the interview process", detail: "a whitewashed home stands" },
-];
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAppState } from "@/components/AppProvider";
+import { supabase } from "@/lib/supabase-browser";
+import { SkeletonPage } from "@/components/Skeleton";
 
-export default function ArchipelagoTemplate() {
+// /network is the long-term home for the archipelago visualization. The
+// fancy SVG island view is in /design-lab/grove until it's wired up to real
+// data. For tonight, this page renders the user's actual outreach footprint
+// — bankers Alma has drafted to or made contact with, grouped by firm.
+
+type Stage = "draft" | "sent" | "replied" | "coffee" | "referral" | "first_round" | "superday" | "offer" | "closed_lost";
+
+interface NetworkBanker {
+  id: string;
+  name: string;
+  title: string | null;
+  firmName: string | null;
+  university: string | null;
+  stage: Stage;
+}
+
+const STAGE_LABEL: Record<Stage, string> = {
+  draft: "Draft prepared",
+  sent: "Email sent",
+  replied: "Replied",
+  coffee: "Coffee scheduled",
+  referral: "Referral",
+  first_round: "First round",
+  superday: "Superday",
+  offer: "Offer",
+  closed_lost: "Closed",
+};
+
+const STAGE_COLOR: Record<Stage, string> = {
+  draft: "bg-[#EAE3D2] text-[#14182A]/70",
+  sent: "bg-[#2E5A88]/15 text-[#2E5A88]",
+  replied: "bg-[#E8B339]/20 text-[#9A7110]",
+  coffee: "bg-[#E8B339]/30 text-[#9A7110]",
+  referral: "bg-[#C86B4F]/20 text-[#C86B4F]",
+  first_round: "bg-[#C86B4F]/30 text-[#C86B4F]",
+  superday: "bg-[#C86B4F]/40 text-[#C86B4F]",
+  offer: "bg-[#1B3B5F] text-white",
+  closed_lost: "bg-[#5C6472]/20 text-[#5C6472]",
+};
+
+export default function NetworkPage() {
+  const { session, authLoading } = useAppState();
+  const router = useRouter();
+  const [bankers, setBankers] = useState<NetworkBanker[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!authLoading && !session) { router.push("/login"); return; }
+    if (session) load();
+  }, [authLoading, session?.user?.id]);
+
+  async function load() {
+    if (!session) return;
+    setLoading(true);
+
+    // Connections (sent + further) live in the connections table
+    const { data: conns } = await supabase
+      .from("connections")
+      .select("banker_id, stage, bankers(id, name, title, university, firms(name))")
+      .eq("user_id", session.user.id);
+
+    // Drafts (not yet sent) live in drafts — we count these as "draft prepared"
+    const { data: drafts } = await supabase
+      .from("drafts")
+      .select("banker_id, bankers(id, name, title, university, firms(name))")
+      .eq("user_id", session.user.id)
+      .is("sent_at", null)
+      .in("status", ["pending_critic", "needs_revision", "approved"]);
+
+    type ConnRow = { banker_id: string; stage: string; bankers: { id: string; name: string; title: string | null; university: string | null; firms: { name: string } | null } | null };
+    type DraftRow = { banker_id: string; bankers: { id: string; name: string; title: string | null; university: string | null; firms: { name: string } | null } | null };
+
+    const seen = new Set<string>();
+    const out: NetworkBanker[] = [];
+
+    for (const c of (conns ?? []) as unknown as ConnRow[]) {
+      if (!c.bankers || seen.has(c.bankers.id)) continue;
+      seen.add(c.bankers.id);
+      out.push({
+        id: c.bankers.id,
+        name: c.bankers.name,
+        title: c.bankers.title,
+        firmName: c.bankers.firms?.name ?? null,
+        university: c.bankers.university,
+        stage: (c.stage as Stage) ?? "sent",
+      });
+    }
+    for (const d of (drafts ?? []) as unknown as DraftRow[]) {
+      if (!d.bankers || seen.has(d.bankers.id)) continue;
+      seen.add(d.bankers.id);
+      out.push({
+        id: d.bankers.id,
+        name: d.bankers.name,
+        title: d.bankers.title,
+        firmName: d.bankers.firms?.name ?? null,
+        university: d.bankers.university,
+        stage: "draft",
+      });
+    }
+
+    setBankers(out);
+    setLoading(false);
+  }
+
+  if (authLoading || loading) return <SkeletonPage />;
+
+  // Group by firm
+  const byFirm = new Map<string, NetworkBanker[]>();
+  for (const b of bankers) {
+    const key = b.firmName ?? "Unknown";
+    if (!byFirm.has(key)) byFirm.set(key, []);
+    byFirm.get(key)!.push(b);
+  }
+  const firms = [...byFirm.entries()].sort(([a], [b]) => a.localeCompare(b));
+
   return (
-    <div className="bg-gradient-to-b from-[#F2ECDB] via-[#EAE3D2] to-[#E4DAC2] text-[#14182A]">
-      <div className="mx-auto max-w-5xl px-6 pt-8 pb-16">
-        <div className="mt-4 mb-6 rounded-xl border-2 border-[#C86B4F]/30 bg-[#C86B4F]/5 px-4 py-3 text-center text-sm">
-          <p className="font-medium text-[#14182A]">Preview — visualization only.</p>
-          <p className="text-xs text-[#14182A]/60 mt-0.5">
-            Names + stages below are mock data. Live wire-up to your real connections is post-launch.
-            See <a href="/pipeline" className="underline text-[#2E5A88]">your pipeline</a> for actual progress.
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
+      <div className="mx-auto max-w-3xl px-6 py-10">
+        <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Network</p>
+        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Your archipelago</h1>
+        <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] mb-8">
+          Every banker Alma has drafted to or contacted on your behalf, grouped by firm. The fancy island visualization is coming — for now this is the source of truth.
+        </p>
 
-        <div className="mt-12 text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">Your archipelago</p>
-          <h1 className="mx-auto mt-4 max-w-2xl text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
-            <span className="italic text-[#2E5A88]">Twelve crossings</span>, so far.
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-[#4A5260]">
-            <span className="italic">Alma</span> means leap. Every banker on this map is a crossing
-            you made. On each bank you&rsquo;re building a home, stone by stone — logs, foundation,
-            walls, roof, and finally a whitewashed home standing against the sea.
-          </p>
-        </div>
-
-        <div className="mt-10 overflow-hidden rounded-3xl border border-[#D9CFB5] bg-white shadow-sm">
-          <Archipelago />
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-[#D9CFB5] bg-white p-5">
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">
-            What you build when things grow
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {LEGEND.map((item) => (
-              <div key={item.stage} className="flex items-center gap-3">
-                <svg viewBox="-14 -14 28 28" className="h-9 w-9 shrink-0">
-                  <StageGlyph stage={item.stage} />
-                </svg>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#14182A]">{item.label}</p>
-                  <p className="text-[11px] text-[#5C6472] italic font-[family-name:var(--font-fraunces)]">
-                    {item.detail}
+        {bankers.length === 0 ? (
+          <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
+            <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">No crossings yet.</p>
+            <p className="text-sm text-[#14182A]/70 mb-5">
+              Run Alma from <a href="/today" className="underline text-[#2E5A88]">Today</a> to draft your first outreach. Every banker you contact lands here.
+            </p>
+            <a
+              href="/today"
+              className="inline-block rounded-xl bg-[#2E5A88] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
+            >
+              Go to Today
+            </a>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-xs text-[#14182A]/60">
+              {bankers.length} {bankers.length === 1 ? "banker" : "bankers"} across {firms.length} {firms.length === 1 ? "firm" : "firms"}
+            </p>
+            {firms.map(([firmName, firmBankers]) => (
+              <div key={firmName} className="rounded-2xl bg-white border border-[#D9CFB5] p-5">
+                <div className="flex items-baseline justify-between mb-3">
+                  <p className="font-[family-name:var(--font-fraunces)] text-lg">{firmName}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50">
+                    {firmBankers.length} {firmBankers.length === 1 ? "banker" : "bankers"}
                   </p>
+                </div>
+                <div className="space-y-2">
+                  {firmBankers.map((b) => (
+                    <div key={b.id} className="flex items-start justify-between gap-3 py-1.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{b.name}</p>
+                        <p className="text-xs text-[#14182A]/60">
+                          {b.title ?? ""}{b.university ? ` · ${b.university}` : ""}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${STAGE_COLOR[b.stage]}`}>
+                        {STAGE_LABEL[b.stage]}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <InsightCard label="Largest island" value="Morgan Stanley" detail="4 bankers · foundations poured, walls up" />
-          <InsightCard label="Longest leap" value="Centerview" detail="Priya &middot; stones freshly laid" />
-          <InsightCard label="Closest to home" value="Evercore" detail="Leila &middot; in the interview process" />
-        </div>
-
-        <p className="mx-auto mt-12 max-w-md text-center text-sm font-[family-name:var(--font-fraunces)] italic text-[#5C6472]">
-          “A home isn’t built in a day — neither is a network.”
-          <br />
-          <span className="text-[11px] not-italic">— Alma</span>
-        </p>
+        )}
       </div>
-    </div>
-  );
-}
-
-function Header() {
-  return (
-    <header className="flex items-center justify-between">
-      <p className="text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">alma</p>
-      <nav className="flex items-center gap-6 text-sm text-[#5C6472]">
-        <span>Pipeline</span>
-        <span>Companies</span>
-        <span>CRM</span>
-        <span>Leaderboard</span>
-        
-      </nav>
-    </header>
-  );
-}
-
-function InsightCard({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return (
-    <div className="rounded-2xl border border-[#D9CFB5] bg-white p-5">
-      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">{label}</p>
-      <p className="mt-2 text-lg font-[family-name:var(--font-fraunces)] text-[#14182A]">{value}</p>
-      <p
-        className="mt-0.5 text-xs text-[#5C6472]"
-        dangerouslySetInnerHTML={{ __html: detail }}
-      />
     </div>
   );
 }

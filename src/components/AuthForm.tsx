@@ -18,8 +18,19 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
 
     if (mode === "signup") {
       const lower = email.toLowerCase().trim();
-      if (!lower.endsWith("@rice.edu") && !lower.endsWith("@brown.edu")) {
-        setError("Early access is limited to @rice.edu and @brown.edu emails");
+      // Default: @rice.edu and @brown.edu. Off-domain testers (founders' personal
+      // accounts, design partners) are listed in NEXT_PUBLIC_OFF_DOMAIN_TESTERS
+      // so the client check stays in sync with the server-side gate in proxy.ts.
+      const offDomain = (process.env.NEXT_PUBLIC_OFF_DOMAIN_TESTERS ?? "")
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+      const allowed =
+        lower.endsWith("@rice.edu") ||
+        lower.endsWith("@brown.edu") ||
+        offDomain.includes(lower);
+      if (!allowed) {
+        setError("Early access is limited to @rice.edu and @brown.edu (or an invited tester email)");
         setLoading(false);
         return;
       }

@@ -320,15 +320,35 @@ function DraftCard({
   const [expanded, setExpanded] = useState(false);
   const banker = draft.bankers;
 
+  // Visual treatment changes by status so the user knows at a glance whether
+  // a draft is ready to send vs still in review.
+  const isApproved = draft.status === "approved";
+  const isInReview = draft.status === "pending_critic" || draft.status === "needs_revision";
+  const cardClass = isApproved
+    ? "rounded-2xl bg-white border-2 border-[#2E5A88] overflow-hidden shadow-sm"
+    : "rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden";
+
   return (
-    <div className="rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden">
+    <div className={cardClass}>
       <button type="button" onClick={() => setExpanded(!expanded)} className="w-full text-left p-4 hover:bg-[#EAE3D2]/30 transition-colors">
         <div className="flex items-start justify-between gap-3 mb-1">
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="font-medium text-sm">{banker?.name ?? "Unknown banker"}</p>
             <p className="text-xs text-[#14182A]/60">{banker?.title ?? ""}{banker?.firms?.name ? ` · ${banker.firms.name}` : ""}</p>
           </div>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-[#EAE3D2] text-[#14182A]/70 shrink-0">{TYPE_LABEL[draft.type]}</span>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            {isApproved && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#2E5A88] text-white font-semibold uppercase tracking-wider">
+                {needsGmail ? "Ready · needs Gmail" : "Ready to send"}
+              </span>
+            )}
+            {isInReview && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E8B339]/20 text-[#9A7110] font-semibold uppercase tracking-wider">
+                In review
+              </span>
+            )}
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EAE3D2] text-[#14182A]/60">{TYPE_LABEL[draft.type]}</span>
+          </div>
         </div>
         {draft.subject && <p className="text-sm italic text-[#14182A]/70 mt-2 font-[family-name:var(--font-fraunces)]">{draft.subject}</p>}
         {!expanded && <p className="text-xs text-[#14182A]/60 mt-2 line-clamp-2">{draft.body}</p>}
@@ -441,14 +461,14 @@ function GmailRequiredBanner() {
   );
 }
 
-// Progressive copy approximating Planner stages.  Real run-now is sequential
-// (Researcher → Correspondent → Critic per banker), so the timing is rough
-// but representative.
+// User-facing copy for run-now stages. Avoid exposing the internal agent
+// architecture (Researcher / Correspondent / Critic) — that's IP. Just say
+// what the user gets at each beat.
 const RUN_STAGES: Array<{ text: string; sub: string; afterMs: number }> = [
-  { text: "Finding alumni at your target firms…", sub: "Ranking by warmth (school, group, role).", afterMs: 0 },
-  { text: "Drafting personalized outreach…", sub: "Writing in your voice. No clichés, no em-dashes.", afterMs: 8000 },
-  { text: "Critic reviewing for tone + accuracy…", sub: "Rejecting anything generic. Up to 3 rewrite rounds.", afterMs: 22000 },
-  { text: "Almost there…", sub: "Saving drafts to your queue.", afterMs: 38000 },
+  { text: "Finding the right alumni…", sub: "At your target firms. Ranking by school, group, and role.", afterMs: 0 },
+  { text: "Writing a personal email…", sub: "In your voice. Pulling real common ground.", afterMs: 8000 },
+  { text: "Polishing it…", sub: "Tightening tone. Cutting anything that sounds generic.", afterMs: 22000 },
+  { text: "Almost there…", sub: "Adding it to your queue below.", afterMs: 38000 },
 ];
 
 function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
@@ -513,14 +533,14 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
       )}
       {state === "idle" && hovered && (
         <div className="absolute top-[calc(100%+6px)] right-0 z-20 w-72 rounded-xl bg-white border border-[#D9CFB5] shadow-lg p-4 text-left">
-          <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-2">What happens</p>
-          <ol className="space-y-2 text-xs text-[#14182A]/80">
-            <li><strong>1. Researcher</strong> picks 1 banker at your target firms — ranked by school, group, and role overlap.</li>
-            <li><strong>2. Correspondent</strong> drafts a short email referencing your real story + a real connection point.</li>
-            <li><strong>3. Critic</strong> reviews tone + factual accuracy. Rejects it if it sounds generic and asks for a rewrite. Max 3 rounds.</li>
-            <li><strong>4.</strong> The result lands in your queue below. You approve before anything sends.</li>
-          </ol>
-          <p className="mt-3 text-[10px] text-[#14182A]/50 italic">Takes 20–40 seconds. Cron also runs this at your daily send time.</p>
+          <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-2">What you&apos;ll get</p>
+          <p className="text-xs text-[#14182A]/80 mb-2">
+            One personalized cold email — drafted to a real banker at one of your target firms, picked because of overlap with your background.
+          </p>
+          <p className="text-xs text-[#14182A]/80">
+            It lands in your queue below. <strong>Nothing sends without your approval.</strong>
+          </p>
+          <p className="mt-3 text-[10px] text-[#14182A]/50 italic">Takes 20–40 seconds.</p>
         </div>
       )}
 

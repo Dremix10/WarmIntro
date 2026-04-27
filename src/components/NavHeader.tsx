@@ -3,11 +3,9 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 
-// /network is a design-stage archipelago visualization — its content is
-// hardcoded mock data (Maya Chen, Alex Park, etc.). We hide it from the nav
-// until it's wired up to real user connections.
 const NAV_ITEMS = [
   { path: "/today", label: "Today" },
+  { path: "/network", label: "Network" },
   { path: "/pipeline", label: "Pipeline" },
   { path: "/crm", label: "CRM" },
   { path: "/agents", label: "Agents" },
