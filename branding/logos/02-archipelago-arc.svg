@@ -1,0 +1,22 @@
+<svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alma — archipelago arc mark">
+  <defs>
+    <style>
+      .word { font-family: "Fraunces", "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 500; font-size: 96px; fill: #1B3B5F; letter-spacing: -0.02em; }
+    </style>
+  </defs>
+  <!-- 7 islands rising in an arc — one per IB funnel stage; final island is the offer -->
+  <ellipse cx="40"  cy="170" rx="14" ry="5"  fill="#C9C1A4"/>
+  <ellipse cx="90"  cy="148" rx="13" ry="4.5" fill="#B5A98A"/>
+  <ellipse cx="140" cy="125" rx="12" ry="4.2" fill="#6E8F6A"/>
+  <ellipse cx="190" cy="100" rx="11" ry="4"  fill="#E8B339"/>
+  <ellipse cx="240" cy="78"  rx="10" ry="3.8" fill="#C86B4F"/>
+  <ellipse cx="290" cy="58"  rx="9"  ry="3.4" fill="#1B3B5F"/>
+  <!-- the offer: small island + a flag (filled circle) -->
+  <ellipse cx="340" cy="42"  rx="11" ry="4"  fill="#1B3B5F"/>
+  <circle  cx="340" cy="28"  r="6"            fill="#C86B4F"/>
+  <line x1="340" y1="28" x2="340" y2="42" stroke="#1B3B5F" stroke-width="1.6" stroke-linecap="round"/>
+  <!-- subtle wave/horizon line for context -->
+  <path d="M 20 195 Q 200 200 380 195" fill="none" stroke="#D9CFB5" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- wordmark -->
+  <text x="395" y="125" class="word">alma</text>
+</svg>

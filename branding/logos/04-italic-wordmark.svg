@@ -1,0 +1,11 @@
+<svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alma — italic wordmark">
+  <defs>
+    <style>
+      .word   { font-family: "Fraunces", "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 400; font-style: italic; font-size: 150px; fill: #1B3B5F; letter-spacing: -0.015em; }
+      .accent { fill: #C86B4F; }
+    </style>
+  </defs>
+  <text x="60" y="160" class="word">alma</text>
+  <!-- terracotta period — the destination, understated -->
+  <circle cx="392" cy="155" r="9" class="accent"/>
+</svg>

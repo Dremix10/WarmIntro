@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alma — Logo Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EAE3D2;
+    --cream: #F4EDDB;
+    --white: #FFFFFF;
+    --hairline: #D9CFB5;
+    --ink: #14182A;
+    --muted: #5C6472;
+    --blue-deep: #1B3B5F;
+    --blue: #2E5A88;
+    --terracotta: #C86B4F;
+    --ochre: #E8B339;
+    --sage: #6E8F6A;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 64px 32px 96px; }
+
+  header {
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 28px;
+    margin-bottom: 44px;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 11px;
+    color: var(--terracotta);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 44px;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  h1 em { font-style: italic; color: var(--blue-deep); }
+  .lede { color: var(--muted); max-width: 720px; margin: 0; font-size: 16px; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 22px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .swatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot {
+    width: 14px; height: 14px; border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .concept {
+    background: var(--white);
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    padding: 0;
+    margin-bottom: 22px;
+    overflow: hidden;
+  }
+  .concept-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 18px 26px 4px;
+    gap: 16px;
+  }
+  .concept-head .name {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .concept-head .num {
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    color: var(--terracotta);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .concept .why {
+    padding: 0 26px 18px;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 780px;
+  }
+  .concept .why em {
+    font-family: "Fraunces", Georgia, serif;
+    font-style: italic;
+    color: var(--blue-deep);
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 0.6fr;
+    gap: 0;
+    border-top: 1px solid var(--hairline);
+  }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
+
+  .panel {
+    padding: 28px 26px;
+    border-right: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 200px;
+  }
+  .panel:last-child { border-right: none; }
+  @media (max-width: 760px) {
+    .panel { border-right: none; border-bottom: 1px solid var(--hairline); }
+    .panel:last-child { border-bottom: none; }
+  }
+
+  .panel.light { background: #FAF7EF; }
+  .panel.dark  { background: var(--blue-deep); }
+  .panel.small { background: var(--cream); }
+
+  .panel svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .panel.dark svg text { fill: #FAF7EF !important; }
+  .panel.dark svg .word { fill: #FAF7EF !important; }
+  .panel.dark svg .a    { fill: var(--blue-deep) !important; }
+  .panel.dark svg [stroke="#1B3B5F"]:not([fill]) { stroke: #FAF7EF; }
+
+  .panel .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .panel.dark .label { color: #C9C1A4; }
+
+  /* Favicon-size logos */
+  .favbox {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .favbox .item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .favbox .item svg {
+    width: auto;
+    height: 32px;
+  }
+  .favbox .item.lg svg { height: 48px; }
+  .favbox .item .px { font-size: 10px; color: var(--muted); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .picks {
+    background: linear-gradient(180deg, #fbf3ec 0%, var(--cream) 100%);
+    border: 1px solid var(--hairline);
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 36px 0 8px;
+  }
+  .picks h3 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 20px;
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+  .picks p { margin: 0 0 8px; font-size: 14px; color: var(--ink); }
+  .picks p strong { color: var(--blue-deep); }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Brand exploration · Round 1</div>
+    <h1>Alma · <em>logo concepts</em></h1>
+    <p class="lede">Six directions, all built inside the existing visual system (Fraunces + Aegean blue + terracotta + warm stone). Each concept tries to land at least one of three ideas: <em>leap</em>, <em>archipelago</em>, or <em>landing the offer</em>. Shown on light, dark, and at favicon size.</p>
+    <div class="legend">
+      <span class="swatch"><span class="dot" style="background:#1B3B5F"></span>Aegean deep</span>
+      <span class="swatch"><span class="dot" style="background:#2E5A88"></span>Aegean</span>
+      <span class="swatch"><span class="dot" style="background:#C86B4F"></span>Terracotta</span>
+      <span class="swatch"><span class="dot" style="background:#E8B339"></span>Ochre</span>
+      <span class="swatch"><span class="dot" style="background:#6E8F6A"></span>Sage</span>
+      <span class="swatch"><span class="dot" style="background:#EAE3D2; border:1px solid #D9CFB5"></span>Warm stone</span>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- 1 -->
+  <article class="concept">
+    <div class="concept-head">
+      <div class="name">Leap Wordmark</div>
+      <div class="num">01 · The leap as arc</div>
+    </div>
+    <p class="why">The wordmark <em>is</em> the leap: a dotted arc rises from the start of the word and lands as a single terracotta dot above the final letter — the offer. Quiet, mature, recognizable. Best fit if you want one logo that does it all and reads "trustworthy mentor brand." My personal favorite for the YC submission.</p>
+    <div class="stage">
+      <div class="panel light">
+        <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 75 95 Q 290 -10 470 55" fill="none" stroke="#C86B4F" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.5 6"/>
+          <circle cx="473" cy="56" r="8" fill="#C86B4F"/>
+          <text x="50" y="170" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:140px; fill:#1B3B5F; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on warm stone</span>
+      </div>
+      <div class="panel dark">
+        <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 75 95 Q 290 -10 470 55" fill="none" stroke="#E8B339" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.5 6"/>
+          <circle cx="473" cy="56" r="8" fill="#E8B339"/>
+          <text x="50" y="170" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:140px; fill:#FAF7EF; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on Aegean deep</span>
+      </div>
+      <div class="panel small">
+        <div class="favbox">
+          <div class="item">
+            <svg viewBox="0 0 600 200"><path d="M 75 95 Q 290 -10 470 55" fill="none" stroke="#C86B4F" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.5 6"/><circle cx="473" cy="56" r="14" fill="#C86B4F"/><text x="50" y="170" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:140px; fill:#1B3B5F;">alma</text></svg>
+            <span class="px">32px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!-- 2 -->
+  <article class="concept">
+    <div class="concept-head">
+      <div class="name">Archipelago Arc</div>
+      <div class="num">02 · The funnel as islands</div>
+    </div>
+    <p class="why">Seven islands rising in an arc — one per IB recruiting stage (networking → calls → coffee → referral → first round → superday → offer). The final island flies a terracotta flag. Most literal fit with your archipelago + IB funnel concept. Strong for product UI use; the icon alone tells the whole story.</p>
+    <div class="stage">
+      <div class="panel light">
+        <svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="40"  cy="170" rx="14" ry="5"   fill="#C9C1A4"/>
+          <ellipse cx="90"  cy="148" rx="13" ry="4.5" fill="#B5A98A"/>
+          <ellipse cx="140" cy="125" rx="12" ry="4.2" fill="#6E8F6A"/>
+          <ellipse cx="190" cy="100" rx="11" ry="4"   fill="#E8B339"/>
+          <ellipse cx="240" cy="78"  rx="10" ry="3.8" fill="#C86B4F"/>
+          <ellipse cx="290" cy="58"  rx="9"  ry="3.4" fill="#1B3B5F"/>
+          <ellipse cx="340" cy="42"  rx="11" ry="4"   fill="#1B3B5F"/>
+          <circle  cx="340" cy="28"  r="6"             fill="#C86B4F"/>
+          <line x1="340" y1="28" x2="340" y2="42" stroke="#1B3B5F" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M 20 195 Q 200 200 380 195" fill="none" stroke="#D9CFB5" stroke-width="1.2"/>
+          <text x="395" y="125" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:96px; fill:#1B3B5F; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on warm stone</span>
+      </div>
+      <div class="panel dark">
+        <svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="40"  cy="170" rx="14" ry="5"   fill="#5C6472"/>
+          <ellipse cx="90"  cy="148" rx="13" ry="4.5" fill="#7B8290"/>
+          <ellipse cx="140" cy="125" rx="12" ry="4.2" fill="#6E8F6A"/>
+          <ellipse cx="190" cy="100" rx="11" ry="4"   fill="#E8B339"/>
+          <ellipse cx="240" cy="78"  rx="10" ry="3.8" fill="#C86B4F"/>
+          <ellipse cx="290" cy="58"  rx="9"  ry="3.4" fill="#FAF7EF"/>
+          <ellipse cx="340" cy="42"  rx="11" ry="4"   fill="#FAF7EF"/>
+          <circle  cx="340" cy="28"  r="6"             fill="#C86B4F"/>
+          <line x1="340" y1="28" x2="340" y2="42" stroke="#FAF7EF" stroke-width="1.6"/>
+          <path d="M 20 195 Q 200 200 380 195" fill="none" stroke="#3F6FA3" stroke-width="1.2"/>
+          <text x="395" y="125" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:96px; fill:#FAF7EF; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on Aegean deep</span>
+      </div>
+      <div class="panel small">
+        <div class="favbox">
+          <div class="item">
+            <svg viewBox="0 0 380 220" width="60" height="34">
+              <ellipse cx="40"  cy="170" rx="14" ry="5"   fill="#C9C1A4"/>
+              <ellipse cx="90"  cy="148" rx="13" ry="4.5" fill="#B5A98A"/>
+              <ellipse cx="140" cy="125" rx="12" ry="4.2" fill="#6E8F6A"/>
+              <ellipse cx="190" cy="100" rx="11" ry="4"   fill="#E8B339"/>
+              <ellipse cx="240" cy="78"  rx="10" ry="3.8" fill="#C86B4F"/>
+              <ellipse cx="290" cy="58"  rx="9"  ry="3.4" fill="#1B3B5F"/>
+              <ellipse cx="340" cy="42"  rx="11" ry="4"   fill="#1B3B5F"/>
+              <circle  cx="340" cy="28"  r="6"             fill="#C86B4F"/>
+            </svg>
+            <span class="px">icon · 32px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!-- 3 -->
+  <article class="concept">
+    <div class="concept-head">
+      <div class="name">The Bridge</div>
+      <div class="num">03 · Warm intro as bridge</div>
+    </div>
+    <p class="why">Two small islands — the student on one, the bank on the other — joined by a dashed arc above. Most directly tells your <em>warm intro is a bridge</em> story. Strong narrative concept; slightly busier than the others, may feel cluttered at very small sizes.</p>
+    <div class="stage">
+      <div class="panel light">
+        <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 30 155 Q 60 130 90 132 Q 120 134 150 155 Z" fill="#1B3B5F"/>
+          <circle cx="90" cy="118" r="6" fill="#C86B4F"/>
+          <path d="M 230 155 Q 270 122 310 124 Q 350 126 390 155 Z" fill="#2E5A88"/>
+          <circle cx="310" cy="108" r="6" fill="#E8B339"/>
+          <path d="M 90 105 Q 200 30 310 95" fill="none" stroke="#C86B4F" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7"/>
+          <path d="M 20 175 Q 200 185 400 175" fill="none" stroke="#D9CFB5" stroke-width="1.3"/>
+          <text x="430" y="160" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:100px; fill:#1B3B5F; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on warm stone</span>
+      </div>
+      <div class="panel dark">
+        <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <path d="M 30 155 Q 60 130 90 132 Q 120 134 150 155 Z" fill="#FAF7EF"/>
+          <circle cx="90" cy="118" r="6" fill="#C86B4F"/>
+          <path d="M 230 155 Q 270 122 310 124 Q 350 126 390 155 Z" fill="#3F6FA3"/>
+          <circle cx="310" cy="108" r="6" fill="#E8B339"/>
+          <path d="M 90 105 Q 200 30 310 95" fill="none" stroke="#E8B339" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7"/>
+          <path d="M 20 175 Q 200 185 400 175" fill="none" stroke="#3F6FA3" stroke-width="1.3"/>
+          <text x="430" y="160" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:100px; fill:#FAF7EF; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on Aegean deep</span>
+      </div>
+      <div class="panel small">
+        <div class="favbox">
+          <div class="item">
+            <svg viewBox="0 0 410 200" width="65" height="32">
+              <path d="M 30 155 Q 60 130 90 132 Q 120 134 150 155 Z" fill="#1B3B5F"/>
+              <circle cx="90" cy="118" r="9" fill="#C86B4F"/>
+              <path d="M 230 155 Q 270 122 310 124 Q 350 126 390 155 Z" fill="#2E5A88"/>
+              <circle cx="310" cy="108" r="9" fill="#E8B339"/>
+              <path d="M 90 105 Q 200 30 310 95" fill="none" stroke="#C86B4F" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="1 7"/>
+            </svg>
+            <span class="px">icon · 32px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!-- 4 -->
+  <article class="concept">
+    <div class="concept-head">
+      <div class="name">Italic Wordmark</div>
+      <div class="num">04 · The voice as the mark</div>
+    </div>
+    <p class="why">Pure typography. The italic <em>is</em> the lean-forward leap motion, and matches the Fraunces italic mentor voice you already use everywhere. A single terracotta period — the destination, understated. Most adult, most "real company." Easiest to use everywhere. Risk: less ownable, more like a blog brand than a startup brand.</p>
+    <div class="stage">
+      <div class="panel light">
+        <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+          <text x="60" y="160" style="font-family: 'Fraunces', Georgia, serif; font-weight:400; font-style:italic; font-size:150px; fill:#1B3B5F; letter-spacing:-0.015em;">alma</text>
+          <circle cx="392" cy="155" r="9" fill="#C86B4F"/>
+        </svg>
+        <span class="label">on warm stone</span>
+      </div>
+      <div class="panel dark">
+        <svg viewBox="0 0 500 200" xmlns="http://www.w3.org/2000/svg">
+          <text x="60" y="160" style="font-family: 'Fraunces', Georgia, serif; font-weight:400; font-style:italic; font-size:150px; fill:#FAF7EF; letter-spacing:-0.015em;">alma</text>
+          <circle cx="392" cy="155" r="9" fill="#E8B339"/>
+        </svg>
+        <span class="label">on Aegean deep</span>
+      </div>
+      <div class="panel small">
+        <div class="favbox">
+          <div class="item">
+            <svg viewBox="0 0 500 200">
+              <text x="60" y="160" style="font-family: 'Fraunces', Georgia, serif; font-weight:400; font-style:italic; font-size:150px; fill:#1B3B5F;">alma</text>
+              <circle cx="392" cy="155" r="14" fill="#C86B4F"/>
+            </svg>
+            <span class="px">32px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!-- 5 -->
+  <article class="concept">
+    <div class="concept-head">
+      <div class="name">Trajectory</div>
+      <div class="num">05 · Single-stroke leap</div>
+    </div>
+    <p class="why">A single continuous arc from low-left to upper-right, gradient from Aegean to terracotta, ending in a filled landing dot with a soft halo. Pure abstraction of the leap. Most distinctive icon at small sizes; reads as "motion, momentum, arrival." Best fit if you want the brand to feel more <em>builder</em> than <em>mentor</em>.</p>
+    <div class="stage">
+      <div class="panel light">
+        <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="trail-light" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1B3B5F" stop-opacity="0.15"/>
+              <stop offset="55%" stop-color="#2E5A88" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#C86B4F" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+          <path d="M 30 175 Q 130 25 320 65" fill="none" stroke="url(#trail-light)" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="322" cy="65" r="11" fill="#C86B4F"/>
+          <circle cx="322" cy="65" r="20" fill="#C86B4F" fill-opacity="0.18"/>
+          <text x="365" y="140" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:100px; fill:#1B3B5F; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on warm stone</span>
+      </div>
+      <div class="panel dark">
+        <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="trail-dark" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0%" stop-color="#FAF7EF" stop-opacity="0.1"/>
+              <stop offset="55%" stop-color="#E8B339" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#C86B4F" stop-opacity="1"/>
+            </linearGradient>
+          </defs>
+          <path d="M 30 175 Q 130 25 320 65" fill="none" stroke="url(#trail-dark)" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="322" cy="65" r="11" fill="#C86B4F"/>
+          <circle cx="322" cy="65" r="20" fill="#C86B4F" fill-opacity="0.22"/>
+          <text x="365" y="140" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:100px; fill:#FAF7EF; letter-spacing:-0.02em;">alma</text>
+        </svg>
+        <span class="label">on Aegean deep</span>
+      </div>
+      <div class="panel small">
+        <div class="favbox">
+          <div class="item">
+            <svg viewBox="0 0 360 220" width="55" height="34">
+              <defs>
+                <linearGradient id="trail-fav" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#1B3B5F" stop-opacity="0.2"/>
+                  <stop offset="55%" stop-color="#2E5A88" stop-opacity="0.8"/>
+                  <stop offset="100%" stop-color="#C86B4F"/>
+                </linearGradient>
+              </defs>
+              <path d="M 30 175 Q 130 25 320 65" fill="none" stroke="url(#trail-fav)" stroke-width="14" stroke-linecap="round"/>
+              <circle cx="322" cy="65" r="22" fill="#C86B4F"/>
+            </svg>
+            <span class="px">icon · 32px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <!-- 6 -->
+  <article class="concept">
+    <div class="concept-head">
+      <div class="name">Monogram a.</div>
+      <div class="num">06 · App icon / favicon companion</div>
+    </div>
+    <p class="why">A single lowercase <em>a</em> in a soft Aegean rounded square, with the leap arc and an ochre landing dot above it. Designed to live as the favicon and iOS/macOS app icon companion to whichever wordmark you pick. Not a primary mark — pair it with one of the others.</p>
+    <div class="stage">
+      <div class="panel light">
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="max-width: 160px;">
+          <rect x="0" y="0" width="240" height="240" rx="48" ry="48" fill="#1B3B5F"/>
+          <path d="M 55 80 Q 120 30 185 70" fill="none" stroke="#C86B4F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 7"/>
+          <circle cx="187" cy="71" r="7" fill="#E8B339"/>
+          <text x="55" y="200" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:180px; fill:#FAF7EF; letter-spacing:-0.02em;">a</text>
+        </svg>
+        <span class="label">app icon · 160px</span>
+      </div>
+      <div class="panel dark">
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" style="max-width: 160px;">
+          <rect x="0" y="0" width="240" height="240" rx="48" ry="48" fill="#FAF7EF"/>
+          <path d="M 55 80 Q 120 30 185 70" fill="none" stroke="#C86B4F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 7"/>
+          <circle cx="187" cy="71" r="7" fill="#C86B4F"/>
+          <text x="55" y="200" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:180px; fill:#1B3B5F; letter-spacing:-0.02em;">a</text>
+        </svg>
+        <span class="label">inverted · 160px</span>
+      </div>
+      <div class="panel small">
+        <div class="favbox">
+          <div class="item lg">
+            <svg viewBox="0 0 240 240">
+              <rect x="0" y="0" width="240" height="240" rx="48" ry="48" fill="#1B3B5F"/>
+              <path d="M 55 80 Q 120 30 185 70" fill="none" stroke="#C86B4F" stroke-width="6" stroke-linecap="round" stroke-dasharray="1 7"/>
+              <circle cx="187" cy="71" r="11" fill="#E8B339"/>
+              <text x="55" y="200" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:180px; fill:#FAF7EF;">a</text>
+            </svg>
+            <span class="px">48px</span>
+          </div>
+          <div class="item">
+            <svg viewBox="0 0 240 240">
+              <rect x="0" y="0" width="240" height="240" rx="48" ry="48" fill="#1B3B5F"/>
+              <path d="M 55 80 Q 120 30 185 70" fill="none" stroke="#C86B4F" stroke-width="8" stroke-linecap="round" stroke-dasharray="1 7"/>
+              <circle cx="187" cy="71" r="14" fill="#E8B339"/>
+              <text x="55" y="200" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:180px; fill:#FAF7EF;">a</text>
+            </svg>
+            <span class="px">32px</span>
+          </div>
+          <div class="item">
+            <svg viewBox="0 0 240 240" width="16" height="16">
+              <rect x="0" y="0" width="240" height="240" rx="48" ry="48" fill="#1B3B5F"/>
+              <circle cx="187" cy="71" r="22" fill="#E8B339"/>
+              <text x="55" y="200" style="font-family: 'Fraunces', Georgia, serif; font-weight:500; font-size:180px; fill:#FAF7EF;">a</text>
+            </svg>
+            <span class="px">16px</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ============================================================ -->
+  <div class="picks">
+    <h3>My pick for the YC submission</h3>
+    <p><strong>Primary wordmark:</strong> #01 (Leap Wordmark) or #04 (Italic Wordmark). #01 carries more story; #04 feels more confident and grown-up. Both are safe.</p>
+    <p><strong>Product / app icon:</strong> #06 (Monogram a.) — pairs cleanly with either wordmark and survives small sizes.</p>
+    <p><strong>For the demo video / pitch deck:</strong> #02 (Archipelago Arc) is the most "ownable" mark and tells your IB-funnel story without a single word. Use it as a hero illustration even if it's not the official logo.</p>
+    <p><strong>Avoid as primary:</strong> #03 (Bridge) and #05 (Trajectory) — both strong concepts but they read as generic SaaS at small sizes. Could work as illustrations inside the product, not as the logo.</p>
+  </div>
+
+  <footer>
+    <p>Each SVG saved separately in <code>/branding/logos/</code>. All use the Alma palette. Open this file in a browser to view; right-click any SVG to save or inspect.</p>
+    <p style="font-family: 'Fraunces', Georgia, serif; font-style: italic; color: var(--blue-deep); margin-top: 18px;">— Alma</p>
+  </footer>
+
+</div>
+</body>
+</html>

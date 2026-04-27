@@ -1,0 +1,19 @@
+<svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alma — trajectory mark">
+  <defs>
+    <style>
+      .word { font-family: "Fraunces", "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 500; font-size: 100px; fill: #1B3B5F; letter-spacing: -0.02em; }
+    </style>
+    <linearGradient id="trail" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1B3B5F" stop-opacity="0.15"/>
+      <stop offset="55%" stop-color="#2E5A88" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#C86B4F" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <!-- single continuous arc — leap trajectory, low-left to apex to landing -->
+  <path d="M 30 175 Q 130 25 320 65" fill="none" stroke="url(#trail)" stroke-width="6" stroke-linecap="round"/>
+  <!-- the landing -->
+  <circle cx="322" cy="65" r="11" fill="#C86B4F"/>
+  <circle cx="322" cy="65" r="20" fill="#C86B4F" fill-opacity="0.18"/>
+  <!-- wordmark -->
+  <text x="365" y="140" class="word">alma</text>
+</svg>

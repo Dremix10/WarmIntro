@@ -1,0 +1,8 @@
+<svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alma">
+  <!-- leap arc: dotted line rising from the start of the wordmark to a landing dot above the final letter -->
+  <path d="M 75 95 Q 290 -10 470 55" fill="none" stroke="#C86B4F" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.5 6"/>
+  <!-- landing dot: the offer -->
+  <circle cx="473" cy="56" r="8" fill="#C86B4F"/>
+  <!-- wordmark -->
+  <text x="50" y="170" style="font-family: 'Fraunces', 'Playfair Display', Georgia, 'Times New Roman', serif; font-weight: 500; font-size: 140px; fill: #1B3B5F; letter-spacing: -0.02em;">alma</text>
+</svg>

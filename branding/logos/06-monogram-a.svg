@@ -1,0 +1,15 @@
+<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alma — a monogram (favicon / app icon)">
+  <defs>
+    <style>
+      .a { font-family: "Fraunces", "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 500; font-size: 180px; fill: #FAF7EF; letter-spacing: -0.02em; }
+    </style>
+  </defs>
+  <!-- soft cream rounded square (app icon shape) -->
+  <rect x="0" y="0" width="240" height="240" rx="48" ry="48" fill="#1B3B5F"/>
+  <!-- leap arc above the 'a' — terracotta, dotted -->
+  <path d="M 55 80 Q 120 30 185 70" fill="none" stroke="#C86B4F" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 7"/>
+  <!-- landing dot -->
+  <circle cx="187" cy="71" r="7" fill="#E8B339"/>
+  <!-- monogram -->
+  <text x="55" y="200" class="a">a</text>
+</svg>
