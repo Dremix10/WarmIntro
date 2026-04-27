@@ -186,18 +186,22 @@ function SetupInner() {
         setFileName("Saved resume");
       }
 
-      // If we have a profile + picks already, jump to step 2 (or whichever later step)
-      // and synthesize a parsed object so the picker can render.
-      if ((tf.length > 0 || data.story_one_liner) && !persisted) {
-        setParsed({
+      // If we have a profile + picks already, jump to step 2 with a synthesized
+      // parsed object. We override any stale sessionStorage step here — DB state
+      // is the source of truth, especially for users whose persisted state
+      // predates resume_text being saved.
+      if (tf.length > 0 || data.story_one_liner) {
+        setParsed((prev) => prev ?? ({
           name: data.name ?? "Student",
           email: data.email ?? undefined,
           university: data.university ?? "Rice University",
           major: data.major ?? "Undeclared",
           graduationYear: data.graduation_year ?? new Date().getFullYear() + 3,
           storyOneLiner: data.story_one_liner ?? undefined,
-        });
-        setStep("confirm");
+        }));
+        // Only auto-jump if the user is currently on the upload step (i.e. they
+        // didn't deliberately click "back" to step 1).
+        setStep((current) => (current === "upload" ? "confirm" : current));
       }
     } catch {
       // ignore — fresh users continue with step 1
@@ -205,9 +209,22 @@ function SetupInner() {
   }
 
   async function loadFirms() {
+    if (firms.length > 0) return; // already loaded — don't refetch on every effect run
     try {
       const universityParam = profile?.university ? `?university=${encodeURIComponent(profile.university)}` : "";
       const res = await fetch(`/api/setup/firms${universityParam}`);
+      if (res.status === 429) {
+        // Backoff and retry once — should be rare now that the route is rate-limit-exempt
+        await new Promise((r) => setTimeout(r, 1500));
+        const retry = await fetch(`/api/setup/firms${universityParam}`);
+        if (!retry.ok) {
+          setError(`Couldn't load banks (${retry.status}). Refresh in a few seconds.`);
+          return;
+        }
+        const json = (await retry.json()) as { firms: Firm[]; error?: string };
+        if (json.firms?.length) setFirms(json.firms);
+        return;
+      }
       if (!res.ok) {
         setError(`Couldn't load banks (HTTP ${res.status}). Try refreshing in a few seconds.`);
         return;

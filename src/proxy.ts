@@ -31,8 +31,11 @@ const BOT_UA_PATTERNS = ["curl", "wget", "python-requests", "httpie", "postmanru
 // Routes exempt from bot UA checks (cron runs as a bot by design; uploads; analytics)
 const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf", "/api/analytics", "/api/admin", "/api/cron"];
 
-// Routes that bypass rate limiting entirely (authenticated crons on fixed schedules)
-const RATE_LIMIT_EXEMPT_ROUTES = ["/api/cron"];
+// Routes that bypass rate limiting entirely:
+//   - /api/cron — fixed schedule, bearer-token auth, can't be abused
+//   - /api/setup/firms — public reference data (firms + groups), read-only,
+//     hit on every onboarding page load. Was generating spurious 429s.
+const RATE_LIMIT_EXEMPT_ROUTES = ["/api/cron", "/api/setup/firms"];
 
 interface RateLimitEntry {
   count: number;
