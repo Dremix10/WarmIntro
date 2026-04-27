@@ -101,6 +101,12 @@ export default function QuestsTemplate() {
   return (
     <div className="bg-[#EAE3D2] text-[#14182A]">
       <div className="mx-auto max-w-3xl px-6 pt-8 pb-16">
+        <div className="mt-4 mb-2 rounded-xl border-2 border-[#C86B4F]/30 bg-[#C86B4F]/5 px-4 py-3 text-sm">
+          <p className="font-medium text-[#14182A]">Preview — sample quests.</p>
+          <p className="text-xs text-[#14182A]/60 mt-0.5">
+            Real per-user quests generate after your first week of activity. See <a href="/today" className="underline text-[#2E5A88]">your queue</a>.
+          </p>
+        </div>
         <div className="mt-12">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">This week</p>
           <h1 className="mt-3 text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
@@ -217,19 +223,13 @@ function QuestCard({ q }: { q: Quest }) {
         <p className="shrink-0 text-[11px] text-[#5C6472] tabular-nums">{q.days}d left</p>
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-[#ECE5D0] pt-3">
-        <button
-          type="button"
-          className="text-xs font-medium text-[#5C6472] hover:text-[#C86B4F]"
-        >
-          Skip
-        </button>
-        <button
-          type="button"
+      <div className="mt-4 flex items-center justify-end border-t border-[#ECE5D0] pt-3">
+        <a
+          href="/today"
           className="rounded-full bg-[#1B3B5F] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5A88]"
         >
-          {done ? "Claim reward →" : "Continue →"}
-        </button>
+          Work on this in your queue →
+        </a>
       </div>
     </div>
   );

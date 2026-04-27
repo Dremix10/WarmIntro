@@ -46,21 +46,25 @@ const PREVIEWS = [
     body: "Every bank is an island. Every intro builds a little more of a home standing on it.",
   },
   {
-    href: "/recap",
-    eyebrow: "Sunday letter",
-    title: "A read, not a dashboard.",
-    body: "Each Sunday, one page in Alma's voice. What moved, what to do next, what to notice.",
+    href: "/crm",
+    eyebrow: "Pipeline kanban",
+    title: "Every banker, every stage.",
+    body: "Draft → sent → replied → coffee → referral → first round → superday → offer. Updates as Alma works.",
   },
 ];
 
 const FAQ = [
   {
     q: "Is Alma a jobs board?",
-    a: "No. Alma doesn't list applications — it helps you reach the bankers who decide who gets a first round. The offer is almost never won on the application form.",
+    a: "No. Alma doesn't list applications. It helps you reach the bankers who actually decide who gets a first round. The offer is almost never won on the application form.",
   },
   {
     q: "Does Alma send emails for me?",
-    a: "Not yet. Alma drafts; you edit one line and send from your inbox. Send-from-Alma with reply tracking is on the roadmap.",
+    a: "Yes — your way. You start in Copilot mode where Alma drafts and you copy or auto-send from your own Gmail. Two more modes (Preview-veto and Autopilot) unlock as you build trust. You stay in control.",
+  },
+  {
+    q: "Why connect my Gmail?",
+    a: "So messages send from your real address. Bankers reply to you, not to a third-party system. We use the narrowest scope possible (compose drafts and watch only Alma-sent threads for replies). Every action is logged at /account/privacy and you can revoke anytime.",
   },
   {
     q: "What does it cost?",
@@ -72,11 +76,15 @@ const FAQ = [
   },
   {
     q: "Which banks do you cover?",
-    a: "All of them — Bulge Bracket (GS, MS, JPM, BAML, Citi, Barclays, DB, UBS), Elite Boutiques (Evercore, Centerview, Lazard, Moelis, PJT, Guggenheim, Perella, Greenhill, Qatalyst), Middle Market (Jefferies, Houlihan Lokey, Raymond James, William Blair, Baird, Piper Sandler). Pick a tier, pick a group, go.",
+    a: "All of them. Bulge Bracket (GS, MS, JPM, BAML, Citi, Barclays, DB, UBS), Elite Boutiques (Evercore, Centerview, Lazard, Moelis, PJT, Guggenheim, Perella, Greenhill, Qatalyst), Middle Market (Jefferies, Houlihan Lokey, Raymond James, William Blair, Baird, Piper Sandler). Pick a tier, pick a group, go.",
   },
   {
     q: "Will recruiters see I used AI?",
-    a: "No. Alma's drafts are written to sound like a student, not a bot. You make them yours with small edits. The system prompt explicitly bans em-dashes and AI tells.",
+    a: "No. Drafts are written to sound like a real curious sophomore. The system explicitly bans the AI tells (em-dashes, generic praise, consultant-speak). A second model reviews every draft and rewrites it if it sounds robotic. You make it yours with one or two edits before it goes out.",
+  },
+  {
+    q: "Are you private-beta or public?",
+    a: "Private beta right now — invite-only for Brown and Rice. If you don't have an invite, drop your email at /coming-soon and we'll let you in as we open up.",
   },
 ];
 

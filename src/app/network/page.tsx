@@ -192,9 +192,59 @@ export default function NetworkPage() {
                 </div>
               </div>
             ))}
+
+            {/* Always-on potential preview — teases the fancy archipelago viz */}
+            <ArchipelagoTeaser bankers={bankers.length} firms={firms.length} />
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ArchipelagoTeaser({ bankers, firms }: { bankers: number; firms: number }) {
+  // Generate islands proportional to firms so the user gets a sense of scale.
+  // Caps at 7 visual islands so a user with 30 firms doesn't break the layout.
+  const islandCount = Math.min(Math.max(firms, 3), 7);
+  const islands = Array.from({ length: islandCount }, (_, i) => ({
+    cx: 60 + (i * (480 - 120) / Math.max(islandCount - 1, 1)),
+    cy: 70 + (i % 2 === 0 ? -10 : 18) + (Math.sin(i * 1.3) * 8),
+    rx: 38 + (i % 3) * 6,
+    ry: 14 + (i % 2) * 4,
+    rotate: -6 + i * 3,
+  }));
+
+  return (
+    <div className="mt-10 rounded-2xl bg-gradient-to-br from-[#F2ECDB] to-[#E4DAC2] border border-[#D9CFB5] p-6 overflow-hidden">
+      <div className="flex items-baseline justify-between mb-3">
+        <p className="text-xs uppercase tracking-[0.18em] text-[#5C6472] font-semibold">Coming next · Archipelago view</p>
+        <p className="text-[10px] uppercase tracking-wider text-[#14182A]/40">in development</p>
+      </div>
+      <svg viewBox="0 0 540 160" className="w-full h-auto" aria-hidden>
+        {/* Wavy water under-line */}
+        <path d="M 0 130 Q 60 122 120 128 T 240 128 T 360 124 T 480 130 T 540 128" stroke="#2E5A88" strokeOpacity="0.18" strokeWidth="1.2" fill="none" />
+        {/* Islands */}
+        {islands.map((isl, i) => (
+          <g key={i} transform={`translate(${isl.cx} ${isl.cy}) rotate(${isl.rotate})`}>
+            <ellipse cx={0} cy={4} rx={isl.rx} ry={isl.ry + 2} fill="#2E5A88" fillOpacity="0.12" />
+            <ellipse cx={0} cy={0} rx={isl.rx} ry={isl.ry} fill="#EAE3D2" stroke="#D9CFB5" strokeWidth="1" />
+            <ellipse cx={-isl.rx * 0.3} cy={-isl.ry * 0.4} rx={isl.rx * 0.5} ry={isl.ry * 0.4} fill="#C5BFA8" fillOpacity="0.4" />
+            {/* one home if banker count is high */}
+            {bankers > i * 2 && (
+              <g transform={`translate(${isl.rx * 0.1} ${-isl.ry * 0.5})`}>
+                <rect x={-3} y={-2} width={6} height={5} fill="#1B3B5F" />
+                <path d={`M -4 -2 L 0 -5 L 4 -2 Z`} fill="#C86B4F" />
+              </g>
+            )}
+          </g>
+        ))}
+      </svg>
+      <p className="mt-2 text-sm text-[#14182A]/80 italic font-[family-name:var(--font-fraunces)] text-center">
+        {firms} {firms === 1 ? "island" : "islands"} on your map. Each banker becomes a stone, foundation, wall, roof, then a home.
+      </p>
+      <p className="mt-1 text-[10px] text-[#14182A]/50 text-center italic">
+        Full visualization rolling out post-launch. The list above is the source of truth meanwhile.
+      </p>
     </div>
   );
 }

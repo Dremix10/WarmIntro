@@ -39,6 +39,14 @@ export default function RecapTemplate() {
   return (
     <div className="bg-[#EAE3D2] text-[#14182A]">
       <div className="mx-auto max-w-2xl px-6 pt-8 pb-16">
+        <div className="mt-4 mb-6 rounded-xl border-2 border-[#C86B4F]/30 bg-[#C86B4F]/5 px-4 py-3 text-center text-sm">
+          <p className="font-medium text-[#14182A]">Preview — sample Sunday letter.</p>
+          <p className="text-xs text-[#14182A]/60 mt-0.5">
+            The numbers and names below are illustrative. Your real recap arrives Sunday once you have a week of activity.
+            See <a href="/today" className="underline text-[#2E5A88]">your queue</a> for live drafts.
+          </p>
+        </div>
+
         <div className="mt-16 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Sunday evening &middot; April 23
@@ -111,18 +119,15 @@ export default function RecapTemplate() {
             ))}
           </ul>
           <div className="mt-6 flex items-center justify-between border-t border-[#ECE5D0] pt-4">
-            <button
-              type="button"
-              className="text-xs font-medium text-[#5C6472] hover:text-[#1B3B5F]"
-            >
-              Skip this week
-            </button>
-            <button
-              type="button"
+            <span className="text-xs font-medium text-[#5C6472] italic">
+              Quest accept/skip wires up post-launch
+            </span>
+            <a
+              href="/today"
               className="rounded-full bg-[#1B3B5F] px-5 py-2 text-xs font-semibold text-white hover:bg-[#2E5A88]"
             >
-              Accept quests &rarr;
-            </button>
+              See my real queue &rarr;
+            </a>
           </div>
         </section>
 

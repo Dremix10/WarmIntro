@@ -57,6 +57,50 @@ const TYPE_LABEL: Record<string, string> = {
   thank_you: "Thank-you",
 };
 
+// Translate raw signal_type enum values into human sentences. Falls back to
+// a tidied version of the enum if no template exists.
+function humanSignal(signalType: string, metadata: Record<string, unknown>): string {
+  const banker = (metadata?.bankerName as string) ?? (metadata?.banker_name as string) ?? "a banker";
+  const firm = (metadata?.firmName as string) ?? (metadata?.firm_name as string) ?? "";
+  const subject = (metadata?.subject as string) ?? "";
+  switch (signalType) {
+    case "draft_created": return `Drafted an email to ${banker}${firm ? ` at ${firm}` : ""}`;
+    case "draft_sent": return metadata?.manual ? `You sent your email to ${banker}` : `Sent your email to ${banker}`;
+    case "draft_skipped": return `Skipped a draft for ${banker}`;
+    case "draft_approved": return `Approved your draft to ${banker}`;
+    case "reply_received": return `${banker} replied${subject ? `: "${subject.slice(0, 50)}"` : ""}`;
+    case "coffee_booked": return `Coffee booked with ${banker}`;
+    case "referral_earned": return `Referral from ${banker}`;
+    case "critic_approved": return `Critic green-lit your draft to ${banker}`;
+    case "critic_rejected": return `Critic asked for a rewrite on your ${banker} draft`;
+    case "critic_rejected_unresolvable_escalated": return `Need your input on the ${banker} draft`;
+    case "planner_run_complete": return "Alma finished researching and drafting";
+    case "planner_nudge": return "Alma queued more work for next run";
+    case "gmail_oauth_expired": return "Gmail token expired — please reconnect";
+    case "night_preview_sent": return "Sent you a preview of tomorrow's drafts";
+    case "sentinel_run": return ""; // internal, not user-facing
+    default: return signalType.replaceAll("_", " ");
+  }
+}
+
+interface RecentEvent { signal_type: string; metadata: Record<string, unknown>; occurred_at: string }
+
+function groupByDay(events: RecentEvent[]): Array<[string, RecentEvent[]]> {
+  const visible = events.filter((e) => humanSignal(e.signal_type, e.metadata).length > 0);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
+  const groups = new Map<string, RecentEvent[]>();
+  for (const e of visible) {
+    const d = new Date(e.occurred_at);
+    const label = sameDay(d, today) ? "Today" : sameDay(d, yesterday) ? "Yesterday" : d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label)!.push(e);
+  }
+  return [...groups.entries()];
+}
+
 export default function TodayPage() {
   const { session, authLoading } = useAppState();
   const router = useRouter();
@@ -272,18 +316,30 @@ export default function TodayPage() {
           </div>
         )}
 
-        {/* Recent activity — collapsed by default; the queue is the focus. */}
+        {/* Recent activity — collapsed by default; the queue is the focus.
+            Signals are translated into human sentences so users don't read raw
+            "draft_sent" / "reply_received" enum values. */}
         {data.recent.length > 0 && (
-          <details className="mt-8 rounded-2xl bg-white/60 p-5 border border-[#D9CFB5] group">
+          <details className="mt-8 rounded-2xl bg-white p-5 border border-[#D9CFB5] group">
             <summary className="cursor-pointer flex items-center justify-between text-xs uppercase tracking-wider text-[#14182A]/50 font-semibold list-none">
-              <span>Recent activity ({data.recent.length})</span>
+              <span>What Alma did recently · {data.recent.length}</span>
               <span className="text-[#14182A]/40 group-open:rotate-180 transition-transform">▾</span>
             </summary>
-            <div className="space-y-1 text-xs text-[#14182A]/70 mt-3">
-              {data.recent.slice(0, 10).map((r, i) => (
-                <div key={i} className="flex justify-between gap-4">
-                  <span className="truncate">{r.signal_type.replaceAll("_", " ")}</span>
-                  <span className="text-[#14182A]/40 shrink-0">{new Date(r.occurred_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+            <div className="mt-4 space-y-3">
+              {groupByDay(data.recent.slice(0, 20)).map(([day, events]) => (
+                <div key={day}>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#14182A]/40 font-semibold mb-2">{day}</p>
+                  <div className="space-y-1.5">
+                    {events.map((r, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm">
+                        <span aria-hidden className="mt-1 block h-1.5 w-1.5 rounded-full bg-[#2E5A88]/40 shrink-0" />
+                        <p className="flex-1 text-[#14182A]/80 leading-tight">
+                          {humanSignal(r.signal_type, r.metadata)}
+                          <span className="ml-2 text-[10px] text-[#14182A]/40">{new Date(r.occurred_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
