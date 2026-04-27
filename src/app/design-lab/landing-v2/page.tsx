@@ -28,16 +28,16 @@ const STEPS = [
   {
     n: "04",
     title: "Track every call through superday",
-    body: "Pipeline dashboard, CRM kanban, weekly Sunday recap. Stages mapped to the real IB funnel — call → coffee → referral → first round → superday → offer.",
+    body: "Network archipelago, CRM kanban, weekly Sunday recap. Stages mapped to the real IB funnel — call → coffee → referral → first round → superday → offer.",
   },
 ];
 
 const PREVIEWS = [
   {
-    href: "/pipeline",
-    eyebrow: "Pipeline",
-    title: "Your journey, in one page.",
-    body: "Distance to your offer, today's three tasks, where the pipeline is heating up.",
+    href: "/today",
+    eyebrow: "Your queue",
+    title: "Today's outreach, lined up.",
+    body: "Drafts ready for review. Trust dial: copilot, preview-veto, autopilot. You decide.",
   },
   {
     href: "/network",

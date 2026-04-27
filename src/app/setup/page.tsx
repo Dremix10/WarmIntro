@@ -113,6 +113,15 @@ function SetupInner() {
   // Persist state to sessionStorage on every change so OAuth redirect doesn't lose progress
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Don't re-persist after the user finishes setup — otherwise a Gmail
+    // connect from the "Almost there" screen leaves step="done" in
+    // sessionStorage forever. /today redirecting back to /setup then
+    // re-mounts and re-pushes to /today => infinite loop until rate limit
+    // bites. Cofounder hit this at 21:25-21:32 UTC on 2026-04-27.
+    if (step === "done") {
+      try { sessionStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
+      return;
+    }
     try {
       const state: PersistedSetupState = {
         userId: session?.user.id,

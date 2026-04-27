@@ -260,33 +260,15 @@ export default function TodayPage() {
           </section>
         )}
 
-        {/* Empty state */}
+        {/* Empty state — RunAlmaNowButton already lives in the page header,
+            so we just point to it here. Two buttons that fire the same API
+            in parallel was producing duplicate drafts when spam-clicked. */}
         {data.drafts.length === 0 && (
           <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Nothing queued yet.</p>
-            <p className="text-sm text-[#14182A]/70 mb-5">
-              Alma is researching bankers based on your target firms. New drafts land here around {data.trust?.preferred_send_time ?? "07:00"}.
+            <p className="text-sm text-[#14182A]/70">
+              Hit <strong>Run Alma now</strong> in the top-right to draft your first email — or wait until {data.trust?.preferred_send_time ?? "07:00"} when it runs automatically.
             </p>
-            <button
-              type="button"
-              onClick={async () => {
-                const { data: { session: s } } = await supabase.auth.getSession();
-                const res = await fetch("/api/planner/run-now", {
-                  method: "POST",
-                  headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-                });
-                const json = await res.json().catch(() => ({}));
-                if (json?.result?.needsSetup) {
-                  window.location.href = "/setup";
-                  return;
-                }
-                if (res.ok) load();
-              }}
-              className="rounded-xl bg-[#2E5A88] text-white px-5 py-2.5 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
-            >
-              Run Alma now
-            </button>
-            <p className="mt-3 text-[10px] text-[#14182A]/40 italic">Kicks off Researcher + Correspondent immediately. Takes 20-60 sec.</p>
           </div>
         )}
 
@@ -324,6 +306,9 @@ function DraftCard({
   needsGmail: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [copiedAddr, setCopiedAddr] = useState(false);
+  const [copiedBody, setCopiedBody] = useState(false);
+  const [showSentConfirm, setShowSentConfirm] = useState(false);
   const banker = draft.bankers;
 
   // Visual treatment changes by status so the user knows at a glance whether
@@ -333,6 +318,19 @@ function DraftCard({
   const cardClass = isApproved
     ? "rounded-2xl bg-white border-2 border-[#2E5A88] overflow-hidden shadow-sm"
     : "rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden";
+
+  async function copyAddress() {
+    if (!banker?.email) return;
+    await navigator.clipboard.writeText(banker.email);
+    setCopiedAddr(true);
+    window.setTimeout(() => setCopiedAddr(false), 1500);
+  }
+  async function copyBody() {
+    const text = `Subject: ${draft.subject ?? ""}\n\n${draft.body}`;
+    await navigator.clipboard.writeText(text);
+    setCopiedBody(true);
+    window.setTimeout(() => setCopiedBody(false), 1500);
+  }
 
   return (
     <div className={cardClass}>
@@ -368,11 +366,12 @@ function DraftCard({
               <code className="font-mono">{banker.email}</code>
               <button
                 type="button"
-                onClick={() => navigator.clipboard.writeText(banker.email ?? "")}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-[#EAE3D2] text-[#14182A]/60 hover:bg-[#D9CFB5]"
-                title="Copy address"
+                onClick={copyAddress}
+                className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                  copiedAddr ? "bg-[#2E5A88] text-white" : "bg-[#EAE3D2] text-[#14182A]/60 hover:bg-[#D9CFB5]"
+                }`}
               >
-                copy
+                {copiedAddr ? "copied ✓" : "copy"}
               </button>
             </div>
           )}
@@ -384,21 +383,18 @@ function DraftCard({
                     Works without Gmail OAuth (Rice users, off-domain testers). */}
                 <button
                   type="button"
-                  onClick={async () => {
-                    const text = `Subject: ${draft.subject ?? ""}\n\n${draft.body}`;
-                    await navigator.clipboard.writeText(text);
-                  }}
-                  className="rounded-lg border border-[#2E5A88] text-[#2E5A88] px-4 py-2 text-sm font-medium hover:bg-[#2E5A88]/10 transition-colors"
+                  onClick={copyBody}
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                    copiedBody
+                      ? "bg-[#2E5A88] text-white border-[#2E5A88]"
+                      : "border-[#2E5A88] text-[#2E5A88] hover:bg-[#2E5A88]/10"
+                  }`}
                 >
-                  Copy
+                  {copiedBody ? "Copied ✓" : "Copy"}
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (confirm("Mark as sent? This advances the pipeline as if you'd sent it.")) {
-                      onAction(draft.id, "mark_sent");
-                    }
-                  }}
+                  onClick={() => setShowSentConfirm(true)}
                   className="rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
                 >
                   I sent it
@@ -459,6 +455,44 @@ function DraftCard({
               Was scheduled for {new Date(draft.scheduled_send_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — paused until Gmail is connected.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Branded "mark as sent" confirmation — replaces the browser confirm() */}
+      {showSentConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#14182A]/40 backdrop-blur-sm"
+          onClick={() => setShowSentConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-[#D9CFB5] max-w-sm w-full p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Confirm</p>
+            <h3 className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Mark this email as sent?</h3>
+            <p className="text-sm text-[#14182A]/70 mb-5">
+              Alma will move <strong>{banker?.name ?? "this banker"}</strong> into your pipeline at the &ldquo;Email sent&rdquo; stage. You should have already pasted + sent the email from your inbox.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowSentConfirm(false)}
+                className="rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium hover:bg-[#EAE3D2] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSentConfirm(false);
+                  onAction(draft.id, "mark_sent");
+                }}
+                className="rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
+              >
+                Yes, I sent it
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

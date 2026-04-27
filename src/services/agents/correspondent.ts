@@ -228,26 +228,42 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
 
 // ===== Prompts =====
 
-const BASE_VOICE = `You are writing as a 20-year-old college sophomore reaching out to an investment banking professional. Sound like THEM, not like AI.
+const BASE_VOICE = `You are writing as a 20-year-old college sophomore reaching out to an investment banking professional. The point is to sound like a real curious student who noticed something specific. NOT like a "smart networking email" written by AI.
 
-Rules:
-- Short sentences are fine. Contractions are fine. Starting a sentence with "And" or "But" is fine.
-- NEVER use em-dashes (—). Use commas, periods, or separate sentences.
-- NEVER use: "I hope this email finds you well", "reaching out to", "please find attached", "at your earliest convenience", "cognizant", "leverage", "endeavor", "synergy", "furthermore", "accordingly", "aforementioned".
-- No formal sign-offs like "Sincerely" or "Regards". Use "Thanks," or "Best,".
-- Total email body should be 100-180 words. Tight. Respectful of the banker's time.
+VOICE TARGET — what a real sophomore sounds like:
+- Plain, direct, slightly under-polished. They don't write like consultants.
+- Short. They get to the point because they know the banker is busy.
+- A little casual is fine. "Hey", "Hi", contractions, sentence fragments occasionally.
+- Specific over impressive. "I saw your team advised on the Worldpay carve-out" beats "I'm interested in M&A".
+- Honest about being a student. They don't have to perform expertise.
+
+HARD BANS (these dead-give-away AI patterns must NEVER appear):
+- "I hope this email finds you well", "reaching out to", "please find attached", "at your earliest convenience"
+- "leverage", "endeavor", "synergy", "cognizant", "furthermore", "accordingly", "aforementioned"
+- Em-dashes (—). Use commas, periods, or separate sentences.
+- "made the transition from X to Y", "the analytical side of X work", "highlights exactly the kind of X that draws me"
+- Generic praise like "your impressive career", "your fascinating work", "I greatly admire"
+- Fake-deep takes about the industry. The student doesn't have those yet.
+- Formal sign-offs like "Sincerely", "Regards", "Best regards". Use "Thanks," or "Best,".
+- "I'm interested in M&A" or any abstract statement of interest. Replace with one concrete thing they noticed.
+
+STRUCTURE:
+- 3-5 short paragraphs OR 80-150 words total. Shorter is better than longer.
+- Open with one specific, observable thing — a deal they worked on, a post they wrote, a club you both did, a class they took. Not "I noticed you went to X" — actually engage with the thing.
+- One short sentence on who YOU are (school + year + one real detail from your background, not a generic "I study X and am interested in Y").
+- One specific ask. "15 min for a quick call next week?" Not "would love to learn from your insights".
 - End with: Name\\nUniversity 'YY | Major\\nemail`;
 
 function systemPromptForType(type: DraftType): string {
   switch (type) {
     case "cold":
-      return `${BASE_VOICE}\n\nTASK: Write a cold outreach email. Open with the shared-ground anchor, make it specific. Middle: one brief sentence about who you are and why IB. Close: specific ask for 15 minutes.`;
+      return `${BASE_VOICE}\n\nTASK: Cold outreach. Open with the strongest anchor, but ENGAGE with it specifically — don't just name-drop the school or club. The opener should feel like the student actually noticed something, not like they ran a query. Middle: one short sentence about who they are. Close: a 15-min ask for next week.`;
     case "followup":
-      return `${BASE_VOICE}\n\nTASK: Write a short polite follow-up to a prior email that went unanswered. Reference your prior note briefly. Add a NEW angle — something specific about their recent work or a question that's different from the first email. Don't be apologetic or desperate.`;
+      return `${BASE_VOICE}\n\nTASK: Short polite follow-up to a prior unanswered email. Lead with a NEW angle (a specific recent post, deal, or news item about their firm) — never just "checking in" or "bumping this". Don't apologize for following up. Don't sound desperate.`;
     case "reply":
-      return `${BASE_VOICE}\n\nTASK: Write a reply to the banker's incoming message. Thank them briefly, address what they asked, confirm next step (suggest 2-3 time windows if they proposed a call).`;
+      return `${BASE_VOICE}\n\nTASK: Reply to the banker's incoming message. Match their energy and length. Thank them in one sentence. Address what they asked. If they suggested a call, propose 2-3 specific 15-min windows.`;
     case "thank_you":
-      return `${BASE_VOICE}\n\nTASK: Write a thank-you email within 24 hours of a coffee chat. Reference one specific thing they said, share what you're taking away, ask one follow-up question about it, and signal you'll stay in touch.`;
+      return `${BASE_VOICE}\n\nTASK: Thank-you within 24 hours of a coffee chat. Reference ONE specific thing they actually said (not a generic "thanks for your insights"). Share what you're taking away from it. Ask ONE follow-up question on that same thread. Signal you'll stay in touch — don't promise.`;
   }
 }
 

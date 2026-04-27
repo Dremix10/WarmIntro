@@ -1,246 +1,184 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
-import { ConnectionCard, STAGE_CONFIG } from "@/components/ConnectionCard";
-import { NotesModal } from "@/components/NotesModal";
-import type { TrackedConnection } from "@/components/AppProvider";
-import { getCoachingTip, updateFunnel } from "@/hooks/useApi";
+import { supabase } from "@/lib/supabase-browser";
+import { SkeletonPage } from "@/components/Skeleton";
 
-export default function CRMPage() {
+// Real-data CRM kanban. Reads from Supabase `connections` (live data) and
+// groups by IB pipeline stage. Replaces the legacy WarmIntro CRM that read
+// from in-memory React Context (which never got wired to the IB schema).
+// The legacy "Connect Gmail" card was removed — Gmail status lives on /today.
+
+type Stage = "draft" | "sent" | "replied" | "coffee" | "referral" | "first_round" | "superday" | "offer" | "closed_lost";
+
+interface CrmRow {
+  id: string;
+  bankerId: string;
+  name: string;
+  title: string | null;
+  firmName: string | null;
+  university: string | null;
+  stage: Stage;
+  updatedAt: string;
+}
+
+const STAGE_ORDER: Stage[] = ["draft", "sent", "replied", "coffee", "referral", "first_round", "superday", "offer"];
+
+const STAGE_LABEL: Record<Stage, string> = {
+  draft: "Draft prepared",
+  sent: "Email sent",
+  replied: "Replied",
+  coffee: "Coffee",
+  referral: "Referral",
+  first_round: "First round",
+  superday: "Superday",
+  offer: "Offer",
+  closed_lost: "Closed",
+};
+
+const STAGE_COLOR: Record<Stage, string> = {
+  draft: "bg-[#EAE3D2] text-[#14182A]/70",
+  sent: "bg-[#2E5A88]/15 text-[#2E5A88]",
+  replied: "bg-[#E8B339]/20 text-[#9A7110]",
+  coffee: "bg-[#E8B339]/30 text-[#9A7110]",
+  referral: "bg-[#C86B4F]/20 text-[#C86B4F]",
+  first_round: "bg-[#C86B4F]/30 text-[#C86B4F]",
+  superday: "bg-[#C86B4F]/40 text-[#C86B4F]",
+  offer: "bg-[#1B3B5F] text-white",
+  closed_lost: "bg-[#5C6472]/20 text-[#5C6472]",
+};
+
+export default function CrmPage() {
+  const { session, authLoading } = useAppState();
   const router = useRouter();
-  const { profile, connections, connectionNotes, alumniStages, setAlumniStage, setFunnel, setGameState, setConnectionNote, selectedCompanies } = useAppState();
+  const [rows, setRows] = useState<CrmRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [emailConnected, setEmailConnected] = useState(false);
-  const [connectingEmail, setConnectingEmail] = useState(false);
-  const [coachingTip, setCoachingTip] = useState<{ tip: string; nextAction: string; alumniId: string } | null>(null);
-  const [loadingTip, setLoadingTip] = useState(false);
-  const [notesModal, setNotesModal] = useState<TrackedConnection | null>(null);
-  const [xpToast, setXpToast] = useState<number | null>(null);
+  useEffect(() => {
+    if (!authLoading && !session) { router.push("/login"); return; }
+    if (session) load();
+  }, [authLoading, session?.user?.id]);
 
-  const connList = Object.values(connections);
-  const getStage = (alumniId: string) => alumniStages[alumniId] ?? "sent";
+  async function load() {
+    if (!session) return;
+    setLoading(true);
+    const { data: conns } = await supabase
+      .from("connections")
+      .select("id, banker_id, stage, updated_at, bankers(id, name, title, university, firms(name))")
+      .eq("user_id", session.user.id);
 
-  const handleAdvance = async (alumniId: string, action: string, nextStage: string) => {
-    const conn = connections[alumniId];
-    if (!conn) return;
+    const { data: drafts } = await supabase
+      .from("drafts")
+      .select("id, banker_id, updated_at, bankers(id, name, title, university, firms(name))")
+      .eq("user_id", session.user.id)
+      .is("sent_at", null)
+      .in("status", ["pending_critic", "needs_revision", "approved"]);
 
-    try {
-      const res = await updateFunnel({
-        action: action as "reply_received" | "coffee_booked" | "referral_earned",
-        companyId: conn.companyId,
-        alumniId,
+    type ConnRow = { id: string; banker_id: string; stage: string; updated_at: string; bankers: { id: string; name: string; title: string | null; university: string | null; firms: { name: string } | null } | null };
+    type DraftRow = { id: string; banker_id: string; updated_at: string; bankers: { id: string; name: string; title: string | null; university: string | null; firms: { name: string } | null } | null };
+
+    const seen = new Set<string>();
+    const out: CrmRow[] = [];
+
+    for (const c of (conns ?? []) as unknown as ConnRow[]) {
+      if (!c.bankers || seen.has(c.bankers.id)) continue;
+      seen.add(c.bankers.id);
+      out.push({
+        id: c.id,
+        bankerId: c.bankers.id,
+        name: c.bankers.name,
+        title: c.bankers.title,
+        firmName: c.bankers.firms?.name ?? null,
+        university: c.bankers.university,
+        stage: (c.stage as Stage) ?? "sent",
+        updatedAt: c.updated_at,
       });
-      setFunnel(res.funnel);
-      setGameState(res.gameState);
-      setAlumniStage(alumniId, nextStage);
-      setXpToast(res.xpGained);
-      setTimeout(() => setXpToast(null), 2500);
-
-      if (profile) {
-        setLoadingTip(true);
-        try {
-          const tip = await getCoachingTip({
-            stage: nextStage,
-            alumniName: conn.alumniName,
-            alumniRole: conn.alumniRole,
-            companyName: conn.companyName,
-            userMajor: profile.major,
-          });
-          setCoachingTip({ ...tip, alumniId });
-        } catch {
-          // skip tip on error
-        } finally {
-          setLoadingTip(false);
-        }
-      }
-    } catch {
-      // silently fail
     }
-  };
-
-  const handleConnectEmail = async () => {
-    setConnectingEmail(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setEmailConnected(true);
-    setConnectingEmail(false);
-  };
-
-  if (!profile) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FBF7EC]">
-        <p className="text-lg font-medium text-[#2A2F3B]">Set up your profile first</p>
-        <button type="button" onClick={() => router.push("/")} className="mt-3 rounded-xl bg-[#1B3B5F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2E5A88]">Go Home</button>
-      </div>
-    );
+    for (const d of (drafts ?? []) as unknown as DraftRow[]) {
+      if (!d.bankers || seen.has(d.bankers.id)) continue;
+      seen.add(d.bankers.id);
+      out.push({
+        id: d.id,
+        bankerId: d.bankers.id,
+        name: d.bankers.name,
+        title: d.bankers.title,
+        firmName: d.bankers.firms?.name ?? null,
+        university: d.bankers.university,
+        stage: "draft",
+        updatedAt: d.updated_at,
+      });
+    }
+    setRows(out);
+    setLoading(false);
   }
 
-  const byStage = STAGE_CONFIG.map((s) => ({
-    ...s,
-    connections: connList.filter((c) => getStage(c.alumniId) === s.id),
-  }));
+  if (authLoading || loading) return <SkeletonPage />;
+
+  const byStage = new Map<Stage, CrmRow[]>();
+  for (const stage of STAGE_ORDER) byStage.set(stage, []);
+  for (const r of rows) {
+    if (!byStage.has(r.stage)) byStage.set(r.stage, []);
+    byStage.get(r.stage)!.push(r);
+  }
 
   return (
-    <div className="min-h-screen bg-[#FBF7EC] py-12">
-      <div className="mx-auto max-w-6xl px-6">
-        {/* Header */}
-        <div className="mb-8">
-          <p className="text-sm font-medium text-[#1B3B5F]">Connections</p>
-          <h1 className="text-3xl font-bold tracking-tight text-[#14182A]">Relationship CRM</h1>
-          <p className="mt-1 text-sm text-[#5C6472]">
-            Track all your networking connections across companies. Log progress, upload notes, get AI coaching.
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
+        <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">CRM</p>
+        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Pipeline kanban</h1>
+        <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] mb-8">
+          Every banker grouped by where you are with them. Updates as Alma drafts, sends, and watches for replies.
+        </p>
 
-        {/* XP Toast */}
-        {xpToast !== null && (
-          <div className="fixed top-6 right-6 z-50 animate-bounce rounded-xl bg-[#1B3B5F] px-4 py-2.5 shadow-lg">
-            <p className="text-sm font-bold text-white">+{xpToast} XP!</p>
-          </div>
-        )}
-
-        {/* AI Coaching Tip */}
-        {(coachingTip || loadingTip) && (
-          <div className="mb-6 rounded-xl border border-[#D9CFB5] bg-[#F4EDDB] p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{"\uD83E\uDDE0"}</span>
-              <div className="flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#1B3B5F] mb-1">AI Coach</p>
-                {loadingTip ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#2E5A88] border-t-transparent" />
-                    <p className="text-sm text-[#0F2A45]">Generating coaching tip...</p>
-                  </div>
-                ) : coachingTip ? (
-                  <>
-                    <p className="text-sm text-[#0F2A45]">{coachingTip.tip}</p>
-                    <p className="mt-2 text-xs font-semibold text-[#0F2A45]">Next: {coachingTip.nextAction}</p>
-                  </>
-                ) : null}
-              </div>
-              {coachingTip && (
-                <button type="button" onClick={() => setCoachingTip(null)} className="text-[#3F6FA3] hover:text-[#1B3B5F] text-lg">&times;</button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Email Integration */}
-        <div className="mb-6 rounded-xl border border-[#D9CFB5] bg-white p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{"\uD83D\uDCE7"}</span>
-              <div>
-                <p className="text-sm font-semibold text-[#2A2F3B]">Email Integration</p>
-                <p className="text-xs text-[#8A8674]">
-                  {emailConnected
-                    ? "Connected — auto-tracking replies and scheduling"
-                    : "Connect your email to auto-detect replies and track conversations"}
-                </p>
-              </div>
-            </div>
-            {emailConnected ? (
-              <span className="flex items-center gap-1.5 rounded-full bg-[#F4EDDB] border border-[#D9CFB5] px-3 py-1 text-xs font-medium text-[#0F2A45]">
-                <span className="h-2 w-2 rounded-full bg-[#2E5A88] animate-pulse" />
-                Connected to Gmail
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handleConnectEmail}
-                disabled={connectingEmail}
-                className="flex items-center gap-2 rounded-lg bg-white border border-[#C7BC9F] px-4 py-2 text-sm font-medium text-[#2A2F3B] hover:bg-[#FBF7EC] disabled:opacity-50 transition-colors"
-              >
-                {connectingEmail ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#8A8674] border-t-transparent" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                    </svg>
-                    Connect Gmail
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          {emailConnected && connList.length > 0 && (
-            <div className="mt-3 border-t border-[#ECE5D0] pt-3 space-y-2">
-              <p className="text-xs font-medium text-[#5C6472]">Recent activity detected:</p>
-              {connList.slice(0, 2).map((c) => (
-                <div key={c.alumniId} className="flex items-center justify-between rounded-lg bg-[#FBF7EC] px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-[#2E5A88]" />
-                    <span className="text-xs text-[#4A5260]">Reply from <strong>{c.alumniName}</strong> at {c.companyName}</span>
-                  </div>
-                  <span className="text-[10px] text-[#8A8674]">Just now</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Empty state */}
-        {connList.length === 0 ? (
-          <div className="rounded-xl border border-[#D9CFB5] bg-white p-12 text-center">
-            <span className="text-4xl">{"\uD83D\uDCCB"}</span>
-            <p className="mt-3 text-lg font-medium text-[#2A2F3B]">No connections yet</p>
-            <p className="mt-1 text-sm text-[#8A8674]">Send outreach from the pipeline to start tracking connections here.</p>
-            <button
-              type="button"
-              onClick={() => router.push("/pipeline")}
-              className="mt-4 rounded-xl bg-[#1B3B5F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2E5A88] transition-colors"
-            >
-              Go to Pipeline
-            </button>
+        {rows.length === 0 ? (
+          <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
+            <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">No pipeline yet.</p>
+            <p className="text-sm text-[#14182A]/70 mb-5">
+              Run Alma from <a href="/today" className="underline text-[#2E5A88]">Today</a> to draft your first outreach. Bankers move across these columns as you progress.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {byStage.map((stage) => (
-              <div key={stage.id}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span>{stage.icon}</span>
-                  <h3 className="text-sm font-semibold text-[#2A2F3B]">{stage.label}</h3>
-                  <span className="rounded-full bg-[#F4EDDB] px-2 py-0.5 text-[10px] font-bold text-[#5C6472]">
-                    {stage.connections.length}
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {stage.connections.map((conn) => (
-                    <ConnectionCard
-                      key={conn.alumniId}
-                      conn={conn}
-                      stage={stage.id}
-                      hasNotes={!!connectionNotes[conn.alumniId]}
-                      onAdvance={handleAdvance}
-                      onUploadNotes={(c) => setNotesModal(c)}
-                      onNavigate={(companyId) => router.push(`/outreach/${companyId}`)}
-                    />
-                  ))}
-                  {stage.connections.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-[#D9CFB5] p-4 text-center">
-                      <p className="text-xs text-[#8A8674]">No connections at this stage</p>
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 pb-4">
+            <div className="flex gap-3 min-w-max">
+              {STAGE_ORDER.map((stage) => {
+                const items = byStage.get(stage) ?? [];
+                return (
+                  <div key={stage} className="w-64 shrink-0">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${STAGE_COLOR[stage]}`}>
+                        {STAGE_LABEL[stage]}
+                      </span>
+                      <span className="text-xs text-[#14182A]/50">{items.length}</span>
                     </div>
-                  )}
-                </div>
-              </div>
-            ))}
+                    <div className="space-y-2">
+                      {items.length === 0 ? (
+                        <div className="rounded-xl bg-white/40 border border-dashed border-[#D9CFB5] p-3 text-center">
+                          <p className="text-[10px] text-[#14182A]/40 italic">empty</p>
+                        </div>
+                      ) : (
+                        items.map((r) => (
+                          <div key={r.id} className="rounded-xl bg-white border border-[#D9CFB5] p-3">
+                            <p className="text-sm font-medium leading-tight">{r.name}</p>
+                            <p className="text-[11px] text-[#14182A]/60 mt-0.5">
+                              {r.title ?? ""}{r.firmName ? ` · ${r.firmName}` : ""}
+                            </p>
+                            {r.university && (
+                              <p className="text-[10px] text-[#14182A]/40 mt-1">{r.university}</p>
+                            )}
+                            <p className="text-[10px] text-[#14182A]/40 mt-2">
+                              {new Date(r.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
-
-        {/* Notes Modal */}
-        {notesModal && (
-          <NotesModal
-            conn={notesModal}
-            savedSummary={connectionNotes[notesModal.alumniId] ?? null}
-            onClose={() => setNotesModal(null)}
-            onSave={(alumniId, summary) => setConnectionNote(alumniId, summary)}
-          />
         )}
       </div>
     </div>
