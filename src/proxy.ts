@@ -85,13 +85,29 @@ function checkRateLimit(ip: string, tier: keyof typeof RATE_LIMITS): { allowed: 
 
 const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB (PDF uploads)
 
-// Private-beta gate — blocks public access except for allowlisted testers.
+// Private-beta gate — blocks public access except for the target audience.
 // Disable by setting TESTING_GATE_ENABLED=false in env.
+//
+// Two-tier allowlist:
+//   1. Domain match (TESTING_ALLOWED_DOMAINS): any signed-in user from these
+//      email domains gets through. Default: @rice.edu, @brown.edu.
+//   2. Explicit email override (TESTING_ALLOWED_EMAILS): for off-domain testers
+//      (e.g. @gmail.com founders, design partners). Comma-separated.
 const TESTING_GATE_ENABLED = process.env.TESTING_GATE_ENABLED !== "false";
-const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
+const TESTING_ALLOWED_DOMAINS = (process.env.TESTING_ALLOWED_DOMAINS ?? "rice.edu,brown.edu")
+  .split(",")
+  .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
+  .filter(Boolean);
+const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
+
+function isAllowlisted(email: string): boolean {
+  const lower = email.toLowerCase();
+  if (TESTING_ALLOWED_EMAILS.includes(lower)) return true;
+  return TESTING_ALLOWED_DOMAINS.some((domain) => lower.endsWith(`@${domain}`));
+}
 
 // Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself)
 const GATE_BYPASS_PREFIXES = [
@@ -175,8 +191,8 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
   const passthroughResponse = NextResponse.next();
   const email = await getSessionEmailFromCookie(request, passthroughResponse);
 
-  if (email && TESTING_ALLOWED_EMAILS.includes(email)) {
-    return null; // whitelisted tester, let through
+  if (email && isAllowlisted(email)) {
+    return null; // allowlisted tester, let through
   }
 
   // For API routes: 403 JSON
