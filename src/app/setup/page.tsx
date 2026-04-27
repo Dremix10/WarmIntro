@@ -691,14 +691,20 @@ function SetupInner() {
             </div>
 
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
-              <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">When should I run?</p>
-              <p className="text-sm text-[#14182A]/70 mb-3">Daily send time. Change anytime from the dashboard.</p>
+              <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">When should Alma run each day?</p>
+              <p className="text-sm text-[#14182A]/70 mb-1">
+                Once a day at this time, Alma drafts new outreach to bankers at your target firms. Approved drafts go out from your Gmail.
+              </p>
+              <p className="text-xs text-[#14182A]/50 italic mb-3 font-[family-name:var(--font-fraunces)]">
+                Most students pick 7-8am so emails land before bankers&apos; first coffee.
+              </p>
               <input
                 type="time"
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
                 className="rounded-lg border border-[#D9CFB5] bg-[#EAE3D2]/40 px-3 py-2 text-sm"
               />
+              <p className="mt-2 text-[11px] text-[#14182A]/40">Change anytime from your dashboard.</p>
             </div>
 
             <button
