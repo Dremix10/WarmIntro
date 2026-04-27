@@ -206,7 +206,7 @@ async function insertBankers(rows: Array<SweepCandidate & ClassifiedProfile>): P
     university: r.university,
     linkedin_url: r.linkedinUrl,
     email_verified: false,
-    source: "serper_sweep",
+    source: "serper",
   }));
 
   if (payload.length === 0) return 0;

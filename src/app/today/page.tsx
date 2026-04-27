@@ -159,6 +159,11 @@ export default function TodayPage() {
           <RunAlmaNowButton onDone={load} />
         </div>
 
+        {/* Gmail-required banner — drafts can't send without Gmail. Show this
+            prominently so the user doesn't waste time approving drafts that
+            can't go anywhere. */}
+        {data.needsGmail && <GmailRequiredBanner />}
+
         {/* Trust controls */}
         <div className="mb-8 rounded-2xl bg-white p-5 border border-[#D9CFB5]">
           <div className="flex items-start justify-between mb-3">
@@ -167,8 +172,13 @@ export default function TodayPage() {
               <p className="font-[family-name:var(--font-fraunces)] text-xl mt-0.5">Cold outreach is on {TRUST_LABEL[data.trust?.send_new_email ?? "C"]}</p>
             </div>
             <div className="text-xs text-[#14182A]/60 text-right">
-              Send time<br />
-              <strong className="text-[#14182A]">{data.trust?.preferred_send_time ?? "07:00"}</strong>
+              {data.needsGmail ? "Will send at" : "Send time"}<br />
+              <strong className={data.needsGmail ? "text-[#14182A]/40 line-through" : "text-[#14182A]"}>
+                {data.trust?.preferred_send_time ?? "07:00"}
+              </strong>
+              {data.needsGmail && (
+                <p className="text-[10px] text-[#C86B4F] not-italic mt-0.5">No mailbox yet</p>
+              )}
             </div>
           </div>
           <p className="text-sm text-[#14182A]/70 italic">{TRUST_DESCRIPTION[data.trust?.send_new_email ?? "C"]}</p>
@@ -208,10 +218,12 @@ export default function TodayPage() {
         {/* Approved */}
         {approved.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-3">Ready to send</h2>
+            <h2 className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-3">
+              {data.needsGmail ? "Ready — but blocked on Gmail" : "Ready to send"}
+            </h2>
             <div className="space-y-3">
               {approved.map((d) => (
-                <DraftCard key={d.id} draft={d} onAction={act} trustLevel={data.trust?.send_new_email ?? "C"} />
+                <DraftCard key={d.id} draft={d} onAction={act} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
               ))}
             </div>
           </section>
@@ -223,7 +235,7 @@ export default function TodayPage() {
             <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">In review</h2>
             <div className="space-y-3">
               {pending.map((d) => (
-                <DraftCard key={d.id} draft={d} onAction={act} trustLevel={data.trust?.send_new_email ?? "C"} />
+                <DraftCard key={d.id} draft={d} onAction={act} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
               ))}
             </div>
           </section>
@@ -298,10 +310,12 @@ function DraftCard({
   draft,
   onAction,
   trustLevel,
+  needsGmail,
 }: {
   draft: DraftWithBanker;
   onAction: (id: string, action: "approve" | "skip" | "send" | "stop", payload?: Record<string, unknown>) => Promise<void>;
   trustLevel: "C" | "B" | "A";
+  needsGmail: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const banker = draft.bankers;
@@ -328,9 +342,11 @@ function DraftCard({
                 <button
                   type="button"
                   onClick={() => onAction(draft.id, "send")}
-                  className="flex-1 rounded-lg bg-[#2E5A88] text-white py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
+                  disabled={needsGmail}
+                  title={needsGmail ? "Connect Gmail to enable sending" : undefined}
+                  className="flex-1 rounded-lg bg-[#2E5A88] text-white py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:bg-[#5C6472] disabled:cursor-not-allowed"
                 >
-                  Send now
+                  {needsGmail ? "Connect Gmail to send" : "Send now"}
                 </button>
                 {draft.scheduled_send_at && (
                   <button
@@ -368,13 +384,59 @@ function DraftCard({
               </>
             )}
           </div>
-          {draft.scheduled_send_at && (
+          {draft.scheduled_send_at && !needsGmail && (
             <p className="text-xs text-[#14182A]/50 mt-2 italic">
               Auto-send at {new Date(draft.scheduled_send_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
             </p>
           )}
+          {draft.scheduled_send_at && needsGmail && (
+            <p className="text-xs text-[#C86B4F] mt-2 italic">
+              Was scheduled for {new Date(draft.scheduled_send_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — paused until Gmail is connected.
+            </p>
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+function GmailRequiredBanner() {
+  const [pending, setPending] = useState(false);
+  async function start() {
+    setPending(true);
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const res = await fetch("/api/auth/gmail/start", {
+        headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+      });
+      if (!res.ok) return;
+      const { url } = await res.json();
+      if (!url) return;
+      // Match /setup behavior: open in a new tab. Setup-page popup handler
+      // closes itself on completion; the user comes back to /today and can
+      // refresh manually. (We can't postMessage between unrelated tabs.)
+      window.open(url, "_blank");
+    } finally {
+      setPending(false);
+    }
+  }
+  return (
+    <div className="mb-6 rounded-2xl border-2 border-[#C86B4F]/30 bg-[#C86B4F]/5 px-5 py-4 flex items-start gap-3">
+      <span aria-hidden className="text-lg leading-none mt-0.5">⚠️</span>
+      <div className="flex-1">
+        <p className="text-sm font-medium">Gmail not connected — Alma can&apos;t actually send.</p>
+        <p className="text-xs text-[#14182A]/70 mt-0.5">
+          Drafts below are real, but they&apos;ll sit here until you connect the mailbox they should send from.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={start}
+        disabled={pending}
+        className="shrink-0 rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-60"
+      >
+        {pending ? "Opening…" : "Connect Gmail"}
+      </button>
     </div>
   );
 }

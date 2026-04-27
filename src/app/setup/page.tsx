@@ -151,6 +151,15 @@ function SetupInner() {
     if (gmailError) setError(`Gmail connection failed: ${gmailError}`);
   }, [searchParams]);
 
+  // If user connects Gmail from the "Almost there" success screen, bounce
+  // them to /today now that the launch gate is met.
+  useEffect(() => {
+    if (step === "done" && gmailConnected) {
+      const id = setTimeout(() => router.push("/today"), 1500);
+      return () => clearTimeout(id);
+    }
+  }, [step, gmailConnected, router]);
+
   // Listen for the OAuth popup to post back its result.
   useEffect(() => {
     function onMessage(event: MessageEvent) {
@@ -431,7 +440,12 @@ function SetupInner() {
     setStep("done");
     // Clear persisted setup state once saved to DB
     try { sessionStorage.removeItem(SETUP_STORAGE_KEY); } catch {}
-    setTimeout(() => router.push("/today"), 1800);
+    // Only auto-bounce to /today if Gmail is connected — otherwise the "done"
+    // screen has a Connect Gmail call-to-action and we want the user to stay
+    // until they finish that.
+    if (gmailConnected) {
+      setTimeout(() => router.push("/today"), 1800);
+    }
   }
 
   if (authLoading) {
@@ -718,10 +732,31 @@ function SetupInner() {
           </div>
         )}
 
-        {step === "done" && (
+        {step === "done" && gmailConnected && (
           <div className="rounded-2xl bg-white p-10 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-3xl mb-2">You&apos;re set.</p>
             <p className="text-sm text-[#14182A]/70 italic">I&apos;ll line up your first drafts for {preferredTime} tomorrow.</p>
+          </div>
+        )}
+
+        {step === "done" && !gmailConnected && (
+          <div className="rounded-2xl bg-white p-8 border-2 border-[#C86B4F]/30 text-center">
+            <p className="font-[family-name:var(--font-fraunces)] text-3xl mb-2">Almost there.</p>
+            <p className="text-sm text-[#14182A]/70 mb-1">Profile saved. Alma can&apos;t draft outreach until Gmail is connected — that&apos;s the mailbox the messages send from.</p>
+            <p className="text-xs text-[#14182A]/50 italic mb-6 font-[family-name:var(--font-fraunces)]">Takes 15 seconds. Opens in a new tab.</p>
+            <button
+              type="button"
+              onClick={connectGmail}
+              disabled={gmailPending}
+              className="rounded-xl bg-[#2E5A88] text-white px-6 py-3 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-50"
+            >
+              {gmailPending ? "Waiting for Google…" : "Connect Gmail"}
+            </button>
+            <div className="mt-6 pt-4 border-t border-[#D9CFB5]">
+              <a href="/today" className="text-xs text-[#14182A]/40 hover:text-[#2E5A88] underline">
+                Skip for now and connect later
+              </a>
+            </div>
           </div>
         )}
       </div>
