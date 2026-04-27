@@ -36,12 +36,17 @@ err() { FAIL=$((FAIL + 1)); printf "  \033[31m✗\033[0m %s — %s\n" "$1" "$2";
 cleanup() {
   if [ -n "${TEST_USER_ID:-}" ]; then
     step "Cleanup: deleting test user $TEST_EMAIL"
-    # Delete profile first (drops dependent rows via cascades)
-    curl -s -X DELETE "$PROJECT_URL/rest/v1/profiles?id=eq.$TEST_USER_ID" \
-      -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" > /dev/null
-    # Delete auth user
-    curl -s -X DELETE "$PROJECT_URL/auth/v1/admin/users/$TEST_USER_ID" \
-      -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" > /dev/null
+    AUTH_HDR=("-H" "apikey: $SUPABASE_SERVICE_ROLE_KEY" "-H" "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY")
+    # Drop dependent rows explicitly — auth.users → signals/agent_runs/etc isn't
+    # always cascading, and test cancellations can otherwise leave orphans
+    # that trigger noisy "profile_not_found" alerts in the planner.
+    for tbl in signals agent_runs drafts critic_reviews connections trust_levels profiles; do
+      curl -s -X DELETE "$PROJECT_URL/rest/v1/$tbl?user_id=eq.$TEST_USER_ID" "${AUTH_HDR[@]}" > /dev/null
+    done
+    # profiles uses .id not .user_id
+    curl -s -X DELETE "$PROJECT_URL/rest/v1/profiles?id=eq.$TEST_USER_ID" "${AUTH_HDR[@]}" > /dev/null
+    # Delete auth user last
+    curl -s -X DELETE "$PROJECT_URL/auth/v1/admin/users/$TEST_USER_ID" "${AUTH_HDR[@]}" > /dev/null
     echo "  cleaned"
   fi
 }

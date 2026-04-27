@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
-import { GROUP_LABELS } from "@/lib/labels";
+import { GROUP_LABELS, GROUP_KIND, groupDescription } from "@/lib/labels";
 
 interface Firm {
   id: string;
@@ -92,6 +92,8 @@ function SetupInner() {
   const [preferredTime, setPreferredTime] = useState(persisted?.preferredTime ?? "07:00");
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
+  const [gmailPending, setGmailPending] = useState(false);
+  const [bankInfo, setBankInfo] = useState<Firm | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,16 +127,47 @@ function SetupInner() {
   }, [session?.user?.id, authLoading, router]);
 
   useEffect(() => {
-    // Handle Gmail OAuth callback
+    // Handle Gmail OAuth callback. Two cases:
+    //   1. Same-tab fallback: ?gmail=connected lands on /setup directly.
+    //   2. New-tab popup flow: this tab IS the popup. Tell the opener and close.
     const gmail = searchParams.get("gmail");
     const gmailError = searchParams.get("gmail_error");
-    if (gmail === "connected") {
-      setGmailConnected(true);
+
+    if ((gmail || gmailError) && typeof window !== "undefined" && window.opener) {
+      // Popup flow — notify opener, close ourselves.
+      try {
+        window.opener.postMessage(
+          { type: "alma-gmail-oauth", status: gmail ?? "error", error: gmailError ?? null },
+          window.location.origin
+        );
+      } catch {
+        // postMessage can throw if origins mismatch — opener will fall back to polling.
+      }
+      window.close();
+      return;
     }
-    if (gmailError) {
-      setError(`Gmail connection failed: ${gmailError}`);
-    }
+
+    if (gmail === "connected") setGmailConnected(true);
+    if (gmailError) setError(`Gmail connection failed: ${gmailError}`);
   }, [searchParams]);
+
+  // Listen for the OAuth popup to post back its result.
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as { type?: string; status?: string; error?: string | null } | null;
+      if (data?.type !== "alma-gmail-oauth") return;
+      setGmailPending(false);
+      if (data.status === "connected") {
+        setGmailConnected(true);
+        checkGmail();
+      } else if (data.error) {
+        setError(`Gmail connection failed: ${data.error}`);
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   useEffect(() => {
     loadFirms();
@@ -280,7 +313,9 @@ function SetupInner() {
     }
     const { profile: p } = (await res.json()) as { profile: ExtractedProfile };
     setParsed(p);
-    setStep("confirm");
+    // Don't auto-advance — the user clicks "Continue" once they've also
+    // confirmed Gmail (or chosen to skip). Auto-advancing skipped past the
+    // Gmail prompt entirely for the cofounder. See feedback 2026-04-27.
   }
 
   async function connectGmail() {
@@ -289,11 +324,37 @@ function SetupInner() {
     const res = await fetch("/api/auth/gmail/start", {
       headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
     });
-    if (res.ok) {
-      const { url } = await res.json();
-      if (url) window.location.href = url;
-      else setError("Gmail OAuth not configured yet.");
+    if (!res.ok) {
+      setError("Gmail OAuth failed to start.");
+      return;
     }
+    const { url } = await res.json();
+    if (!url) {
+      setError("Gmail OAuth not configured yet.");
+      return;
+    }
+
+    // Open in a new tab so users don't lose their setup progress if they
+    // pick the wrong Google account or get bounced. The callback page
+    // detects window.opener, posts a message back, and self-closes.
+    const popup = window.open(url, "alma-gmail-oauth");
+    if (!popup) {
+      // Popup blocker — fall back to same-tab redirect.
+      window.location.href = url;
+      return;
+    }
+
+    setGmailPending(true);
+
+    // Watch for the popup closing (postMessage handler also covers this,
+    // but the user could close the tab themselves without finishing).
+    const pollId = window.setInterval(() => {
+      if (popup.closed) {
+        window.clearInterval(pollId);
+        setGmailPending(false);
+        checkGmail();
+      }
+    }, 600);
   }
 
   function toggleFirm(id: string) {
@@ -389,7 +450,34 @@ function SetupInner() {
       <div className="max-w-2xl mx-auto px-6 py-10">
         <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Setup</p>
         <h1 className="text-4xl font-[family-name:var(--font-fraunces)] font-medium mb-2">Let&apos;s get Alma running</h1>
-        <p className="text-sm text-[#14182A]/70 mb-8 italic font-[family-name:var(--font-fraunces)]">Three quick steps. You&apos;ll be live tonight.</p>
+        <p className="text-sm text-[#14182A]/70 mb-4 italic font-[family-name:var(--font-fraunces)]">Three quick steps. You&apos;ll be live tonight.</p>
+
+        {/* Persistent Gmail status — visible on every step so users can connect
+            Gmail any time, not just from step 1. */}
+        <div className={`mb-6 rounded-xl border px-4 py-2.5 flex items-center justify-between gap-3 text-sm ${
+          gmailConnected
+            ? "bg-[#2E5A88]/5 border-[#2E5A88]/20"
+            : "bg-[#C86B4F]/5 border-[#C86B4F]/20"
+        }`}>
+          <div className="flex-1">
+            <p className={`font-medium ${gmailConnected ? "text-[#2E5A88]" : "text-[#14182A]"}`}>
+              {gmailConnected ? `Gmail: connected${gmailEmail ? ` as ${gmailEmail}` : ""}` : "Gmail: not connected"}
+            </p>
+            {!gmailConnected && (
+              <p className="text-xs text-[#14182A]/60 mt-0.5">Required for Alma to send. Opens in a new tab.</p>
+            )}
+          </div>
+          {!gmailConnected && (
+            <button
+              type="button"
+              onClick={connectGmail}
+              disabled={gmailPending}
+              className="shrink-0 rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-50"
+            >
+              {gmailPending ? "Waiting…" : "Connect"}
+            </button>
+          )}
+        </div>
 
         {/* Step 1 — Upload + Gmail */}
         {step === "upload" && (
@@ -431,36 +519,32 @@ function SetupInner() {
 
               {error && <p className="mt-3 text-xs text-[#C86B4F]">{error}</p>}
 
-              {/* Skip-ahead button when user has saved resume */}
-              {fileName === "Saved resume" && resumeText.trim() && (
-                <button
-                  type="button"
-                  onClick={() => parsed ? setStep("confirm") : runParse(resumeText)}
-                  className="w-full mt-3 rounded-xl bg-[#1B3B5F] text-white py-3 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
-                >
-                  Continue with saved resume →
-                </button>
+              {/* Parsed-profile preview shown after parse completes — gives the user
+                  a moment to confirm Alma got the basics right before moving on. */}
+              {parsed && !uploading && (
+                <div className="mt-4 rounded-xl bg-[#EAE3D2]/50 border border-[#D9CFB5] p-4 text-sm">
+                  <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-2">Got it</p>
+                  <p><span className="text-[#14182A]/60">Name:</span> {parsed.name}</p>
+                  <p><span className="text-[#14182A]/60">School:</span> {parsed.university}</p>
+                  <p><span className="text-[#14182A]/60">Major · Grad:</span> {parsed.major} · &lsquo;{String(parsed.graduationYear).slice(2)}</p>
+                  {parsed.clubs && parsed.clubs.length > 0 && (
+                    <p className="mt-1 text-xs text-[#14182A]/60">Clubs spotted: {parsed.clubs.slice(0, 4).join(", ")}{parsed.clubs.length > 4 ? "..." : ""}</p>
+                  )}
+                </div>
               )}
             </div>
 
-            <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
-              <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">Connect Gmail</p>
-              <p className="text-sm text-[#14182A]/70 mb-4">I&apos;ll draft and send from your real address. You always stay in control.</p>
-              {gmailConnected ? (
-                <div>
-                  <p className="text-sm text-[#2E5A88] font-medium">✓ Gmail connected{gmailEmail ? ` as ${gmailEmail}` : ""}</p>
-                  <p className="text-xs text-[#14182A]/50 mt-1 italic">Manage in <a href="/account" className="underline hover:text-[#2E5A88]">/account</a></p>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={connectGmail}
-                  className="rounded-lg bg-[#2E5A88] text-white px-5 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
-                >
-                  Connect Gmail
-                </button>
-              )}
-            </div>
+            {/* Explicit Continue button — replaces the auto-advance that skipped past
+                the Gmail prompt entirely. Gmail status is shown by the persistent
+                banner above; this button always lets the user move on. */}
+            <button
+              type="button"
+              onClick={() => setStep("confirm")}
+              disabled={!parsed || uploading}
+              className="w-full rounded-xl bg-[#1B3B5F] text-white py-3 font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-40"
+            >
+              {parsed ? "Continue →" : "Drop your resume to continue"}
+            </button>
           </div>
         )}
 
@@ -504,6 +588,7 @@ function SetupInner() {
                         selected={targetFirms.has(f.id)}
                         userUniversity={parsed.university}
                         onToggle={() => toggleFirm(f.id)}
+                        onInfo={() => setBankInfo(f)}
                       />
                     ))}
                   </div>
@@ -514,21 +599,36 @@ function SetupInner() {
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">Coverage or product groups?</p>
               <p className="text-sm text-[#14182A]/70 mb-4 italic">Pick 2-4. Leave blank if you&apos;re undecided; I&apos;ll mix.</p>
-              <div className="flex flex-wrap gap-2">
-                {GROUP_CHOICES.map((g) => (
-                  <button
-                    key={g.id}
-                    type="button"
-                    onClick={() => toggleGroup(g.id)}
-                    className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                      targetGroups.has(g.id)
-                        ? "bg-[#C86B4F] text-white border-[#C86B4F]"
-                        : "bg-white text-[#14182A]/80 border-[#D9CFB5] hover:border-[#C86B4F]"
-                    }`}
-                  >
-                    {g.label}
-                  </button>
-                ))}
+
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 mb-2">Coverage (industry)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {GROUP_CHOICES.filter((g) => GROUP_KIND[g.id] === "coverage").map((g) => (
+                      <GroupChip
+                        key={g.id}
+                        id={g.id}
+                        label={g.label}
+                        selected={targetGroups.has(g.id)}
+                        onToggle={() => toggleGroup(g.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 mb-2">Product (deal type)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {GROUP_CHOICES.filter((g) => GROUP_KIND[g.id] === "product").map((g) => (
+                      <GroupChip
+                        key={g.id}
+                        id={g.id}
+                        label={g.label}
+                        selected={targetGroups.has(g.id)}
+                        onToggle={() => toggleGroup(g.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -619,6 +719,8 @@ function SetupInner() {
           </div>
         )}
       </div>
+
+      {bankInfo && <BankInfoModal firm={bankInfo} onClose={() => setBankInfo(null)} />}
     </div>
   );
 }
@@ -641,37 +743,63 @@ function BankCard({
   selected,
   userUniversity,
   onToggle,
+  onInfo,
 }: {
   firm: Firm;
   selected: boolean;
   userUniversity?: string;
   onToggle: () => void;
+  onInfo: () => void;
 }) {
   const groups = (firm.groups ?? []).slice(0, 4).map((g) => g.name);
   const sameSchool = firm.sameSchoolCount ?? 0;
   const total = firm.bankerCount ?? 0;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
       aria-pressed={selected}
-      className={`group relative text-left rounded-2xl px-4 py-3 transition-all duration-200 overflow-hidden ${
+      className={`group relative text-left rounded-2xl px-4 py-3 transition-all duration-200 overflow-hidden cursor-pointer ${
         selected
           ? "bg-gradient-to-br from-[#1B3B5F] to-[#2E5A88] text-white shadow-md scale-[1.01]"
           : "bg-white text-[#14182A] border border-[#D9CFB5] hover:border-[#2E5A88] hover:shadow-md hover:-translate-y-0.5"
       }`}
     >
-      {/* Selection pulse dot */}
-      {selected && (
-        <span className="absolute top-3 right-3 inline-flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B339] opacity-60" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8B339]" />
-        </span>
-      )}
+      {/* Top-right: info button + selection dot */}
+      <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfo();
+          }}
+          aria-label={`More info about ${firm.name}`}
+          className={`h-5 w-5 rounded-full flex items-center justify-center text-[11px] font-semibold transition-colors ${
+            selected
+              ? "bg-white/20 text-white hover:bg-white/30"
+              : "bg-[#EAE3D2] text-[#14182A]/60 hover:bg-[#2E5A88] hover:text-white"
+          }`}
+        >
+          i
+        </button>
+        {selected && (
+          <span className="inline-flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#E8B339] opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8B339]" />
+          </span>
+        )}
+      </div>
 
       {/* Top row: name */}
-      <p className={`font-[family-name:var(--font-fraunces)] text-base ${selected ? "text-white" : "text-[#14182A]"}`}>
+      <p className={`font-[family-name:var(--font-fraunces)] text-base pr-14 ${selected ? "text-white" : "text-[#14182A]"}`}>
         {firm.name}
       </p>
 
@@ -704,6 +832,126 @@ function BankCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function GroupChip({
+  id,
+  label,
+  selected,
+  onToggle,
+}: {
+  id: string;
+  label: string;
+  selected: boolean;
+  onToggle: () => void;
+}) {
+  const desc = groupDescription(id);
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={desc ?? undefined}
+      aria-label={desc ? `${label} — ${desc}` : label}
+      className={`group flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+        selected
+          ? "bg-[#C86B4F] text-white border-[#C86B4F]"
+          : "bg-white text-[#14182A]/80 border-[#D9CFB5] hover:border-[#C86B4F]"
+      }`}
+    >
+      <span className="font-medium">{label}</span>
+      {desc && (
+        <span className={`text-[10px] ${selected ? "text-white/80" : "text-[#14182A]/45"} hidden sm:inline`}>
+          · {desc}
+        </span>
+      )}
     </button>
+  );
+}
+
+function BankInfoModal({ firm, onClose }: { firm: Firm; onClose: () => void }) {
+  const groups = firm.groups ?? [];
+  const coverage = groups.filter((g) => g.kind === "coverage");
+  const product = groups.filter((g) => g.kind === "product");
+  const total = firm.bankerCount ?? 0;
+  const sameSchool = firm.sameSchoolCount ?? 0;
+  const tierBlurb: Record<Firm["tier"], string> = {
+    bulge_bracket: "Bulge bracket — the largest global investment banks. High deal volume across all sectors and products.",
+    elite_boutique: "Elite boutique — advisory-focused firms known for senior attention and high-stakes M&A or restructuring mandates.",
+    middle_market: "Middle market — strong deal flow in the $50M–$2B range. Often a faster path to responsibility and direct client work.",
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-[#14182A]/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl border border-[#D9CFB5] max-w-md w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-6 py-5 border-b border-[#D9CFB5] flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold">{TIER_LABEL[firm.tier]}</p>
+            <h3 className="font-[family-name:var(--font-fraunces)] text-2xl mt-1">{firm.name}</h3>
+            {firm.hq_city && <p className="text-xs text-[#14182A]/60 mt-0.5">HQ: {firm.hq_city}</p>}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="text-[#14182A]/40 hover:text-[#14182A] text-xl leading-none -mt-1"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4 text-sm">
+          <p className="text-[#14182A]/75 italic font-[family-name:var(--font-fraunces)]">{tierBlurb[firm.tier]}</p>
+
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 mb-1.5">Bankers in Alma&apos;s database</p>
+            <p className="text-[#14182A]">{total} banker{total === 1 ? "" : "s"}{sameSchool > 0 ? ` · ${sameSchool} from your school` : ""}</p>
+          </div>
+
+          {coverage.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 mb-1.5">Coverage groups</p>
+              <div className="flex flex-wrap gap-1.5">
+                {coverage.map((g) => (
+                  <span key={g.name} className="text-[11px] rounded-full bg-[#EAE3D2] px-2.5 py-1 text-[#14182A]/80">{g.name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {product.length > 0 && (
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 mb-1.5">Product groups</p>
+              <div className="flex flex-wrap gap-1.5">
+                {product.map((g) => (
+                  <span key={g.name} className="text-[11px] rounded-full bg-[#EAE3D2] px-2.5 py-1 text-[#14182A]/80">{g.name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {firm.domain && (
+            <div className="pt-2 border-t border-[#D9CFB5]">
+              <a
+                href={`https://${firm.domain}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-[#2E5A88] hover:text-[#1B3B5F] underline text-sm"
+              >
+                {firm.domain}
+                <span aria-hidden>↗</span>
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

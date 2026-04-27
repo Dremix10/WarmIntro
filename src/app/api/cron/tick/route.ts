@@ -53,10 +53,20 @@ async function handleTick() {
   const now = new Date();
   const TICK_WINDOW_MIN = 15;
 
-  // Get all connected users with preferred times
-  const { data: trustRows } = await admin
+  // Only consider users who actually completed setup. Trust rows can outlive
+  // a profile when an e2e test crashes or a user bails mid-onboarding —
+  // calling the planner for them just emits noisy profile_not_found errors.
+  const { data: completeProfiles } = await admin
+    .from("profiles")
+    .select("id")
+    .not("target_firms", "is", null);
+  const completeIds = new Set((completeProfiles ?? []).map((p) => p.id));
+
+  // Get trust rows, then filter to users with a real profile + targets.
+  const { data: rawTrustRows } = await admin
     .from("trust_levels")
     .select("user_id, preferred_send_time, preferred_timezone, tomorrow_override");
+  const trustRows = (rawTrustRows ?? []).filter((t) => completeIds.has(t.user_id));
 
   // Also include users who have outstanding planner nudges (reply drafts to do) regardless of time
   const { data: recentNudges } = await admin
@@ -69,7 +79,10 @@ async function handleTick() {
 
   const triggered: Array<{ userId: string; reason: string }> = [];
 
-  for (const t of trustRows ?? []) {
+  // Nudges from users with no complete profile are also dropped — same reason.
+  const filteredNudgedIds = new Set([...nudgedUserIds].filter((id) => completeIds.has(id)));
+
+  for (const t of trustRows) {
     const override = t.tomorrow_override as { sendTime?: string; skipDay?: boolean } | null;
     if (override?.skipDay) continue;
     const sendTime = override?.sendTime ?? t.preferred_send_time ?? "07:00";
@@ -77,7 +90,7 @@ async function handleTick() {
     const targetMin = parseHHMM(sendTime);
     const withinWindow = Math.abs(nowMin - targetMin) < TICK_WINDOW_MIN;
 
-    if (withinWindow || nudgedUserIds.has(t.user_id)) {
+    if (withinWindow || filteredNudgedIds.has(t.user_id)) {
       triggered.push({ userId: t.user_id, reason: withinWindow ? "send_time" : "nudge" });
     }
   }

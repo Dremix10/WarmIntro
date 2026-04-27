@@ -40,7 +40,8 @@ export function NavHeader() {
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <button
           type="button"
-          onClick={() => router.push(session ? "/today" : "/")}
+          onClick={() => router.push("/")}
+          aria-label="Alma — home"
           className="shrink-0 text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)] hover:text-[#2E5A88] transition-colors"
         >
           alma

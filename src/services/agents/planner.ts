@@ -77,11 +77,13 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
       filters: { id: eq(input.userId) },
     });
     if (!profile) {
-      await endAgentRun(ctx, { error: "profile not found — user must complete /setup" }, "profile_not_found");
+      // Expected state for new signups — not an error to alert on. Cron should
+      // also filter these out at the source, but defense in depth.
+      await endAgentRun(ctx, { skipped: "no_profile_yet", needsSetup: true });
       return { ...out, needsSetup: true };
     }
     if (!profile.target_firms || profile.target_firms.length === 0) {
-      await endAgentRun(ctx, { error: "no target_firms — user must complete /setup" }, "setup_incomplete");
+      await endAgentRun(ctx, { skipped: "setup_incomplete", needsSetup: true });
       return { ...out, needsSetup: true };
     }
     const p: ProfileForSend = {
