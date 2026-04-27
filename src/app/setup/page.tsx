@@ -222,10 +222,13 @@ function SetupInner() {
       // is the source of truth, especially for users whose persisted state
       // predates resume_text being saved.
       if (tf.length > 0 || data.story_one_liner) {
+        const sessionEmail = session.user.email ?? "";
+        const fallbackUniversity =
+          sessionEmail.endsWith("@brown.edu") ? "Brown University" : "Rice University";
         setParsed((prev) => prev ?? ({
           name: data.name ?? "Student",
           email: data.email ?? undefined,
-          university: data.university ?? "Rice University",
+          university: data.university ?? fallbackUniversity,
           major: data.major ?? "Undeclared",
           graduationYear: data.graduation_year ?? new Date().getFullYear() + 3,
           storyOneLiner: data.story_one_liner ?? undefined,
@@ -311,10 +314,18 @@ function SetupInner() {
   async function runParse(text: string) {
     if (!session) return;
     const { data: { session: s } } = await supabase.auth.getSession();
+    // Derive university hint from email domain. Hardcoding "Rice University"
+    // here was biasing Brown students' parses → drafts went out claiming the
+    // user was a Rice student.
+    const email = session.user.email ?? "";
+    const universityHint =
+      email.endsWith("@brown.edu") ? "Brown University"
+        : email.endsWith("@rice.edu") ? "Rice University"
+        : ""; // empty → resume parser must extract from the resume itself
     const res = await fetch("/api/parse-resume", {
       method: "POST",
       headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ resumeText: text, university: "Rice University" }),
+      body: JSON.stringify({ resumeText: text, university: universityHint }),
     });
     if (!res.ok) {
       setError("Resume parse failed.");
@@ -571,6 +582,7 @@ function SetupInner() {
 
               <div className="space-y-3 text-sm">
                 <ProfileRow label="Name" value={parsed.name} onChange={(v) => setParsed({ ...parsed, name: v })} />
+                <ProfileRow label="School" value={parsed.university} onChange={(v) => setParsed({ ...parsed, university: v })} />
                 <ProfileRow label="Major" value={parsed.major} onChange={(v) => setParsed({ ...parsed, major: v })} />
                 <ProfileRow label="Grad year" value={String(parsed.graduationYear)} onChange={(v) => setParsed({ ...parsed, graduationYear: parseInt(v, 10) || parsed.graduationYear })} />
                 {parsed.gpa && <p className="text-[#14182A]/70">GPA: {parsed.gpa}</p>}

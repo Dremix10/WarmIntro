@@ -12,6 +12,14 @@ export default function ArchipelagoTemplate() {
   return (
     <div className="bg-gradient-to-b from-[#F2ECDB] via-[#EAE3D2] to-[#E4DAC2] text-[#14182A]">
       <div className="mx-auto max-w-5xl px-6 pt-8 pb-16">
+        <div className="mt-4 mb-6 rounded-xl border-2 border-[#C86B4F]/30 bg-[#C86B4F]/5 px-4 py-3 text-center text-sm">
+          <p className="font-medium text-[#14182A]">Preview — visualization only.</p>
+          <p className="text-xs text-[#14182A]/60 mt-0.5">
+            Names + stages below are mock data. Live wire-up to your real connections is post-launch.
+            See <a href="/pipeline" className="underline text-[#2E5A88]">your pipeline</a> for actual progress.
+          </p>
+        </div>
+
         <div className="mt-12 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">Your archipelago</p>
           <h1 className="mx-auto mt-4 max-w-2xl text-4xl leading-[1.1] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
