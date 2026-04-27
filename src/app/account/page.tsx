@@ -154,12 +154,20 @@ export default function AccountPage() {
             />
             <Row label="Why IB" value={profile?.story_one_liner ?? "—"} />
           </div>
-          <a
-            href="/setup"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#2E5A88] text-white px-4 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
-          >
-            Edit profile + targets →
-          </a>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href="/setup?edit=targets"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#2E5A88] text-white px-4 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors"
+            >
+              Edit firms + groups
+            </a>
+            <a
+              href="/setup?edit=resume"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#2E5A88] text-[#2E5A88] px-4 py-2 text-sm font-medium hover:bg-[#2E5A88]/10 transition-colors"
+            >
+              Re-upload resume
+            </a>
+          </div>
           <p className="mt-2 text-xs text-[#14182A]/50 italic">
             Picks up where you are — change banks, groups, or your &ldquo;why IB&rdquo; sentence and re-run.
           </p>

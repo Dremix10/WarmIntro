@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   // Look up existing row. If none, we'll upsert with defaults; if exists, we'll merge.
   const { data: existing } = await admin
     .from("profiles")
-    .select("name, major, graduation_year, university")
+    .select("name, major, graduation_year, university, resume_text")
     .eq("id", ctx.user.id)
     .maybeSingle();
 
@@ -65,5 +65,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true });
+  // Re-contextualization: if resume_text actually changed, the user's voice +
+  // background context is stale on every pending draft. Wipe pending drafts so
+  // the next Planner run regenerates from fresh context. (Sent drafts are kept
+  // — we can't unsend, but their connections record still tracks the thread.)
+  const oldResume = (existing?.resume_text as string | null) ?? "";
+  const newResume = (body.resumeText ?? "").trim();
+  const resumeChanged = newResume.length > 0 && newResume !== (oldResume ?? "").trim();
+  let staleDraftsDropped = 0;
+  if (resumeChanged) {
+    // Drop dependent rows first (FKs)
+    const { data: stale } = await admin
+      .from("drafts")
+      .select("id")
+      .eq("user_id", ctx.user.id)
+      .is("sent_at", null)
+      .in("status", ["pending_critic", "needs_revision", "approved"]);
+    const ids = (stale ?? []).map((r) => r.id);
+    if (ids.length > 0) {
+      await admin.from("critic_reviews").delete().in("draft_id", ids);
+      await admin.from("signals").delete().in("draft_id", ids);
+      await admin.from("drafts").delete().in("id", ids);
+      staleDraftsDropped = ids.length;
+    }
+  }
+
+  return NextResponse.json({ ok: true, resumeChanged, staleDraftsDropped });
 }

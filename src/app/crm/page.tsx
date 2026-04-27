@@ -25,6 +25,9 @@ interface CrmRow {
 }
 
 const STAGE_ORDER: Stage[] = ["draft", "sent", "replied", "coffee", "referral", "first_round", "superday", "offer"];
+// Stages a user can manually advance/regress to. Excludes "draft" (managed by
+// the Planner / mark_sent flow) and "closed_lost" (handled separately).
+const ADVANCEABLE: Stage[] = ["sent", "replied", "coffee", "referral", "first_round", "superday", "offer"];
 
 const STAGE_LABEL: Record<Stage, string> = {
   draft: "Draft prepared",
@@ -159,18 +162,7 @@ export default function CrmPage() {
                         </div>
                       ) : (
                         items.map((r) => (
-                          <div key={r.id} className="rounded-xl bg-white border border-[#D9CFB5] p-3">
-                            <p className="text-sm font-medium leading-tight">{r.name}</p>
-                            <p className="text-[11px] text-[#14182A]/60 mt-0.5">
-                              {r.title ?? ""}{r.firmName ? ` · ${r.firmName}` : ""}
-                            </p>
-                            {r.university && (
-                              <p className="text-[10px] text-[#14182A]/40 mt-1">{r.university}</p>
-                            )}
-                            <p className="text-[10px] text-[#14182A]/40 mt-2">
-                              {new Date(r.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                            </p>
-                          </div>
+                          <CrmCard key={r.id} row={r} onAdvanced={load} />
                         ))
                       )}
                     </div>
@@ -181,6 +173,121 @@ export default function CrmPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function CrmCard({ row, onAdvanced }: { row: CrmRow; onAdvanced: () => Promise<void> | void }) {
+  const [busy, setBusy] = useState(false);
+  const [showLost, setShowLost] = useState(false);
+
+  // Determine next/prev stage for the advance buttons. Draft → sent is handled
+  // via the "I sent it" button on /today, not here.
+  const idx = ADVANCEABLE.indexOf(row.stage as Stage);
+  const next: Stage | null = idx >= 0 && idx < ADVANCEABLE.length - 1 ? ADVANCEABLE[idx + 1] : null;
+  const prev: Stage | null = idx > 0 ? ADVANCEABLE[idx - 1] : null;
+
+  async function moveTo(stage: Stage) {
+    if (row.stage === "draft") return; // can't advance a draft from here
+    setBusy(true);
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      await fetch(`/api/connections/${row.id}/stage`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ stage }),
+      });
+      await onAdvanced();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const isDraft = row.stage === "draft";
+
+  return (
+    <div className="rounded-xl bg-white border border-[#D9CFB5] p-3 group">
+      <p className="text-sm font-medium leading-tight">{row.name}</p>
+      <p className="text-[11px] text-[#14182A]/60 mt-0.5">
+        {row.title ?? ""}{row.firmName ? ` · ${row.firmName}` : ""}
+      </p>
+      {row.university && (
+        <p className="text-[10px] text-[#14182A]/40 mt-1">{row.university}</p>
+      )}
+      <p className="text-[10px] text-[#14182A]/40 mt-2">
+        {new Date(row.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+      </p>
+
+      {/* Stage controls — visible on hover or always on mobile */}
+      {isDraft ? (
+        <div className="mt-2 pt-2 border-t border-[#EAE3D2]">
+          <a href="/today" className="text-[10px] text-[#2E5A88] hover:underline">Open in queue →</a>
+        </div>
+      ) : (
+        <div className="mt-2 pt-2 border-t border-[#EAE3D2] flex items-center justify-between gap-1">
+          <button
+            type="button"
+            onClick={() => prev && moveTo(prev)}
+            disabled={!prev || busy}
+            title={prev ? `Move back to ${STAGE_LABEL[prev]}` : "Already at first stage"}
+            className="text-[10px] text-[#14182A]/40 hover:text-[#14182A]/80 disabled:opacity-30"
+          >
+            ← back
+          </button>
+          {next && (
+            <button
+              type="button"
+              onClick={() => moveTo(next)}
+              disabled={busy}
+              className="text-[10px] px-2 py-0.5 rounded-full bg-[#1B3B5F] text-white hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+            >
+              → {STAGE_LABEL[next]}
+            </button>
+          )}
+          {!next && (
+            <span className="text-[10px] text-[#1B3B5F] font-semibold">offer ✓</span>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowLost(true)}
+            className="text-[10px] text-[#14182A]/30 hover:text-[#C86B4F]"
+            title="Mark closed (no fit, ghosted, etc.)"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {showLost && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#14182A]/40 backdrop-blur-sm"
+          onClick={() => setShowLost(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-[#D9CFB5] max-w-sm w-full p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Confirm</p>
+            <h3 className="font-[family-name:var(--font-fraunces)] text-xl mb-2">Close this thread?</h3>
+            <p className="text-sm text-[#14182A]/70 mb-4">
+              Move <strong>{row.name}</strong> out of your active pipeline (ghosted, no fit, declined). You can revisit later.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button type="button" onClick={() => setShowLost(false)} className="rounded-lg border border-[#D9CFB5] px-3 py-1.5 text-xs hover:bg-[#EAE3D2]">Cancel</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLost(false);
+                  moveTo("closed_lost");
+                }}
+                className="rounded-lg bg-[#C86B4F] text-white px-3 py-1.5 text-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

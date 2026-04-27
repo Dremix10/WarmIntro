@@ -255,9 +255,16 @@ function SetupInner() {
           graduationYear: data.graduation_year ?? new Date().getFullYear() + 3,
           storyOneLiner: data.story_one_liner ?? undefined,
         }));
-        // Only auto-jump if the user is currently on the upload step (i.e. they
-        // didn't deliberately click "back" to step 1).
-        setStep((current) => (current === "upload" ? "confirm" : current));
+
+        // Edit-mode honors ?edit= from /account: "resume" → start at upload,
+        // "targets" → go to confirm. Default for someone with picks: confirm.
+        const editMode = searchParams.get("edit");
+        if (editMode === "resume") {
+          setStep("upload");
+        } else {
+          // Only auto-jump if the user is currently on the upload step.
+          setStep((current) => (current === "upload" ? "confirm" : current));
+        }
       }
     } catch {
       // ignore — fresh users continue with step 1
@@ -611,8 +618,24 @@ function SetupInner() {
         {step === "confirm" && parsed && (
           <div className="space-y-4">
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
-              <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-2">Step 2 of 3</p>
-              <h2 className="font-[family-name:var(--font-fraunces)] text-2xl mb-4">This look right?</h2>
+              <div className="flex items-baseline justify-between mb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-2">Step 2 of 3</p>
+                  <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">This look right?</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setParsed(null);
+                    setResumeText("");
+                    setFileName(null);
+                    setStep("upload");
+                  }}
+                  className="text-xs text-[#2E5A88] hover:text-[#1B3B5F] underline shrink-0"
+                >
+                  Re-upload resume
+                </button>
+              </div>
 
               <div className="space-y-3 text-sm">
                 <ProfileRow label="Name" value={parsed.name} onChange={(v) => setParsed({ ...parsed, name: v })} />
