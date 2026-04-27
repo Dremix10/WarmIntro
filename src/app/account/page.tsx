@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
 import { SkeletonPage } from "@/components/Skeleton";
+import { groupLabels } from "@/lib/labels";
 
 interface ProfileSnapshot {
   name: string;
@@ -19,10 +20,16 @@ interface ProfileSnapshot {
   story_one_liner: string | null;
 }
 
+interface FirmRef {
+  id: string;
+  name: string;
+}
+
 export default function AccountPage() {
   const { session, authLoading, signOut } = useAppState();
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileSnapshot | null>(null);
+  const [firmsById, setFirmsById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
@@ -44,7 +51,31 @@ export default function AccountPage() {
       .select("name, email, university, major, graduation_year, target_firms, target_groups, gmail_connected_at, gmail_email, story_one_liner")
       .eq("id", session.user.id)
       .maybeSingle();
-    setProfile((data as unknown as ProfileSnapshot) ?? null);
+    const snapshot = (data as unknown as ProfileSnapshot) ?? null;
+
+    // No profile or no targets picked — bounce to setup. Mirrors /today's logic
+    // so users can't land on a blank /account page after signup.
+    if (!snapshot || !snapshot.target_firms?.length) {
+      router.replace("/setup");
+      return;
+    }
+
+    setProfile(snapshot);
+
+    // Load firm name map so we can render "Morgan Stanley, Goldman Sachs"
+    // instead of "5 picked". Cheap public endpoint, cached by browser.
+    try {
+      const res = await fetch("/api/setup/firms");
+      if (res.ok) {
+        const json = (await res.json()) as { firms: FirmRef[] };
+        const map: Record<string, string> = {};
+        for (const f of json.firms ?? []) map[f.id] = f.name;
+        setFirmsById(map);
+      }
+    } catch {
+      // Non-fatal — falls back to "N picked"
+    }
+
     setLoading(false);
   }
 
@@ -109,8 +140,18 @@ export default function AccountPage() {
             <Row label="Email" value={profile?.email ?? session?.user.email ?? "—"} />
             <Row label="School" value={profile?.university ?? "—"} />
             <Row label="Major · Grad" value={`${profile?.major ?? "—"} · '${String(profile?.graduation_year ?? "").slice(2)}`} />
-            <Row label="Target firms" value={profile?.target_firms?.length ? `${profile.target_firms.length} picked` : "none yet"} />
-            <Row label="Target groups" value={profile?.target_groups?.length ? profile.target_groups.join(", ") : "none yet"} />
+            <Row
+              label="Target firms"
+              value={
+                profile?.target_firms?.length
+                  ? profile.target_firms.map((id) => firmsById[id] ?? id).join(", ")
+                  : "none yet"
+              }
+            />
+            <Row
+              label="Target groups"
+              value={profile?.target_groups?.length ? groupLabels(profile.target_groups).join(", ") : "none yet"}
+            />
             <Row label="Why IB" value={profile?.story_one_liner ?? "—"} />
           </div>
           <a

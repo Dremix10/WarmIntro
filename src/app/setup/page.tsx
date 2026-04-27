@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
+import { GROUP_LABELS } from "@/lib/labels";
 
 interface Firm {
   id: string;
@@ -22,21 +23,9 @@ const TIER_LABEL: Record<Firm["tier"], string> = {
   middle_market: "Middle Market",
 };
 
-const GROUP_CHOICES: Array<{ id: string; label: string }> = [
-  { id: "tmt", label: "TMT" },
-  { id: "healthcare", label: "Healthcare" },
-  { id: "consumer", label: "Consumer" },
-  { id: "industrials", label: "Industrials" },
-  { id: "fig", label: "FIG" },
-  { id: "energy", label: "Energy" },
-  { id: "real-estate", label: "Real Estate" },
-  { id: "sponsors", label: "Sponsors" },
-  { id: "m-and-a", label: "M&A" },
-  { id: "levfin", label: "LevFin" },
-  { id: "rssg", label: "Restructuring" },
-  { id: "ecm", label: "ECM" },
-  { id: "dcm", label: "DCM" },
-];
+const GROUP_CHOICES: Array<{ id: string; label: string }> = Object.entries(GROUP_LABELS).map(
+  ([id, label]) => ({ id, label })
+);
 
 type Step = "upload" | "confirm" | "story" | "done";
 type Trust = "C" | "B" | "A";
