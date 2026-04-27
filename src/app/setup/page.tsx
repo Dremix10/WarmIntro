@@ -10,6 +10,10 @@ interface Firm {
   name: string;
   tier: "bulge_bracket" | "elite_boutique" | "middle_market";
   domain: string;
+  hq_city?: string | null;
+  bankerCount?: number;
+  sameSchoolCount?: number;
+  groups?: Array<{ name: string; kind: string }>;
 }
 
 const TIER_LABEL: Record<Firm["tier"], string> = {
@@ -202,7 +206,8 @@ function SetupInner() {
 
   async function loadFirms() {
     try {
-      const res = await fetch("/api/setup/firms");
+      const universityParam = profile?.university ? `?university=${encodeURIComponent(profile.university)}` : "";
+      const res = await fetch(`/api/setup/firms${universityParam}`);
       if (!res.ok) {
         setError(`Couldn't load banks (HTTP ${res.status}). Try refreshing in a few seconds.`);
         return;
@@ -476,25 +481,24 @@ function SetupInner() {
 
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">Which banks?</p>
-              <p className="text-sm text-[#14182A]/70 mb-4 italic">Tap everything you&apos;d take a coffee at. I&apos;ll prioritize them.</p>
+              <p className="text-sm text-[#14182A]/70 mb-1 italic">Tap everything you&apos;d take a coffee at.</p>
+              <p className="text-xs text-[#14182A]/50 mb-5">{targetFirms.size} selected · {firms.length} total</p>
 
               {(["bulge_bracket", "elite_boutique", "middle_market"] as const).map((tier) => (
-                <div key={tier} className="mb-4">
-                  <p className="text-xs uppercase tracking-wider text-[#14182A]/50 font-semibold mb-2">{TIER_LABEL[tier]}</p>
-                  <div className="flex flex-wrap gap-2">
+                <div key={tier} className="mb-6">
+                  <div className="flex items-baseline justify-between mb-3">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold">{TIER_LABEL[tier]}</p>
+                    <p className="text-[10px] text-[#14182A]/40">{firmsByTier[tier].length} firms</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {firmsByTier[tier].map((f) => (
-                      <button
+                      <BankCard
                         key={f.id}
-                        type="button"
-                        onClick={() => toggleFirm(f.id)}
-                        className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                          targetFirms.has(f.id)
-                            ? "bg-[#2E5A88] text-white border-[#2E5A88]"
-                            : "bg-white text-[#14182A]/80 border-[#D9CFB5] hover:border-[#2E5A88]"
-                        }`}
-                      >
-                        {f.name}
-                      </button>
+                        firm={f}
+                        selected={targetFirms.has(f.id)}
+                        userUniversity={parsed.university}
+                        onToggle={() => toggleFirm(f.id)}
+                      />
                     ))}
                   </div>
                 </div>
@@ -623,5 +627,77 @@ function ProfileRow({ label, value, onChange }: { label: string; value: string; 
         className="flex-1 bg-transparent border-b border-[#D9CFB5] focus:border-[#2E5A88] outline-none py-1 text-sm"
       />
     </div>
+  );
+}
+
+function BankCard({
+  firm,
+  selected,
+  userUniversity,
+  onToggle,
+}: {
+  firm: Firm;
+  selected: boolean;
+  userUniversity?: string;
+  onToggle: () => void;
+}) {
+  const groups = (firm.groups ?? []).slice(0, 4).map((g) => g.name);
+  const sameSchool = firm.sameSchoolCount ?? 0;
+  const total = firm.bankerCount ?? 0;
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={selected}
+      className={`group relative text-left rounded-2xl px-4 py-3 transition-all duration-200 overflow-hidden ${
+        selected
+          ? "bg-gradient-to-br from-[#1B3B5F] to-[#2E5A88] text-white shadow-md scale-[1.01]"
+          : "bg-white text-[#14182A] border border-[#D9CFB5] hover:border-[#2E5A88] hover:shadow-md hover:-translate-y-0.5"
+      }`}
+    >
+      {/* Selection pulse dot */}
+      {selected && (
+        <span className="absolute top-3 right-3 inline-flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8B339] opacity-60" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8B339]" />
+        </span>
+      )}
+
+      {/* Top row: name */}
+      <p className={`font-[family-name:var(--font-fraunces)] text-base ${selected ? "text-white" : "text-[#14182A]"}`}>
+        {firm.name}
+      </p>
+
+      {/* HQ + counts row */}
+      <p className={`mt-0.5 text-[11px] ${selected ? "text-white/70" : "text-[#14182A]/60"}`}>
+        {firm.hq_city ? `${firm.hq_city} · ` : ""}
+        {total > 0 ? `${total} banker${total === 1 ? "" : "s"} on file` : "Building coverage"}
+        {sameSchool > 0 ? ` · ${sameSchool} from ${userUniversity?.replace(" University", "") ?? "your school"}` : ""}
+      </p>
+
+      {/* Group chips */}
+      {groups.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {groups.map((g) => (
+            <span
+              key={g}
+              className={`text-[10px] rounded-full px-2 py-0.5 ${
+                selected
+                  ? "bg-white/15 text-white/90"
+                  : "bg-[#EAE3D2] text-[#14182A]/70"
+              }`}
+            >
+              {g}
+            </span>
+          ))}
+          {(firm.groups?.length ?? 0) > 4 && (
+            <span className={`text-[10px] ${selected ? "text-white/60" : "text-[#14182A]/40"}`}>
+              +{(firm.groups?.length ?? 0) - 4}
+            </span>
+          )}
+        </div>
+      )}
+    </button>
   );
 }
