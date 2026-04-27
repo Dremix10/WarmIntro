@@ -34,13 +34,24 @@ export async function GET(request: Request) {
     .select("stage")
     .eq("user_id", ctx.user.id);
 
+  const { data: profile } = await ctx.supabase
+    .from("profiles")
+    .select("target_firms, gmail_connected_at")
+    .eq("id", ctx.user.id)
+    .maybeSingle();
+
   const stageCounts: Record<string, number> = {};
   for (const c of pipeline ?? []) stageCounts[c.stage] = (stageCounts[c.stage] ?? 0) + 1;
+
+  const needsSetup = !profile?.target_firms || profile.target_firms.length === 0;
+  const needsGmail = !profile?.gmail_connected_at;
 
   return NextResponse.json({
     drafts: drafts ?? [],
     trust: trust ?? null,
     recent: recent ?? [],
     stageCounts,
+    needsSetup,
+    needsGmail,
   });
 }

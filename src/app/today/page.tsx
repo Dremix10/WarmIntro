@@ -33,6 +33,8 @@ interface TodayResponse {
   trust: TrustState | null;
   recent: Array<{ signal_type: string; metadata: Record<string, unknown>; occurred_at: string }>;
   stageCounts: Record<string, number>;
+  needsSetup?: boolean;
+  needsGmail?: boolean;
 }
 
 const TRUST_LABEL: Record<"C" | "B" | "A", string> = {
@@ -79,6 +81,11 @@ export default function TodayPage() {
       });
       if (!res.ok) throw new Error(`api error ${res.status}`);
       const json = (await res.json()) as TodayResponse;
+      // Auto-route incomplete users to /setup on first visit
+      if (json.needsSetup) {
+        router.replace("/setup");
+        return;
+      }
       setData(json);
       setError(null);
     } catch (err) {

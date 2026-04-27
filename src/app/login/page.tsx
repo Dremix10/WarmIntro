@@ -11,7 +11,21 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && session) {
-      router.push("/today");
+      // Decide where to land based on profile completeness
+      (async () => {
+        try {
+          const { supabase: sb } = await import("@/lib/supabase-browser");
+          const { data: profile } = await sb
+            .from("profiles")
+            .select("target_firms")
+            .eq("id", session.user.id)
+            .maybeSingle();
+          const needsSetup = !profile?.target_firms || profile.target_firms.length === 0;
+          router.replace(needsSetup ? "/setup" : "/today");
+        } catch {
+          router.replace("/today");
+        }
+      })();
     }
   }, [authLoading, session, router]);
 
@@ -27,7 +41,23 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
-          <AuthForm onSuccess={() => router.push("/today")} />
+          <AuthForm onSuccess={async () => {
+            // Decide where to land — /setup if profile incomplete, /today otherwise
+            try {
+              const { supabase: sb } = await import("@/lib/supabase-browser");
+              const { data: { session: s } } = await sb.auth.getSession();
+              if (!s) { router.push("/today"); return; }
+              const { data: profile } = await sb
+                .from("profiles")
+                .select("target_firms")
+                .eq("id", s.user.id)
+                .maybeSingle();
+              const needsSetup = !profile?.target_firms || profile.target_firms.length === 0;
+              router.push(needsSetup ? "/setup" : "/today");
+            } catch {
+              router.push("/today");
+            }
+          }} />
         </div>
 
         <p className="text-center mt-6 text-xs text-[#14182A]/40">
