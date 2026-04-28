@@ -28,7 +28,59 @@ interface BankerRow {
 }
 interface FirmRow { id: string; name: string }
 
+// False-negative regression test: known-bad bankers the auditor MUST flag.
+// Run with `--false-negative-test` flag to exercise.
+const SYNTHETIC_BAD_BANKERS = [
+  {
+    id: "fn-test-1",
+    name: "Maya Patel",
+    title: "Associate",
+    firmName: "Evercore",
+    linkedinUrl: "https://www.linkedin.com/in/maya-patel-evercore",
+    university: "Brown University",
+  },
+  {
+    id: "fn-test-2",
+    name: "Alex Chen",
+    title: "VP, TMT",
+    firmName: "Morgan Stanley",
+    linkedinUrl: "https://www.linkedin.com/in/alex-chen-ms-tmt",
+    university: "Brown University",
+  },
+  {
+    id: "fn-test-3",
+    name: "Zzqxv Made-Up-Person",
+    title: "Analyst",
+    firmName: "Goldman Sachs",
+    linkedinUrl: null,
+    university: "Brown University",
+  },
+];
+
+async function runFalseNegativeTest() {
+  console.log("=== FALSE-NEGATIVE TEST ===\n");
+  console.log("Auditing 3 known-bad synthetic bankers. Each MUST flag.\n");
+  let allFlagged = true;
+  for (const b of SYNTHETIC_BAD_BANKERS) {
+    process.stdout.write(`  ${b.name}… `);
+    const result = await auditBanker(b);
+    if (result.flags.length === 0) {
+      console.log("MISSED — false negative");
+      allFlagged = false;
+    } else {
+      console.log(`flagged ${result.flags.length}x: ${result.flags.map((f) => f.field).join(", ")}`);
+    }
+    await new Promise((r) => setTimeout(r, 1100));
+  }
+  console.log(`\n${allFlagged ? "✓ All synthetic bad rows flagged correctly" : "✗ Some synthetic bad rows slipped through"}`);
+  process.exit(allFlagged ? 0 : 1);
+}
+
 async function main() {
+  if (process.argv.includes("--false-negative-test")) {
+    await runFalseNegativeTest();
+    return;
+  }
   const limitArg = process.argv.indexOf("--limit");
   const limit = limitArg >= 0 ? parseInt(process.argv[limitArg + 1], 10) || 100 : 100;
 
