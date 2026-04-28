@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const admin = getAdminClient();
   const { data: draft } = await admin
     .from("drafts")
-    .select("id, user_id, banker_id, subject, body")
+    .select("id, user_id, banker_id, connection_id, subject, body, bankers(name, title, linkedin_url, firm_id, firms(name))")
     .eq("id", id)
     .single();
   if (!draft || draft.user_id !== ctx.user.id) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -71,10 +71,58 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     );
   }
 
+  const now = new Date().toISOString();
   await admin
     .from("drafts")
-    .update({ status: "sent", sent_at: new Date().toISOString(), sent_message_id: res.sentMessageId, updated_at: new Date().toISOString() })
+    .update({ status: "sent", sent_at: now, sent_message_id: res.sentMessageId, updated_at: now })
     .eq("id", id);
+
+  // Create / advance the connection so /crm and /network reflect the send.
+  // Was previously only done by the Planner's autopilot path + send-all batch
+  // — single-button send was creating sent drafts but no connection rows.
+  type BankerJoin = { name: string; title: string | null; linkedin_url: string | null; firm_id: string | null; firms: { name: string } | null };
+  const bankerRow = (draft as unknown as { bankers: BankerJoin | null }).bankers;
+  if (draft.connection_id) {
+    await admin
+      .from("connections")
+      .update({
+        stage: "sent",
+        last_send_message_id: res.sentMessageId,
+        thread_id: res.gmailThreadId,
+        silence_days: 0,
+        needs_followup: false,
+        updated_at: now,
+      })
+      .eq("id", draft.connection_id);
+  } else if (draft.banker_id) {
+    // Avoid duplicating if a connection already exists for this banker
+    const { data: existing } = await admin
+      .from("connections")
+      .select("id")
+      .eq("user_id", ctx.user.id)
+      .eq("banker_id", draft.banker_id)
+      .maybeSingle();
+    if (existing) {
+      await admin
+        .from("connections")
+        .update({ stage: "sent", last_send_message_id: res.sentMessageId, thread_id: res.gmailThreadId, silence_days: 0, needs_followup: false, updated_at: now })
+        .eq("id", existing.id);
+    } else {
+      await admin.from("connections").insert({
+        user_id: ctx.user.id,
+        banker_id: draft.banker_id,
+        alumni_id: draft.banker_id, // legacy column
+        alumni_name: bankerRow?.name ?? "",
+        alumni_role: bankerRow?.title ?? "",
+        alumni_linkedin_url: bankerRow?.linkedin_url ?? "",
+        company_id: bankerRow?.firm_id ?? "",
+        company_name: bankerRow?.firms?.name ?? "",
+        stage: "sent",
+        last_send_message_id: res.sentMessageId,
+        thread_id: res.gmailThreadId,
+      });
+    }
+  }
 
   await logSignal({
     userId: ctx.user.id,
@@ -82,7 +130,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     draftId: id,
     agent: "planner",
     signalType: "draft_sent",
-    metadata: { manual: true },
+    metadata: { manual: true, gmailThreadId: res.gmailThreadId },
   });
 
   return NextResponse.json({ ok: true, messageId: res.sentMessageId });

@@ -37,6 +37,18 @@
   animation: card-enter-emphasis 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Sent-card fade-out: triggered after a successful Auto-send via Gmail.
+   Card lingers briefly, fades, then the silent data refresh removes it
+   from the queue. */
+@keyframes card-sent-fade {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  20%  { opacity: 1; transform: translateY(-2px) scale(1.005); box-shadow: 0 0 0 3px rgba(46, 90, 136, 0.18); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+.draft-card-sent-fade {
+  animation: card-sent-fade 900ms ease-out forwards !important;
+}
+
 /* Top-of-page progress bar slide */
 @keyframes loading-bar {
   0%   { transform: translateX(-100%); }

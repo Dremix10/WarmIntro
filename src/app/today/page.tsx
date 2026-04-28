@@ -145,7 +145,12 @@ export default function TodayPage() {
     }
   }
 
-  async function act(draftId: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
+  async function act(
+    draftId: string,
+    action: "approve" | "skip" | "send" | "stop" | "mark_sent",
+    payload?: Record<string, unknown>,
+    opts: { deferReload?: boolean } = {}
+  ): Promise<{ ok: boolean; error?: string }> {
     const { data: { session: s } } = await supabase.auth.getSession();
     let result: { ok: boolean; error?: string } = { ok: true };
     try {
@@ -164,8 +169,13 @@ export default function TodayPage() {
     } catch (err) {
       result = { ok: false, error: String(err) };
     }
-    await load({ silent: true });
+    if (!opts.deferReload) await load({ silent: true });
     return result;
+  }
+
+  /** Caller-driven reload — used when the caller wants to animate first */
+  async function reload() {
+    await load({ silent: true });
   }
 
   async function updateTrust(field: keyof TrustState, value: string | boolean): Promise<void> {
@@ -285,7 +295,7 @@ export default function TodayPage() {
             </h2>
             <div className="space-y-3">
               {approved.map((d) => (
-                <DraftCard key={d.id} draft={d} onAction={act} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
+                <DraftCard key={d.id} draft={d} onAction={act} onReload={reload} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
               ))}
             </div>
           </section>
@@ -297,7 +307,7 @@ export default function TodayPage() {
             <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">In review</h2>
             <div className="space-y-3">
               {pending.map((d) => (
-                <DraftCard key={d.id} draft={d} onAction={act} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
+                <DraftCard key={d.id} draft={d} onAction={act} onReload={reload} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
               ))}
             </div>
           </section>
@@ -368,11 +378,13 @@ export default function TodayPage() {
 function DraftCard({
   draft,
   onAction,
+  onReload,
   trustLevel,
   needsGmail,
 }: {
   draft: DraftWithBanker;
-  onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>) => Promise<{ ok: boolean; error?: string }>;
+  onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>, opts?: { deferReload?: boolean }) => Promise<{ ok: boolean; error?: string }>;
+  onReload: () => Promise<void>;
   trustLevel: "C" | "B" | "A";
   needsGmail: boolean;
 }) {
@@ -382,6 +394,9 @@ function DraftCard({
   const [showSentConfirm, setShowSentConfirm] = useState(false);
   const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [sendError, setSendError] = useState<string | null>(null);
+  // Card-level fade-out triggered by sendState=sent for visual confirmation
+  // before the data refresh removes it from the queue.
+  const [fading, setFading] = useState(false);
   const banker = draft.bankers;
 
   // Visual treatment changes by status so the user knows at a glance whether
@@ -391,9 +406,11 @@ function DraftCard({
   // Cards fade-and-slide on entry so a newly-approved draft "lands" in the
   // top section instead of blinking. Approved gets a slightly more
   // pronounced animation since it's the moment the user cares about.
-  const cardClass = isApproved
-    ? "rounded-2xl bg-white border-2 border-[#2E5A88] overflow-hidden shadow-sm draft-card-enter-emphasis"
-    : "rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden draft-card-enter-soft";
+  const cardClass = `${
+    isApproved
+      ? "rounded-2xl bg-white border-2 border-[#2E5A88] overflow-hidden shadow-sm draft-card-enter-emphasis"
+      : "rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden draft-card-enter-soft"
+  }${fading ? " draft-card-sent-fade" : ""}`;
 
   async function copyAddress() {
     if (!banker?.email) return;
@@ -483,9 +500,14 @@ function DraftCard({
                   onClick={async () => {
                     setSendState("sending");
                     setSendError(null);
-                    const result = await onAction(draft.id, "send");
+                    // Defer the data reload so we can animate the card out first.
+                    const result = await onAction(draft.id, "send", undefined, { deferReload: true });
                     if (result.ok) {
                       setSendState("sent");
+                      setFading(true);
+                      // ~900ms fade, then refresh — card naturally exits the
+                      // queue because its status is now "sent".
+                      window.setTimeout(() => onReload(), 900);
                     } else {
                       setSendState("error");
                       setSendError(result.error ?? "Send failed");
@@ -699,10 +721,14 @@ const RUN_STAGES: Array<{ text: string; sub: string; afterMs: number }> = [
   { text: "Almost there…", sub: "Adding it to your queue below.", afterMs: 38000 },
 ];
 
+const MAX_BATCH_DRAFTS = 5;
+
 function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
   const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
   const [stageIdx, setStageIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
+  const [batchSize, setBatchSize] = useState(1);
+  const [progress, setProgress] = useState({ done: 0, total: 1 });
 
   return (
     <div
@@ -710,29 +736,58 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Batch slider — generate 1-5 drafts in one click. Each runs serially
+          so the dedup picks a different banker each time. */}
+      {state === "idle" && (
+        <div className="mb-1.5 flex items-center gap-2 text-[10px] text-[#14182A]/60">
+          <label htmlFor="batch-size">Batch:</label>
+          <input
+            id="batch-size"
+            type="range"
+            min={1}
+            max={MAX_BATCH_DRAFTS}
+            value={batchSize}
+            onChange={(e) => setBatchSize(parseInt(e.target.value, 10))}
+            className="w-20 accent-[#2E5A88] cursor-pointer"
+          />
+          <span className="font-semibold text-[#14182A] tabular-nums">{batchSize}</span>
+        </div>
+      )}
       <button
         type="button"
         disabled={state === "running"}
         onClick={async () => {
           setState("running");
           setStageIdx(0);
-          // Schedule progressive stage transitions.
-          const timers = RUN_STAGES.slice(1).map((stage, i) =>
-            window.setTimeout(() => setStageIdx(i + 1), stage.afterMs)
-          );
+          setProgress({ done: 0, total: batchSize });
+          // Per-call stage timers (only meaningful for batch=1; for batches we
+          // reset stages each iteration).
+          let timers: number[] = [];
+          const startStageTimers = () => {
+            timers.forEach((t) => window.clearTimeout(t));
+            setStageIdx(0);
+            timers = RUN_STAGES.slice(1).map((stage, i) =>
+              window.setTimeout(() => setStageIdx(i + 1), stage.afterMs)
+            );
+          };
           try {
             const { data: { session: s } } = await supabase.auth.getSession();
-            const res = await fetch("/api/planner/run-now", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-            });
-            const json = await res.json().catch(() => ({}));
-            timers.forEach((t) => window.clearTimeout(t));
-            if (json?.result?.needsSetup) {
-              window.location.href = "/setup";
-              return;
+            const auth = { Authorization: `Bearer ${s?.access_token ?? ""}` };
+            for (let i = 0; i < batchSize; i++) {
+              startStageTimers();
+              const res = await fetch("/api/planner/run-now", { method: "POST", headers: auth });
+              const json = await res.json().catch(() => ({}));
+              if (json?.result?.needsSetup) {
+                window.location.href = "/setup";
+                return;
+              }
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              setProgress({ done: i + 1, total: batchSize });
+              // Brief pause between calls so the prior draft settles before
+              // the next Researcher dedup query reads.
+              if (i < batchSize - 1) await new Promise((r) => setTimeout(r, 800));
             }
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            timers.forEach((t) => window.clearTimeout(t));
             setState("done");
             await onDone();
             setTimeout(() => setState("idle"), 2500);
@@ -745,12 +800,14 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
         className="rounded-xl bg-[#2E5A88] text-white px-4 py-2 text-xs font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-80 whitespace-nowrap min-w-[120px]"
       >
         {state === "running"
-          ? "Running…"
+          ? `Running ${progress.done}/${progress.total}…`
           : state === "done"
-            ? "Done ✓"
+            ? `Done ✓`
             : state === "error"
               ? "Retry"
-              : "Run Alma now"}
+              : batchSize === 1
+                ? "Run Alma now"
+                : `Draft ${batchSize} emails`}
       </button>
 
       {/* Idle: short subtitle. Hover: full explainer card. */}
