@@ -5,7 +5,7 @@ import { startAgentRun, endAgentRun, logSignal } from "./shared";
 import { runResearcher, enrichBanker } from "./researcher";
 import { runCorrespondent } from "./correspondent";
 import { runCritic } from "./critic";
-import { sendEmailAsUser, saveToDrafts } from "@/services/gmail/send";
+import { sendEmailAsUser, saveToDrafts, isGmailSendSuccess } from "@/services/gmail/send";
 import { restSelect, restSelectOne, restInsert, restUpdate, restCount, eq, isNull, gte } from "@/lib/supabase-rest";
 import type { TrustLevel, TrustCapability } from "@/shared/ib-types";
 import { TRUST_GRADUATION } from "@/shared/ib-constants";
@@ -291,14 +291,15 @@ async function sendApprovedDrafts(
         const sendAt = new Date(now.getTime() + TRUST_GRADUATION.previewWindowMin * 60_000);
         await restUpdate("drafts", { scheduled_send_at: sendAt.toISOString() }, { id: eq(d.id) });
       } else if (new Date(d.scheduled_send_at) <= now) {
-        const res = await sendEmailAsUser({
+        const sendRes = await sendEmailAsUser({
           userId,
           fromEmail: profile.gmail_email ?? "",
           toEmail: banker.email,
           subject: d.subject ?? "",
           body: d.body,
         });
-        if (res) {
+        if (isGmailSendSuccess(sendRes)) {
+          const res = sendRes;
           await restUpdate(
             "drafts",
             {
@@ -325,14 +326,15 @@ async function sendApprovedDrafts(
         }
       }
     } else {
-      const res = await sendEmailAsUser({
+      const sendRes = await sendEmailAsUser({
         userId,
         fromEmail: profile.gmail_email ?? "",
         toEmail: banker.email,
         subject: d.subject ?? "",
         body: d.body,
       });
-      if (res) {
+      if (isGmailSendSuccess(sendRes)) {
+        const res = sendRes;
         await restUpdate(
           "drafts",
           {

@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { sendEmailAsUser } from "@/services/gmail/send";
+import { sendEmailAsUser, isGmailSendSuccess } from "@/services/gmail/send";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { logSignal } from "@/services/signals/log";
 
@@ -35,12 +35,38 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     subject: draft.subject ?? "",
     body: draft.body,
   });
-  if (!res) {
-    // sendEmailAsUser returns null on token-expired, scope-mismatch, or
-    // Gmail API rejection. The detail is in Vercel logs; the user gets a
-    // graceful copy-able instruction instead of a silent failure.
+
+  if (!isGmailSendSuccess(res)) {
+    // Log a signal so we can see exactly why this failed across the fleet.
+    await logSignal({
+      userId: ctx.user.id,
+      bankerId: draft.banker_id ?? undefined,
+      draftId: id,
+      agent: "planner",
+      signalType: "draft_send_failed",
+      metadata: {
+        reason: res.error.reason,
+        status: res.error.status,
+        body: res.error.body,
+        gmailFromEmail: profile.gmail_email,
+        bankerEmail: banker.email,
+      },
+    });
+
+    // Surface the actual Gmail error to the UI so the user sees what's wrong.
+    let userMessage: string;
+    if (res.error.reason === "no_access_token") {
+      userMessage = "Couldn't refresh your Gmail token. Reconnect Gmail at /account.";
+    } else if (res.error.reason === "gmail_rejected") {
+      // Try to pull a useful line from Google's error body.
+      const detail = res.error.body ?? "";
+      const match = detail.match(/"message":\s*"([^"]+)"/);
+      userMessage = `Gmail rejected: ${match?.[1] ?? `HTTP ${res.error.status}`}`;
+    } else {
+      userMessage = `Send threw: ${res.error.message ?? "unknown"}`;
+    }
     return NextResponse.json(
-      { error: "Gmail send rejected. Token may have expired — try reconnecting Gmail at /account." },
+      { error: userMessage, detail: res.error },
       { status: 502 }
     );
   }

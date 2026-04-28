@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
-import { sendEmailAsUser } from "@/services/gmail/send";
+import { sendEmailAsUser, isGmailSendSuccess } from "@/services/gmail/send";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -89,7 +89,7 @@ async function handle() {
       subject: `Tomorrow — ${body.draftCount} drafts ready`,
       body: body.text,
     });
-    if (result) {
+    if (isGmailSendSuccess(result)) {
       await admin.from("signals").insert({
         user_id: t.user_id,
         agent: "planner",

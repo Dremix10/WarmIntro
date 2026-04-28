@@ -8,7 +8,7 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { getAdminClient } from "@/lib/supabase-admin";
-import { sendEmailAsUser } from "@/services/gmail/send";
+import { sendEmailAsUser, isGmailSendSuccess } from "@/services/gmail/send";
 import { logSignal } from "@/services/signals/log";
 
 export const runtime = "nodejs";
@@ -50,17 +50,20 @@ export async function POST(request: Request) {
       results.push({ draftId: d.id, banker: banker?.name ?? "?", ok: false, error: "no_email" });
       continue;
     }
-    const sent = await sendEmailAsUser({
+    const sentRes = await sendEmailAsUser({
       userId: ctx.user.id,
       fromEmail: profile.gmail_email,
       toEmail: banker.email,
       subject: d.subject ?? "",
       body: d.body,
     });
-    if (!sent) {
-      results.push({ draftId: d.id, banker: banker.name, ok: false, error: "gmail_rejected" });
+    if (!isGmailSendSuccess(sentRes)) {
+      const errReason = sentRes.error.reason;
+      const errBody = sentRes.error.body ?? sentRes.error.message ?? "";
+      results.push({ draftId: d.id, banker: banker.name, ok: false, error: `${errReason}: ${errBody.slice(0, 100)}` });
       continue;
     }
+    const sent = sentRes;
 
     await admin
       .from("drafts")

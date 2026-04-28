@@ -4,6 +4,7 @@
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { restSelectOne, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
+import { factCheckDraft } from "./fact-checker";
 import type { CriticScores, CriticVerdict } from "@/shared/ib-types";
 import type { Json } from "@/lib/database.types";
 
@@ -74,6 +75,42 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
   });
 
   try {
+    // Pre-flight fact-check: web-search every specific claim before scoring.
+    // If anything fabricated slips past the LLM critic, this rejects it
+    // deterministically. Skipped for non-cold/followup types (replies +
+    // thank-yous reference the prior conversation, not net-new claims).
+    if (draft.type === "cold" || draft.type === "followup") {
+      const banker = await restSelectOne("bankers", {
+        select: "id, name, title, firm_id, linkedin_url, university",
+        filters: { id: eq(draft.banker_id ?? "") },
+      });
+      if (banker) {
+        const firm = banker.firm_id
+          ? await restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } })
+          : null;
+        const factCheck = await factCheckDraft(draft.body as string, {
+          name: banker.name as string,
+          title: banker.title as string | null,
+          firmName: (firm?.name as string | undefined) ?? null,
+          linkedinUrl: banker.linkedin_url as string | null,
+          university: banker.university as string | null,
+        });
+        const fabricated = factCheck.checks.filter((c) => c.verdict !== "verified");
+        if (fabricated.length > 0) {
+          const review = await persistReview({
+            draftId: draft.id,
+            scores: { specificity: 4, voiceMatch: 6, guardrails: 6, sharedGround: 3 },
+            overallScore: 4.75,
+            verdict: draft.iteration_count >= MAX_ITERATIONS ? "escalate_to_planner" : "reject",
+            feedback: `Fabrication risk: ${fabricated.length} claim(s) couldn't be verified online. ${fabricated.map((c) => `"${c.claim.slice(0, 60)}"`).join("; ")}. Rewrite without those specifics — lean on school/firm/group anchors instead.`,
+          });
+          await advanceDraftStatus(draft.id, review.verdict);
+          await endAgentRun(ctx, { verdict: review.verdict, reason: "fact_check_fail", unverifiedClaims: fabricated.length });
+          return review;
+        }
+      }
+    }
+
     // Hard auto-reject if guardrails blocked the draft
     const flags = (draft.guardrail_flags ?? {}) as Record<string, unknown>;
     const bannedPhrases = Array.isArray(flags.bannedPhrasesFound) ? (flags.bannedPhrasesFound as string[]) : [];

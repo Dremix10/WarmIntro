@@ -23,17 +23,24 @@ function buildMime(opts: { from: string; to: string; subject: string; body: stri
   return lines.join("\r\n");
 }
 
+export interface GmailSendError {
+  reason: "no_access_token" | "gmail_rejected" | "exception";
+  status?: number;
+  body?: string;
+  message?: string;
+}
+
 export async function sendEmailAsUser(opts: {
   userId: string;
   fromEmail: string;
   toEmail: string;
   subject: string;
   body: string;
-}): Promise<GmailSendResult | null> {
+}): Promise<GmailSendResult | { error: GmailSendError }> {
   const accessToken = await getAccessTokenForUser(opts.userId);
   if (!accessToken) {
-    console.warn(`[gmail/send] no access token for user ${opts.userId} — Gmail not connected?`);
-    return null;
+    console.warn(`[gmail/send] no access token for user ${opts.userId} — Gmail not connected? (or refresh failed)`);
+    return { error: { reason: "no_access_token", message: "Could not obtain Gmail access token. Refresh-token decryption or Google refresh call failed." } };
   }
 
   const messageId = `<alma-${opts.userId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}@mail.alma.app>`;
@@ -48,27 +55,36 @@ export async function sendEmailAsUser(opts: {
 
   const base64url = Buffer.from(mime, "utf8").toString("base64url");
 
-  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ raw: base64url }),
-  });
+  try {
+    const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ raw: base64url }),
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    console.warn(`[gmail/send] send failed ${res.status}: ${text}`);
-    return null;
+    if (!res.ok) {
+      const text = await res.text();
+      console.warn(`[gmail/send] send failed ${res.status}: ${text}`);
+      return { error: { reason: "gmail_rejected", status: res.status, body: text.slice(0, 500) } };
+    }
+
+    const json = (await res.json()) as { id: string; threadId: string };
+    return {
+      sentMessageId: messageId,
+      gmailMessageId: json.id,
+      gmailThreadId: json.threadId,
+    };
+  } catch (err) {
+    console.warn(`[gmail/send] exception during send`, err);
+    return { error: { reason: "exception", message: String(err).slice(0, 500) } };
   }
+}
 
-  const json = (await res.json()) as { id: string; threadId: string };
-  return {
-    sentMessageId: messageId,
-    gmailMessageId: json.id,
-    gmailThreadId: json.threadId,
-  };
+export function isGmailSendSuccess(r: GmailSendResult | { error: GmailSendError }): r is GmailSendResult {
+  return "sentMessageId" in r;
 }
 
 export async function saveToDrafts(opts: {
