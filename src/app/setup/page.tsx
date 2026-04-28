@@ -260,6 +260,14 @@ function SetupInner() {
         // "targets" → go to confirm. Default for someone with picks: confirm.
         const editMode = searchParams.get("edit");
         if (editMode === "resume") {
+          // CRITICAL: clear any pre-filled resume state so the user must
+          // actually upload a new one. Otherwise the dropzone shows "Saved
+          // resume" + Continue button, and clicking Continue re-saves the
+          // existing text — fooling them into thinking the new upload
+          // worked when nothing changed.
+          setResumeText("");
+          setFileName(null);
+          setParsed(null);
           setStep("upload");
         } else {
           // Only auto-jump if the user is currently on the upload step.
@@ -470,13 +478,23 @@ function SetupInner() {
       return;
     }
 
-    // Kick off the Planner immediately so the user doesn't stare at an empty queue
-    fetch("/api/planner/run-now", {
-      method: "POST",
-      headers: auth,
-    }).catch(() => {
-      /* non-fatal — cron will catch up next tick */
-    });
+    // Kick off three Planner runs back-to-back so the user gets at least 3
+    // drafts in their queue immediately. Each run picks ONE banker (capped at
+    // 1 to fit Vercel's 60s function limit). The Researcher's dedup against
+    // active drafts means run #2 and #3 each pick a *different* banker.
+    // Fire-and-forget — the cron picks up the rest. Slight delay between
+    // calls so the prior run can write its draft row before the next run
+    // queries existing drafts.
+    (async () => {
+      for (let i = 0; i < 3; i++) {
+        try {
+          await fetch("/api/planner/run-now", { method: "POST", headers: auth });
+        } catch {
+          // non-fatal; cron will catch up
+        }
+        if (i < 2) await new Promise((r) => setTimeout(r, 1500));
+      }
+    })();
 
     setSaving(false);
     setStep("done");

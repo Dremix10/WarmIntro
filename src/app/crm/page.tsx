@@ -119,12 +119,29 @@ export default function CrmPage() {
 
   if (authLoading || loading) return <SkeletonPage />;
 
+  // Group + sort each column by most-recent activity. The user wanted to see
+  // "what's heating up" without having to scan every card.
   const byStage = new Map<Stage, CrmRow[]>();
   for (const stage of STAGE_ORDER) byStage.set(stage, []);
   for (const r of rows) {
     if (!byStage.has(r.stage)) byStage.set(r.stage, []);
     byStage.get(r.stage)!.push(r);
   }
+  for (const arr of byStage.values()) {
+    arr.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  }
+
+  // Summary stats up top — quick read on where the pipeline stands.
+  const stats = {
+    total: rows.length,
+    drafts: byStage.get("draft")?.length ?? 0,
+    sent: byStage.get("sent")?.length ?? 0,
+    replied: byStage.get("replied")?.length ?? 0,
+    coffees: byStage.get("coffee")?.length ?? 0,
+    referrals: byStage.get("referral")?.length ?? 0,
+    interviews: (byStage.get("first_round")?.length ?? 0) + (byStage.get("superday")?.length ?? 0),
+  };
+  const replyRate = stats.sent > 0 ? Math.round(((stats.replied + stats.coffees + stats.referrals + stats.interviews) / (stats.sent + stats.replied + stats.coffees + stats.referrals + stats.interviews)) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
@@ -143,6 +160,18 @@ export default function CrmPage() {
             </p>
           </div>
         ) : (
+          <>
+            {/* Summary strip — at-a-glance funnel state */}
+            <div className="mb-6 rounded-2xl bg-white p-5 border border-[#D9CFB5]">
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
+                <Stat label="Total bankers" value={stats.total} />
+                <Stat label="In review" value={stats.drafts} muted />
+                <Stat label="Sent" value={stats.sent} />
+                <Stat label="Replied" value={stats.replied} accent />
+                <Stat label="Coffees + referrals" value={stats.coffees + stats.referrals} accent />
+                <Stat label="Reply rate" value={`${replyRate}%`} muted />
+              </div>
+            </div>
           <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 pb-4">
             <div className="flex gap-3 min-w-max">
               {STAGE_ORDER.map((stage) => {
@@ -171,8 +200,20 @@ export default function CrmPage() {
               })}
             </div>
           </div>
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, accent, muted }: { label: string; value: number | string; accent?: boolean; muted?: boolean }) {
+  return (
+    <div>
+      <p className={`font-[family-name:var(--font-fraunces)] text-2xl tabular-nums ${
+        accent ? "text-[#2E5A88]" : muted ? "text-[#14182A]/50" : "text-[#14182A]"
+      }`}>{value}</p>
+      <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50 mt-0.5">{label}</p>
     </div>
   );
 }

@@ -21,7 +21,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { data: profile } = await admin.from("profiles").select("gmail_email").eq("id", ctx.user.id).single();
   const { data: banker } = await admin.from("bankers").select("email").eq("id", draft.banker_id ?? "").maybeSingle();
-  if (!profile?.gmail_email || !banker?.email) return NextResponse.json({ error: "missing_gmail_or_banker_email" }, { status: 400 });
+  if (!profile?.gmail_email) {
+    return NextResponse.json({ error: "Gmail not connected — connect at /account" }, { status: 400 });
+  }
+  if (!banker?.email) {
+    return NextResponse.json({ error: "No email on file for this banker. Use Copy + I sent it instead." }, { status: 400 });
+  }
 
   const res = await sendEmailAsUser({
     userId: ctx.user.id,
@@ -30,7 +35,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     subject: draft.subject ?? "",
     body: draft.body,
   });
-  if (!res) return NextResponse.json({ error: "send_failed" }, { status: 502 });
+  if (!res) {
+    // sendEmailAsUser returns null on token-expired, scope-mismatch, or
+    // Gmail API rejection. The detail is in Vercel logs; the user gets a
+    // graceful copy-able instruction instead of a silent failure.
+    return NextResponse.json(
+      { error: "Gmail send rejected. Token may have expired — try reconnecting Gmail at /account." },
+      { status: 502 }
+    );
+  }
 
   await admin
     .from("drafts")

@@ -145,17 +145,27 @@ export default function TodayPage() {
     }
   }
 
-  async function act(draftId: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>) {
+  async function act(draftId: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
     const { data: { session: s } } = await supabase.auth.getSession();
-    await fetch(`/api/drafts/${draftId}/${action}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${s?.access_token ?? ""}`,
-        "Content-Type": "application/json",
-      },
-      body: payload ? JSON.stringify(payload) : undefined,
-    });
+    let result: { ok: boolean; error?: string } = { ok: true };
+    try {
+      const res = await fetch(`/api/drafts/${draftId}/${action}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${s?.access_token ?? ""}`,
+          "Content-Type": "application/json",
+        },
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        result = { ok: false, error: (json.error as string) ?? `HTTP ${res.status}` };
+      }
+    } catch (err) {
+      result = { ok: false, error: String(err) };
+    }
     await load({ silent: true });
+    return result;
   }
 
   async function updateTrust(field: keyof TrustState, value: string | boolean): Promise<void> {
@@ -203,7 +213,12 @@ export default function TodayPage() {
             </p>
           </div>
 
-          <RunAlmaNowButton onDone={() => load({ silent: true })} />
+          <div className="flex flex-col items-end gap-2">
+            <RunAlmaNowButton onDone={() => load({ silent: true })} />
+            {!data.needsGmail && approved.length > 1 && (
+              <SendAllButton count={approved.length} onDone={() => load({ silent: true })} />
+            )}
+          </div>
         </div>
 
         {/* Gmail-required banner — drafts can't send without Gmail. Show this
@@ -357,7 +372,7 @@ function DraftCard({
   needsGmail,
 }: {
   draft: DraftWithBanker;
-  onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>) => Promise<void>;
+  onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>) => Promise<{ ok: boolean; error?: string }>;
   trustLevel: "C" | "B" | "A";
   needsGmail: boolean;
 }) {
@@ -365,15 +380,20 @@ function DraftCard({
   const [copiedAddr, setCopiedAddr] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
   const [showSentConfirm, setShowSentConfirm] = useState(false);
+  const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [sendError, setSendError] = useState<string | null>(null);
   const banker = draft.bankers;
 
   // Visual treatment changes by status so the user knows at a glance whether
   // a draft is ready to send vs still in review.
   const isApproved = draft.status === "approved";
   const isInReview = draft.status === "pending_critic" || draft.status === "needs_revision";
+  // Cards fade-and-slide on entry so a newly-approved draft "lands" in the
+  // top section instead of blinking. Approved gets a slightly more
+  // pronounced animation since it's the moment the user cares about.
   const cardClass = isApproved
-    ? "rounded-2xl bg-white border-2 border-[#2E5A88] overflow-hidden shadow-sm"
-    : "rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden";
+    ? "rounded-2xl bg-white border-2 border-[#2E5A88] overflow-hidden shadow-sm draft-card-enter-emphasis"
+    : "rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden draft-card-enter-soft";
 
   async function copyAddress() {
     if (!banker?.email) return;
@@ -455,15 +475,32 @@ function DraftCard({
                 >
                   I sent it
                 </button>
-                {/* Auto-send via Gmail OAuth — only useful if Gmail is wired up */}
+                {/* Auto-send via Gmail OAuth — with explicit loading + error states.
+                    Earlier the button just silently failed if the Gmail API call
+                    rejected, leaving the user confused why nothing happened. */}
                 <button
                   type="button"
-                  onClick={() => onAction(draft.id, "send")}
-                  disabled={needsGmail}
+                  onClick={async () => {
+                    setSendState("sending");
+                    setSendError(null);
+                    const result = await onAction(draft.id, "send");
+                    if (result.ok) {
+                      setSendState("sent");
+                    } else {
+                      setSendState("error");
+                      setSendError(result.error ?? "Send failed");
+                      window.setTimeout(() => setSendState("idle"), 5000);
+                    }
+                  }}
+                  disabled={needsGmail || sendState === "sending"}
                   title={needsGmail ? "Connect Gmail to enable auto-send" : undefined}
                   className="flex-1 min-w-[140px] rounded-lg bg-[#2E5A88] text-white py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:bg-[#5C6472] disabled:cursor-not-allowed"
                 >
-                  {needsGmail ? "Auto-send (needs Gmail)" : "Auto-send via Gmail"}
+                  {needsGmail ? "Auto-send (needs Gmail)"
+                    : sendState === "sending" ? "Sending via Gmail…"
+                    : sendState === "sent" ? "Sent ✓"
+                    : sendState === "error" ? "Retry send"
+                    : "Auto-send via Gmail"}
                 </button>
                 {draft.scheduled_send_at && !needsGmail && (
                   <button
@@ -511,6 +548,14 @@ function DraftCard({
               Was scheduled for {new Date(draft.scheduled_send_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — paused until Gmail is connected.
             </p>
           )}
+          {sendError && (
+            <div className="mt-3 rounded-lg bg-[#C86B4F]/10 border border-[#C86B4F]/30 px-3 py-2 text-xs text-[#C86B4F]">
+              <strong>Send failed:</strong> {sendError}
+              {sendError.toLowerCase().includes("gmail") || sendError === "send_failed" ? (
+                <span className="block mt-0.5">Try reconnecting Gmail at <a href="/account" className="underline">/account</a>, or use the &quot;I sent it&quot; manual path.</span>
+              ) : null}
+            </div>
+          )}
         </div>
       )}
 
@@ -550,6 +595,54 @@ function DraftCard({
             </div>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function SendAllButton({ count, onDone }: { count: number; onDone: () => void | Promise<void> }) {
+  const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [summary, setSummary] = useState<string | null>(null);
+  return (
+    <div className="flex flex-col items-end">
+      <button
+        type="button"
+        disabled={state === "sending"}
+        onClick={async () => {
+          if (!confirm(`Send all ${Math.min(count, 5)} approved drafts via Gmail right now? This batch caps at 5; rerun for more.`)) return;
+          setState("sending");
+          setSummary(null);
+          try {
+            const { data: { session: s } } = await supabase.auth.getSession();
+            const res = await fetch("/api/drafts/send-all", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              setState("error");
+              setSummary((json.error as string) ?? `HTTP ${res.status}`);
+            } else {
+              setState("done");
+              const sent = json.sent as number ?? 0;
+              const failed = json.failed as number ?? 0;
+              setSummary(`${sent} sent${failed > 0 ? `, ${failed} failed` : ""}`);
+            }
+            await onDone();
+            window.setTimeout(() => { setState("idle"); setSummary(null); }, 5000);
+          } catch (err) {
+            setState("error");
+            setSummary(String(err));
+          }
+        }}
+        className="rounded-xl bg-[#1B3B5F] text-white px-3 py-1.5 text-[11px] font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-60 whitespace-nowrap"
+      >
+        {state === "sending" ? "Sending…" : state === "done" ? `Sent ✓` : state === "error" ? "Retry" : `Send all ${count} →`}
+      </button>
+      {summary && (
+        <p className={`mt-1 text-[10px] ${state === "error" ? "text-[#C86B4F]" : "text-[#14182A]/50"} italic max-w-[160px] text-right`}>
+          {summary}
+        </p>
       )}
     </div>
   );
