@@ -107,6 +107,7 @@ export default function TodayPage() {
   const [data, setData] = useState<TodayResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sentToast, setSentToast] = useState<{ banker: string; firm: string | null } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -207,6 +208,14 @@ export default function TodayPage() {
   const pending = data.drafts.filter((d) => d.status === "pending_critic" || d.status === "needs_revision");
   const approved = data.drafts.filter((d) => d.status === "approved");
   const escalated = data.drafts.filter((d) => d.status === "rejected_unresolvable");
+  // Split active drafts by type so cold outreach and follow-ups visually
+  // separate. The user asked for clarity on which is which (some users
+  // want to send cold first and bench follow-ups, or vice versa).
+  const isFollowup = (t: string) => t === "followup" || t === "reply" || t === "thank_you";
+  const approvedCold = approved.filter((d) => !isFollowup(d.type));
+  const approvedFollowup = approved.filter((d) => isFollowup(d.type));
+  const pendingCold = pending.filter((d) => !isFollowup(d.type));
+  const pendingFollowup = pending.filter((d) => isFollowup(d.type));
 
   return (
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
@@ -287,31 +296,66 @@ export default function TodayPage() {
           </div>
         )}
 
-        {/* Approved */}
-        {approved.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-3">
-              {data.needsGmail ? "Ready — but blocked on Gmail" : "Ready to send"}
-            </h2>
-            <div className="space-y-3">
-              {approved.map((d) => (
-                <DraftCard key={d.id} draft={d} onAction={act} onReload={reload} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Helper to render a draft list — keeps four sections DRY */}
+        {(() => {
+          const onSent = (banker: string, firm: string | null) => {
+            setSentToast({ banker, firm });
+            window.setTimeout(() => setSentToast(null), 4000);
+          };
+          const renderList = (drafts: DraftWithBanker[]) =>
+            drafts.map((d) => (
+              <DraftCard
+                key={d.id}
+                draft={d}
+                onAction={act}
+                onReload={reload}
+                onSent={onSent}
+                trustLevel={data.trust?.send_new_email ?? "C"}
+                needsGmail={data.needsGmail ?? false}
+              />
+            ));
 
-        {/* Pending / needs revision */}
-        {pending.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">In review</h2>
-            <div className="space-y-3">
-              {pending.map((d) => (
-                <DraftCard key={d.id} draft={d} onAction={act} onReload={reload} trustLevel={data.trust?.send_new_email ?? "C"} needsGmail={data.needsGmail ?? false} />
-              ))}
-            </div>
-          </section>
-        )}
+          return (
+            <>
+              {/* Approved cold outreach */}
+              {approvedCold.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-3">
+                    Cold outreach · {data.needsGmail ? "ready (needs Gmail)" : "ready to send"}
+                  </h2>
+                  <div className="space-y-3">{renderList(approvedCold)}</div>
+                </section>
+              )}
+
+              {/* Approved follow-ups + replies — separate so the user knows
+                  these are bankers already in the pipeline, not net-new contacts */}
+              {approvedFollowup.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="text-xs uppercase tracking-wider text-[#E8B339] font-semibold mb-3">
+                    Follow-ups · in your existing threads
+                  </h2>
+                  <div className="space-y-3">{renderList(approvedFollowup)}</div>
+                </section>
+              )}
+
+              {/* In-review cold */}
+              {pendingCold.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">Cold · in review</h2>
+                  <div className="space-y-3">{renderList(pendingCold)}</div>
+                </section>
+              )}
+
+              {/* In-review follow-ups */}
+              {pendingFollowup.length > 0 && (
+                <section className="mb-8">
+                  <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">Follow-ups · in review</h2>
+                  <div className="space-y-3">{renderList(pendingFollowup)}</div>
+                </section>
+              )}
+            </>
+          );
+        })()}
 
         {/* Escalated */}
         {escalated.length > 0 && (
@@ -371,6 +415,22 @@ export default function TodayPage() {
           </details>
         )}
       </div>
+
+      {/* Success toast — celebrates a successful Gmail send and points the
+          user to where the conversation is being tracked. */}
+      {sentToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 sent-toast-enter">
+          <div className="rounded-2xl bg-gradient-to-br from-[#1B3B5F] to-[#2E5A88] text-white px-5 py-3 shadow-2xl flex items-center gap-3 max-w-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-base">✓</span>
+            <div>
+              <p className="text-sm font-medium">Sent to {sentToast.banker}{sentToast.firm ? ` at ${sentToast.firm}` : ""}</p>
+              <p className="text-xs text-white/80 mt-0.5">
+                Watching for replies. Track in <a href="/crm" className="underline hover:text-white">CRM</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -379,12 +439,14 @@ function DraftCard({
   draft,
   onAction,
   onReload,
+  onSent,
   trustLevel,
   needsGmail,
 }: {
   draft: DraftWithBanker;
   onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>, opts?: { deferReload?: boolean }) => Promise<{ ok: boolean; error?: string }>;
   onReload: () => Promise<void>;
+  onSent?: (banker: string, firm: string | null) => void;
   trustLevel: "C" | "B" | "A";
   needsGmail: boolean;
 }) {
@@ -505,6 +567,9 @@ function DraftCard({
                     if (result.ok) {
                       setSendState("sent");
                       setFading(true);
+                      // Trigger the page-level success toast so the user sees
+                      // a celebratory confirmation, not just a card disappearing.
+                      onSent?.(banker?.name ?? "the banker", banker?.firms?.name ?? null);
                       // ~900ms fade, then refresh — card naturally exits the
                       // queue because its status is now "sent".
                       window.setTimeout(() => onReload(), 900);

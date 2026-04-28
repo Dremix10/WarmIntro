@@ -189,7 +189,11 @@ async function discoverNewBankers(): Promise<number> {
   }
 
   let count = 0;
-  for (const t of targets.slice(0, 5)) {
+  for (const t of targets.slice(0, 2)) {
+    // Two firms per tick × ~5 results = ~10 candidates. Source is now
+    // serper (proxycurl is shut down). University is left null on
+    // discovery; the Curator's enrichment pass or the user-facing
+    // researcher matches school based on profile snippets.
     const discovered = await discoverBankersAtFirm(t.firm_name, t.group_name, 5);
     for (const d of discovered) {
       if (!d.name || !d.linkedinUrl) continue;
@@ -197,10 +201,11 @@ async function discoverNewBankers(): Promise<number> {
         "bankers",
         {
           name: d.name,
-          title: d.title,
+          title: d.title || "Investment Banking",
           firm_id: t.firm_id,
           linkedin_url: d.linkedinUrl,
-          source: "proxycurl",
+          email_verified: false,
+          source: "serper",
         },
         { onConflict: "linkedin_url" }
       );

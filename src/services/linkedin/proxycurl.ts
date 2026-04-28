@@ -138,33 +138,40 @@ export async function discoverBankersAtFirm(
   groupName: string | undefined,
   limit = 20
 ): Promise<Array<{ name: string; title: string; linkedinUrl: string }>> {
-  const apiKey = process.env.PROXYCURL_API_KEY;
-  if (!apiKey) {
-    warnMissingKey();
-    return [];
-  }
+  // Proxycurl shut down. Fall back to Serper-based LinkedIn search — same
+  // approach as scripts/sweep-alumni.ts, just one firm × school per Curator
+  // tick. The Curator runs every 30 min on the VPS, so even at 1 query per
+  // run it adds 48 firm × school combos per day.
+  const serperKey = process.env.SERPER_API_KEY;
+  if (!serperKey) return [];
 
   try {
-    const query = [firmName, groupName, "investment banking"].filter(Boolean).join(" ");
-    const url = new URL("https://nubela.co/proxycurl/api/v2/search/person/");
-    url.searchParams.set("current_job_description_regex", query);
-    url.searchParams.set("page_size", String(limit));
-
-    const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${apiKey}` } });
+    // Alternate between Rice and Brown each call so both schools get filled.
+    const school = Math.random() < 0.5 ? "Rice University" : "Brown University";
+    const query = `site:linkedin.com/in "${firmName}" "${school}"${groupName ? ` "${groupName}"` : ""}`;
+    const res = await fetch("https://google.serper.dev/search", {
+      method: "POST",
+      headers: { "X-API-KEY": serperKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ q: query, num: limit }),
+    });
     if (!res.ok) return [];
-
-    const json = (await res.json()) as { results?: Array<{ profile?: { full_name?: string; occupation?: string; linkedin_profile_url?: string } }> };
-    return (
-      json.results
-        ?.map((r) => ({
-          name: r.profile?.full_name ?? "",
-          title: r.profile?.occupation ?? "",
-          linkedinUrl: r.profile?.linkedin_profile_url ?? "",
-        }))
-        .filter((r) => r.name && r.linkedinUrl) ?? []
-    );
+    const data = (await res.json()) as { organic?: Array<{ title: string; link: string; snippet: string }> };
+    const seen = new Set<string>();
+    const results: Array<{ name: string; title: string; linkedinUrl: string }> = [];
+    for (const r of data.organic ?? []) {
+      if (!r.link.includes("linkedin.com/in/")) continue;
+      const norm = r.link.toLowerCase().replace(/[/?].*$/, "");
+      if (seen.has(norm)) continue;
+      seen.add(norm);
+      // Extract name from "<Name> - <Title> - <Company> | LinkedIn" pattern
+      const name = r.title.split(" - ")[0].split(" | ")[0].trim();
+      const titleGuess = r.title.split(" - ")[1]?.trim() ?? "";
+      results.push({ name, title: titleGuess, linkedinUrl: r.link });
+      if (results.length >= limit) break;
+    }
+    return results;
   } catch (err) {
-    console.warn("[proxycurl] discovery error", err);
+    console.warn("[discovery] serper search error", err);
     return [];
   }
 }

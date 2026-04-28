@@ -128,7 +128,7 @@ const GATE_BYPASS_PREFIXES = [
   "/api/find-companies", // legacy, safe
   "/api/setup/firms", // public reference data — seeded firms+groups
   "/api/cron",
-  "/api/auth",
+  "/api/auth", // includes /api/auth/reset-password — needs to work for non-signed-in users
   "/api/analytics",
   "/auth/callback",
 ];
