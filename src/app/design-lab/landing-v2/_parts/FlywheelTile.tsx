@@ -8,7 +8,7 @@ export function FlywheelTile() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             The flywheel
           </p>
-          <h2 className="mx-auto mt-3 max-w-2xl text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+          <h2 className="mx-auto mt-3 max-w-2xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
             Every Sunday, Alma learns something.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
@@ -18,7 +18,7 @@ export function FlywheelTile() {
       </Reveal>
 
       <Reveal delay={150}>
-        <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-[#D9CFB5] bg-white p-6">
+        <div className="mx-auto mt-10 max-w-xl alma-card rounded-2xl border border-[#D9CFB5] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">

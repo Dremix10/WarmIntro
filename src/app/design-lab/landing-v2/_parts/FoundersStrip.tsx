@@ -14,7 +14,7 @@ export function FoundersStrip() {
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
           Who built this
         </p>
-        <h2 className="mx-auto mt-3 max-w-xl text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+        <h2 className="mx-auto mt-3 max-w-xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
           <em className="text-[#2E5A88]">We&rsquo;re sophomores too.</em>
           <br />
           We built Alma for our cycle.
@@ -41,7 +41,7 @@ export function FoundersStrip() {
       </div>
 
       <Reveal delay={4 * 80 + 80}>
-        <div className="mx-auto mt-10 flex max-w-xl items-center gap-4 rounded-2xl border border-[#D9CFB5] bg-white p-5 text-left">
+        <div className="mx-auto mt-10 flex max-w-xl items-center gap-4 alma-card rounded-2xl border border-[#D9CFB5] p-5 text-left">
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#FCD34D] bg-[#FEF3C7] text-base font-bold text-[#92400E]"
             aria-hidden

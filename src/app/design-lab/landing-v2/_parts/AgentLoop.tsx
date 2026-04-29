@@ -134,7 +134,7 @@ export function AgentLoop() {
         STEPS.length - 1,
         Math.max(0, Math.floor(progress * STEPS.length))
       );
-      setActiveIndex(idx);
+      setActiveIndex((prev) => (prev === idx ? prev : idx));
     };
     const onScroll = () => {
       if (rafId) return;
@@ -158,7 +158,7 @@ export function AgentLoop() {
     <section
       ref={sectionRef}
       className="relative"
-      style={{ minHeight: "200vh" }}
+      style={{ minHeight: "160vh" }}
       aria-label="The agent loop, one banker through the pipeline"
     >
       <div className="sticky top-20 mx-auto max-w-5xl px-6 py-12">
@@ -166,7 +166,7 @@ export function AgentLoop() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             One banker, six agents
           </p>
-          <h2 className="mt-3 text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+          <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
             The loop, in motion.
           </h2>
         </div>
@@ -207,7 +207,7 @@ export function AgentLoop() {
         </div>
 
         {/* Content card */}
-        <div className="mt-6 min-h-[220px] rounded-2xl border border-[#D9CFB5] bg-white p-6 shadow-sm">
+        <div className="mt-6 min-h-[220px] alma-card rounded-2xl border border-[#D9CFB5] p-6 shadow-sm">
           <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">
             {step.eyebrow}
           </div>

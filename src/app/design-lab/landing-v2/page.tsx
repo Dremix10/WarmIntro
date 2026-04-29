@@ -4,6 +4,7 @@ import { GrainOverlay } from "@/components/GrainOverlay";
 import { LogoMarquee } from "@/components/LogoMarquee";
 import { StickyUploadCTA } from "@/components/StickyUploadCTA";
 import { AuthAwareLogin } from "@/components/AuthAwareLogin";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import { AnimatedHeadline } from "./_parts/AnimatedHeadline";
 import { FunnelMathAnimated } from "./_parts/FunnelMathAnimated";
 import { ScenePreviewTilted } from "./_parts/ScenePreviewTilted";
@@ -45,6 +46,7 @@ const FAQ = [
 export default function LandingV2() {
   return (
     <div className="relative bg-[#EAE3D2] text-[#14182A]">
+      <SmoothScroll />
       <GrainOverlay />
 
       <TopBar />
@@ -94,8 +96,9 @@ function TopBar() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <GradientOrb className="right-[-80px] top-[-100px]" />
-      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-16 pb-20 md:pt-24 md:pb-24">
+      <GradientOrb className="right-[-120px] top-[-140px]" size={720} opacity={0.55} />
+      <GradientOrb className="left-[-140px] top-[280px]" size={520} opacity={0.32} />
+      <div className="relative z-10 mx-auto max-w-5xl px-6 pt-20 pb-28 md:pt-28 md:pb-32">
         <p
           className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472] opacity-0"
           style={{ animation: "fade-rise 700ms cubic-bezier(.22,.75,.3,1) 0ms forwards" }}
@@ -106,7 +109,7 @@ function Hero() {
         <AnimatedHeadline />
 
         <p
-          className="mt-6 max-w-xl text-base leading-relaxed text-[#4A5260] opacity-0 md:text-lg"
+          className="mt-8 max-w-2xl text-lg leading-[1.55] text-[#4A5260] opacity-0 md:text-xl"
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1500ms forwards" }}
         >
           Alma reads your resume, finds alumni at every bank and coverage group, drafts the call
@@ -115,18 +118,18 @@ function Hero() {
         </p>
 
         <div
-          className="mt-8 flex flex-wrap items-center gap-3 opacity-0"
+          className="mt-10 flex flex-wrap items-center gap-3 opacity-0"
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1750ms forwards", pointerEvents: "auto" }}
         >
           <a
             href="/demo"
-            className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
+            className="rounded-full bg-[#1B3B5F] px-7 py-3.5 text-base font-semibold text-white shadow-[0_8px_24px_-8px_rgba(27,59,95,.5)] transition-all hover:-translate-y-0.5 hover:bg-[#2E5A88] hover:shadow-[0_12px_32px_-8px_rgba(27,59,95,.6)]"
           >
             Upload your resume →
           </a>
           <a
             href="#how"
-            className="rounded-full border border-[#D9CFB5] bg-white px-5 py-3 text-sm font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
+            className="alma-card rounded-full border border-[#D9CFB5] px-6 py-3.5 text-base font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
           >
             See how it works
           </a>
@@ -166,13 +169,14 @@ function Hero() {
 
 function FunnelSection() {
   return (
-    <section className="relative mx-auto max-w-4xl px-6 py-20">
+    <section className="relative mx-auto max-w-4xl px-6 py-28 md:py-36">
+      <GradientOrb className="-left-40 top-1/2 -translate-y-1/2" size={520} opacity={0.28} />
       <Reveal>
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             The IB funnel, honestly
           </p>
-          <h2 className="mx-auto mt-4 max-w-2xl text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+          <h2 className="mx-auto mt-4 max-w-2xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
             It takes ~120 networking calls to land one offer.{" "}
             <span className="italic text-[#2E5A88]">Consistency wins.</span>
           </h2>
@@ -209,7 +213,7 @@ function FAQSection() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Honest answers
           </p>
-          <h2 className="mt-4 text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+          <h2 className="mt-4 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
             Questions worth asking.
           </h2>
         </div>
@@ -238,9 +242,10 @@ function FAQSection() {
 
 function ClosingCTA() {
   return (
-    <section className="mx-auto max-w-3xl px-6 py-20 text-center">
+    <section className="relative mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
+      <GradientOrb className="left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" size={680} opacity={0.34} />
       <Reveal>
-        <h2 className="mx-auto max-w-xl text-4xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-5xl">
+        <h2 className="relative mx-auto max-w-xl text-[56px] leading-[1.02] tracking-[-0.02em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[88px]">
           Ready to <span className="italic text-[#2E5A88]">leap</span>?
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm text-[#4A5260] md:text-base">

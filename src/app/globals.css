@@ -156,3 +156,42 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .alma-flywheel-slot { animation: none; }
 }
+
+/* Premium card surface — subtle vertical gradient + soft layered shadow.
+   Used for hero/section cards to add depth without breaking the calm tone. */
+.alma-card {
+  background-image: linear-gradient(180deg, #ffffff 0%, #FCFAF5 100%);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px 0 rgba(20, 24, 42, 0.04),
+    0 12px 28px -12px rgba(20, 24, 42, 0.08);
+  transition:
+    transform 320ms cubic-bezier(.22,.75,.3,1),
+    box-shadow 320ms cubic-bezier(.22,.75,.3,1),
+    border-color 320ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 4px 0 rgba(20, 24, 42, 0.04),
+    0 24px 48px -12px rgba(20, 24, 42, 0.12);
+}
+
+/* Page atmosphere — slow ambient drift on scattered orbs.
+   Longer duration than orb-drift keeps it feeling alive but never busy. */
+@keyframes orb-drift-slow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(40px, -30px, 0) scale(1.04); }
+  66%      { transform: translate3d(-30px, 24px, 0) scale(0.98); }
+}
+.alma-orb-slow {
+  animation: orb-drift-slow 42s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-orb-slow { animation: none; }
+  .alma-card { transition: none; }
+  .alma-card:hover { transform: none; box-shadow: none; }
+}

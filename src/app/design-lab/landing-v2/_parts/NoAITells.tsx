@@ -21,7 +21,7 @@ export function NoAITells() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             No AI tells
           </p>
-          <h2 className="mx-auto mt-3 max-w-2xl text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+          <h2 className="mx-auto mt-3 max-w-2xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
             What Alma writes vs what you send.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
@@ -40,7 +40,7 @@ export function NoAITells() {
           </div>
         </Reveal>
         <Reveal delay={200}>
-          <div className="h-full rounded-2xl border border-[#2E5A88] bg-white p-5 text-[#14182A] shadow-[0_0_0_4px_rgba(46,90,136,.08)]">
+          <div className="h-full alma-card rounded-2xl border border-[#2E5A88] p-5 text-[#14182A] shadow-[0_0_0_4px_rgba(46,90,136,.08)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">What Sarah sent</p>
             <pre className="mt-3 whitespace-pre-wrap font-[family-name:var(--font-fraunces)] text-sm leading-relaxed">
               {SENT}

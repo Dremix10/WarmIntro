@@ -67,7 +67,7 @@ export function TrustGradient() {
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
           You stay in control
         </p>
-        <h2 className="mt-3 text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+        <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
           Three trust levels. You pick. You change anytime.
         </h2>
       </div>
@@ -108,7 +108,7 @@ export function TrustGradient() {
         })}
       </div>
 
-      <div className="mt-6 rounded-2xl border border-[#D9CFB5] bg-white p-5">
+      <div className="mt-6 alma-card rounded-2xl border border-[#D9CFB5] p-5">
         <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">
           Right now: {current.label}
         </p>

@@ -107,7 +107,7 @@ export function SurfacesStack() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Your week in Alma
           </p>
-          <h2 className="mt-3 text-3xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-4xl">
+          <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
             Three surfaces. Zero spreadsheet.
           </h2>
         </div>
@@ -118,7 +118,7 @@ export function SurfacesStack() {
           <Reveal key={s.href} delay={i * 80}>
             <Link
               href={s.href}
-              className="group block rounded-2xl border border-[#D9CFB5] bg-white p-5 transition-colors hover:border-[#2E5A88] md:p-6"
+              className="group block alma-card rounded-2xl border border-[#D9CFB5] p-5 transition-colors hover:border-[#2E5A88] md:p-6"
             >
               <div className={"grid grid-cols-1 gap-5 md:grid-cols-2 md:items-center md:gap-8 " + (s.imageRight ? "" : "md:[&>*:first-child]:order-2")}>
                 <div>

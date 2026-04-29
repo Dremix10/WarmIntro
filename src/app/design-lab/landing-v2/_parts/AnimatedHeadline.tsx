@@ -17,7 +17,7 @@ export function AnimatedHeadline() {
   const dotStart = italicStart + 180;
 
   return (
-    <h1 className="mt-5 max-w-3xl text-5xl leading-[1.02] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[68px]">
+    <h1 className="mt-6 max-w-4xl text-[44px] leading-[1.02] tracking-[-0.02em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[88px] lg:text-[104px]">
       {WORDS_PREFIX.map((w, i) => (
         <span
           key={i}
