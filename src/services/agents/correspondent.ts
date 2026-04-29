@@ -261,7 +261,7 @@ STRUCTURE:
 - Open with one specific, observable thing — a deal they worked on, a post they wrote, a club you both did, a class they took. Not "I noticed you went to X" — actually engage with the thing.
 - One short sentence on who YOU are (school + year + one real detail from your background, not a generic "I study X and am interested in Y").
 - One specific ask. "15 min for a quick call next week?" Not "would love to learn from your insights".
-- End with: Name\\nUniversity 'YY | Major\\nemail`;
+- End with EXACTLY two lines: Name (first + last)\\nUniversity 'YY | Major. NO email line at the bottom — Gmail's reply-to header already carries the address. Adding the email below the name reads as cold-template / scam.`;
 
 function systemPromptForType(type: DraftType): string {
   switch (type) {

@@ -27,7 +27,7 @@ interface DraftWithBanker {
   iteration_count: number;
   scheduled_send_at: string | null;
   fact_check: FactCheckResult | null;
-  bankers: { name: string; title: string; email: string | null; firms: { name: string } | null } | null;
+  bankers: { name: string; title: string; email: string | null; linkedin_url: string | null; firms: { name: string } | null } | null;
 }
 
 interface TrustState {
@@ -491,10 +491,37 @@ function DraftCard({
   const [showSentConfirm, setShowSentConfirm] = useState(false);
   const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [sendError, setSendError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editedSubject, setEditedSubject] = useState(draft.subject ?? "");
+  const [editedBody, setEditedBody] = useState(draft.body);
+  const [savingEdit, setSavingEdit] = useState(false);
   // Card-level fade-out triggered by sendState=sent for visual confirmation
   // before the data refresh removes it from the queue.
   const [fading, setFading] = useState(false);
   const banker = draft.bankers;
+
+  async function saveEdit() {
+    setSavingEdit(true);
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/drafts/${draft.id}/edit`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: editedSubject, body: editedBody }),
+      });
+      if (res.ok) {
+        setEditing(false);
+        await onReload();
+      }
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+  function cancelEdit() {
+    setEditedSubject(draft.subject ?? "");
+    setEditedBody(draft.body);
+    setEditing(false);
+  }
 
   // Visual treatment changes by status so the user knows at a glance whether
   // a draft is ready to send vs still in review.
@@ -527,7 +554,21 @@ function DraftCard({
       <button type="button" onClick={() => setExpanded(!expanded)} className="w-full text-left p-4 hover:bg-[#EAE3D2]/30 transition-colors">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm">{banker?.name ?? "Unknown banker"}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-sm">{banker?.name ?? "Unknown banker"}</p>
+              {banker?.linkedin_url && (
+                <a
+                  href={banker.linkedin_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[10px] text-[#2E5A88] hover:text-[#1B3B5F] underline"
+                  title="Open LinkedIn profile in new tab"
+                >
+                  LinkedIn ↗
+                </a>
+              )}
+            </div>
             <p className="text-xs text-[#14182A]/60">{banker?.title ?? ""}{banker?.firms?.name ? ` · ${banker.firms.name}` : ""}</p>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
@@ -565,42 +606,97 @@ function DraftCard({
               </button>
             </div>
           )}
-          <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[#14182A]/80">{draft.body}</pre>
-
-          {/* Fact-check citations — every specific claim the agent made,
-              with evidence URLs we found in the wild. Helps the user trust
-              before sending. Only renders if checks exist. */}
-          {draft.fact_check && draft.fact_check.checks.length > 0 && (
-            <details className="mt-3 rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-3 text-xs">
-              <summary className="cursor-pointer text-[10px] uppercase tracking-[0.15em] font-semibold text-[#14182A]/60 hover:text-[#2E5A88]">
-                Fact-check · {draft.fact_check.checks.length} {draft.fact_check.checks.length === 1 ? "specific claim" : "specific claims"}
-              </summary>
-              <div className="mt-3 space-y-2">
-                {draft.fact_check.checks.map((c, i) => (
-                  <div key={i} className="border-l-2 pl-3 py-1" style={{ borderColor: c.verdict === "verified" ? "#2E5A88" : "#C86B4F" }}>
-                    <p className="text-[#14182A] italic">&ldquo;{c.claim}&rdquo;</p>
-                    <p className="mt-1 text-[10px] text-[#14182A]/60">
-                      <span className={c.verdict === "verified" ? "text-[#2E5A88] font-semibold" : "text-[#C86B4F] font-semibold"}>
-                        {c.verdict === "verified" ? "✓ Verified" : "⚠ Unverified"}
-                      </span>
-                      {" — "}{c.notes}
-                    </p>
-                    {c.evidenceUrls.length > 0 && (
-                      <ul className="mt-1 space-y-0.5 text-[10px]">
-                        {c.evidenceUrls.slice(0, 3).map((u, j) => (
-                          <li key={j}>
-                            <a href={u} target="_blank" rel="noreferrer" className="text-[#2E5A88] underline hover:text-[#1B3B5F] break-all">
-                              {u.replace(/^https?:\/\//, "").slice(0, 80)}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+          {/* Subject + body — view OR edit. Browser spell-check is on by
+              default for both inputs (spellCheck attribute), so red squigglies
+              show up natively without an LLM round-trip. */}
+          {editing ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={editedSubject}
+                onChange={(e) => setEditedSubject(e.target.value)}
+                placeholder="Subject"
+                spellCheck
+                className="w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-2 text-sm font-medium focus:border-[#2E5A88] focus:outline-none italic font-[family-name:var(--font-fraunces)]"
+              />
+              <textarea
+                value={editedBody}
+                onChange={(e) => setEditedBody(e.target.value)}
+                spellCheck
+                rows={Math.max(8, editedBody.split("\n").length + 1)}
+                className="w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-2 text-sm font-[family-name:var(--font-geist-sans)] text-[#14182A] focus:border-[#2E5A88] focus:outline-none whitespace-pre-wrap"
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  disabled={savingEdit}
+                  className="rounded-lg border border-[#D9CFB5] px-3 py-1.5 text-xs font-medium hover:bg-[#EAE3D2]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEdit}
+                  disabled={savingEdit || !editedBody.trim()}
+                  className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50"
+                >
+                  {savingEdit ? "Saving…" : "Save"}
+                </button>
               </div>
-            </details>
+            </div>
+          ) : (
+            <div className="relative group">
+              <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[#14182A]/80">{draft.body}</pre>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditedSubject(draft.subject ?? "");
+                  setEditedBody(draft.body);
+                  setEditing(true);
+                }}
+                className="absolute top-0 right-0 text-[10px] text-[#2E5A88] hover:text-[#1B3B5F] underline opacity-60 hover:opacity-100"
+                title="Edit inline (browser spell-check enabled)"
+              >
+                edit
+              </button>
+            </div>
           )}
+
+          {/* Fact-check citations — only verified claims surface. Unverified
+              ones shouldn't reach the user at all (Critic now rejects drafts
+              with any unverified claim), and showing "⚠ Unverified" with
+              evidence URLs that *don't* support the claim was confusing —
+              looked like we were citing as proof what was actually a miss. */}
+          {(() => {
+            const verified = draft.fact_check?.checks.filter((c) => c.verdict === "verified") ?? [];
+            if (verified.length === 0) return null;
+            return (
+              <details className="mt-3 rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-3 text-xs">
+                <summary className="cursor-pointer text-[10px] uppercase tracking-[0.15em] font-semibold text-[#14182A]/60 hover:text-[#2E5A88]">
+                  Sources · {verified.length} {verified.length === 1 ? "claim verified" : "claims verified"}
+                </summary>
+                <div className="mt-3 space-y-2">
+                  {verified.map((c, i) => (
+                    <div key={i} className="border-l-2 border-[#2E5A88] pl-3 py-1">
+                      <p className="text-[#14182A] italic">&ldquo;{c.claim}&rdquo;</p>
+                      {c.evidenceUrls.length > 0 && (
+                        <ul className="mt-1 space-y-0.5 text-[10px]">
+                          {c.evidenceUrls.slice(0, 3).map((u, j) => (
+                            <li key={j}>
+                              <a href={u} target="_blank" rel="noreferrer" className="text-[#2E5A88] underline hover:text-[#1B3B5F] break-all">
+                                {u.replace(/^https?:\/\//, "").slice(0, 80)}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            );
+          })()}
           <div className="mt-4 flex flex-wrap gap-2">
             {draft.status === "approved" ? (
               <>

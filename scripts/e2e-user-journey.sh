@@ -125,6 +125,72 @@ AGENTS=$(curl -s -X GET "$BASE/api/agents/runs?limit=20" -H "User-Agent: $UA" -H
 RUN_COUNT=$(echo "$AGENTS" | python3 -c "import json,sys;d=json.load(sys.stdin);print(len(d.get('runs',[])))" 2>/dev/null)
 if [ "${RUN_COUNT:-0}" -ge 3 ]; then ok "/api/agents/runs has $RUN_COUNT logged runs"; else err "/api/agents/runs" "$RUN_COUNT runs"; fi
 
+# ── 8. Drafts contain a fact_check field ────────────────────────
+# Cold drafts go through fact-checker now. fact_check column should be
+# populated (jsonb { ok, checks: [] }). Catches a regression where the
+# Critic wiring drops fact-check.
+step "8. Drafts have fact_check populated (column exists + Critic wrote it)"
+FACT_CHECK_COUNT=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
+  --data-urlencode "user_id=eq.$TEST_USER_ID" \
+  --data-urlencode "fact_check=not.is.null" \
+  --data-urlencode "select=id" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  | python3 -c "import json,sys;print(len(json.load(sys.stdin)))" 2>/dev/null)
+if [ "${FACT_CHECK_COUNT:-0}" -ge 1 ]; then ok "$FACT_CHECK_COUNT draft(s) carry fact_check JSON"; else err "fact_check populated" "0 drafts have fact_check"; fi
+
+# ── 9. mark_sent endpoint creates a connection (#1 regression: was missing) ──
+step "9. POST /api/drafts/[id]/mark_sent → creates connections row"
+APPROVED_DRAFT_ID=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
+  --data-urlencode "user_id=eq.$TEST_USER_ID" \
+  --data-urlencode "status=eq.approved" \
+  --data-urlencode "sent_at=is.null" \
+  --data-urlencode "select=id" \
+  --data-urlencode "limit=1" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  | python3 -c "import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if d else '')" 2>/dev/null)
+if [ -n "$APPROVED_DRAFT_ID" ]; then
+  curl -s -X POST "$BASE/api/drafts/$APPROVED_DRAFT_ID/mark_sent" \
+    -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" > /dev/null
+  CONN_COUNT=$(curl -s -G "$PROJECT_URL/rest/v1/connections" \
+    --data-urlencode "user_id=eq.$TEST_USER_ID" \
+    --data-urlencode "stage=eq.sent" \
+    --data-urlencode "select=id" \
+    -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+    | python3 -c "import json,sys;print(len(json.load(sys.stdin)))" 2>/dev/null)
+  if [ "${CONN_COUNT:-0}" -ge 1 ]; then ok "mark_sent created a connection row (stage=sent)"; else err "mark_sent → connection" "0 connections after mark_sent"; fi
+else
+  err "mark_sent setup" "no approved draft to mark"
+fi
+
+# ── 10. Stage-advance endpoint moves a connection ───────────────
+step "10. POST /api/connections/[id]/stage advances a connection"
+CONN_ID=$(curl -s -G "$PROJECT_URL/rest/v1/connections" \
+  --data-urlencode "user_id=eq.$TEST_USER_ID" \
+  --data-urlencode "select=id" \
+  --data-urlencode "limit=1" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  | python3 -c "import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if d else '')" 2>/dev/null)
+if [ -n "$CONN_ID" ]; then
+  STAGE_RES=$(curl -s -w "\n%{http_code}" -X POST "$BASE/api/connections/$CONN_ID/stage" \
+    -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" -H "Content-Type: application/json" \
+    -d '{"stage":"replied"}')
+  STAGE_CODE=$(echo "$STAGE_RES" | tail -1)
+  if [ "$STAGE_CODE" = "200" ]; then ok "/api/connections/[id]/stage returns 200"; else err "stage advance" "$STAGE_CODE"; fi
+else
+  err "stage advance setup" "no connection found"
+fi
+
+# ── 11. Custom reset-password endpoint accepts requests ─────────
+# Doesn't actually verify email delivery (Resend is async + we don't
+# have an inbox here) — but verifies the endpoint isn't 500-ing,
+# which is the most likely regression mode.
+step "11. POST /api/auth/reset-password returns 200"
+RESET_RES=$(curl -s -w "\n%{http_code}" -X POST "$BASE/api/auth/reset-password" \
+  -H "User-Agent: $UA" -H "Content-Type: application/json" \
+  -d "{\"email\":\"$TEST_EMAIL\"}")
+RESET_CODE=$(echo "$RESET_RES" | tail -1)
+if [ "$RESET_CODE" = "200" ]; then ok "/api/auth/reset-password returns 200"; else err "reset-password" "$RESET_CODE"; fi
+
 # ── Summary ─────────────────────────────────────────────────────
 echo ""
 echo "──────────────────────────────"

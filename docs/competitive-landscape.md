@@ -87,3 +87,38 @@ No, for three reasons:
 - **Banker fatigue** — same banker getting 5 Alma emails would notice. Mitigation: per-banker dedup at DB level, response-rate flywheel, one-tester-per-firm-per-week soft-cap on the roadmap.
 - **Hallucination** — fact-checker is the answer. False negatives caught in the Maya Patel audit; false positives caught in the 59-banker clean run.
 - **Defensibility** — see "Alma's differentiation" above. Wedge depth + Critic calibration data + flywheel scoring weights = the moat.
+
+## Newer competitors worth naming
+
+### breakin.ai
+IB recruiting AI — looks like a coaching / interview-practice tool (mock interviews + content). **Different from Alma:** practice for the interview, not the outreach that gets you to the interview. Adjacent, not direct. The student can use both.
+
+### super-day.app
+Superday prep tool (mock technicals + behaviorals). **Different from Alma:** single-stage interview prep, not pipeline. Adjacent.
+
+### Tsenta (YC)
+AI for B2B sales-development outreach. **Different from Alma:** different customer (sales orgs, not students), different industry. Useful as a positioning marker — "horizontal AI outreach exists; the wedge of one industry × one demographic is where the quality bar can be enforced."
+
+## The two questions Alma gets in every conversation
+
+### "Hasn't this been done already?"
+
+No, not the full stack. There's:
+- AI mock interview tools (Forage, super-day, breakin)
+- AI sales sequencers (Lavender, Lemlist, Apollo)
+- Manual playbooks (WSO, M&I)
+- Coaching ($5–15k packages)
+
+Nobody combines real banker discovery + per-banker fact-checking + student-voice drafting + Gmail send + reply tracking + 7-stage IB pipeline + anti-spam dedup, in one funnel for one demographic. **The wedge is the moat.**
+
+### "If everyone uses this, no banker will respond."
+
+Three answers, escalating:
+
+1. **Volume cap.** Even with 1000 Alma users, no banker receives more than 1 email per Alma user per banker (per-banker dedup at the DB level). Today bankers already get 30+ cold emails/week from non-Alma students writing the same generic stuff. Alma's worst case = same volume. Best case = lower volume + higher quality.
+
+2. **Anti-spam soft-cap (roadmap).** Across all Alma users, we cap how many can email the same banker in the same week. So we throttle our own demand if it's overwhelming any one inbox. The flywheel scoring weights make this profitable for us — bankers with high reply rates get prioritized for users with strongest fit, and over-saturated bankers get rotated out.
+
+3. **Voice differentiation.** Even if 100 Alma students email Goldman, each writes from their own background to a banker who shares something specific with them. They don't all read like form letters — that's the fact-checker enforcing verbatim-only. Banker fatigue scales with quality, not volume.
+
+Pitch it as: *AI doesn't get banker fatigue — bad outreach does. The bar is reply rate per email; ours is 22% in pilot vs ~3% manual. As we scale, we tune toward higher-quality fewer-emails, not the other way.*

@@ -113,7 +113,12 @@ async function queryBankerDB(
   if (!url || !key) return [];
 
   const rowLimit = Math.max(limit * 3, 30);
-  let endpoint = `${url}/rest/v1/bankers?select=*&limit=${rowLimit}`;
+  // Only consider bankers we can actually email. Cofounder explicitly:
+  // "no we cant allow unverified emails. thats no way to test user-side."
+  // email IS NOT NULL is the gate — pattern-guess emails would land in
+  // spam and fail Hunter's verification. Hunter-verified rows live with
+  // email_verified=true; serper-discovered without enrichment are skipped.
+  let endpoint = `${url}/rest/v1/bankers?select=*&email=not.is.null&limit=${rowLimit}`;
   if (targetFirms.length > 0) {
     endpoint += `&firm_id=in.(${targetFirms.map((f) => `"${f}"`).join(",")})`;
   }
@@ -220,14 +225,27 @@ export async function runResearcher(input: ResearcherInput): Promise<ResearcherO
     const weights = await getActiveScoringWeights();
     const responseRates = (weights?.bankerResponseRate as Record<string, number> | undefined) ?? {};
 
-    // Score and rank
+    // Score and rank. Hard partition: same-school candidates exhaust first
+    // (sorted by warmth among themselves), then cross-school. Cofounder
+    // hit the cross-school case writing "I'm at Rice (similar vibes to
+    // Brown, I imagine)" to a Brown alum — the email opener is awkward
+    // when the school anchor doesn't match. Same-school always reads
+    // better when available.
     const scored = bankers.map((b) => {
       const responseBoost = responseRates[b.id] ?? 0;
       const warmth = computeWarmth(b, user, responseBoost);
-      return { banker: b, warmth };
+      const sameSchool = !!(
+        b.university && user.university &&
+        b.university.toLowerCase() === user.university.toLowerCase()
+      );
+      return { banker: b, warmth, sameSchool };
     });
 
-    scored.sort((a, b) => b.warmth - a.warmth);
+    scored.sort((a, b) => {
+      if (a.sameSchool && !b.sameSchool) return -1;
+      if (!a.sameSchool && b.sameSchool) return 1;
+      return b.warmth - a.warmth;
+    });
 
     const top = scored.slice(0, input.needed);
 
