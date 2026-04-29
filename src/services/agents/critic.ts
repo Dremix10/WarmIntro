@@ -88,19 +88,45 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
         const firm = banker.firm_id
           ? await restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } })
           : null;
-        const factCheck = await factCheckDraft(draft.body as string, {
-          name: banker.name as string,
-          title: banker.title as string | null,
-          firmName: (firm?.name as string | undefined) ?? null,
-          linkedinUrl: banker.linkedin_url as string | null,
-          university: banker.university as string | null,
-        });
+        let factCheck;
+        try {
+          factCheck = await factCheckDraft(draft.body as string, {
+            name: banker.name as string,
+            title: banker.title as string | null,
+            firmName: (firm?.name as string | undefined) ?? null,
+            linkedinUrl: banker.linkedin_url as string | null,
+            university: banker.university as string | null,
+          });
+        } catch (err) {
+          // Fact-check extraction itself failed — Claude returned malformed
+          // JSON or refused. This is the failure mode where a draft would
+          // otherwise pass unchecked. Route to needs_revision instead so
+          // the draft isn't silently approved.
+          await logSignal({
+            userId: draft.user_id as string,
+            bankerId: draft.banker_id as string | null ?? undefined,
+            draftId: draft.id as string,
+            agent: "critic",
+            signalType: "fact_check_unavailable",
+            metadata: { error: String(err).slice(0, 200) },
+          });
+          const review = await persistReview({
+            draftId: draft.id as string,
+            scores: { specificity: 5, voiceMatch: 6, guardrails: 6, sharedGround: 5 },
+            overallScore: 5.5,
+            verdict: draft.iteration_count + 1 >= MAX_ITERATIONS ? "escalate_to_planner" : "reject",
+            feedback: "Fact-check service couldn't run cleanly. Re-drafting with safer (less specific) claims so we can verify before send.",
+          });
+          await advanceDraftStatus(draft.id as string, review.verdict);
+          await endAgentRun(ctx, { verdict: review.verdict, reason: "fact_check_unavailable" });
+          return review;
+        }
         // Persist the fact-check on the draft so /today can show citations
         // under the email body. Stored even when ok — verified claims with
         // their sources are useful proof to the user.
         await restUpdate(
           "drafts",
-          { fact_check: factCheck } as never,
+          { fact_check: factCheck as unknown as Json },
           { id: eq(draft.id) }
         );
         const fabricated = factCheck.checks.filter((c) => c.verdict !== "verified");
@@ -109,7 +135,7 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
             draftId: draft.id,
             scores: { specificity: 4, voiceMatch: 6, guardrails: 6, sharedGround: 3 },
             overallScore: 4.75,
-            verdict: draft.iteration_count >= MAX_ITERATIONS ? "escalate_to_planner" : "reject",
+            verdict: draft.iteration_count + 1 >= MAX_ITERATIONS ? "escalate_to_planner" : "reject",
             feedback: `Fabrication risk: ${fabricated.length} claim(s) couldn't be verified online. ${fabricated.map((c) => `"${c.claim.slice(0, 60)}"`).join("; ")}. Rewrite without those specifics — lean on school/firm/group anchors instead.`,
           });
           await advanceDraftStatus(draft.id, review.verdict);

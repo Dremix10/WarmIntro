@@ -24,11 +24,38 @@ export const runtime = "nodejs";
 const FROM_ADDRESS = "Alma <noreply@alma.careers>";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers";
 
+// Per-email throttle: same address can't trigger more than 1 reset every 60s.
+// Stops the route from being a free email amplifier targeting any allowlisted
+// student. Lives in memory (per-instance) — fine for a small fleet; upgrade
+// to Redis if abuse is observed.
+const PER_EMAIL_COOLDOWN_MS = 60_000;
+const lastResetByEmail = new Map<string, number>();
+
+function isThrottled(email: string): boolean {
+  const last = lastResetByEmail.get(email);
+  if (!last) return false;
+  return Date.now() - last < PER_EMAIL_COOLDOWN_MS;
+}
+function recordReset(email: string): void {
+  lastResetByEmail.set(email, Date.now());
+  // Cap map size so it doesn't grow unbounded.
+  if (lastResetByEmail.size > 5000) {
+    const cutoff = Date.now() - PER_EMAIL_COOLDOWN_MS * 5;
+    for (const [k, t] of lastResetByEmail) if (t < cutoff) lastResetByEmail.delete(k);
+  }
+}
+
 export async function POST(request: Request) {
   const { email } = (await request.json()) as { email?: string };
   if (!email || typeof email !== "string") {
     return NextResponse.json({ error: "email is required" }, { status: 400 });
   }
+  const normalized = email.toLowerCase().trim();
+  if (isThrottled(normalized)) {
+    // Don't leak — return 200 so attackers can't probe rate-limit behavior.
+    return NextResponse.json({ ok: true });
+  }
+  recordReset(normalized);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

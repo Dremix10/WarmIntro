@@ -370,6 +370,7 @@ export type Database = {
           connection_id: string | null
           created_at: string
           critic_review_id: string | null
+          fact_check: Json | null
           guardrail_flags: Json
           id: string
           iteration_count: number
@@ -389,6 +390,7 @@ export type Database = {
           connection_id?: string | null
           created_at?: string
           critic_review_id?: string | null
+          fact_check?: Json | null
           guardrail_flags?: Json
           id?: string
           iteration_count?: number
@@ -408,6 +410,7 @@ export type Database = {
           connection_id?: string | null
           created_at?: string
           critic_review_id?: string | null
+          fact_check?: Json | null
           guardrail_flags?: Json
           id?: string
           iteration_count?: number

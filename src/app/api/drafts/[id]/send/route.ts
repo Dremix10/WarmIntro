@@ -95,20 +95,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       })
       .eq("id", draft.connection_id);
   } else if (draft.banker_id) {
-    // Avoid duplicating if a connection already exists for this banker
-    const { data: existing } = await admin
-      .from("connections")
-      .select("id")
-      .eq("user_id", ctx.user.id)
-      .eq("banker_id", draft.banker_id)
-      .maybeSingle();
-    if (existing) {
-      await admin
-        .from("connections")
-        .update({ stage: "sent", last_send_message_id: res.sentMessageId, thread_id: res.gmailThreadId, silence_days: 0, needs_followup: false, updated_at: now })
-        .eq("id", existing.id);
-    } else {
-      await admin.from("connections").insert({
+    // Race-safe upsert: a unique constraint on (user_id, banker_id) means
+    // a parallel send (planner autopilot, double-click, mark_sent) might
+    // beat us to the insert. Use upsert with onConflict so we never throw
+    // and always end up with a single connection row.
+    await admin.from("connections").upsert(
+      {
         user_id: ctx.user.id,
         banker_id: draft.banker_id,
         alumni_id: draft.banker_id, // legacy column
@@ -120,8 +112,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         stage: "sent",
         last_send_message_id: res.sentMessageId,
         thread_id: res.gmailThreadId,
-      });
-    }
+        silence_days: 0,
+        needs_followup: false,
+        updated_at: now,
+      },
+      { onConflict: "user_id,banker_id", ignoreDuplicates: false }
+    );
   }
 
   await logSignal({

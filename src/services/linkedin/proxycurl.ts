@@ -154,7 +154,13 @@ export async function discoverBankersAtFirm(
       headers: { "X-API-KEY": serperKey, "Content-Type": "application/json" },
       body: JSON.stringify({ q: query, num: limit }),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      // Surface rate-limit / 5xx so observability can see why Curator's
+      // discovered-count is zero, instead of silently returning empty.
+      const text = await res.text().catch(() => "");
+      console.warn(`[discovery] serper ${res.status} for "${firmName}": ${text.slice(0, 200)}`);
+      return [];
+    }
     const data = (await res.json()) as { organic?: Array<{ title: string; link: string; snippet: string }> };
     const seen = new Set<string>();
     const results: Array<{ name: string; title: string; linkedinUrl: string }> = [];
@@ -166,6 +172,18 @@ export async function discoverBankersAtFirm(
       // Extract name from "<Name> - <Title> - <Company> | LinkedIn" pattern
       const name = r.title.split(" - ")[0].split(" | ")[0].trim();
       const titleGuess = r.title.split(" - ")[1]?.trim() ?? "";
+
+      // Validate the parsed name. Serper occasionally returns LinkedIn snippets
+      // with non-name leading text ("Connect with Maria on LinkedIn", "View
+      // John's profile"). Reject anything that doesn't look like a real name
+      // — saves the Correspondent from quoting nonsense at a real banker.
+      const looksLikeName =
+        name.length >= 3 &&
+        name.length <= 50 &&
+        /^[A-Z][a-zA-Z'’.\-]*(?:\s+[A-Z][a-zA-Z'’.\-]*){0,4}$/.test(name) &&
+        !/(connect|view|profile|linkedin|sign in|join|see all|contact|members|company)/i.test(name);
+      if (!looksLikeName) continue;
+
       results.push({ name, title: titleGuess, linkedinUrl: r.link });
       if (results.length >= limit) break;
     }

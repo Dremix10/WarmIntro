@@ -410,11 +410,17 @@ async function createOrUpdateConnection(
       { id: eq(draft.connection_id) }
     );
   } else {
+    // alumni_role is NOT NULL — coerce empty string when banker.title is
+    // null (which happens for Serper-discovered rows that never get
+    // enriched). Race-safe via the (user_id, banker_id) unique constraint;
+    // a duplicate insert would surface as a Postgres error here, but the
+    // earlier alreadyContactedBankerIds check + the fact that planner
+    // autopilot runs serially per user makes that unreachable in practice.
     const inserted = await restInsert("connections", {
       user_id: userId,
       alumni_id: bankerId, // legacy column name
       alumni_name: banker.name,
-      alumni_role: banker.title,
+      alumni_role: banker.title ?? "",
       alumni_linkedin_url: banker.linkedin_url ?? "",
       company_id: banker.firm_id ?? "",
       company_name: firmName,

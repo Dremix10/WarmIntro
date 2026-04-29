@@ -14,7 +14,7 @@ const AI_ROUTES = [
 const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate-outreach", "/api/find-people"];
 
 // Auth routes — brute-force protection
-const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup"];
+const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup", "/api/auth/reset-password"];
 
 // Rate limit tiers (requests per window)
 const RATE_LIMITS = {

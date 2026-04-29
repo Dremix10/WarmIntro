@@ -76,30 +76,80 @@ DO extract:
 Return JSON: { "claims": [ { "text": "...", "type": "deal|post|role|school_activity|career_move|other" } ] }
 If no specific claims, return { "claims": [] }.`;
 
+// Throws if Claude refuses or returns malformed JSON. Critic catches that
+// and routes the draft to needs_revision — a silent empty-array return would
+// have let unfact-checked drafts pass under the false guise of "no specific
+// claims," which is the worst possible failure mode.
 async function extractClaims(emailBody: string): Promise<Array<{ text: string; type: ClaimCheck["type"] }>> {
-  try {
-    const res = await askClaudeJSON<{ claims: Array<{ text: string; type: ClaimCheck["type"] }> }>(
-      `Email:\n${emailBody}\n\nReturn only the JSON object.`,
-      { systemPrompt: EXTRACT_SYSTEM, maxTokens: 800, skipCache: true }
-    );
-    return res.claims ?? [];
-  } catch {
-    return [];
+  const res = await askClaudeJSON<{ claims: Array<{ text: string; type: ClaimCheck["type"] }> }>(
+    `Email:\n${emailBody}\n\nReturn only the JSON object.`,
+    { systemPrompt: EXTRACT_SYSTEM, maxTokens: 800, skipCache: true }
+  );
+  if (!res || !Array.isArray(res.claims)) {
+    throw new Error("fact_check_extract_invalid_shape");
   }
+  return res.claims;
+}
+
+// Stop-words excluded from "meaningful" word count + n-gram matching to
+// prevent generic phrases like "your team advised on the" from trivially
+// matching any banker's M&A page.
+const STOP_WORDS = new Set([
+  "the", "and", "for", "you", "your", "with", "from", "that", "this", "have",
+  "has", "had", "was", "were", "are", "been", "being", "their", "they", "them",
+  "our", "out", "about", "over", "under", "into", "than", "then", "when",
+  "where", "which", "what", "who", "how", "why", "but", "any", "all", "some",
+  "team", "work", "role", "year", "years", "time", "made", "make", "doing",
+]);
+
+function meaningfulWords(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 3 && !STOP_WORDS.has(w));
+}
+
+function extractNamedEntities(claim: string): string[] {
+  // Heuristic: capitalized words 2+ letters (deal codenames, firm names),
+  // dollar amounts, year references. The presence of one of these in the
+  // haystack is a stronger signal than common-word n-grams.
+  const out: string[] = [];
+  const proper = claim.match(/\b[A-Z][a-zA-Z]{1,}\b/g) ?? [];
+  for (const p of proper) if (p.length > 2) out.push(p.toLowerCase());
+  const money = claim.match(/\$\s?\d+(?:[.,]\d+)?\s?(?:[BM]|billion|million)?/gi) ?? [];
+  for (const m of money) out.push(m.toLowerCase().replace(/\s/g, ""));
+  const years = claim.match(/\b(19|20)\d{2}\b/g) ?? [];
+  for (const y of years) out.push(y);
+  return [...new Set(out)];
 }
 
 function snippetMatchesClaim(claim: string, snippets: string[]): boolean {
-  // Heuristic: any meaningful overlap (>= 4-word phrase from the claim appears in snippets) counts.
-  const claimLower = claim.toLowerCase();
-  const claimWords = claimLower.replace(/[^\w\s]/g, " ").split(/\s+/).filter((w) => w.length > 2);
-  if (claimWords.length === 0) return false;
+  // A claim is "verified" only if BOTH:
+  //   1. A 6+ consecutive meaningful-word phrase (stop-words excluded) appears
+  //      in the haystack, OR a named entity from the claim appears verbatim.
+  //   2. At least one named-entity token from the claim is present in the
+  //      haystack — this stops "your team advised on a recent transaction"
+  //      from matching every banker's profile.
+  // If the claim has no named entities (rare; the entire claim is generic),
+  // we require a longer 8-word phrase match to compensate.
   const haystack = snippets.join(" ").toLowerCase();
-  // Look for any 4+ consecutive words from the claim in the haystack.
-  for (let i = 0; i + 4 <= claimWords.length; i++) {
-    const phrase = claimWords.slice(i, i + 4).join(" ");
-    if (haystack.includes(phrase)) return true;
+  const words = meaningfulWords(claim);
+  const entities = extractNamedEntities(claim);
+
+  let phraseMatch = false;
+  const phraseLen = entities.length > 0 ? 6 : 8;
+  for (let i = 0; i + phraseLen <= words.length; i++) {
+    const phrase = words.slice(i, i + phraseLen).join(" ");
+    if (haystack.includes(phrase)) { phraseMatch = true; break; }
   }
-  return false;
+
+  let entityMatch = entities.length === 0; // no entities → skip this gate
+  for (const e of entities) {
+    if (haystack.includes(e)) { entityMatch = true; break; }
+  }
+
+  return phraseMatch && entityMatch;
 }
 
 async function verifyClaim(claim: string, banker: BankerForFactCheck): Promise<ClaimCheck> {
