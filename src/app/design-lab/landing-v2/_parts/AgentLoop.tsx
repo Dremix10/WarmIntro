@@ -63,174 +63,164 @@ const STEPS: Step[] = [
   },
 ];
 
-const AGENTS: { id: AgentId; label: string }[] = [
-  { id: "researcher", label: "Researcher" },
-  { id: "correspondent", label: "Correspondent" },
-  { id: "critic", label: "Critic" },
-  { id: "watcher", label: "Watcher" },
-  { id: "curator", label: "Curator" },
-];
-
-function useReducedMotion() {
-  // Initialise from the media query synchronously so there's no flash.
-  // typeof window guard keeps SSR safe; the component is "use client" so
-  // this always runs in the browser, but the guard satisfies strict mode.
-  const [reduced, setReduced] = useState<boolean>(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
-      : false
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
+function pad(n: number) {
+  return n.toString().padStart(2, "0");
 }
 
-export function AgentLoop() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const reducedMotion = useReducedMotion();
+function StepRow({
+  step,
+  idx,
+  isLast,
+  onUnfold,
+}: {
+  step: Step;
+  idx: number;
+  isLast: boolean;
+  onUnfold: (i: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [unfolded, setUnfolded] = useState(false);
 
-  // Reduced-motion fallback: one-shot autoplay through the steps when section enters viewport.
   useEffect(() => {
-    if (!reducedMotion) return;
-    const sec = sectionRef.current;
-    if (!sec) return;
+    const el = ref.current;
+    if (!el) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setUnfolded(true);
+      onUnfold(idx);
+      return;
+    }
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          STEPS.forEach((_, i) => {
-            window.setTimeout(() => setActiveIndex(i), i * 350);
-          });
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setUnfolded(true);
+          onUnfold(idx);
           observer.disconnect();
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.35, rootMargin: "0px 0px -15% 0px" }
     );
-    observer.observe(sec);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, [reducedMotion]);
+  }, [idx, onUnfold]);
 
-  // Scroll-progress driven (default).
-  useEffect(() => {
-    if (reducedMotion) return;
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      const sec = sectionRef.current;
-      if (!sec) return;
-      const rect = sec.getBoundingClientRect();
-      const vh = window.innerHeight;
-      // Pinned-scroll range: from when section top hits viewport top
-      // to when section bottom is one viewport above viewport top.
-      const pinTop = -rect.top; // 0 when section just hit top
-      const pinRange = rect.height - vh; // total scroll distance available within the pinned section
-      const raw = pinRange > 0 ? pinTop / pinRange : 0;
-      const progress = Math.max(0, Math.min(1, raw));
-      const idx = Math.min(
-        STEPS.length - 1,
-        Math.max(0, Math.floor(progress * STEPS.length))
-      );
-      setActiveIndex((prev) => (prev === idx ? prev : idx));
-    };
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (rafId) window.cancelAnimationFrame(rafId);
-    };
-  }, [reducedMotion]);
+  const isReject = step.variant === "reject";
+  const isApprove = step.variant === "approve";
 
-  const step = STEPS[activeIndex];
-  const completed = new Set<AgentId>();
-  for (let i = 0; i < activeIndex; i++) completed.add(STEPS[i].agent);
+  return (
+    <div
+      ref={ref}
+      data-unfolded={unfolded}
+      className="agent-row group relative grid grid-cols-[56px_1fr] gap-4 md:grid-cols-[88px_1fr] md:gap-7"
+    >
+      {/* Rail node + connector */}
+      <div className="relative flex flex-col items-center">
+        <div
+          className={
+            "agent-rail-node relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-[family-name:var(--font-fraunces)] text-base transition-all duration-500 md:h-14 md:w-14 md:text-lg " +
+            (unfolded
+              ? "bg-[#1B3B5F] text-white shadow-[0_8px_24px_-8px_rgba(27,59,95,.45)]"
+              : "border border-[#D9CFB5] bg-white text-[#8A8674]")
+          }
+        >
+          {pad(idx + 1)}
+        </div>
+        {!isLast && (
+          <span
+            className={
+              "agent-rail-connector absolute left-1/2 top-12 -translate-x-1/2 w-px transition-colors duration-700 md:top-14 " +
+              (unfolded ? "bg-[#1B3B5F]/35" : "bg-[#D9CFB5]")
+            }
+            style={{ height: "calc(100% - 3rem)" }}
+            aria-hidden
+          />
+        )}
+      </div>
+
+      {/* Content card */}
+      <div className="agent-row-content alma-card rounded-2xl border border-[#D9CFB5] p-5 md:p-7">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#2E5A88]">
+            {step.eyebrow}
+          </p>
+          {isReject && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#991B1B]">
+              ✗ rejected
+            </span>
+          )}
+          {isApprove && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#D1FAE5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#065F46]">
+              ✓ approved
+            </span>
+          )}
+        </div>
+        <h3 className="mt-2 text-2xl leading-[1.15] tracking-[-0.01em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[28px]">
+          {step.title}
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed text-[#4A5260] md:text-base">{step.body}</p>
+      </div>
+    </div>
+  );
+}
+
+export function AgentLoop() {
+  const [unfoldedSet, setUnfoldedSet] = useState<Set<number>>(new Set([0]));
+
+  const handleUnfold = (i: number) => {
+    setUnfoldedSet((prev) => {
+      if (prev.has(i)) return prev;
+      const next = new Set(prev);
+      next.add(i);
+      return next;
+    });
+  };
+
+  const progress = unfoldedSet.size / STEPS.length;
 
   return (
     <section
-      ref={sectionRef}
-      className="relative"
-      style={{ minHeight: "160vh" }}
+      className="relative mx-auto max-w-4xl px-6 py-24 md:py-32"
       aria-label="The agent loop, one banker through the pipeline"
     >
-      <div className="sticky top-20 mx-auto max-w-5xl px-6 py-12">
-        <div className="mb-2">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
-            One banker, six agents
-          </p>
-          <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            The loop, in motion.
-          </h2>
-        </div>
-
-        {/* Agent badges row */}
-        <div className="mt-10 flex flex-wrap items-center gap-2">
-          {AGENTS.map((a, i) => {
-            const isActive = a.id === step.agent;
-            const isDone = completed.has(a.id);
-            return (
-              <span key={a.id} className="contents">
-                <span
-                  className={
-                    "rounded-md px-3 py-2 text-xs font-semibold transition-colors duration-300 " +
-                    (isActive
-                      ? "bg-[#1B3B5F] text-white"
-                      : isDone
-                      ? "bg-[#1B3B5F]/15 text-[#1B3B5F] border border-[#1B3B5F]/25"
-                      : "border border-[#D9CFB5] bg-white text-[#5C6472]")
-                  }
-                >
-                  {a.label}
-                </span>
-                {i < AGENTS.length - 1 && (
-                  <span className="hidden h-px flex-1 bg-[#D9CFB5] sm:block" aria-hidden />
-                )}
-              </span>
-            );
-          })}
-        </div>
-
-        {/* Progress bar */}
-        <div className="mt-3 h-[3px] overflow-hidden rounded-sm bg-[#D9CFB5]">
-          <div
-            className="h-full bg-[#1B3B5F] transition-[width] duration-300"
-            style={{ width: `${((activeIndex + 1) / STEPS.length) * 100}%` }}
-          />
-        </div>
-
-        {/* Content card */}
-        <div className="mt-6 min-h-[220px] alma-card rounded-2xl border border-[#D9CFB5] p-6 shadow-sm">
-          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">
-            {step.eyebrow}
-          </div>
-          <div className="mt-2 text-xl text-[#14182A] font-[family-name:var(--font-fraunces)]">
-            {step.title}
-          </div>
-          <p className="mt-3 text-sm leading-relaxed text-[#4A5260]">{step.body}</p>
-          {step.variant === "reject" && (
-            <div className="mt-4 inline-flex items-center gap-2 rounded bg-[#FEE2E2] px-2 py-1 text-xs font-semibold text-[#991B1B]">
-              ✗ Reject · revise required
-            </div>
-          )}
-          {step.variant === "approve" && (
-            <div className="mt-4 inline-flex items-center gap-2 rounded bg-[#D1FAE5] px-2 py-1 text-xs font-semibold text-[#065F46]">
-              ✓ Approved · ready to send
-            </div>
-          )}
-        </div>
-
-        <p className="mt-4 text-xs text-[#8A8674]">
-          Planner orchestrates this loop deterministically every fifteen minutes. Curator runs in the background, keeping the banker graph fresh.
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
+          One banker, six agents
+        </p>
+        <h2 className="mt-4 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
+          The loop, in motion.
+        </h2>
+        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#4A5260] md:text-lg">
+          Watch one Brown sophomore reach a Morgan Stanley VP. Seven steps, six agents, one inbox.
         </p>
       </div>
+
+      <div className="mx-auto mt-12 flex max-w-md items-center gap-3">
+        <span className="font-mono text-xs tabular-nums text-[#8A8674]">
+          {pad(unfoldedSet.size)} / {pad(STEPS.length)}
+        </span>
+        <div className="h-[2px] flex-1 overflow-hidden rounded-sm bg-[#D9CFB5]">
+          <div
+            className="h-full bg-[#1B3B5F] transition-[width] duration-700 ease-out"
+            style={{ width: `${progress * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="relative mt-14 space-y-6 md:space-y-7">
+        {STEPS.map((step, i) => (
+          <StepRow
+            key={i}
+            step={step}
+            idx={i}
+            isLast={i === STEPS.length - 1}
+            onUnfold={handleUnfold}
+          />
+        ))}
+      </div>
+
+      <p className="mx-auto mt-10 max-w-md text-center text-xs text-[#8A8674]">
+        Planner orchestrates this loop deterministically every fifteen minutes. Curator runs in the
+        background, keeping the banker graph fresh.
+      </p>
     </section>
   );
 }

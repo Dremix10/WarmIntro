@@ -195,3 +195,39 @@ html, body {
   .alma-card { transition: none; }
   .alma-card:hover { transform: none; box-shadow: none; }
 }
+
+/* Agent-loop step rows — unfold as they enter the viewport.
+   Each row starts dimmed, slightly translated, slightly blurred.
+   IntersectionObserver flips data-unfolded=true; CSS handles the rest. */
+.agent-row .agent-row-content {
+  opacity: 0;
+  transform: translateY(48px) scale(0.97);
+  filter: blur(3px);
+  transition:
+    opacity 700ms cubic-bezier(.22,.75,.3,1),
+    transform 800ms cubic-bezier(.22,.75,.3,1),
+    filter 700ms cubic-bezier(.22,.75,.3,1);
+  will-change: transform, opacity, filter;
+}
+.agent-row[data-unfolded="true"] .agent-row-content {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+.agent-row .agent-rail-node {
+  opacity: 0.35;
+}
+.agent-row[data-unfolded="true"] .agent-rail-node {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-row .agent-row-content {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .agent-row .agent-rail-node { opacity: 1; }
+}
