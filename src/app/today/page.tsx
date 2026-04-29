@@ -292,42 +292,27 @@ export default function TodayPage() {
             ))}
           </div>
 
-          {/* Daily morning run controls — number of drafts + send time */}
-          <div className="mt-4 pt-4 border-t border-[#EAE3D2] grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <label htmlFor="batch-size" className="block text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 font-semibold mb-1.5">
-                Drafts each morning
-              </label>
-              <input
-                id="batch-size"
-                type="number"
-                min={1}
-                max={5}
+          {/* Auto-run controls — batch size + send time. Only relevant when
+              the cron actually runs the planner (Preview-veto / Autopilot).
+              On Copilot, all drafting is on-demand via Run Alma now, so
+              these settings don't apply. */}
+          {(data.trust?.send_new_email ?? "C") === "C" ? (
+            <div className="mt-4 pt-4 border-t border-[#EAE3D2] text-xs text-[#14182A]/55 italic font-[family-name:var(--font-fraunces)]">
+              On Copilot — drafts only when you click <strong>Run Alma now</strong>. Switch to Preview-veto or Autopilot to schedule a daily morning run.
+            </div>
+          ) : (
+            <div className="mt-4 pt-4 border-t border-[#EAE3D2] grid grid-cols-2 gap-3 text-xs">
+              <BatchStepper
                 value={Math.min(data.trust?.daily_batch_size ?? 5, 5)}
-                onChange={(e) => {
-                  const n = parseInt(e.target.value, 10);
-                  if (!Number.isNaN(n) && n >= 1 && n <= 5) updateTrust("daily_batch_size", n);
-                }}
-                className="w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-1.5 text-sm font-medium text-[#14182A] focus:border-[#2E5A88] focus:outline-none tabular-nums"
+                onChange={(n) => updateTrust("daily_batch_size", n)}
               />
-            </div>
-            <div>
-              <label htmlFor="send-time" className="block text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 font-semibold mb-1.5">
-                Send time {data.needsGmail && <span className="text-[#C86B4F]">· no mailbox</span>}
-              </label>
-              <input
-                id="send-time"
-                type="time"
+              <SendTimePicker
                 value={(data.trust?.preferred_send_time ?? "08:23").slice(0, 5)}
-                onChange={(e) => {
-                  if (e.target.value) updateTrust("preferred_send_time", e.target.value);
-                }}
-                className={`w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-1.5 text-sm font-medium tabular-nums focus:border-[#2E5A88] focus:outline-none ${
-                  data.needsGmail ? "text-[#14182A]/40 line-through" : "text-[#14182A]"
-                }`}
+                onChange={(t) => updateTrust("preferred_send_time", t)}
+                disabled={data.needsGmail ?? false}
               />
             </div>
-          </div>
+          )}
         </div>
 
         {/* Pipeline summary */}
@@ -897,6 +882,85 @@ function SendAllButton({ count, onDone }: { count: number; onDone: () => void | 
           {summary}
         </p>
       )}
+    </div>
+  );
+}
+
+// Custom number stepper — replaces the native <input type=number> whose
+// browser stepper buttons feel old + the controlled-input race that made
+// typing not commit. Local state for typing UX; commits on each step or
+// on blur. Range 1-5 (Vercel function timeout caps the planner at 5).
+function BatchStepper({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [local, setLocal] = useState(String(value));
+  useEffect(() => { setLocal(String(value)); }, [value]);
+  function clampAndCommit(raw: string) {
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n)) { setLocal(String(value)); return; }
+    const clamped = Math.max(1, Math.min(5, n));
+    setLocal(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  }
+  function step(delta: number) {
+    const n = Math.max(1, Math.min(5, value + delta));
+    if (n !== value) onChange(n);
+  }
+  return (
+    <div>
+      <label htmlFor="batch-size" className="block text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 font-semibold mb-1.5">
+        Drafts each morning
+      </label>
+      <div className="flex items-stretch rounded-lg border border-[#D9CFB5] bg-white overflow-hidden focus-within:border-[#2E5A88] transition-colors">
+        <button
+          type="button"
+          onClick={() => step(-1)}
+          disabled={value <= 1}
+          aria-label="Decrease"
+          className="w-9 text-[#14182A] hover:bg-[#EAE3D2] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-base leading-none flex items-center justify-center"
+        >−</button>
+        <input
+          id="batch-size"
+          type="text"
+          inputMode="numeric"
+          value={local}
+          onChange={(e) => setLocal(e.target.value.replace(/[^0-9]/g, "").slice(0, 1))}
+          onBlur={(e) => clampAndCommit(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+          className="flex-1 text-center text-sm font-medium tabular-nums focus:outline-none bg-transparent"
+        />
+        <button
+          type="button"
+          onClick={() => step(1)}
+          disabled={value >= 5}
+          aria-label="Increase"
+          className="w-9 text-[#14182A] hover:bg-[#EAE3D2] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-base leading-none flex items-center justify-center"
+        >+</button>
+      </div>
+    </div>
+  );
+}
+
+function SendTimePicker({ value, onChange, disabled }: { value: string; onChange: (t: string) => void; disabled: boolean }) {
+  // Branded time picker — uses native <input type=time> for the wheel UX
+  // but styled to match the rest. Disabled state = grayed out, not
+  // line-through (line-through reads as "this happened and was struck",
+  // which doesn't fit a future time).
+  return (
+    <div>
+      <label htmlFor="send-time" className="block text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 font-semibold mb-1.5">
+        Send time{disabled && <span className="text-[#C86B4F] ml-1">· connect Gmail first</span>}
+      </label>
+      <input
+        id="send-time"
+        type="time"
+        value={value}
+        onChange={(e) => { if (e.target.value) onChange(e.target.value); }}
+        disabled={disabled}
+        className={`w-full rounded-lg border bg-white px-3 py-1.5 text-sm font-medium tabular-nums focus:outline-none transition-colors ${
+          disabled
+            ? "border-[#EAE3D2] text-[#14182A]/35 cursor-not-allowed"
+            : "border-[#D9CFB5] text-[#14182A] focus:border-[#2E5A88] hover:border-[#2E5A88]/60"
+        }`}
+      />
     </div>
   );
 }
