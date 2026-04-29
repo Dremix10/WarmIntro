@@ -33,14 +33,21 @@ interface ScoutInput {
 interface SerperOrganic { title: string; link: string; snippet?: string; date?: string }
 interface SerperResponse { organic?: SerperOrganic[] }
 
-async function serperSearch(query: string, num = 8): Promise<SerperOrganic[]> {
+async function serperSearch(query: string, opts: { num?: number; recentOnly?: boolean } = {}): Promise<SerperOrganic[]> {
   const apiKey = process.env.SERPER_API_KEY;
   if (!apiKey) return [];
   try {
+    // qdr:y limits to past year. Useful for "recent post" queries but hurts
+    // queries that just want to find the banker's profile/bio anywhere on
+    // the web. Most junior bankers don't post often, so a year filter
+    // empties the result set. Only apply on queries explicitly asking for
+    // recent activity.
+    const body: Record<string, unknown> = { q: query, num: opts.num ?? 8 };
+    if (opts.recentOnly) body.tbs = "qdr:y";
     const res = await fetch("https://google.serper.dev/search", {
       method: "POST",
       headers: { "X-API-KEY": apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ q: query, num, tbs: "qdr:y" }), // qdr:y = past year
+      body: JSON.stringify(body),
     });
     if (!res.ok) return [];
     const json = (await res.json()) as SerperResponse;
@@ -71,12 +78,16 @@ function mentionsBanker(banker: ScoutInput, organic: SerperOrganic): boolean {
   const haystack = `${organic.title} ${organic.snippet ?? ""} ${organic.link}`.toLowerCase();
   const nameHit = haystack.includes(banker.bankerName.toLowerCase());
   if (!nameHit) return false;
-  // Disambiguation: require firm or the banker's exact LinkedIn slug.
+  // Disambiguation: require firm OR the banker's exact LinkedIn slug
+  // anywhere in the URL. The slug is unique per LinkedIn user, so its
+  // presence is a strong "this is the right person" signal — works for
+  // /in/<slug> (profile pages) AND /posts/<slug>_... (post pages) AND
+  // /pulse/<slug>-... (article pages).
   const firmHit = banker.firmName ? haystack.includes(banker.firmName.toLowerCase()) : false;
   let slugHit = false;
   if (banker.linkedinUrl) {
     const slug = banker.linkedinUrl.replace(/.*linkedin\.com\/in\//, "").replace(/[/?#].*$/, "").toLowerCase();
-    if (slug && organic.link.toLowerCase().includes(`/in/${slug}`)) slugHit = true;
+    if (slug && slug.length >= 4 && organic.link.toLowerCase().includes(slug)) slugHit = true;
   }
   return firmHit || slugHit;
 }
@@ -122,19 +133,33 @@ export async function scoutBankerFindings(input: ScoutInput): Promise<ScoutedFin
       }
     }
 
-    // Build queries. We fan them out in parallel — the diverse ones return
-    // mostly disjoint results (LinkedIn vs press vs podcast), and total
-    // Scout latency is what matters under the 60s function budget. Rather
-    // than serial-with-early-exit (saves 1-2 Serper calls but burns 4-6
-    // seconds per banker), we just take the cost of 4 parallel calls and
-    // dedupe results client-side.
-    const queries: string[] = [];
-    queries.push(`"${input.bankerName}" ${input.firmName ?? ""} 2025 2026`.trim());
-    queries.push(`"${input.bankerName}" linkedin post`);
-    if (input.firmName) queries.push(`"${input.bankerName}" "${input.firmName}" deal acquisition`);
-    queries.push(`"${input.bankerName}" interview podcast`);
+    // Build queries. Fan out in parallel — diverse queries return mostly
+    // disjoint result spaces (LinkedIn / press / podcast / profile pages).
+    // Each query is annotated whether it's "recent only" (year-filtered)
+    // or general — most queries skip the year filter because junior
+    // bankers rarely post, and we'd rather have a real bio mention than
+    // nothing at all.
+    const slug = input.linkedinUrl
+      ?.replace(/.*linkedin\.com\/in\//, "")
+      .replace(/[/?#].*$/, "");
 
-    const allResults = (await Promise.all(queries.map((q) => serperSearch(q, 8)))).flat();
+    const queries: Array<{ q: string; recentOnly?: boolean }> = [];
+    // 1. Recent activity by name + firm — year-filtered, looks for fresh news/posts.
+    if (input.firmName) queries.push({ q: `"${input.bankerName}" "${input.firmName}"`, recentOnly: true });
+    // 2. The banker's own LinkedIn profile + adjacent post pages.
+    if (slug) queries.push({ q: `site:linkedin.com/in/${slug}` });
+    if (slug) queries.push({ q: `site:linkedin.com/posts "${input.bankerName}"` });
+    // 3. Broad name + firm search (no time filter) — bio pages, firm
+    //    websites, deal announcements that may not be from "the past year".
+    if (input.firmName) queries.push({ q: `"${input.bankerName}" "${input.firmName}"` });
+    // 4. Deals + press.
+    if (input.firmName) queries.push({ q: `"${input.bankerName}" "${input.firmName}" advised acquisition`, recentOnly: true });
+    // 5. Podcast / interview surfaces.
+    queries.push({ q: `"${input.bankerName}" interview podcast` });
+
+    const allResults = (
+      await Promise.all(queries.map((q) => serperSearch(q.q, { num: 8, recentOnly: q.recentOnly })))
+    ).flat();
 
     const seen = new Set<string>();
     const findings: ScoutedFinding[] = [];
