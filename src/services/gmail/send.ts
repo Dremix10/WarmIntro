@@ -9,14 +9,27 @@ export interface GmailSendResult {
   gmailMessageId: string;
 }
 
+// RFC 2047 encoded-word for non-ASCII subjects. Gmail's send API accepts UTF-8
+// in the raw MIME but downstream relays sometimes mangle it (mojibake risk).
+// Encoding the subject as `=?UTF-8?B?<base64>?=` is the safe path.
+function encodeSubject(subject: string): string {
+  // ASCII-only? leave it alone.
+  if (/^[\x20-\x7E]*$/.test(subject)) return subject;
+  return `=?UTF-8?B?${Buffer.from(subject, "utf8").toString("base64")}?=`;
+}
+
 function buildMime(opts: { from: string; to: string; subject: string; body: string; messageId: string }): string {
+  // Date header improves deliverability. Some spam filters flag mail without it.
+  const dateHeader = new Date().toUTCString();
   const lines = [
     `From: ${opts.from}`,
     `To: ${opts.to}`,
-    `Subject: ${opts.subject}`,
+    `Subject: ${encodeSubject(opts.subject)}`,
     `Message-ID: ${opts.messageId}`,
+    `Date: ${dateHeader}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 8bit`,
     ``,
     opts.body,
   ];
