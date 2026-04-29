@@ -1,11 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { TodayMock, NetworkMock, CrmMock } from "./SurfaceMocks";
 
 type Surface = {
-  href: string;
   eyebrow: string;
   title: string;
   body: string;
@@ -14,21 +12,18 @@ type Surface = {
 
 const SURFACES: Surface[] = [
   {
-    href: "/today",
     eyebrow: "Your queue",
     title: "Today's outreach, lined up.",
     body: "Drafts ready for review. Trust dial: Copilot, Preview-veto, Autopilot. You decide.",
     Mock: TodayMock,
   },
   {
-    href: "/network",
     eyebrow: "Archipelago",
     title: "Your network, as a place.",
     body: "Every bank is an island. Every intro builds more of a home on it.",
     Mock: NetworkMock,
   },
   {
-    href: "/crm",
     eyebrow: "Pipeline",
     title: "Every banker, every stage.",
     body: "Draft → sent → replied → coffee → referral → first round → superday → offer.",
@@ -130,14 +125,13 @@ export function SurfacesStack() {
           {SURFACES.map((s, i) => {
             const state = i <= activeIdx ? "open" : "closed";
             return (
-              <Link
-                key={s.href}
-                href={s.href}
+              <div
+                key={i}
                 data-state={state}
-                style={{ ["--surface-delay" as string]: `${i * 60}ms` }}
-                className="surface-card group block"
+                style={{ ["--surface-delay" as string]: `${i * 80}ms` }}
+                className="surface-card block"
               >
-                <div className="alma-card flex h-full flex-col rounded-2xl border border-[#D9CFB5] p-4 transition-colors hover:border-[#2E5A88] md:p-5">
+                <div className="alma-card flex h-full flex-col rounded-2xl border border-[#D9CFB5] p-4 md:p-5">
                   <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[#ECE7DE] bg-[#F4EDDB]">
                     <s.Mock />
                   </div>
@@ -151,7 +145,7 @@ export function SurfacesStack() {
                     <p className="mt-2 flex-1 text-sm leading-relaxed text-[#4A5260]">{s.body}</p>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>
