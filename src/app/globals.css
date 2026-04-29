@@ -252,3 +252,43 @@ html, body {
   }
   .agent-focus { animation: none; }
 }
+
+/* Surfaces leaflet — three product cards unfold left-to-right with a 3D
+   rotateY swing as the section pins and scroll progress advances. The grid
+   parent gets perspective so the rotation reads as paper opening, not as a
+   2D skew. data-state on each card flips closed -> open. */
+.surface-leaflet {
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+}
+.surface-card {
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+  transition:
+    transform 800ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms),
+    opacity 700ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms),
+    filter 700ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms);
+  will-change: transform, opacity;
+}
+.surface-card[data-state="closed"] {
+  opacity: 0;
+  transform: rotateY(-72deg) scale(0.96);
+  filter: blur(6px);
+  pointer-events: none;
+}
+.surface-card[data-state="open"] {
+  opacity: 1;
+  transform: rotateY(0deg) scale(1);
+  filter: blur(0);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface-leaflet { perspective: none; }
+  .surface-card {
+    transition: none;
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
+}
