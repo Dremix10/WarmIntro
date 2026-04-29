@@ -118,10 +118,21 @@ async function queryBankerDB(
   // email IS NOT NULL is the gate — pattern-guess emails would land in
   // spam and fail Hunter's verification. Hunter-verified rows live with
   // email_verified=true; serper-discovered without enrichment are skipped.
-  let endpoint = `${url}/rest/v1/bankers?select=*&email=not.is.null&limit=${rowLimit}`;
+  //
+  // Use URLSearchParams for safe encoding. Earlier version embedded literal
+  // `"` chars in the URL, which Node fetch sometimes mangled — e2e showed
+  // 0 rows returned even though the same query in curl worked. PostgREST
+  // accepts firm IDs without quotes for slug-shaped values (no commas, no
+  // spaces) so we drop them.
+  const params = new URLSearchParams({
+    select: "*",
+    email: "not.is.null",
+    limit: String(rowLimit),
+  });
   if (targetFirms.length > 0) {
-    endpoint += `&firm_id=in.(${targetFirms.map((f) => `"${f}"`).join(",")})`;
+    params.set("firm_id", `in.(${targetFirms.join(",")})`);
   }
+  const endpoint = `${url}/rest/v1/bankers?${params.toString()}`;
 
   const res = await fetch(endpoint, {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
