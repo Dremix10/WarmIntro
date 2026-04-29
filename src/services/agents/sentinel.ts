@@ -7,6 +7,7 @@
 
 import { startAgentRun, endAgentRun, logSignal } from "./shared";
 import { restSelect, gte, eq } from "@/lib/supabase-rest";
+import { sendTelegram } from "@/lib/telegram";
 
 export interface SentinelOutput {
   alertsSent: number;
@@ -87,26 +88,6 @@ async function getHunterBalance(): Promise<{ available: number; total: number } 
   }
 }
 
-async function sendTelegram(message: string): Promise<boolean> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_ALERT_CHAT_ID;
-  if (!token || !chatId) {
-    console.log("[sentinel] Telegram not configured — alert logged only:", message);
-    return false;
-  }
-  try {
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" }),
-    });
-    return res.ok;
-  } catch (err) {
-    console.warn("[sentinel] Telegram send failed", err);
-    return false;
-  }
-}
-
 export async function runSentinel(): Promise<SentinelOutput> {
   const ctx = await startAgentRun({ agent: "curator", triggeredBy: "cron", inputSummary: { mode: "sentinel" } });
   const out: SentinelOutput = { alertsSent: 0, errors: 0, creditWarnings: [] };
@@ -154,11 +135,15 @@ export async function runSentinel(): Promise<SentinelOutput> {
       }
     }
 
-    // Check 3: any signals flagged as critical in last 30 min
+    // Check 3: any signals flagged as critical in last 30 min. Includes
+    // planner_run_failed and planner_run_slow because Run Alma being broken
+    // (or so slow the user thinks it is) is the worst customer UX failure
+    // we can have. The run-now route also fires its own immediate Telegram
+    // — this sweep is the redundant safety net + per-bucket dedup.
     const criticalSignals = await restSelect("signals", {
       select: "signal_type, metadata, occurred_at",
       filters: {
-        signal_type: `in.("critic_rejected_unresolvable_escalated","planner_crash","gmail_oauth_expired")`,
+        signal_type: `in.("critic_rejected_unresolvable_escalated","planner_crash","planner_run_failed","planner_run_slow","gmail_oauth_expired")`,
         occurred_at: gte(since),
       },
       limit: 10,
@@ -167,10 +152,13 @@ export async function runSentinel(): Promise<SentinelOutput> {
     if (criticalSignals.length > 0) {
       const bucket = criticalSignals.length > 5 ? "lt5" : criticalSignals.length > 2 ? "lt10" : "lt20";
       if (await shouldAlert("critical_signal", bucket)) {
-        const sent = await sendTelegram(`⚠️ *Alma critical signals*\n\n${criticalSignals.length} critical events in last 30 min. Check /agents.`);
+        const breakdown: Record<string, number> = {};
+        for (const s of criticalSignals) breakdown[s.signal_type as string] = (breakdown[s.signal_type as string] ?? 0) + 1;
+        const summary = Object.entries(breakdown).map(([k, n]) => `${k}: ${n}`).join(", ");
+        const sent = await sendTelegram(`⚠️ *Alma critical signals* · last 30 min\n\n${summary}\n\nCheck /agents.`);
         if (sent) {
           out.alertsSent++;
-          await recordAlert("critical_signal", bucket, { count: criticalSignals.length });
+          await recordAlert("critical_signal", bucket, { count: criticalSignals.length, breakdown });
         }
       }
     }
