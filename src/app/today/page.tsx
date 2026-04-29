@@ -182,20 +182,30 @@ export default function TodayPage() {
     // keep their explicit in-flight state machines (sendState, scheduling
     // pill) — those signal mid-operation progress to the user, so jumping
     // ahead would be confusing rather than snappy.
-    let snapshot: TodayResponse | null = null;
-    setData((d) => {
-      if (!d) return d;
-      if (action === "skip" || action === "mark_sent") {
-        snapshot = d;
-        return { ...d, drafts: d.drafts.filter((x) => x.id !== draftId) };
-      }
-      if (action === "approve") {
-        snapshot = d;
+    //
+    // Revert is per-draft (not whole-snapshot). If a parallel skip on a
+    // different draft fails while ours succeeds, we don't want to restore
+    // the whole list and undo the parallel optimistic update — only the
+    // failing row's prior state should come back.
+    let prevDraftSnapshot: DraftWithBanker | null = null;
+    let prevIndex = -1;
+    const isOptimistic = action === "skip" || action === "mark_sent" || action === "approve";
+
+    if (isOptimistic) {
+      setData((d) => {
+        if (!d) return d;
+        const idx = d.drafts.findIndex((x) => x.id === draftId);
+        if (idx === -1) return d;
+        prevDraftSnapshot = d.drafts[idx];
+        prevIndex = idx;
+        if (action === "skip" || action === "mark_sent") {
+          return { ...d, drafts: d.drafts.filter((x) => x.id !== draftId) };
+        }
+        // approve
         return { ...d, drafts: d.drafts.map((x) => (x.id === draftId ? { ...x, status: "approved" } : x)) };
-      }
-      return d;
-    });
-    const didOptimistic = snapshot !== null;
+      });
+    }
+    const didOptimistic = isOptimistic && prevDraftSnapshot !== null;
 
     const { data: { session: s } } = await supabase.auth.getSession();
     let result: { ok: boolean; error?: string } = { ok: true };
@@ -216,9 +226,25 @@ export default function TodayPage() {
       result = { ok: false, error: String(err) };
     }
 
-    // Revert on failure: restore snapshot + surface the error.
-    if (!result.ok && didOptimistic && snapshot) {
-      setData(snapshot);
+    // Revert on failure: only this draft, not the whole snapshot. Other
+    // optimistic updates that landed in parallel are preserved.
+    if (!result.ok && didOptimistic && prevDraftSnapshot) {
+      const original = prevDraftSnapshot as DraftWithBanker;
+      const insertAt = prevIndex;
+      setData((d) => {
+        if (!d) return d;
+        // If the draft already exists in the list (approve revert), flip its
+        // status back. Otherwise (skip/mark_sent revert), splice it back at
+        // its prior index.
+        const exists = d.drafts.some((x) => x.id === original.id);
+        if (exists) {
+          return { ...d, drafts: d.drafts.map((x) => (x.id === original.id ? original : x)) };
+        }
+        const next = [...d.drafts];
+        const safeIndex = Math.min(Math.max(insertAt, 0), next.length);
+        next.splice(safeIndex, 0, original);
+        return { ...d, drafts: next };
+      });
       pushActionToast(`Couldn't ${action.replace("_", " ")}: ${result.error ?? "unknown error"}`);
     }
 
