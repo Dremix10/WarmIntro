@@ -30,6 +30,7 @@ export interface PlannerOutput {
   savedToDrafts: number;
   escalations: number;
   needsSetup?: boolean;
+  queueFull?: boolean;
 }
 
 interface ProfileForSend {
@@ -125,6 +126,13 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
 
     const batchCap = input.maxCandidates ?? MAX_PENDING_DRAFTS_PER_USER;
     const needed = Math.max(0, Math.min(MAX_PENDING_DRAFTS_PER_USER - pending, batchCap));
+
+    // Surface "queue full" up to the UI so the run-now button can tell the
+    // user "approve or skip something first" instead of saying "Done ✓"
+    // when nothing actually happened. Cofounder hit this — see issue #2/#7.
+    if (needed === 0 && batchCap > 0) {
+      out.queueFull = true;
+    }
 
     // 4. Recent nudges from Watcher (for reply drafts)
     const recentNudges = await restSelect("signals", {

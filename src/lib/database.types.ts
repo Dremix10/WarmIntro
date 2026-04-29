@@ -852,6 +852,7 @@ export type Database = {
           approvals_count_new: number
           approvals_count_reply: number
           auto_graduate: boolean
+          daily_batch_size: number
           night_preview_enabled: boolean
           preferred_send_time: string
           preferred_timezone: string
@@ -868,6 +869,7 @@ export type Database = {
           approvals_count_new?: number
           approvals_count_reply?: number
           auto_graduate?: boolean
+          daily_batch_size?: number
           night_preview_enabled?: boolean
           preferred_send_time?: string
           preferred_timezone?: string
@@ -884,6 +886,7 @@ export type Database = {
           approvals_count_new?: number
           approvals_count_reply?: number
           auto_graduate?: boolean
+          daily_batch_size?: number
           night_preview_enabled?: boolean
           preferred_send_time?: string
           preferred_timezone?: string

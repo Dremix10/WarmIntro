@@ -12,6 +12,7 @@ interface TrustSetupRequest {
   preferredSendTime?: string; // HH:MM
   preferredTimezone?: string;
   nightPreviewEnabled?: boolean;
+  dailyBatchSize?: number; // 1-15, how many drafts the morning cron generates
 }
 
 export async function POST(request: Request) {
@@ -31,6 +32,10 @@ export async function POST(request: Request) {
   if (body.preferredSendTime) updates.preferred_send_time = body.preferredSendTime;
   if (body.preferredTimezone) updates.preferred_timezone = body.preferredTimezone;
   if (body.nightPreviewEnabled !== undefined) updates.night_preview_enabled = body.nightPreviewEnabled;
+  if (body.dailyBatchSize !== undefined) {
+    const n = Math.max(1, Math.min(15, Math.round(body.dailyBatchSize)));
+    updates.daily_batch_size = n;
+  }
 
   await ctx.supabase.from("trust_levels").upsert(updates as never, { onConflict: "user_id" });
   return NextResponse.json({ ok: true });

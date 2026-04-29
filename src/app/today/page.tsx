@@ -39,6 +39,7 @@ interface TrustState {
   night_preview_enabled: boolean;
   stops_count: number;
   approvals_count_new: number;
+  daily_batch_size: number;
 }
 
 interface TodayResponse {
@@ -191,7 +192,7 @@ export default function TodayPage() {
     await load({ silent: true });
   }
 
-  async function updateTrust(field: keyof TrustState, value: string | boolean): Promise<void> {
+  async function updateTrust(field: keyof TrustState, value: string | boolean | number): Promise<void> {
     const { data: { session: s } } = await supabase.auth.getSession();
     const body: Record<string, unknown> = {};
     if (field === "send_new_email") body.sendNewEmail = value;
@@ -199,6 +200,7 @@ export default function TodayPage() {
     else if (field === "send_reply") body.sendReply = value;
     else if (field === "preferred_send_time") body.preferredSendTime = value;
     else if (field === "night_preview_enabled") body.nightPreviewEnabled = value;
+    else if (field === "daily_batch_size") body.dailyBatchSize = value;
     await fetch("/api/setup/trust", {
       method: "POST",
       headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
@@ -268,20 +270,9 @@ export default function TodayPage() {
 
         {/* Trust controls */}
         <div className="mb-8 rounded-2xl bg-white p-5 border border-[#D9CFB5]">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold">Trust</p>
-              <p className="font-[family-name:var(--font-fraunces)] text-xl mt-0.5">Cold outreach is on {TRUST_LABEL[data.trust?.send_new_email ?? "C"]}</p>
-            </div>
-            <div className="text-xs text-[#14182A]/60 text-right">
-              {data.needsGmail ? "Will send at" : "Send time"}<br />
-              <strong className={data.needsGmail ? "text-[#14182A]/40 line-through" : "text-[#14182A]"}>
-                {data.trust?.preferred_send_time ?? "07:00"}
-              </strong>
-              {data.needsGmail && (
-                <p className="text-[10px] text-[#C86B4F] not-italic mt-0.5">No mailbox yet</p>
-              )}
-            </div>
+          <div className="mb-3">
+            <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold">Trust</p>
+            <p className="font-[family-name:var(--font-fraunces)] text-xl mt-0.5">Cold outreach is on {TRUST_LABEL[data.trust?.send_new_email ?? "C"]}</p>
           </div>
           <p className="text-sm text-[#14182A]/70 italic">{TRUST_DESCRIPTION[data.trust?.send_new_email ?? "C"]}</p>
           <div className="mt-4 flex gap-2">
@@ -299,6 +290,43 @@ export default function TodayPage() {
                 {TRUST_LABEL[level]}
               </button>
             ))}
+          </div>
+
+          {/* Daily morning run controls — number of drafts + send time */}
+          <div className="mt-4 pt-4 border-t border-[#EAE3D2] grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <label htmlFor="batch-size" className="block text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 font-semibold mb-1.5">
+                Drafts each morning
+              </label>
+              <input
+                id="batch-size"
+                type="number"
+                min={1}
+                max={5}
+                value={Math.min(data.trust?.daily_batch_size ?? 5, 5)}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10);
+                  if (!Number.isNaN(n) && n >= 1 && n <= 5) updateTrust("daily_batch_size", n);
+                }}
+                className="w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-1.5 text-sm font-medium text-[#14182A] focus:border-[#2E5A88] focus:outline-none tabular-nums"
+              />
+            </div>
+            <div>
+              <label htmlFor="send-time" className="block text-[10px] uppercase tracking-[0.15em] text-[#14182A]/50 font-semibold mb-1.5">
+                Send time {data.needsGmail && <span className="text-[#C86B4F]">· no mailbox</span>}
+              </label>
+              <input
+                id="send-time"
+                type="time"
+                value={(data.trust?.preferred_send_time ?? "08:23").slice(0, 5)}
+                onChange={(e) => {
+                  if (e.target.value) updateTrust("preferred_send_time", e.target.value);
+                }}
+                className={`w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-1.5 text-sm font-medium tabular-nums focus:border-[#2E5A88] focus:outline-none ${
+                  data.needsGmail ? "text-[#14182A]/40 line-through" : "text-[#14182A]"
+                }`}
+              />
+            </div>
           </div>
         </div>
 
@@ -867,7 +895,7 @@ const RUN_STAGES: Array<{ text: string; sub: string; afterMs: number }> = [
 const MAX_BATCH_DRAFTS = 5;
 
 function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
-  const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [state, setState] = useState<"idle" | "running" | "done" | "error" | "queue_full">("idle");
   const [stageIdx, setStageIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [batchSize, setBatchSize] = useState(1);
@@ -916,6 +944,7 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
           try {
             const { data: { session: s } } = await supabase.auth.getSession();
             const auth = { Authorization: `Bearer ${s?.access_token ?? ""}` };
+            let queueWasFull = false;
             for (let i = 0; i < batchSize; i++) {
               startStageTimers();
               const res = await fetch("/api/planner/run-now", { method: "POST", headers: auth });
@@ -925,15 +954,17 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
                 return;
               }
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              if (json?.result?.queueFull) {
+                queueWasFull = true;
+                break;
+              }
               setProgress({ done: i + 1, total: batchSize });
-              // Brief pause between calls so the prior draft settles before
-              // the next Researcher dedup query reads.
               if (i < batchSize - 1) await new Promise((r) => setTimeout(r, 800));
             }
             timers.forEach((t) => window.clearTimeout(t));
-            setState("done");
+            setState(queueWasFull ? "queue_full" : "done");
             await onDone();
-            setTimeout(() => setState("idle"), 2500);
+            setTimeout(() => setState("idle"), queueWasFull ? 6000 : 2500);
           } catch {
             timers.forEach((t) => window.clearTimeout(t));
             setState("error");
@@ -946,12 +977,19 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
           ? `Running ${progress.done}/${progress.total}…`
           : state === "done"
             ? `Done ✓`
-            : state === "error"
-              ? "Retry"
-              : batchSize === 1
-                ? "Run Alma now"
-                : `Draft ${batchSize} emails`}
+            : state === "queue_full"
+              ? "Queue full"
+              : state === "error"
+                ? "Retry"
+                : batchSize === 1
+                  ? "Run Alma now"
+                  : `Draft ${batchSize} emails`}
       </button>
+      {state === "queue_full" && (
+        <p className="mt-1 max-w-[200px] text-right text-[10px] text-[#C86B4F] italic leading-snug">
+          Approve or skip a draft below first — your queue is at the cap.
+        </p>
+      )}
 
       {/* Idle: short subtitle. Hover: full explainer card. */}
       {state === "idle" && !hovered && (

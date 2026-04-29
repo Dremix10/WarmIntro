@@ -65,7 +65,7 @@ async function handleTick() {
   // Get trust rows, then filter to users with a real profile + targets.
   const { data: rawTrustRows } = await admin
     .from("trust_levels")
-    .select("user_id, preferred_send_time, preferred_timezone, tomorrow_override");
+    .select("user_id, preferred_send_time, preferred_timezone, tomorrow_override, daily_batch_size");
   const trustRows = (rawTrustRows ?? []).filter((t) => completeIds.has(t.user_id));
 
   // Also include users who have outstanding planner nudges (reply drafts to do) regardless of time
@@ -77,7 +77,7 @@ async function handleTick() {
 
   const nudgedUserIds = new Set((recentNudges ?? []).map((r) => r.user_id).filter(Boolean) as string[]);
 
-  const triggered: Array<{ userId: string; reason: string }> = [];
+  const triggered: Array<{ userId: string; reason: string; batchSize: number }> = [];
 
   // Nudges from users with no complete profile are also dropped — same reason.
   const filteredNudgedIds = new Set([...nudgedUserIds].filter((id) => completeIds.has(id)));
@@ -85,13 +85,17 @@ async function handleTick() {
   for (const t of trustRows) {
     const override = t.tomorrow_override as { sendTime?: string; skipDay?: boolean } | null;
     if (override?.skipDay) continue;
-    const sendTime = override?.sendTime ?? t.preferred_send_time ?? "07:00";
+    const sendTime = override?.sendTime ?? t.preferred_send_time ?? "08:23";
     const nowMin = minutesIntoDay(now, t.preferred_timezone ?? "America/New_York");
     const targetMin = parseHHMM(sendTime);
     const withinWindow = Math.abs(nowMin - targetMin) < TICK_WINDOW_MIN;
 
     if (withinWindow || filteredNudgedIds.has(t.user_id)) {
-      triggered.push({ userId: t.user_id, reason: withinWindow ? "send_time" : "nudge" });
+      // Per-user daily batch size, clamped at 5 here because Vercel
+      // functions are 60s and a single Planner run already nears that
+      // ceiling. Overflow gets picked up by the next tick.
+      const batchSize = Math.min((t as { daily_batch_size?: number }).daily_batch_size ?? 5, 5);
+      triggered.push({ userId: t.user_id, reason: withinWindow ? "send_time" : "nudge", batchSize });
     }
   }
 
@@ -99,7 +103,7 @@ async function handleTick() {
   const results: Array<{ userId: string; reason: string; out: unknown; err?: string }> = [];
   for (const t of triggered) {
     try {
-      const out = await runPlanner({ userId: t.userId, triggeredBy: t.reason === "nudge" ? "event" : "cron" });
+      const out = await runPlanner({ userId: t.userId, triggeredBy: t.reason === "nudge" ? "event" : "cron", maxCandidates: t.batchSize });
       results.push({ userId: t.userId, reason: t.reason, out });
     } catch (err) {
       results.push({ userId: t.userId, reason: t.reason, out: null, err: String(err) });
