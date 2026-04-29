@@ -372,6 +372,7 @@ export type Database = {
           critic_review_id: string | null
           fact_check: Json | null
           guardrail_flags: Json
+          critic_override: boolean
           id: string
           iteration_count: number
           pre_edit_ai_body: string | null
@@ -390,6 +391,7 @@ export type Database = {
           body: string
           connection_id?: string | null
           created_at?: string
+          critic_override?: boolean
           critic_review_id?: string | null
           fact_check?: Json | null
           guardrail_flags?: Json
@@ -411,6 +413,7 @@ export type Database = {
           body?: string
           connection_id?: string | null
           created_at?: string
+          critic_override?: boolean
           critic_review_id?: string | null
           fact_check?: Json | null
           guardrail_flags?: Json

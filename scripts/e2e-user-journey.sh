@@ -162,9 +162,11 @@ ANY_DRAFT_ID=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
   -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   | python3 -c "import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if d else '')" 2>/dev/null)
 if [ -n "$ANY_DRAFT_ID" ]; then
-  # User-override approve (Critic may have rejected on tightened fact-check)
+  # User-override approve. Pass override:true so the Critic-rejected gate lets
+  # us through — same path the UI uses on rejected cards.
   curl -s -X POST "$BASE/api/drafts/$ANY_DRAFT_ID/approve" \
-    -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" > /dev/null
+    -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" -H "Content-Type: application/json" \
+    -d '{"override":true}' > /dev/null
   curl -s -X POST "$BASE/api/drafts/$ANY_DRAFT_ID/mark_sent" \
     -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" > /dev/null
   CONN_COUNT=$(curl -s -G "$PROJECT_URL/rest/v1/connections" \

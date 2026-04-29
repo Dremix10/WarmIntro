@@ -2,7 +2,7 @@
 // Uses findCommonGround tool; applies guardrails; Critic reviews the output
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
-import { restSelectOne, restSelect, restInsert, eq } from "@/lib/supabase-rest";
+import { restSelectOne, restSelect, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
 import { applyGuardrails } from "@/services/guardrails";
 import type { CommonGroundAnchor, DraftType } from "@/shared/ib-types";
 
@@ -17,6 +17,12 @@ export interface CorrespondentInput {
     incomingReplyBody?: string;
   };
   revisionFeedback?: string; // from Critic on re-draft
+  // Set by the Critic-loop on revise iterations. The unique index
+  // uq_drafts_active_user_banker_type forbids two active drafts for the same
+  // (user, banker, type), so revise iterations MUST UPDATE the existing draft
+  // — INSERTing a fresh one silently fails and breaks the loop.
+  existingDraftId?: string;
+  iteration?: number;
 }
 
 export interface CorrespondentOutput {
@@ -187,19 +193,42 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
     // Step 3: Apply guardrails
     const { body: cleanedBody, flags } = applyGuardrails(drafted.body);
 
-    // Step 4: Persist as draft, pending_critic
-    const inserted = await restInsert("drafts", {
-      user_id: input.userId,
-      banker_id: input.bankerId,
-      connection_id: input.connectionId,
-      type: input.type,
-      subject: drafted.subject,
-      body: cleanedBody,
-      guardrail_flags: flags,
-      status: "pending_critic",
-      iteration_count: input.revisionFeedback ? 1 : 0,
-    });
-    const draftId = inserted[0]?.id;
+    // Step 4: Persist as draft. On revise iterations we MUST update the
+    // existing row — the unique index uq_drafts_active_user_banker_type
+    // would silently reject a fresh INSERT for the same (user, banker, type).
+    let draftId: string | undefined;
+    if (input.existingDraftId) {
+      await restUpdate(
+        "drafts",
+        {
+          subject: drafted.subject,
+          body: cleanedBody,
+          guardrail_flags: flags,
+          status: "pending_critic",
+          iteration_count: input.iteration ?? 1,
+          // Reset critic linkage so the next Critic run produces a fresh review
+          // attached to this revised body.
+          critic_review_id: null,
+          fact_check: null,
+          updated_at: new Date().toISOString(),
+        },
+        { id: eq(input.existingDraftId) }
+      );
+      draftId = input.existingDraftId;
+    } else {
+      const inserted = await restInsert("drafts", {
+        user_id: input.userId,
+        banker_id: input.bankerId,
+        connection_id: input.connectionId,
+        type: input.type,
+        subject: drafted.subject,
+        body: cleanedBody,
+        guardrail_flags: flags,
+        status: "pending_critic",
+        iteration_count: 0,
+      });
+      draftId = inserted[0]?.id;
+    }
 
     await logSignal({
       userId: input.userId,

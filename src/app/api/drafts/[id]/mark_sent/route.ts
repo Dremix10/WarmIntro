@@ -17,7 +17,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const admin = getAdminClient();
   const { data: draft } = await admin
     .from("drafts")
-    .select("id, user_id, banker_id, connection_id, subject, body, user_edited_body, type, bankers(name, title, firm_id, linkedin_url, firms(name))")
+    .select("id, user_id, banker_id, connection_id, subject, body, user_edited_body, type, critic_override, bankers(name, title, firm_id, linkedin_url, firms(name))")
     .eq("id", id)
     .single();
   if (!draft || draft.user_id !== ctx.user.id) {
@@ -65,6 +65,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       via: "user_marked_sent",
       type: draft.type,
       userEdited: Boolean(draft.user_edited_body),
+      criticOverride: Boolean(draft.critic_override),
       bodyLength: draft.body.length,
     },
   });

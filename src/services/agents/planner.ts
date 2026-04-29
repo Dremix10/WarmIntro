@@ -212,7 +212,10 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
   }
 }
 
-// Core loop: Correspondent -> Critic -> revise up to N times
+// Core loop: Correspondent -> Critic -> revise up to N times. The
+// Correspondent UPDATEs the same draft row on revise iterations (the
+// unique-active-draft index forbids parallel rows), so we thread the
+// draftId through after the first iteration.
 async function draftWithCriticLoop(
   userId: string,
   bankerId: string,
@@ -222,6 +225,7 @@ async function draftWithCriticLoop(
 ): Promise<"approved" | "rejected" | "escalated" | "no_anchor"> {
   let iteration = 0;
   let revisionFeedback: string | undefined;
+  let existingDraftId: string | undefined;
 
   while (iteration < MAX_ITERATIONS_CORRESPONDENT_CRITIC) {
     const draft = await runCorrespondent({
@@ -231,10 +235,13 @@ async function draftWithCriticLoop(
       connectionId,
       threadContext,
       revisionFeedback,
+      existingDraftId,
+      iteration,
     });
 
     if (draft.rejectedForNoAnchor) return "no_anchor";
     if (!draft.draftId) return "rejected";
+    existingDraftId = draft.draftId;
 
     const review = await runCritic({ draftId: draft.draftId });
     if (review.verdict === "approve") return "approved";
@@ -254,7 +261,7 @@ async function sendApprovedDrafts(
   const out = { approved: 0, sent: 0, savedToDrafts: 0 };
 
   const approvedDrafts = await restSelect("drafts", {
-    select: "id, banker_id, connection_id, type, subject, body, user_edited_body, scheduled_send_at",
+    select: "id, banker_id, connection_id, type, subject, body, user_edited_body, critic_override, scheduled_send_at",
     filters: { user_id: eq(userId), status: eq("approved"), sent_at: isNull },
     limit: 10,
   });
@@ -332,6 +339,7 @@ async function sendApprovedDrafts(
               type: d.type,
               via: "preview_veto",
               userEdited: Boolean(d.user_edited_body),
+              criticOverride: Boolean(d.critic_override),
               bodyLength: d.body.length,
             },
           });
@@ -373,6 +381,7 @@ async function sendApprovedDrafts(
             autopilot: true,
             via: "autopilot",
             userEdited: Boolean(d.user_edited_body),
+            criticOverride: Boolean(d.critic_override),
             bodyLength: d.body.length,
           },
         });

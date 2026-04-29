@@ -152,7 +152,80 @@ function snippetMatchesClaim(claim: string, snippets: string[]): boolean {
   return phraseMatch && entityMatch;
 }
 
+// Claims like "you're now a Director at Evercore" are structural — they
+// assert (title, firm) about the banker. We can verify them more reliably by
+// checking our stored DB tokens against Serper directly, bypassing the
+// brittle "verbatim phrase appears in snippet" matching. Returns null if the
+// claim isn't a clean structural assertion. The DB is NEVER the sole source
+// — Serper still has to corroborate name + title + firm together. So a wrong
+// DB value can't smuggle a fake claim through.
+async function verifyStructuralRoleClaim(
+  claim: string,
+  banker: BankerForFactCheck
+): Promise<ClaimCheck | null> {
+  if (!banker.title || !banker.firmName) return null;
+
+  const claimLower = claim.toLowerCase();
+  const firmLower = banker.firmName.toLowerCase();
+
+  // Title strings often look like "Director at Evercore" or "Managing
+  // Director" or "VP". Strip any " at <firm>" suffix, then take the role
+  // tokens (lowered minimum to 2 chars so "VP" / "MD" survive). This is the
+  // role keyword we'll search for, distinct from the firm.
+  const roleStringRaw = banker.title.toLowerCase().replace(/\s+at\s+.+$/, "").trim();
+  const roleTokens = roleStringRaw
+    .replace(/[^a-z\s&]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2 && !STOP_WORDS.has(w));
+  if (roleTokens.length === 0) return null;
+
+  // Claim must reference the role AND the firm to qualify as structural.
+  // "you're a Director at Evercore" → role=director, firm=evercore → match.
+  // "your team's TMT work" → no role/firm tokens → null, fall through.
+  const roleInClaim = roleTokens.some((t) => claimLower.includes(t));
+  const firmInClaim = claimLower.includes(firmLower);
+  if (!roleInClaim || !firmInClaim) return null;
+
+  // Serper still gates the verdict — this is what prevents a stale DB from
+  // smuggling a fake claim through. Search for name + role + firm; verify
+  // only if all three tokens appear in any returned snippet/title together.
+  const primaryRole = roleTokens.join(" ");
+  const q = `"${banker.name}" "${primaryRole}" "${banker.firmName}"`;
+  const results = await serperSearch(q, 5);
+  const haystack = results.map((r) => `${r.title} ${r.snippet}`).join(" ").toLowerCase();
+  const evidenceUrls = results.map((r) => r.link);
+
+  const nameInResults = haystack.includes(banker.name.toLowerCase());
+  const roleInResults = roleTokens.some((t) => haystack.includes(t));
+  const firmInResults = haystack.includes(firmLower);
+
+  if (nameInResults && roleInResults && firmInResults) {
+    return {
+      claim,
+      type: "role",
+      verdict: "verified",
+      evidenceUrls: [...new Set(evidenceUrls)].slice(0, 3),
+      notes: `Web search corroborates ${banker.title} at ${banker.firmName} for ${banker.name}.`,
+    };
+  }
+  // DB has the title but Serper can't corroborate — could be stale DB or
+  // the wrong banker matched. Do NOT verify. The user sees this as a real
+  // miss in the UI and either edits or overrides knowingly.
+  return {
+    claim,
+    type: "role",
+    verdict: "unverifiable",
+    evidenceUrls: [...new Set(evidenceUrls)].slice(0, 3),
+    notes: `Internal DB has ${banker.title} at ${banker.firmName} but web search couldn't corroborate name + role + firm together.`,
+  };
+}
+
 async function verifyClaim(claim: string, banker: BankerForFactCheck): Promise<ClaimCheck> {
+  // Try structural matching first (title/firm assertions). Falls through to
+  // generic phrase-matching if the claim isn't structural.
+  const structural = await verifyStructuralRoleClaim(claim, banker);
+  if (structural) return structural;
+
   const queries: string[] = [];
   // Most specific first — banker's name + the claim
   queries.push(`"${banker.name}" ${claim.slice(0, 80)}`);

@@ -27,6 +27,7 @@ interface DraftWithBanker {
   iteration_count: number;
   scheduled_send_at: string | null;
   fact_check: FactCheckResult | null;
+  critic_override: boolean;
   bankers: { name: string; title: string; email: string | null; linkedin_url: string | null; firms: { name: string } | null } | null;
 }
 
@@ -474,6 +475,7 @@ function DraftCard({
   const [copiedAddr, setCopiedAddr] = useState(false);
   const [copiedBody, setCopiedBody] = useState(false);
   const [showSentConfirm, setShowSentConfirm] = useState(false);
+  const [showOverrideConfirm, setShowOverrideConfirm] = useState(false);
   const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [sendError, setSendError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -788,6 +790,27 @@ function DraftCard({
                   Skip
                 </button>
               </>
+            ) : draft.status === "needs_revision" ? (
+              // Critic rejected — surface the unverified claims and gate
+              // approval behind a confirmation modal. Sending anyway is a
+              // valid path (sometimes the user knows better than the
+              // fact-checker), but it should be a deliberate, audited choice.
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowOverrideConfirm(true)}
+                  className="flex-1 rounded-lg bg-[#C86B4F] text-white py-2 text-sm font-medium hover:bg-[#B85939] transition-colors"
+                >
+                  Send anyway
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onAction(draft.id, "skip")}
+                  className="rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium hover:bg-[#EAE3D2] transition-colors"
+                >
+                  Skip
+                </button>
+              </>
             ) : (
               <>
                 <button
@@ -860,6 +883,66 @@ function DraftCard({
                 className="rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
               >
                 Yes, I sent it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Critic-override confirmation. Shown when the user clicks
+          "Send anyway" on a needs_revision draft. Lists every fact-check
+          claim Critic flagged so the user knows what they're overriding. */}
+      {showOverrideConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#14182A]/40 backdrop-blur-sm"
+          onClick={() => setShowOverrideConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-[#C86B4F]/40 max-w-md w-full p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Override fact-check</p>
+            <h3 className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Send despite Critic flag?</h3>
+            <p className="text-sm text-[#14182A]/70 mb-3">
+              Alma&rsquo;s Critic flagged claims it couldn&rsquo;t verify online. Sending anyway is fine if you know they&rsquo;re correct, but the override is recorded.
+            </p>
+            {(() => {
+              const flagged = draft.fact_check?.checks.filter((c) => c.verdict !== "verified") ?? [];
+              if (flagged.length === 0) {
+                return (
+                  <p className="text-xs text-[#14182A]/60 italic mb-4">
+                    No specific claims flagged — Critic rejected on tone or guardrails. Edit if you want, or send as-is.
+                  </p>
+                );
+              }
+              return (
+                <ul className="text-xs space-y-2 mb-4 bg-[#EAE3D2]/40 rounded-lg p-3">
+                  {flagged.map((c, i) => (
+                    <li key={i} className="border-l-2 border-[#C86B4F] pl-2">
+                      <p className="text-[#14182A]"><span className="text-[#C86B4F] font-semibold uppercase tracking-wider text-[10px]">{c.verdict}:</span> &ldquo;{c.claim}&rdquo;</p>
+                      {c.notes && <p className="text-[#14182A]/55 mt-0.5">{c.notes}</p>}
+                    </li>
+                  ))}
+                </ul>
+              );
+            })()}
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowOverrideConfirm(false)}
+                className="rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium hover:bg-[#EAE3D2] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOverrideConfirm(false);
+                  onAction(draft.id, "approve", { override: true });
+                }}
+                className="rounded-lg bg-[#C86B4F] text-white px-4 py-2 text-sm font-medium hover:bg-[#B85939] transition-colors"
+              >
+                Override + approve
               </button>
             </div>
           </div>
