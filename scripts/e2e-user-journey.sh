@@ -113,7 +113,15 @@ SOURCED=$(echo "$PLAN" | python3 -c "import json,sys;d=json.load(sys.stdin);prin
 DRAFTED=$(echo "$PLAN" | python3 -c "import json,sys;d=json.load(sys.stdin);r=d.get('result',{});print(r.get('coldDrafted',0)+r.get('approved',0))" 2>/dev/null)
 QUEUE_FULL=$(echo "$PLAN" | python3 -c "import json,sys;d=json.load(sys.stdin);print(d.get('result',{}).get('queueFull',False))" 2>/dev/null)
 if [ "${SOURCED:-0}" -ge 1 ]; then ok "Researcher sourced $SOURCED candidate(s)"; else err "Researcher" "sourced $SOURCED (queueFull=$QUEUE_FULL)"; fi
-if [ "${DRAFTED:-0}" -ge 1 ]; then ok "Correspondent + Critic produced $DRAFTED draft(s)"; else err "Correspondent/Critic" "drafted $DRAFTED"; fi
+# Counts any draft row, not just approved. Critic-rejected drafts are
+# expected on tightened fact-check rules — what matters is the agent
+# pipeline ran end-to-end and persisted SOMETHING.
+ANY_DRAFT_COUNT=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
+  --data-urlencode "user_id=eq.$TEST_USER_ID" \
+  --data-urlencode "select=id" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  | python3 -c "import json,sys;print(len(json.load(sys.stdin)))" 2>/dev/null)
+if [ "${ANY_DRAFT_COUNT:-0}" -ge 1 ]; then ok "Correspondent + Critic produced $ANY_DRAFT_COUNT draft row(s) (any status)"; else err "Correspondent/Critic" "drafted $ANY_DRAFT_COUNT (no draft row created)"; fi
 
 # ── 6. /api/today AFTER Planner ─────────────────────────────────
 step "6. GET /api/today after Planner — should show drafts"
@@ -141,17 +149,23 @@ FACT_CHECK_COUNT=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
 if [ "${FACT_CHECK_COUNT:-0}" -ge 1 ]; then ok "$FACT_CHECK_COUNT draft(s) carry fact_check JSON"; else err "fact_check populated" "0 drafts have fact_check"; fi
 
 # ── 9. mark_sent endpoint creates a connection (#1 regression: was missing) ──
+# Critic now rejects any draft with unverifiable specifics — fact-checker
+# is tight by design. For the e2e, we user-override approve any draft
+# (mirrors what a real user does on /today via the "Looks good" button)
+# so the rest of the send pipeline gets exercised.
 step "9. POST /api/drafts/[id]/mark_sent → creates connections row"
-APPROVED_DRAFT_ID=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
+ANY_DRAFT_ID=$(curl -s -G "$PROJECT_URL/rest/v1/drafts" \
   --data-urlencode "user_id=eq.$TEST_USER_ID" \
-  --data-urlencode "status=eq.approved" \
   --data-urlencode "sent_at=is.null" \
   --data-urlencode "select=id" \
   --data-urlencode "limit=1" \
   -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
   | python3 -c "import json,sys;d=json.load(sys.stdin);print(d[0]['id'] if d else '')" 2>/dev/null)
-if [ -n "$APPROVED_DRAFT_ID" ]; then
-  curl -s -X POST "$BASE/api/drafts/$APPROVED_DRAFT_ID/mark_sent" \
+if [ -n "$ANY_DRAFT_ID" ]; then
+  # User-override approve (Critic may have rejected on tightened fact-check)
+  curl -s -X POST "$BASE/api/drafts/$ANY_DRAFT_ID/approve" \
+    -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" > /dev/null
+  curl -s -X POST "$BASE/api/drafts/$ANY_DRAFT_ID/mark_sent" \
     -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" > /dev/null
   CONN_COUNT=$(curl -s -G "$PROJECT_URL/rest/v1/connections" \
     --data-urlencode "user_id=eq.$TEST_USER_ID" \
@@ -161,7 +175,7 @@ if [ -n "$APPROVED_DRAFT_ID" ]; then
     | python3 -c "import json,sys;print(len(json.load(sys.stdin)))" 2>/dev/null)
   if [ "${CONN_COUNT:-0}" -ge 1 ]; then ok "mark_sent created a connection row (stage=sent)"; else err "mark_sent → connection" "0 connections after mark_sent"; fi
 else
-  err "mark_sent setup" "no approved draft to mark"
+  err "mark_sent setup" "no draft to mark"
 fi
 
 # ── 10. Stage-advance endpoint moves a connection ───────────────

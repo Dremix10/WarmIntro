@@ -250,6 +250,7 @@ HARD BANS (these dead-give-away AI patterns must NEVER appear):
 - "I hope this email finds you well", "reaching out to", "please find attached", "at your earliest convenience"
 - "leverage", "endeavor", "synergy", "cognizant", "furthermore", "accordingly", "aforementioned"
 - Em-dashes (—). Use commas, periods, or separate sentences.
+- ANY "transition / move / jump / path / journey from X to Y" framing — e.g. "your transition to Jefferies", "making the jump from Brown to IB", "your path from school to MS". These imply you know career history specifics you don't actually know. The banker had a career arc; you don't get to summarize it.
 - "made the transition from X to Y", "the analytical side of X work", "highlights exactly the kind of X that draws me"
 - Generic praise like "your impressive career", "your fascinating work", "I greatly admire"
 - Fake-deep takes about the industry. The student doesn't have those yet.

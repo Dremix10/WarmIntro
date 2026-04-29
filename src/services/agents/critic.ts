@@ -42,6 +42,7 @@ Specific banned phrases — if ANY appear, reject:
 - "highlights the kind of [X] that draws me"
 - "the analytical side of [X] work"
 - "made the transition from [X] to [Y]"
+- "your transition to [X]" / "your jump from [X] to [Y]" / "your path from [X] to [Y]" — any career-arc framing the student couldn't actually know
 - "your impressive [career/work/background]"
 - "I'm interested in [M&A / IB / finance]" (must be more concrete)
 - Any em-dash
