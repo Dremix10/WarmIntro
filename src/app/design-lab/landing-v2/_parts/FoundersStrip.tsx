@@ -9,15 +9,16 @@ const TILES = [
 
 export function FoundersStrip() {
   return (
-    <section className="mx-auto max-w-3xl px-6 py-20 text-center">
+    <section className="mx-auto max-w-5xl px-6 py-20 text-center">
       <Reveal>
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
           Who built this
         </p>
-        <h2 className="mx-auto mt-3 max-w-xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-          <em className="text-[#2E5A88]">We&rsquo;re sophomores too.</em>
-          <br />
-          We built Alma for our cycle.
+        <h2 className="mt-3 text-[34px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[56px]">
+          <span className="block whitespace-nowrap italic text-[#2E5A88]">
+            We&rsquo;re sophomores too.
+          </span>
+          <span className="block whitespace-nowrap">We built Alma for our cycle.</span>
         </h2>
       </Reveal>
 

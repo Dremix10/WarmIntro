@@ -133,152 +133,244 @@ export function TodayMock() {
 }
 
 export function NetworkMock() {
-  // Archipelago — three islands with construction stages.
-  // Stages: logs (just sent), foundation (replied), walls (coffee), roof (referral), home (interview).
+  // Archipelago — bird's-eye view of three banks as islands with progressively
+  // built homes. Stages: logs → foundation → walls → roof → home.
+  // SVG is drawn at viewBox 0 0 320 200 (16:10) so all coordinates are honest pixels.
   const ISLANDS = [
-    { name: "Morgan Stanley", x: 22, y: 38, stage: "home", scale: 1 },
-    { name: "Goldman Sachs", x: 56, y: 56, stage: "walls", scale: 0.9 },
-    { name: "Evercore", x: 80, y: 32, stage: "foundation", scale: 0.8 },
+    { name: "Morgan Stanley", role: "TMT · home", cx: 80, cy: 110, stage: "home", base: 46 },
+    { name: "Goldman Sachs", role: "M&A · roof", cx: 200, cy: 138, stage: "roof", base: 40 },
+    { name: "Evercore", role: "Sponsors · walls", cx: 268, cy: 80, stage: "walls", base: 34 },
   ];
 
   return (
     <div
       className="relative h-full w-full overflow-hidden"
       style={{
-        background: `linear-gradient(180deg, ${PALETTE.bgWarm} 0%, ${PALETTE.bg} 100%)`,
+        background: `radial-gradient(120% 80% at 50% 10%, #F4EDDB 0%, #EAE3D2 55%, #E3DCCB 100%)`,
       }}
       aria-hidden
     >
-      {/* Header */}
-      <div className="absolute left-3 top-3 flex items-baseline gap-2 md:left-4 md:top-4">
-        <span
-          className="text-[12px] md:text-[14px]"
-          style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink }}
-        >
-          Archipelago
-        </span>
-        <span className="text-[7px] md:text-[8px]" style={{ color: PALETTE.faint }}>
-          3 banks · 14 paths
-        </span>
+      {/* Header chrome */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-baseline justify-between px-3 pt-3 md:px-4 md:pt-4">
+        <div className="flex items-baseline gap-2">
+          <span
+            className="text-[12px] md:text-[14px]"
+            style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink }}
+          >
+            Archipelago
+          </span>
+          <span className="text-[7px] md:text-[8px]" style={{ color: PALETTE.faint }}>
+            3 banks · 14 paths
+          </span>
+        </div>
       </div>
 
-      {/* Wave lines for water atmosphere */}
       <svg
         className="absolute inset-0 h-full w-full"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
+        viewBox="0 0 320 200"
+        preserveAspectRatio="xMidYMid slice"
       >
+        <defs>
+          <radialGradient id="island-shadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(20,24,42,0.18)" />
+            <stop offset="100%" stopColor="rgba(20,24,42,0)" />
+          </radialGradient>
+          <linearGradient id="sand" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#F4EDDB" />
+            <stop offset="100%" stopColor="#E3D5B3" />
+          </linearGradient>
+          <linearGradient id="grass" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#A6B58A" />
+            <stop offset="100%" stopColor="#8C9D6F" />
+          </linearGradient>
+        </defs>
+
+        {/* Water — depth lines for rhythm, no blue fill (we're light/sand themed) */}
+        {[0.06, 0.05, 0.04, 0.035, 0.03].map((op, i) => {
+          const y = 152 + i * 9;
+          const a = 6 - i;
+          return (
+            <path
+              key={i}
+              d={`M 0 ${y} Q 80 ${y - a} 160 ${y} T 320 ${y}`}
+              stroke={`rgba(46,90,136,${op})`}
+              strokeWidth="1"
+              fill="none"
+            />
+          );
+        })}
+
+        {/* Faint connection paths between islands — the "warm intro" lines */}
         <path
-          d="M 0 70 Q 25 65 50 70 T 100 72"
-          stroke="rgba(46,90,136,0.12)"
-          strokeWidth="0.3"
+          d="M 80 110 Q 140 70 200 138"
+          stroke="rgba(46,90,136,0.22)"
+          strokeWidth="0.8"
+          strokeDasharray="2 3"
           fill="none"
         />
         <path
-          d="M 0 80 Q 30 76 60 81 T 100 83"
-          stroke="rgba(46,90,136,0.08)"
-          strokeWidth="0.3"
-          fill="none"
-        />
-        <path
-          d="M 0 90 Q 20 87 40 90 T 100 92"
-          stroke="rgba(46,90,136,0.06)"
-          strokeWidth="0.3"
+          d="M 200 138 Q 235 110 268 80"
+          stroke="rgba(46,90,136,0.15)"
+          strokeWidth="0.8"
+          strokeDasharray="2 3"
           fill="none"
         />
 
         {ISLANDS.map((island, i) => {
-          const cx = island.x;
-          const cy = island.y;
-          const w = 14 * island.scale;
-          const h = 4 * island.scale;
+          const { cx, cy, base, stage, name, role } = island;
           return (
             <g key={i}>
-              {/* Island base — flattened ellipse */}
+              {/* Drop shadow on water */}
               <ellipse
                 cx={cx}
-                cy={cy + h * 0.6}
-                rx={w}
-                ry={h}
-                fill={PALETTE.terracotta}
-                opacity="0.75"
+                cy={cy + base * 0.55}
+                rx={base * 1.1}
+                ry={base * 0.32}
+                fill="url(#island-shadow)"
               />
+              {/* Sand outer */}
+              <ellipse cx={cx} cy={cy + base * 0.4} rx={base} ry={base * 0.42} fill="url(#sand)" />
+              {/* Grass plateau */}
               <ellipse
                 cx={cx}
-                cy={cy + h * 0.4}
-                rx={w * 0.85}
-                ry={h * 0.7}
-                fill={PALETTE.bgWarm}
+                cy={cy + base * 0.32}
+                rx={base * 0.78}
+                ry={base * 0.32}
+                fill="url(#grass)"
+              />
+              {/* Subtle highlight stroke on grass */}
+              <ellipse
+                cx={cx}
+                cy={cy + base * 0.28}
+                rx={base * 0.78}
+                ry={base * 0.28}
+                fill="none"
+                stroke="rgba(255,255,255,0.35)"
+                strokeWidth="0.5"
               />
 
-              {/* Construction by stage */}
-              {island.stage === "foundation" && (
-                <rect
-                  x={cx - 1.5}
-                  y={cy - 0.5}
-                  width="3"
-                  height="1"
-                  fill={PALETTE.muted}
-                  opacity="0.6"
-                />
+              {/* Construction by stage, drawn from the plateau center upwards */}
+              {stage === "logs" && (
+                <g>
+                  <rect x={cx - 5} y={cy + base * 0.28 - 2} width="10" height="1.4" fill="#8B6F4E" rx="0.3" />
+                  <rect x={cx - 5} y={cy + base * 0.28 - 4} width="10" height="1.4" fill="#A07F58" rx="0.3" />
+                </g>
               )}
-              {island.stage === "walls" && (
-                <>
-                  <rect x={cx - 2} y={cy - 2} width="4" height="2" fill={PALETTE.cardBg} stroke={PALETTE.border} strokeWidth="0.15" />
-                </>
+              {stage === "foundation" && (
+                <g>
+                  <rect
+                    x={cx - 7}
+                    y={cy + base * 0.28 - 3}
+                    width="14"
+                    height="3"
+                    fill="#B5A88D"
+                    stroke="rgba(20,24,42,0.18)"
+                    strokeWidth="0.4"
+                  />
+                </g>
               )}
-              {island.stage === "home" && (
-                <>
+              {stage === "walls" && (
+                <g>
+                  {/* Foundation */}
+                  <rect x={cx - 8} y={cy + base * 0.28 - 2} width="16" height="2" fill="#B5A88D" />
                   {/* Walls */}
-                  <rect x={cx - 2.4} y={cy - 3} width="4.8" height="3" fill={PALETTE.cardBg} stroke={PALETTE.border} strokeWidth="0.15" />
-                  {/* Roof */}
+                  <rect
+                    x={cx - 7}
+                    y={cy + base * 0.28 - 8}
+                    width="14"
+                    height="6"
+                    fill="#FCFAF5"
+                    stroke="rgba(20,24,42,0.18)"
+                    strokeWidth="0.4"
+                  />
+                </g>
+              )}
+              {stage === "roof" && (
+                <g>
+                  <rect x={cx - 8} y={cy + base * 0.28 - 2} width="16" height="2" fill="#B5A88D" />
+                  <rect
+                    x={cx - 7}
+                    y={cy + base * 0.28 - 8}
+                    width="14"
+                    height="6"
+                    fill="#FCFAF5"
+                    stroke="rgba(20,24,42,0.18)"
+                    strokeWidth="0.4"
+                  />
                   <polygon
-                    points={`${cx - 2.8},${cy - 3} ${cx},${cy - 5} ${cx + 2.8},${cy - 3}`}
+                    points={`${cx - 8.5},${cy + base * 0.28 - 8} ${cx},${cy + base * 0.28 - 14} ${cx + 8.5},${cy + base * 0.28 - 8}`}
                     fill={PALETTE.terracotta}
+                    stroke="rgba(20,24,42,0.18)"
+                    strokeWidth="0.4"
+                  />
+                </g>
+              )}
+              {stage === "home" && (
+                <g>
+                  <rect x={cx - 8} y={cy + base * 0.28 - 2} width="16" height="2" fill="#B5A88D" />
+                  <rect
+                    x={cx - 7}
+                    y={cy + base * 0.28 - 8}
+                    width="14"
+                    height="6"
+                    fill="#FCFAF5"
+                    stroke="rgba(20,24,42,0.18)"
+                    strokeWidth="0.4"
+                  />
+                  <polygon
+                    points={`${cx - 8.5},${cy + base * 0.28 - 8} ${cx},${cy + base * 0.28 - 14} ${cx + 8.5},${cy + base * 0.28 - 8}`}
+                    fill={PALETTE.terracotta}
+                    stroke="rgba(20,24,42,0.18)"
+                    strokeWidth="0.4"
                   />
                   {/* Door */}
-                  <rect x={cx - 0.5} y={cy - 1.5} width="1" height="1.5" fill={PALETTE.blue} />
-                  {/* Window */}
-                  <rect x={cx - 1.8} y={cy - 2.4} width="0.8" height="0.8" fill={PALETTE.ochre} opacity="0.7" />
-                </>
+                  <rect x={cx - 1} y={cy + base * 0.28 - 5} width="2" height="3" fill={PALETTE.blue} />
+                  {/* Window left */}
+                  <rect x={cx - 5} y={cy + base * 0.28 - 6.5} width="2.5" height="2" fill={PALETTE.ochre} opacity="0.85" />
+                  {/* Window right */}
+                  <rect x={cx + 2.5} y={cy + base * 0.28 - 6.5} width="2.5" height="2" fill={PALETTE.ochre} opacity="0.85" />
+                  {/* Chimney smoke */}
+                  <circle cx={cx + 4} cy={cy + base * 0.28 - 16} r="0.8" fill="rgba(255,255,255,0.7)" />
+                  <circle cx={cx + 5} cy={cy + base * 0.28 - 18} r="1.2" fill="rgba(255,255,255,0.5)" />
+                  <circle cx={cx + 4.2} cy={cy + base * 0.28 - 20} r="1.6" fill="rgba(255,255,255,0.35)" />
+                </g>
               )}
 
-              {/* Bank label */}
+              {/* Labels under island */}
               <text
                 x={cx}
-                y={cy + h * 1.8}
+                y={cy + base * 0.78}
                 textAnchor="middle"
-                fontSize="2.2"
+                fontSize="7"
                 fill={PALETTE.ink}
                 fontFamily="var(--font-fraunces)"
               >
-                {island.name}
+                {name}
               </text>
               <text
                 x={cx}
-                y={cy + h * 2.6}
+                y={cy + base * 0.78 + 8}
                 textAnchor="middle"
-                fontSize="1.6"
+                fontSize="5"
                 fill={PALETTE.faint}
               >
-                {island.stage}
+                {role}
               </text>
             </g>
           );
         })}
       </svg>
 
-      {/* Legend bottom-right */}
+      {/* Stage legend bottom-left */}
       <div
-        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[6px] md:bottom-4 md:right-4 md:gap-2 md:text-[7px]"
+        className="absolute bottom-3 left-3 flex items-center gap-1 rounded-md px-1.5 py-1 text-[6px] md:bottom-4 md:left-4 md:gap-1.5 md:text-[7px]"
         style={{
-          backgroundColor: "rgba(255,255,255,0.7)",
+          backgroundColor: "rgba(255,255,255,0.78)",
           border: `1px solid ${PALETTE.border}`,
-          backdropFilter: "blur(4px)",
           color: PALETTE.muted,
         }}
       >
-        <span>logs → foundation → walls → roof → home</span>
+        logs · foundation · walls · roof · <span style={{ color: PALETTE.ink, fontWeight: 600 }}>home</span>
       </div>
     </div>
   );
