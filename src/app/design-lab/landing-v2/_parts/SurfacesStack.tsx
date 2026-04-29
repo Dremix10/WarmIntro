@@ -150,9 +150,6 @@ export function SurfacesStack() {
                       {s.title}
                     </h3>
                     <p className="mt-2 flex-1 text-sm leading-relaxed text-[#4A5260]">{s.body}</p>
-                    <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#1B3B5F] group-hover:underline">
-                      Take a look <span aria-hidden>→</span>
-                    </p>
                   </div>
                 </div>
               </Link>
