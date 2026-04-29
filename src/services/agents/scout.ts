@@ -109,35 +109,37 @@ export async function scoutBankerFindings(input: ScoutInput): Promise<ScoutedFin
       }
     }
 
-    // Build queries. Most-specific first; stop early once we have enough.
+    // Build queries. We fan them out in parallel — the diverse ones return
+    // mostly disjoint results (LinkedIn vs press vs podcast), and total
+    // Scout latency is what matters under the 60s function budget. Rather
+    // than serial-with-early-exit (saves 1-2 Serper calls but burns 4-6
+    // seconds per banker), we just take the cost of 4 parallel calls and
+    // dedupe results client-side.
     const queries: string[] = [];
     queries.push(`"${input.bankerName}" ${input.firmName ?? ""} 2025 2026`.trim());
     queries.push(`"${input.bankerName}" linkedin post`);
     if (input.firmName) queries.push(`"${input.bankerName}" "${input.firmName}" deal acquisition`);
     queries.push(`"${input.bankerName}" interview podcast`);
 
+    const allResults = (await Promise.all(queries.map((q) => serperSearch(q, 8)))).flat();
+
     const seen = new Set<string>();
     const findings: ScoutedFinding[] = [];
-
-    for (const q of queries) {
+    for (const r of allResults) {
       if (findings.length >= 5) break;
-      const results = await serperSearch(q, 8);
-      for (const r of results) {
-        if (!isUsefulUrl(r.link)) continue;
-        if (!mentionsBanker(input, r)) continue;
-        const key = r.link.toLowerCase().replace(/[?#].*$/, "");
-        if (seen.has(key)) continue;
-        seen.add(key);
-        findings.push({
-          url: r.link,
-          title: r.title.slice(0, 200),
-          snippet: r.snippet?.slice(0, 400) ?? null,
-          sourceType: classifySource(r.link),
-          publishedHint: r.date ?? null,
-          scoutedAt: new Date().toISOString(),
-        });
-        if (findings.length >= 5) break;
-      }
+      if (!isUsefulUrl(r.link)) continue;
+      if (!mentionsBanker(input, r)) continue;
+      const key = r.link.toLowerCase().replace(/[?#].*$/, "");
+      if (seen.has(key)) continue;
+      seen.add(key);
+      findings.push({
+        url: r.link,
+        title: r.title.slice(0, 200),
+        snippet: r.snippet?.slice(0, 400) ?? null,
+        sourceType: classifySource(r.link),
+        publishedHint: r.date ?? null,
+        scoutedAt: new Date().toISOString(),
+      });
     }
 
     // Cache. UNIQUE(banker_id,url) makes upsert idempotent.
