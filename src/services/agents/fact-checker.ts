@@ -65,12 +65,14 @@ DO NOT extract:
 - Generic facts the student knows from the data already (banker's firm, title, school overlap)
 - The student's own background ("I'm a sophomore at Brown")
 - Generic statements ("I'd love to learn from you")
+- Temporal/positional phrases that are NOT claims of fact: "after Rice", "since college", "post-graduation", "early in your career", "fellow Owl", "fellow Brown grad". These reference school overlap (already known) or generic timeline, not a verifiable specific.
+- Vague descriptors of the banker's work without naming a specific deal, post, or program ("your tech work", "your industry experience"). Either it's a named claim worth verifying, or it's a generic gesture — not in between.
 
 DO extract:
-- "your team advised on the X transaction"
-- "your post about Y caught my attention"
-- "your move from X to Y"
-- "your work in the Z industry"
+- "your team advised on the X transaction" (named deal)
+- "your post about Y caught my attention" (specific post)
+- "your move from Goldman to Evercore in 2022" (specific dated transition)
+- "you led the AAPL/META advisory" (specific deal)
 - Anything the banker would read and think "where did they get that from?"
 
 Return JSON: { "claims": [ { "text": "...", "type": "deal|post|role|school_activity|career_move|other" } ] }

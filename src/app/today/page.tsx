@@ -530,6 +530,8 @@ function DraftCard({
   // a draft is ready to send vs still in review.
   const isApproved = draft.status === "approved";
   const isInReview = draft.status === "pending_critic" || draft.status === "needs_revision";
+  const isCriticEscalated = draft.status === "rejected_unresolvable";
+  const isCriticBlocked = draft.status === "needs_revision" || draft.status === "rejected_unresolvable";
   // Cards fade-and-slide on entry so a newly-approved draft "lands" in the
   // top section instead of blinking. Approved gets a slightly more
   // pronounced animation since it's the moment the user cares about.
@@ -585,6 +587,11 @@ function DraftCard({
             {isInReview && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E8B339]/20 text-[#9A7110] font-semibold uppercase tracking-wider">
                 In review
+              </span>
+            )}
+            {isCriticEscalated && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C86B4F]/20 text-[#9A4220] font-semibold uppercase tracking-wider" title="Critic ran 3 revisions and couldn't satisfy itself. Edit, override, or skip.">
+                Critic stuck
               </span>
             )}
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EAE3D2] text-[#14182A]/60">{TYPE_LABEL[draft.type]}</span>
@@ -790,11 +797,12 @@ function DraftCard({
                   Skip
                 </button>
               </>
-            ) : draft.status === "needs_revision" ? (
-              // Critic rejected — surface the unverified claims and gate
-              // approval behind a confirmation modal. Sending anyway is a
-              // valid path (sometimes the user knows better than the
-              // fact-checker), but it should be a deliberate, audited choice.
+            ) : isCriticBlocked ? (
+              // Critic rejected (or escalated after 3 failed iterations) —
+              // surface the unverified claims and gate approval behind a
+              // confirmation modal. Sending anyway is a valid path
+              // (sometimes the user knows better than the fact-checker), but
+              // it should be a deliberate, audited choice.
               <>
                 <button
                   type="button"
