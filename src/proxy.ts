@@ -294,6 +294,13 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+// Skip middleware for static assets, fonts, manifests, and the gate page itself.
+// Every excluded request saves a Supabase auth round-trip (~100-300ms).
+// Asset extensions extended beyond v1: woff/woff2/ttf/otf (fonts),
+// txt/xml/json/map (manifests, sourcemaps), css/js (legacy compiled assets).
 export const config = {
-  matcher: ["/api/:path*", "/((?!coming-soon|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)).*)"],
+  matcher: [
+    "/api/:path*",
+    "/((?!coming-soon|_next/static|_next/image|_next/data|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|apple-icon|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|txt|xml|json|map|css|js)).*)",
+  ],
 };
