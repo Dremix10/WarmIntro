@@ -39,7 +39,7 @@ const FAQ = [
   },
   {
     q: "Are you private-beta or public?",
-    a: "Private beta right now — invite-only for Brown and Rice. If you don't have an invite, drop your email at /coming-soon and we'll let you in as we open up.",
+    a: "Private beta right now, invite-only for Brown and Rice. If you don't have an invite, drop your email at /coming-soon and we'll let you in as we open up.",
   },
 ];
 
@@ -112,9 +112,9 @@ function Hero() {
           className="mt-8 max-w-2xl text-lg leading-[1.55] text-[#4A5260] opacity-0 md:text-xl"
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1500ms forwards" }}
         >
-          Alma reads your resume, finds alumni at every bank and coverage group, drafts the call
-          requests you&rsquo;d actually send, and tracks you through superday. One hour a week is
-          enough.
+          Alma is your AI networking team. It finds the alumni who&rsquo;ll take your call, drafts the
+          emails you&rsquo;d actually send, and tracks every reply through superday. You spend your
+          week on the calls, not the inbox.
         </p>
 
         <div
@@ -182,7 +182,7 @@ function FunnelSection() {
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260] md:text-base">
             Banking recruiting is a filter, not a lottery. Referrals convert 10× better than the
-            cold portal. The math is simple — you just need to keep showing up for sixteen weeks,
+            cold portal. The math is simple. You just need to keep showing up for sixteen weeks,
             not crush a single day.
           </p>
         </div>
@@ -197,7 +197,7 @@ function FunnelSection() {
           &ldquo;The point isn&rsquo;t to hustle harder. It&rsquo;s to be consistent. An hour, three
           reaches, three times a week.&rdquo;
           <br />
-          <span className="text-[11px] not-italic">— Alma</span>
+          <span className="text-[11px] not-italic">· Alma</span>
         </p>
       </Reveal>
     </section>

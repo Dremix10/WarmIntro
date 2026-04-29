@@ -35,7 +35,7 @@ const STEPS: Step[] = [
     agent: "critic",
     shortLabel: "Reject",
     eyebrow: "Critic · reviewing v1",
-    title: "Rejected — too generic",
+    title: "Rejected: too generic",
     body: "Voice: too formal. Specificity: missing the recent deal reference. Send back to Correspondent for a revise.",
     variant: "reject",
   },

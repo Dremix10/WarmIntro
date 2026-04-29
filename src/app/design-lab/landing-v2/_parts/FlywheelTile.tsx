@@ -51,7 +51,7 @@ export function FlywheelTile() {
             </div>
           </div>
           <p className="mt-4 border-t border-[#ECE7DE] pt-4 text-xs text-[#5C6472]">
-            Public release notes will name what changed and why — like a software release, but for the network&apos;s intuition.
+            Public release notes will name what changed and why. Like a software release, but for the network&apos;s intuition.
           </p>
         </div>
       </Reveal>

@@ -9,7 +9,7 @@ Sarah`;
 
 const SENT = `Hi Maya,
 
-I'm a Brown CS sophomore looking at TMT and saw your team led the Q4 software deal — the structure was wild. I'm trying to learn how a banker actually thinks about a deal like that. Free for 15 minutes next week?
+I'm a Brown CS sophomore looking at TMT and saw your team led the Q4 software deal. The structure was wild. I'm trying to learn how a banker actually thinks about a deal like that. Free for 15 minutes next week?
 
 Sarah`;
 
@@ -25,7 +25,7 @@ export function NoAITells() {
             What Alma writes vs what you send.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
-            Critic rejects generic drafts. You make it yours in two edits. The recruiter sees one email — yours.
+            Critic rejects generic drafts. You make it yours in two edits. The recruiter sees one email, yours.
           </p>
         </div>
       </Reveal>
@@ -51,7 +51,7 @@ export function NoAITells() {
 
       <Reveal delay={300}>
         <p className="mx-auto mt-8 max-w-md text-center text-xs text-[#5C6472]">
-          The original draft is what Alma&apos;s Correspondent produced. The version on the right is what the student sent — same person, same email, two minutes of editing. Backed by the <code className="text-[#1B3B5F]">drafts_pre_edit_ai_body</code> column.
+          The original draft is what Alma&apos;s Correspondent produced. The version on the right is what the student sent. Same person, same email, two minutes of editing. Backed by the <code className="text-[#1B3B5F]">drafts_pre_edit_ai_body</code> column.
         </p>
       </Reveal>
     </section>

@@ -51,7 +51,7 @@ export function FoundersStrip() {
           </span>
           <div>
             <p className="text-sm font-semibold text-[#14182A]">
-              Track winner — Y-Claude Builder Club Hackathon at Rice
+              Track winner. Y-Claude Builder Club Hackathon at Rice.
             </p>
             <p className="mt-1 text-xs text-[#5C6472]">
               April 2026 · 6,047 lines of TypeScript shipped in 4 hours, zero merge conflicts

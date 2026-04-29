@@ -3,7 +3,6 @@ const WORDS_PREFIX = [
   "warm-intro",
   "engine",
   "for",
-  "students",
   "breaking",
   "into",
 ];
