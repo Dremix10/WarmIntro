@@ -9,19 +9,71 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [ready, setReady] = useState(false);
+  const [initDone, setInitDone] = useState(false);
   const [state, setState] = useState<"idle" | "saving" | "saved" | "err">("idle");
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    // Supabase redirects to here with a recovery token in the URL hash.
-    // The browser client picks it up automatically and puts us in a temporary authed state.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setReady(Boolean(session));
-    });
+    // Supabase recovery flow lands here with the session in the URL hash:
+    //   #access_token=…&refresh_token=…&type=recovery&expires_at=…
+    // Our @supabase/ssr browser client defaults to the PKCE flow which
+    // looks for ?code= in the query string, so it doesn't auto-detect
+    // the hash-based recovery payload. Parse it manually and seed the
+    // session.
+    let cancelled = false;
+
+    async function init() {
+      try {
+        // Already-authed (e.g. user already on this tab from a prior reset)
+        const initial = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (initial.data.session) { setReady(true); return; }
+
+        // Parse the recovery hash. window.location.hash starts with "#".
+        const hash = typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "";
+        if (hash) {
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get("access_token");
+          const refreshToken = params.get("refresh_token");
+          const errorDesc = params.get("error_description") ?? params.get("error");
+          if (errorDesc) {
+            setReady(false);
+            setErrMsg(decodeURIComponent(errorDesc.replace(/\+/g, " ")));
+            return;
+          }
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (cancelled) return;
+            if (error) {
+              setReady(false);
+              setErrMsg(error.message);
+            } else {
+              // Strip the hash so a refresh doesn't try to re-process a stale token
+              window.history.replaceState(null, "", window.location.pathname);
+              setReady(true);
+            }
+            return;
+          }
+        }
+        // No hash + no session → link is missing or expired
+        setReady(false);
+      } finally {
+        if (!cancelled) setInitDone(true);
+      }
+    }
+
+    init();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setReady(Boolean(s));
+      if (!cancelled) setReady(Boolean(s));
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function onSubmit(e: FormEvent) {
@@ -49,10 +101,17 @@ export default function ResetPasswordPage() {
           <h1 className="font-[family-name:var(--font-fraunces)] text-4xl">Pick a new one</h1>
         </div>
 
-        {!ready ? (
+        {!ready && !initDone ? (
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center text-sm text-[#14182A]/70">
             Loading your reset link...
-            <p className="text-xs text-[#14182A]/50 mt-2">If this stays for a while, the link may be expired — request a fresh one from <a href="/forgot-password" className="underline">here</a>.</p>
+          </div>
+        ) : !ready && initDone ? (
+          <div className="rounded-2xl bg-white p-6 border border-[#C86B4F]/30 text-center text-sm">
+            <p className="text-[#C86B4F] font-medium">Reset link is missing or expired.</p>
+            {errMsg && <p className="text-xs text-[#14182A]/60 mt-2">{errMsg}</p>}
+            <p className="text-xs text-[#14182A]/60 mt-3">
+              <a href="/forgot-password" className="underline text-[#2E5A88]">Request a fresh link →</a>
+            </p>
           </div>
         ) : state === "saved" ? (
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center">
