@@ -7,7 +7,10 @@ const client = new Anthropic();
 // and cumulative revision history during testing — Opus follows
 // instructions more reliably and the per-call cost is justified.
 const MODEL = "claude-sonnet-4-20250514";
-export const OPUS_MODEL = "claude-opus-4-20250514";
+// Opus 4.7 (latest). Used by Correspondent + Critic for stricter
+// instruction-following — Sonnet ignored HARD BAN list and cumulative
+// revision history; Opus 4.7 reliably honors multi-step constraint prompts.
+export const OPUS_MODEL = "claude-opus-4-7";
 
 const MAX_CACHE_SIZE = 200;
 const cache = new Map<string, string>();

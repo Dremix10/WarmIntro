@@ -700,6 +700,36 @@ function DraftCard({
               </details>
             );
           })()}
+          {draft.iterations.length > 1 && (
+            <details className="mt-3 rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-3 text-xs">
+              <summary className="cursor-pointer text-[10px] uppercase tracking-[0.15em] font-semibold text-[#14182A]/60 hover:text-[#2E5A88]">
+                Critic history · {draft.iterations.length} attempts
+              </summary>
+              <div className="mt-3 space-y-3">
+                {draft.iterations.map((it) => (
+                  <div key={it.iteration} className="rounded-lg bg-white p-3 border border-[#D9CFB5]">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold">
+                        Iteration {it.iteration}
+                      </span>
+                      {it.critic_score !== null && (
+                        <span className="text-[10px] text-[#C86B4F] font-medium">
+                          score {it.critic_score.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    {it.subject && <p className="font-medium text-[#14182A]/80 italic font-[family-name:var(--font-fraunces)] mb-1">{it.subject}</p>}
+                    <pre className="text-[#14182A]/70 whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[11px]">{it.body}</pre>
+                    {it.critic_feedback && (
+                      <p className="mt-2 pt-2 border-t border-[#EAE3D2] text-[#C86B4F] italic">
+                        Critic: &ldquo;{it.critic_feedback}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             {draft.status === "approved" ? (
               <>
