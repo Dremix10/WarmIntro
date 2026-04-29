@@ -29,21 +29,23 @@ export function AnimatedHeadline() {
           {w}&nbsp;
         </span>
       ))}
-      <span
-        className="inline-block italic text-[#2E5A88] opacity-0"
-        style={{
-          animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${italicStart}ms forwards, glow-in 1400ms ease-out ${italicStart + 300}ms forwards`,
-        }}
-      >
-        investment banking
-      </span>
-      <span
-        className="inline-block opacity-0"
-        style={{
-          animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${dotStart}ms forwards`,
-        }}
-      >
-        .
+      <span className="inline-block whitespace-nowrap">
+        <span
+          className="inline italic text-[#2E5A88] opacity-0"
+          style={{
+            animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${italicStart}ms forwards, glow-in 1400ms ease-out ${italicStart + 300}ms forwards`,
+          }}
+        >
+          investment banking
+        </span>
+        <span
+          className="inline opacity-0"
+          style={{
+            animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${dotStart}ms forwards`,
+          }}
+        >
+          .
+        </span>
       </span>
     </h1>
   );
