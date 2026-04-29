@@ -6,6 +6,17 @@ import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
 import { SkeletonToday } from "@/components/Skeleton";
 
+interface FactCheckResult {
+  ok: boolean;
+  checks: Array<{
+    claim: string;
+    type: string;
+    verdict: "verified" | "unverifiable" | "contradicted";
+    evidenceUrls: string[];
+    notes: string;
+  }>;
+}
+
 interface DraftWithBanker {
   id: string;
   banker_id: string | null;
@@ -15,6 +26,7 @@ interface DraftWithBanker {
   status: "pending_critic" | "needs_revision" | "approved" | "rejected_unresolvable" | "sent" | "skipped" | "edited_by_user";
   iteration_count: number;
   scheduled_send_at: string | null;
+  fact_check: FactCheckResult | null;
   bankers: { name: string; title: string; email: string | null; firms: { name: string } | null } | null;
 }
 
@@ -230,6 +242,15 @@ export default function TodayPage() {
             <p className="mt-2 text-sm text-[#14182A]/70">
               {approved.length} ready to send · {pending.length} in review · {escalated.length} need data
             </p>
+            {/* Anchor jumps — quick navigation between sections */}
+            {(approvedCold.length + approvedFollowup.length + pendingCold.length + pendingFollowup.length) > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
+                {approvedCold.length > 0 && <AnchorChip href="#cold-ready" color="#C86B4F">Cold ready · {approvedCold.length}</AnchorChip>}
+                {approvedFollowup.length > 0 && <AnchorChip href="#followup-ready" color="#9A7110">Follow-ups · {approvedFollowup.length}</AnchorChip>}
+                {pendingCold.length > 0 && <AnchorChip href="#cold-review" color="#2E5A88">In review · {pendingCold.length}</AnchorChip>}
+                {pendingFollowup.length > 0 && <AnchorChip href="#followup-review" color="#2E5A88">Follow-ups review · {pendingFollowup.length}</AnchorChip>}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-2">
@@ -317,41 +338,27 @@ export default function TodayPage() {
 
           return (
             <>
-              {/* Approved cold outreach */}
+              {/* Each section is a card with a colored left rule for visual
+                  separation. Sticky-ish header with section name + count. */}
               {approvedCold.length > 0 && (
-                <section className="mb-8">
-                  <h2 className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-3">
-                    Cold outreach · {data.needsGmail ? "ready (needs Gmail)" : "ready to send"}
-                  </h2>
-                  <div className="space-y-3">{renderList(approvedCold)}</div>
-                </section>
+                <SectionShell id="cold-ready" accent="#C86B4F" title={`Cold outreach · ${data.needsGmail ? "ready (needs Gmail)" : "ready to send"}`} count={approvedCold.length}>
+                  {renderList(approvedCold)}
+                </SectionShell>
               )}
-
-              {/* Approved follow-ups + replies — separate so the user knows
-                  these are bankers already in the pipeline, not net-new contacts */}
               {approvedFollowup.length > 0 && (
-                <section className="mb-8">
-                  <h2 className="text-xs uppercase tracking-wider text-[#E8B339] font-semibold mb-3">
-                    Follow-ups · in your existing threads
-                  </h2>
-                  <div className="space-y-3">{renderList(approvedFollowup)}</div>
-                </section>
+                <SectionShell id="followup-ready" accent="#E8B339" title="Follow-ups · in your existing threads" count={approvedFollowup.length}>
+                  {renderList(approvedFollowup)}
+                </SectionShell>
               )}
-
-              {/* In-review cold */}
               {pendingCold.length > 0 && (
-                <section className="mb-8">
-                  <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">Cold · in review</h2>
-                  <div className="space-y-3">{renderList(pendingCold)}</div>
-                </section>
+                <SectionShell id="cold-review" accent="#2E5A88" title="Cold · in review" count={pendingCold.length}>
+                  {renderList(pendingCold)}
+                </SectionShell>
               )}
-
-              {/* In-review follow-ups */}
               {pendingFollowup.length > 0 && (
-                <section className="mb-8">
-                  <h2 className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">Follow-ups · in review</h2>
-                  <div className="space-y-3">{renderList(pendingFollowup)}</div>
-                </section>
+                <SectionShell id="followup-review" accent="#2E5A88" title="Follow-ups · in review" count={pendingFollowup.length}>
+                  {renderList(pendingFollowup)}
+                </SectionShell>
               )}
             </>
           );
@@ -531,6 +538,41 @@ function DraftCard({
             </div>
           )}
           <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[#14182A]/80">{draft.body}</pre>
+
+          {/* Fact-check citations — every specific claim the agent made,
+              with evidence URLs we found in the wild. Helps the user trust
+              before sending. Only renders if checks exist. */}
+          {draft.fact_check && draft.fact_check.checks.length > 0 && (
+            <details className="mt-3 rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-3 text-xs">
+              <summary className="cursor-pointer text-[10px] uppercase tracking-[0.15em] font-semibold text-[#14182A]/60 hover:text-[#2E5A88]">
+                Fact-check · {draft.fact_check.checks.length} {draft.fact_check.checks.length === 1 ? "specific claim" : "specific claims"}
+              </summary>
+              <div className="mt-3 space-y-2">
+                {draft.fact_check.checks.map((c, i) => (
+                  <div key={i} className="border-l-2 pl-3 py-1" style={{ borderColor: c.verdict === "verified" ? "#2E5A88" : "#C86B4F" }}>
+                    <p className="text-[#14182A] italic">&ldquo;{c.claim}&rdquo;</p>
+                    <p className="mt-1 text-[10px] text-[#14182A]/60">
+                      <span className={c.verdict === "verified" ? "text-[#2E5A88] font-semibold" : "text-[#C86B4F] font-semibold"}>
+                        {c.verdict === "verified" ? "✓ Verified" : "⚠ Unverified"}
+                      </span>
+                      {" — "}{c.notes}
+                    </p>
+                    {c.evidenceUrls.length > 0 && (
+                      <ul className="mt-1 space-y-0.5 text-[10px]">
+                        {c.evidenceUrls.slice(0, 3).map((u, j) => (
+                          <li key={j}>
+                            <a href={u} target="_blank" rel="noreferrer" className="text-[#2E5A88] underline hover:text-[#1B3B5F] break-all">
+                              {u.replace(/^https?:\/\//, "").slice(0, 80)}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             {draft.status === "approved" ? (
               <>
@@ -732,6 +774,42 @@ function SendAllButton({ count, onDone }: { count: number; onDone: () => void | 
         </p>
       )}
     </div>
+  );
+}
+
+function AnchorChip({ href, color, children }: { href: string; color: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      className="rounded-full px-2.5 py-1 font-medium hover:bg-white/60 transition-colors"
+      style={{ color, border: `1px solid ${color}30`, background: `${color}10` }}
+    >
+      {children}
+    </a>
+  );
+}
+
+function SectionShell({ id, accent, title, count, children }: {
+  id: string;
+  accent: string;
+  title: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      className="mb-6 rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden scroll-mt-20"
+      style={{ borderLeftWidth: 4, borderLeftColor: accent }}
+    >
+      <header className="px-5 py-3 border-b border-[#D9CFB5] flex items-center justify-between gap-3 bg-[#EAE3D2]/30">
+        <h2 className="text-xs uppercase tracking-wider font-semibold" style={{ color: accent }}>
+          {title}
+        </h2>
+        <span className="text-[10px] tabular-nums text-[#14182A]/50">{count}</span>
+      </header>
+      <div className="p-3 space-y-3">{children}</div>
+    </section>
   );
 }
 

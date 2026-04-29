@@ -17,6 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { logSignal } from "@/services/signals/log";
 
 export const runtime = "nodejs";
 
@@ -108,9 +109,20 @@ export async function POST(request: Request) {
   if (!resendRes.ok) {
     const body = await resendRes.text();
     console.warn(`[reset-password] resend error ${resendRes.status}: ${body}`);
+    // Log to Supabase so we can audit failures across the fleet.
+    await logSignal({
+      agent: "planner",
+      signalType: "reset_password_failed",
+      metadata: { email, status: resendRes.status, body: body.slice(0, 300) },
+    });
     // Still return 200 so we don't leak failure modes.
     return NextResponse.json({ ok: true });
   }
 
+  await logSignal({
+    agent: "planner",
+    signalType: "reset_password_sent",
+    metadata: { email },
+  });
   return NextResponse.json({ ok: true });
 }

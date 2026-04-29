@@ -95,6 +95,14 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
           linkedinUrl: banker.linkedin_url as string | null,
           university: banker.university as string | null,
         });
+        // Persist the fact-check on the draft so /today can show citations
+        // under the email body. Stored even when ok — verified claims with
+        // their sources are useful proof to the user.
+        await restUpdate(
+          "drafts",
+          { fact_check: factCheck } as never,
+          { id: eq(draft.id) }
+        );
         const fabricated = factCheck.checks.filter((c) => c.verdict !== "verified");
         if (fabricated.length > 0) {
           const review = await persistReview({

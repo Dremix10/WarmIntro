@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
   const { data: drafts } = await ctx.supabase
     .from("drafts")
-    .select("id, banker_id, type, subject, body, status, iteration_count, scheduled_send_at, created_at, bankers(name, title, email, firm_id, firms(name))")
+    .select("id, banker_id, type, subject, body, status, iteration_count, scheduled_send_at, created_at, fact_check, bankers(name, title, email, firm_id, firms(name))")
     .eq("user_id", ctx.user.id)
     .in("status", ["pending_critic", "needs_revision", "approved", "rejected_unresolvable"])
     .is("sent_at", null)
