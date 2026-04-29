@@ -28,6 +28,7 @@ interface DraftWithBanker {
   scheduled_send_at: string | null;
   fact_check: FactCheckResult | null;
   critic_override: boolean;
+  latest_review: { verdict: string; feedback: string | null; overall_score: number; created_at: string } | null;
   bankers: { name: string; title: string; email: string | null; linkedin_url: string | null; firms: { name: string } | null } | null;
 }
 
@@ -220,9 +221,14 @@ export default function TodayPage() {
 
   if (!data) return null;
 
-  const pending = data.drafts.filter((d) => d.status === "pending_critic" || d.status === "needs_revision");
+  // Bucket all "user needs to act" drafts together. Escalated drafts
+  // (Critic stuck after 3 iterations) are real drafts with real bodies — they
+  // need to render through the same DraftCard as needs_revision, just with
+  // the "Critic stuck" badge so the user sees the override flow.
+  const pending = data.drafts.filter(
+    (d) => d.status === "pending_critic" || d.status === "needs_revision" || d.status === "rejected_unresolvable"
+  );
   const approved = data.drafts.filter((d) => d.status === "approved");
-  const escalated = data.drafts.filter((d) => d.status === "rejected_unresolvable");
   // Split active drafts by type so cold outreach and follow-ups visually
   // separate. The user asked for clarity on which is which (some users
   // want to send cold first and bench follow-ups, or vice versa).
@@ -243,7 +249,7 @@ export default function TodayPage() {
               Your queue
             </h1>
             <p className="mt-2 text-sm text-[#14182A]/70">
-              {approved.length} ready to send · {pending.length} in review · {escalated.length} need data
+              {approved.length} ready to send · {pending.length} in review
             </p>
             {/* Anchor jumps — quick navigation between sections */}
             {(approvedCold.length + approvedFollowup.length + pendingCold.length + pendingFollowup.length) > 0 && (
@@ -377,22 +383,6 @@ export default function TodayPage() {
             </>
           );
         })()}
-
-        {/* Escalated */}
-        {escalated.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-xs uppercase tracking-wider text-[#14182A]/40 font-semibold mb-3">Need more data</h2>
-            <div className="space-y-3">
-              {escalated.map((d) => (
-                <div key={d.id} className="rounded-2xl bg-white p-4 border border-[#D9CFB5] opacity-70">
-                  <p className="text-sm">
-                    Critic rejected this draft 3 times. Researcher will enrich the banker and retry this week.
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Empty state — RunAlmaNowButton already lives in the page header,
             so we just point to it here. Two buttons that fire the same API
@@ -909,22 +899,25 @@ function DraftCard({
             className="bg-white rounded-2xl border border-[#C86B4F]/40 max-w-md w-full p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Override fact-check</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Override Critic</p>
             <h3 className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Send despite Critic flag?</h3>
             <p className="text-sm text-[#14182A]/70 mb-3">
-              Alma&rsquo;s Critic flagged claims it couldn&rsquo;t verify online. Sending anyway is fine if you know they&rsquo;re correct, but the override is recorded.
+              Sending anyway is fine if you know the email is right — the override is recorded so we can learn from these.
             </p>
+            {draft.latest_review?.feedback && (
+              <div className="mb-3 rounded-lg bg-[#EAE3D2]/40 p-3 text-xs">
+                <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50 font-semibold mb-1">
+                  Critic feedback (score {Number(draft.latest_review.overall_score).toFixed(2)} / 10)
+                </p>
+                <p className="text-[#14182A] italic">&ldquo;{draft.latest_review.feedback}&rdquo;</p>
+              </div>
+            )}
             {(() => {
               const flagged = draft.fact_check?.checks.filter((c) => c.verdict !== "verified") ?? [];
-              if (flagged.length === 0) {
-                return (
-                  <p className="text-xs text-[#14182A]/60 italic mb-4">
-                    No specific claims flagged — Critic rejected on tone or guardrails. Edit if you want, or send as-is.
-                  </p>
-                );
-              }
+              if (flagged.length === 0) return null;
               return (
                 <ul className="text-xs space-y-2 mb-4 bg-[#EAE3D2]/40 rounded-lg p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50 font-semibold mb-1">Unverifiable claims</p>
                   {flagged.map((c, i) => (
                     <li key={i} className="border-l-2 border-[#C86B4F] pl-2">
                       <p className="text-[#14182A]"><span className="text-[#C86B4F] font-semibold uppercase tracking-wider text-[10px]">{c.verdict}:</span> &ldquo;{c.claim}&rdquo;</p>

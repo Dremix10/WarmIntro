@@ -16,6 +16,32 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  // Fetch the latest critic_review per draft so the override modal can
+  // show the user exactly what the Critic objected to (not just fact-check
+  // claims). Single roundtrip — pull all reviews for these drafts and
+  // collapse to the latest per draft on the server.
+  const draftIds = (drafts ?? []).map((d) => d.id);
+  let latestReviewByDraft: Record<string, { verdict: string; feedback: string | null; overall_score: number; created_at: string } | undefined> = {};
+  if (draftIds.length > 0) {
+    const { data: reviews } = await ctx.supabase
+      .from("critic_reviews")
+      .select("draft_id, verdict, feedback, overall_score, created_at")
+      .in("draft_id", draftIds)
+      .order("created_at", { ascending: false });
+    latestReviewByDraft = {};
+    for (const r of reviews ?? []) {
+      if (!latestReviewByDraft[r.draft_id]) {
+        latestReviewByDraft[r.draft_id] = {
+          verdict: r.verdict,
+          feedback: r.feedback,
+          overall_score: r.overall_score,
+          created_at: r.created_at,
+        };
+      }
+    }
+  }
+  const draftsWithReview = (drafts ?? []).map((d) => ({ ...d, latest_review: latestReviewByDraft[d.id] ?? null }));
+
   const { data: trust } = await ctx.supabase
     .from("trust_levels")
     .select("*")
@@ -47,7 +73,7 @@ export async function GET(request: Request) {
   const needsGmail = !profile?.gmail_connected_at;
 
   return NextResponse.json({
-    drafts: drafts ?? [],
+    drafts: draftsWithReview,
     trust: trust ?? null,
     recent: recent ?? [],
     stageCounts,
