@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Reveal } from "@/components/Reveal";
 
 type Surface = {
   href: string;
@@ -12,18 +11,16 @@ type Surface = {
   body: string;
   src: string;
   alt: string;
-  imageRight: boolean;
 };
 
 const SURFACES: Surface[] = [
   {
     href: "/today",
     eyebrow: "Your queue",
-    title: "Today’s outreach, lined up.",
+    title: "Today's outreach, lined up.",
     body: "Drafts ready for review. Trust dial: Copilot, Preview-veto, Autopilot. You decide.",
     src: "/landing/today.png",
     alt: "Today's outreach queue with drafts and trust dial",
-    imageRight: true,
   },
   {
     href: "/network",
@@ -32,7 +29,6 @@ const SURFACES: Surface[] = [
     body: "Every bank is an island. Every intro builds more of a home on it.",
     src: "/landing/network.png",
     alt: "Network archipelago with bank islands at different construction stages",
-    imageRight: false,
   },
   {
     href: "/crm",
@@ -41,28 +37,67 @@ const SURFACES: Surface[] = [
     body: "Draft → sent → replied → coffee → referral → first round → superday → offer.",
     src: "/landing/crm.png",
     alt: "CRM kanban with bankers across pipeline stages",
-    imageRight: true,
   },
 ];
 
-function ParallaxImage({ src, alt }: { src: string; alt: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
-
+function useReducedMotion() {
+  const [reduced, setReduced] = useState<boolean>(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false
+  );
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return reduced;
+}
+
+export function SurfacesStack() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const reducedMotion = useReducedMotion();
+
+  // Reduced-motion fallback: auto-unfold all panels once on viewport entry.
+  useEffect(() => {
+    if (!reducedMotion) return;
+    const sec = sectionRef.current;
+    if (!sec) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          window.setTimeout(() => setActiveIdx(1), 350);
+          window.setTimeout(() => setActiveIdx(2), 700);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(sec);
+    return () => observer.disconnect();
+  }, [reducedMotion]);
+
+  // Scroll-progress driven (default).
+  useEffect(() => {
+    if (reducedMotion) return;
     let rafId = 0;
     const update = () => {
       rafId = 0;
-      const el = ref.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
+      const sec = sectionRef.current;
+      if (!sec) return;
+      const rect = sec.getBoundingClientRect();
       const vh = window.innerHeight;
-      // -1 when card is below fold, 0 when centered, +1 when above fold.
-      const ratio = (rect.top + rect.height / 2 - vh / 2) / vh;
-      const clamped = Math.max(-1, Math.min(1, ratio));
-      setOffset(clamped * 20); // 20px max travel
+      const pinTop = -rect.top;
+      const pinRange = rect.height - vh;
+      const raw = pinRange > 0 ? pinTop / pinRange : 0;
+      const progress = Math.max(0, Math.min(1, raw));
+      const idx = Math.min(
+        SURFACES.length - 1,
+        Math.max(0, Math.floor(progress * SURFACES.length))
+      );
+      setActiveIdx((prev) => (prev === idx ? prev : idx));
     };
     const onScroll = () => {
       if (rafId) return;
@@ -76,34 +111,17 @@ function ParallaxImage({ src, alt }: { src: string; alt: string }) {
       window.removeEventListener("resize", onScroll);
       if (rafId) window.cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [reducedMotion]);
 
   return (
-    <div
-      ref={ref}
-      className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[#ECE7DE] bg-[#F4EDDB]"
+    <section
+      ref={sectionRef}
+      className="relative"
+      style={{ minHeight: "180vh" }}
+      aria-label="Three product surfaces"
     >
-      <div
-        className="absolute inset-0"
-        style={{ transform: `translate3d(0, ${offset}px, 0)`, willChange: "transform" }}
-      >
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover"
-        />
-      </div>
-    </div>
-  );
-}
-
-export function SurfacesStack() {
-  return (
-    <section className="mx-auto max-w-5xl px-6 py-20">
-      <Reveal>
-        <div className="max-w-2xl">
+      <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-6xl flex-col justify-center px-6 py-10 md:py-14">
+        <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Your week in Alma
           </p>
@@ -111,33 +129,59 @@ export function SurfacesStack() {
             Three surfaces. Zero spreadsheet.
           </h2>
         </div>
-      </Reveal>
 
-      <div className="mt-10 flex flex-col gap-5">
-        {SURFACES.map((s, i) => (
-          <Reveal key={s.href} delay={i * 80}>
-            <Link
-              href={s.href}
-              className="group block alma-card rounded-2xl border border-[#D9CFB5] p-5 transition-colors hover:border-[#2E5A88] md:p-6"
-            >
-              <div className={"grid grid-cols-1 gap-5 md:grid-cols-2 md:items-center md:gap-8 " + (s.imageRight ? "" : "md:[&>*:first-child]:order-2")}>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#5C6472]">
-                    {s.eyebrow}
-                  </p>
-                  <h3 className="mt-2 text-2xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A]">
-                    {s.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#4A5260]">{s.body}</p>
-                  <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#1B3B5F] group-hover:underline">
-                    Take a look <span aria-hidden>→</span>
-                  </p>
+        {/* Leaflet — three panels unfold left-to-right with a 3D rotateY swing. */}
+        <div className="surface-leaflet mx-auto mt-14 grid w-full max-w-5xl grid-cols-1 gap-5 md:grid-cols-3 md:gap-7">
+          {SURFACES.map((s, i) => {
+            const state = i <= activeIdx ? "open" : "closed";
+            return (
+              <Link
+                key={s.href}
+                href={s.href}
+                data-state={state}
+                style={{ ["--surface-delay" as string]: `${i * 60}ms` }}
+                className="surface-card group block"
+              >
+                <div className="alma-card flex h-full flex-col rounded-2xl border border-[#D9CFB5] p-4 transition-colors hover:border-[#2E5A88] md:p-5">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[#ECE7DE] bg-[#F4EDDB]">
+                    <Image
+                      src={s.src}
+                      alt={s.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="mt-4 flex flex-1 flex-col">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#5C6472]">
+                      {s.eyebrow}
+                    </p>
+                    <h3 className="mt-1.5 text-xl leading-tight font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-2xl">
+                      {s.title}
+                    </h3>
+                    <p className="mt-2 flex-1 text-sm leading-relaxed text-[#4A5260]">{s.body}</p>
+                    <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#1B3B5F] group-hover:underline">
+                      Take a look <span aria-hidden>→</span>
+                    </p>
+                  </div>
                 </div>
-                <ParallaxImage src={s.src} alt={s.alt} />
-              </div>
-            </Link>
-          </Reveal>
-        ))}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Progress + counter */}
+        <div className="mx-auto mt-7 flex w-full max-w-md items-center gap-3">
+          <span className="font-mono text-xs tabular-nums text-[#8A8674]">
+            {String(activeIdx + 1).padStart(2, "0")} / {String(SURFACES.length).padStart(2, "0")}
+          </span>
+          <div className="h-[2px] flex-1 overflow-hidden rounded-sm bg-[#D9CFB5]">
+            <div
+              className="h-full bg-[#1B3B5F] transition-[width] duration-500 ease-out"
+              style={{ width: `${((activeIdx + 1) / SURFACES.length) * 100}%` }}
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
