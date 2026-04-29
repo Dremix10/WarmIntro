@@ -57,9 +57,12 @@ export async function POST(request: Request) {
   }
   recordReset(normalized);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const resendKey = process.env.RESEND_API_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  // Defensive .trim() — Vercel `echo "..." | vercel env add` leaves a trailing
+  // newline which Resend rejects with "API key is invalid". Safer to always
+  // strip whitespace from auth tokens regardless of how they got stored.
+  const resendKey = process.env.RESEND_API_KEY?.trim();
 
   if (!supabaseUrl || !serviceKey) {
     return NextResponse.json({ error: "Auth service misconfigured" }, { status: 500 });

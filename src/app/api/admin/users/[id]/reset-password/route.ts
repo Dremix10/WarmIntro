@@ -50,7 +50,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Best-effort email — same body as the user-initiated route. We return the
   // link in the response either way so the admin can paste it manually.
-  const resendKey = process.env.RESEND_API_KEY;
+  // .trim() defends against trailing-newline env values (vercel env add via
+  // echo bug — Resend rejects "Bearer key\n" as invalid API key).
+  const resendKey = process.env.RESEND_API_KEY?.trim();
   let emailSent = false;
   if (resendKey) {
     const html = `<!DOCTYPE html><html><body style="font-family:Georgia,serif;background:#EAE3D2;padding:48px 24px;color:#14182A;line-height:1.6"><div style="max-width:480px;margin:0 auto;background:white;border:1px solid #D9CFB5;border-radius:16px;padding:36px"><p style="font-size:24px;font-style:italic;color:#1B3B5F;margin:0 0 24px 0">alma</p><p style="font-size:18px;font-weight:500;margin:0 0 12px 0">Reset your password</p><p style="margin:0 0 16px 0">An admin issued you a new password-reset link. Good for one hour.</p><p style="margin:24px 0"><a href="${actionLink}" style="display:inline-block;background:#1B3B5F;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:500">Reset password</a></p><p style="margin:0 0 8px 0;font-size:12px;color:#5C6472">Or copy this link:</p><p style="margin:0;font-size:12px;word-break:break-all"><a href="${actionLink}" style="color:#2E5A88">${actionLink}</a></p></div></body></html>`;

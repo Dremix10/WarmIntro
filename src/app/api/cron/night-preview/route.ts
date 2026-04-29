@@ -116,7 +116,9 @@ async function sendNightPreview(opts: {
   draftCount: number;
   bankerLines: Array<{ name: string; title: string; firm: string; type: string }>;
 }): Promise<boolean> {
-  const resendKey = process.env.RESEND_API_KEY;
+  // .trim() defends against a trailing newline that vercel env add via echo
+  // bakes in (Resend then rejects the Bearer header as "invalid API key").
+  const resendKey = process.env.RESEND_API_KEY?.trim();
   if (!resendKey) {
     console.warn("[night-preview] RESEND_API_KEY missing — skipping send");
     return false;
