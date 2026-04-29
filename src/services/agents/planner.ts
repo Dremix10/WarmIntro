@@ -195,11 +195,24 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
       if (result === "escalated") out.escalations++;
     }
 
-    // 8. Send approved drafts according to trust level
-    const sendResult = await sendApprovedDrafts(input.userId, t, p);
-    out.approved = sendResult.approved;
-    out.sent = sendResult.sent;
-    out.savedToDrafts = sendResult.savedToDrafts;
+    // 8. Send approved drafts according to trust level. SKIPPED on user-
+    //    triggered runs because:
+    //    - Trust C (Copilot): the level-C path saves drafts to Gmail and
+    //      marks our DB row as "skipped". When the user just clicked Run
+    //      Alma, that vanishes the new draft from /today before they can
+    //      see it. They expect /today to show the result of their click.
+    //    - Trust B (Preview-veto): scheduled sends in 30 min — same
+    //      argument, user wants to see the draft on /today first.
+    //    - Trust A (Autopilot): user opted into "send for me," but it's
+    //      still surprising on a user-triggered run vs a cron run. Keep
+    //      consistent: user_command never auto-sends.
+    //    Cron-driven runs still process approved drafts as before.
+    if (input.triggeredBy !== "user_command") {
+      const sendResult = await sendApprovedDrafts(input.userId, t, p);
+      out.approved = sendResult.approved;
+      out.sent = sendResult.sent;
+      out.savedToDrafts = sendResult.savedToDrafts;
+    }
 
     // 9. Trust-level auto-graduation
     await checkAndGraduate(input.userId, t);
