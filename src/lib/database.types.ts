@@ -54,6 +54,50 @@ export type Database = {
         }
         Relationships: []
       }
+      banker_findings: {
+        Row: {
+          id: string
+          banker_id: string
+          url: string
+          title: string
+          snippet: string | null
+          source_type: string
+          published_hint: string | null
+          scouted_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          banker_id: string
+          url: string
+          title: string
+          snippet?: string | null
+          source_type: string
+          published_hint?: string | null
+          scouted_at?: string
+          expires_at?: string
+        }
+        Update: {
+          id?: string
+          banker_id?: string
+          url?: string
+          title?: string
+          snippet?: string | null
+          source_type?: string
+          published_hint?: string | null
+          scouted_at?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banker_findings_banker_id_fkey"
+            columns: ["banker_id"]
+            isOneToOne: false
+            referencedRelation: "bankers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banker_deals: {
         Row: {
           acquirer_company: string | null
