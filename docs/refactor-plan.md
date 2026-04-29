@@ -37,9 +37,9 @@ Two pressures forced a v2:
 
 ### Structural (preserved from v1)
 
-1. **`src/app/today/page.tsx` is now ~1118 lines** (up from ~870 in v1). DraftCard (300+ lines), RunAlmaNowButton, SendAllButton, GmailRequiredBanner, SectionShell, AnchorChip all live in one file. Inline edit, fact-check rendering, send-state machine, fade animations all interleaved. One bug forces understanding all of them.
+1. **`src/app/today/page.tsx` is now ~1358 lines** (up from ~870 in v1, +240 since Apr 29). DraftCard (300+ lines), RunAlmaNowButton, SendAllButton, GmailRequiredBanner, SectionShell, AnchorChip, plus the new override-modal, iteration-history viewer, escalated-draft styling, and Critic-feedback rendering all live in one file. Inline edit, fact-check rendering, send-state machine, fade animations all interleaved. One bug forces understanding all of them. Refactor urgency keeps growing with every commit.
 
-2. **`src/services/agents/correspondent.ts` (~307 lines)** bundles the prompt, the `findCommonGround` tool, the draft loop, and the persistence. Hard to test the prompt in isolation.
+2. **`src/services/agents/correspondent.ts` (~388 lines)** bundles the prompt, the `findCommonGround` tool, the cumulative-feedback revise loop, and the persistence. The cumulative-feedback addition since v1 made it harder to test the prompt in isolation, not easier.
 
 3. **`src/services/gmail/`** is small and clean — no refactor needed.
 
@@ -117,6 +117,7 @@ Two pressures forced a v2:
 - `admin/route.ts` — legacy admin endpoint
 - `admin/users/route.ts` — admin roster + per-user state
 - `admin/users/[id]/reset-password/route.ts` — admin-triggered password reset
+- `admin/users/[id]/resume/route.ts` `[NEW: admin downloads a user's parsed resume]`
 
 **Other**
 - `today/route.ts` `[updated]`
@@ -136,24 +137,29 @@ Two pressures forced a v2:
 
 ### Agents — `src/services/agents/`
 
-- `planner.ts` — orchestrator (deterministic, not an LLM call)
-- `researcher.ts` `[updated: target_groups soft preference, URL-encoded queries, banker query fix]`
-- `correspondent.ts` `[updated: career-arc framing tightening]`
-- `critic.ts` `[updated: career-arc rejection, persists fact_check JSON]`
-- `fact-checker.ts` `[updated: results persisted via drafts.fact_check column]`
+The roster is now **7 agents** (was 6 in v1). Scout is new.
+
+- `planner.ts` `[updated: dispatches Scout; dedupes escalated bankers; uses Opus 4.7]` — orchestrator (deterministic, not an LLM call)
+- `scout.ts` `[NEW: 270 LOC — real-time finding harvest, Serper fan-out with provenance, parallel queries within run-now budget; defensive Serper-query gating]`
+- `researcher.ts` `[updated]`
+- `correspondent.ts` `[updated: cumulative feedback in revise loop, banned-phrase tightening, Opus 4.7]`
+- `critic.ts` `[updated: cumulative feedback, iteration history, banker facts in prompt, Opus 4.7]`
+- `fact-checker.ts` `[updated: claims must come with a defensible Serper query]`
 - `watcher.ts`
 - `curator.ts`
-- `sentinel.ts`
+- `sentinel.ts` `[updated: failure auditing, hot-path Telegram]`
 - `shared.ts`
 
 ### Integrations — `src/services/`
 
-- `claude.ts` — Anthropic wrapper
-- `gmail/oauth.ts`, `gmail/send.ts` `[updated: verbose error surfacing]`, `gmail/poll.ts`, `gmail/thread-match.ts`, `gmail/tokens.ts`
+- `claude.ts` `[updated: Opus 4.7 model migration]`
+- `gmail/oauth.ts`, `gmail/send.ts` `[updated: drafts.send API for atomic conversion]`, `gmail/poll.ts`, `gmail/thread-match.ts`, `gmail/tokens.ts`
+- `gmail/sync-draft.ts` `[NEW: mirrors approved drafts into the user's Gmail Drafts folder]`
 - `hunter/enrich.ts`
-- `linkedin/proxycurl.ts` `[updated]`
+- `linkedin/discovery.ts` `[renamed from proxycurl.ts in 1c51324; Serper-only now]`
+- `lib/telegram.ts` `[NEW: shared Telegram alert client — used by Sentinel + run-now hot-path auditing]`
 
-(Resend, Serper, Telegram are inline — search for their env keys.)
+(Resend and Serper are still inline — search for their env keys.)
 
 ### Support — `src/services/`
 
@@ -172,10 +178,11 @@ Two pressures forced a v2:
 
 ### Frontend pieces touched recently (for awareness)
 
-- `src/app/today/page.tsx` `[updated, ~1118 LOC — refactor target]`
-- `src/app/admin/page.tsx` `[NEW]`
-- `src/app/reset-password/page.tsx` `[updated]`
-- `src/components/RecoveryHashRedirect.tsx` `[NEW]`
+- `src/app/today/page.tsx` `[updated, ~1358 LOC and growing — refactor target #1]`
+- `src/app/admin/page.tsx` `[updated: resume download UI]`
+- `src/app/reset-password/page.tsx`
+- `src/components/RecoveryHashRedirect.tsx`
+- `src/app/crm/page.tsx` `[updated locally on worktree-batch-0-optimistic-ui: optimistic stage moves]`
 
 ### Database — `supabase/migrations/`
 
@@ -184,6 +191,13 @@ Two pressures forced a v2:
 - `003_alma_ib_schema.sql`
 - `004_alma_agents_flywheel.sql`
 - `005_unique_active_drafts.sql`
+- `006_draft_fact_check.sql` — `drafts.fact_check JSONB`
+- `008_drafts_critic_override.sql` — `drafts.critic_override` flag for "Send anyway"
+- `009_banker_findings.sql` `[NEW: Scout's per-banker discovery records with provenance]`
+- `010_draft_iterations.sql` `[NEW: full revision history per draft for the override-modal + audit trail]`
+- `011_unique_active_drafts_include_escalated.sql` `[NEW: extended migration 005 to cover escalated state]`
+- `012_rls_draft_iterations_banker_findings.sql` `[NEW: RLS policies for the two new tables]`
+- `013_drafts_gmail_draft_id.sql` `[NEW: drafts.gmail_draft_id for two-way Gmail sync]`
 - `006_draft_fact_check.sql` `[NEW: adds drafts.fact_check JSONB]`
 
 ---
@@ -247,7 +261,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 The user-stated #1 priority. Every other batch is academic until the app feels snappy.
 
-**0.1 Single auth path** *(biggest single win, ~300ms median saved)*
+**0.1 Single auth path** *(biggest single win, ~300ms median saved)* `⚠ blocks on D1`
 
 Today: middleware verifies the session against Supabase, then the route does the same call again. Two network round-trips to Supabase Auth before any business logic.
 
@@ -274,7 +288,7 @@ Pattern:
 const [drafts, trust, recent, pipeline, profile] = await Promise.all([...]);
 ```
 
-**0.3 HTTP cache headers on read GETs** *(repeat-load latency drops to ~50ms)*
+**0.3 HTTP cache headers on read GETs** *(repeat-load latency drops to ~50ms)* `⚠ blocks on D2`
 
 Add `Cache-Control: private, max-age=10, stale-while-revalidate=60` on:
 - `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`.
@@ -295,7 +309,7 @@ Current matcher in `src/proxy.ts:297-299` runs middleware on virtually every pat
 
 Cheap trick: add `cron/warm` route that pings the 4-5 hottest endpoints every 5 min (during 6am-11pm America/New_York). Keeps those functions warm so the first user click of the morning isn't a 2s cold start.
 
-**0.7 Replace or delete in-process caches**
+**0.7 Replace or delete in-process caches** `⚠ blocks on D3`
 
 `claude.ts`'s "LRU" map is per-instance; cleared on every cold start; doesn't actually save anything. Either:
 - Delete (cleanest), OR
@@ -381,7 +395,7 @@ Same decision for `proxy.ts` rate-limit map and `linkedin-search.ts` profile/ema
 
 **6.3 Curator dedup O(N²) → O(N).** `src/services/agents/curator.ts`. Two-pass with Set-based dedup index. **30 min.**
 
-**6.4 Cron tick fan-out.** `src/app/api/cron/tick/route.ts`. Replace serial loop with dispatcher: cron triggers fan-out function that enqueues one invocation per user. Use Vercel queue, QStash, or Inngest. **Required before user count exceeds ~50. 3-4 hrs.**
+**6.4 Cron tick fan-out.** `⚠ blocks on D4` `src/app/api/cron/tick/route.ts`. Replace serial loop with dispatcher: cron triggers fan-out function that enqueues one invocation per user. Use Vercel queue, QStash, or Inngest. **Required before user count exceeds ~50. 3-4 hrs.**
 
 **6.5 Legacy `alumni_*` deprecation.** Three-phase migration:
 - `migration 007`: backfill `alumni_id` ← `banker_id` where mismatched.
@@ -406,18 +420,55 @@ Ship one per week with a soak between. **2 hrs of code, weeks of soak.**
 
 ---
 
-## Questions for the reviewer
+## Decisions needed before execution
 
-(v1 questions preserved + new ones for v2 batches)
+> **Reviewer: please answer inline below each.** The executor will treat your answers as binding and start the corresponding batch as soon as the answer lands. If you don't have an opinion, write `default` and we'll go with the recommended option (italicized).
 
-1. Comfortable with the `(app)` / `(auth)` / `(marketing)` route groups, or prefer a flatter layout?
-2. Should `services/outreach/` and `services/pipeline/` share a common `services/core/` for cross-cutting helpers, or stay independent?
-3. Tests in vitest + a Supabase test branch, or a separate test DB? Test branch is nicer but uses a Supabase paid feature.
-4. Any DraftCard sub-component that's particularly important to keep separate? (FactCheckPanel feels like the most extractable.)
-5. **[NEW]** Batch 0.1: comfortable signing `x-alma-user-id` with HMAC, or prefer to verify the JWT in middleware and pass parsed claims via headers? Both work; HMAC is simpler.
-6. **[NEW]** Batch 0.7: drop the in-process caches outright, or move to Upstash Redis as a single follow-up? Redis adds $0/$10/mo depending on tier.
-7. **[NEW]** Batch 6.4: which queue — Vercel native (limited), QStash (Upstash, $0 free tier), or Inngest (richer features, more setup)?
-8. **[NEW]** Batch 0.3: 10s stale-while-revalidate window OK, or stricter? Affects how fast a "Send" button click reflects in the funnel counts on /today.
+### Blocks Batch 0 (perf — the user-felt priority)
+
+**D1.** `[Batch 0.1]` Auth header refactor — *recommended: HMAC-signed `x-alma-user-id` header (simpler).*
+Alternative: verify the JWT in middleware and pass the parsed claims as plaintext headers (slightly safer if `ALMA_INTERNAL_SECRET` ever leaks).
+
+> Answer:
+
+**D2.** `[Batch 0.3]` Cache freshness — *recommended: `Cache-Control: private, max-age=10, stale-while-revalidate=60` on `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`.*
+Trade-off: a "Send" click takes up to 10s to reflect in funnel counts on the Today page. If that's too long, we can drop to 5s or use `max-age=0, stale-while-revalidate=30` (always revalidates but serves stale instantly).
+
+> Answer:
+
+**D3.** `[Batch 0.7]` In-process caches — *recommended: delete them.*
+They're per-instance only and don't help cold starts. Alternative: move to Upstash Redis ($0 free tier, $10/mo at scale) as a real shared cache. Worth doing if we're going to need cache for the agent system anyway; not worth it for the current footprint.
+
+> Answer:
+
+### Blocks Batch 6 (scaling)
+
+**D4.** `[Batch 6.4]` Cron fan-out queue — *recommended: QStash (Upstash, $0 free tier, simplest).*
+Alternatives: Vercel native queue (newer, limited features), Inngest (richer DX, more setup). Required before user count crosses ~50.
+
+> Answer:
+
+### Blocks Batches 1-3 (structural)
+
+**D5.** `[Batch 3]` Route groups — *recommended: yes, `(marketing)` / `(auth)` / `(app)` groups.*
+Alternative: keep flat layout. Groups give a clearer mental model but mean every existing page-import path changes.
+
+> Answer:
+
+**D6.** `[Batch 1]` Shared service helpers — *recommended: keep `services/outreach/` and `services/pipeline/` independent for now.*
+Alternative: introduce `services/core/` upfront for cross-cutting helpers. Premature unless real overlap shows up.
+
+> Answer:
+
+**D7.** `[Batch 5]` Test database — *recommended: vitest + dedicated Supabase test branch (paid feature, $10/mo).*
+Alternative: a separate test DB on the existing instance with cleanup hooks. Cheaper but riskier (cleanup bugs leave junk in prod-ish data).
+
+> Answer:
+
+**D8.** `[Batch 2]` DraftCard sub-components — *recommended: extract `DraftCard`, `FactCheckPanel`, `SentToConfirmModal`, `RunAlmaNowButton`, `SendAllButton`, `GmailRequiredBanner`, `BatchStepper`, `SendTimePicker`.*
+Reviewer: any sub-component you'd specifically want kept separate or merged differently? FactCheckPanel feels like the most extractable.
+
+> Answer:
 
 ---
 
