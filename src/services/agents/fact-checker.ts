@@ -59,38 +59,77 @@ interface BankerForFactCheck {
   university?: string | null;
 }
 
-const EXTRACT_SYSTEM = `You read a cold-outreach email a student is about to send to an investment banker. Identify every SPECIFIC verifiable claim about the banker — anything that names a deal, quotes a post, references a specific career detail, role transition, or activity.
+const EXTRACT_SYSTEM = `You read a cold-outreach email a student is about to send to an investment banker. Identify every SPECIFIC verifiable claim about the banker.
 
-DO NOT extract:
-- Generic facts the student knows from the data already (banker's firm, title, school overlap)
-- The student's own background ("I'm a sophomore at Brown")
-- Generic statements ("I'd love to learn from you")
-- Temporal/positional phrases that are NOT claims of fact: "after Rice", "since college", "post-graduation", "early in your career", "fellow Owl", "fellow Brown grad". These reference school overlap (already known) or generic timeline, not a verifiable specific.
-- Vague descriptors of the banker's work without naming a specific deal, post, or program ("your tech work", "your industry experience"). Either it's a named claim worth verifying, or it's a generic gesture — not in between.
+A claim qualifies ONLY if you can write a SUBSTANTIVE web search query that would corroborate it. If the most precise query you can write is something like "did <banker> go to Rice" or "is <banker> at Morgan Stanley", that's a weak claim — it references background we already have, not a specific event. Drop it.
 
-DO extract:
-- "your team advised on the X transaction" (named deal)
-- "your post about Y caught my attention" (specific post)
-- "your move from Goldman to Evercore in 2022" (specific dated transition)
-- "you led the AAPL/META advisory" (specific deal)
-- Anything the banker would read and think "where did they get that from?"
+A strong claim names a specific deal, post, transition with both endpoints, dated event, publication, or program. The verification query for a strong claim contains at least two distinct named entities (deal name, year, firm, publication, deal value, etc.) beyond the banker's own name.
 
-Return JSON: { "claims": [ { "text": "...", "type": "deal|post|role|school_activity|career_move|other" } ] }
-If no specific claims, return { "claims": [] }.`;
+For each claim you keep, you MUST write the EXACT Serper search query you'd run to verify it — the query a careful human would Google. The query is what gates the claim.
+
+DROP (do not extract):
+- Generic background: firm, title, school overlap, graduation timeline ("after Rice", "fellow Owl", "since college")
+- The student's own background
+- Vague descriptors of the banker's work without a named specific ("your tech work", "your industry experience")
+- Any claim where the best verification query you can construct contains only the banker's name + a single common-knowledge token
+
+KEEP:
+- Named deal: "your team advised on the Stripe IPO" → query: "Christian Saldana Morgan Stanley Stripe IPO"
+- Specific post or quote: "your post about AI M&A consolidation" → query: "Christian Saldana LinkedIn AI M&A consolidation 2025"
+- Dated transition: "your move from Goldman to Evercore in 2022" → query: "Christian Saldana Goldman Sachs Evercore 2022"
+- Specific program/award: "your CFA Level III pass last year" → query: "Christian Saldana CFA Level III 2025"
+
+Return JSON: { "claims": [ { "text": "<verbatim from the email>", "type": "deal|post|role|school_activity|career_move|other", "verificationQuery": "<exact Google query a human would type>" } ] }
+If no specific claims meet the bar, return { "claims": [] } — that's the correct answer for an email with no fact-laden specifics.`;
+
+interface ExtractedClaim {
+  text: string;
+  type: ClaimCheck["type"];
+  verificationQuery: string;
+}
 
 // Throws if Claude refuses or returns malformed JSON. Critic catches that
 // and routes the draft to needs_revision — a silent empty-array return would
 // have let unfact-checked drafts pass under the false guise of "no specific
 // claims," which is the worst possible failure mode.
-async function extractClaims(emailBody: string): Promise<Array<{ text: string; type: ClaimCheck["type"] }>> {
-  const res = await askClaudeJSON<{ claims: Array<{ text: string; type: ClaimCheck["type"] }> }>(
-    `Email:\n${emailBody}\n\nReturn only the JSON object.`,
-    { systemPrompt: EXTRACT_SYSTEM, maxTokens: 800, skipCache: true }
+async function extractClaims(
+  emailBody: string,
+  banker: BankerForFactCheck
+): Promise<ExtractedClaim[]> {
+  const res = await askClaudeJSON<{ claims: ExtractedClaim[] }>(
+    `Email:\n${emailBody}\n\nBanker known facts (do NOT extract these as claims):\n- name: ${banker.name}\n- title: ${banker.title ?? "?"}\n- firm: ${banker.firmName ?? "?"}\n- university: ${banker.university ?? "?"}\n\nReturn only the JSON object.`,
+    { systemPrompt: EXTRACT_SYSTEM, maxTokens: 900, skipCache: true }
   );
   if (!res || !Array.isArray(res.claims)) {
     throw new Error("fact_check_extract_invalid_shape");
   }
-  return res.claims;
+
+  // Code-side filter: drop claims whose verificationQuery doesn't pass the
+  // bar the prompt set. The model is supposed to self-police but we don't
+  // trust it blindly — this is the safety net for "after Rice"-style
+  // weak-claim leaks.
+  const knownTokens = new Set(
+    [banker.name, banker.title, banker.firmName, banker.university]
+      .filter((v): v is string => Boolean(v))
+      .flatMap((v) => v.toLowerCase().split(/\s+/))
+      .filter((w) => w.length > 2)
+  );
+
+  return res.claims.filter((c) => {
+    if (!c.text || !c.verificationQuery || typeof c.verificationQuery !== "string") return false;
+    const q = c.verificationQuery.trim();
+    const tokens = q.split(/\s+/);
+    if (tokens.length < 4) return false;
+    // Count "novel" tokens — anything not part of the banker's known facts.
+    const novel = tokens
+      .map((t) => t.toLowerCase().replace(/[^\w]/g, ""))
+      .filter((t) => t.length >= 2 && !knownTokens.has(t) && !STOP_WORDS.has(t));
+    // Require at least 2 distinct novel tokens. A query that's just
+    // "<banker name> <firm name> + filler" doesn't pass — it's testing
+    // background, not a specific claim.
+    const distinctNovel = new Set(novel);
+    return distinctNovel.size >= 2;
+  });
 }
 
 // Stop-words excluded from "meaningful" word count + n-gram matching to
@@ -222,16 +261,21 @@ async function verifyStructuralRoleClaim(
   };
 }
 
-async function verifyClaim(claim: string, banker: BankerForFactCheck): Promise<ClaimCheck> {
+async function verifyClaim(
+  claim: string,
+  banker: BankerForFactCheck,
+  verificationQuery: string
+): Promise<ClaimCheck> {
   // Try structural matching first (title/firm assertions). Falls through to
   // generic phrase-matching if the claim isn't structural.
   const structural = await verifyStructuralRoleClaim(claim, banker);
   if (structural) return structural;
 
-  const queries: string[] = [];
-  // Most specific first — banker's name + the claim
+  // Use the LLM-supplied verification query as the primary search — that's
+  // the query the model already justified writing. Fall back to name+claim
+  // and LinkedIn-scoped only if the primary returns nothing useful.
+  const queries: string[] = [verificationQuery];
   queries.push(`"${banker.name}" ${claim.slice(0, 80)}`);
-  if (banker.firmName) queries.push(`"${banker.name}" "${banker.firmName}" ${claim.slice(0, 60)}`);
   if (banker.linkedinUrl) {
     const slug = banker.linkedinUrl.replace(/.*linkedin\.com\/in\//, "").replace(/\/.*$/, "");
     if (slug) queries.push(`site:linkedin.com/in/${slug} ${claim.slice(0, 50)}`);
@@ -260,13 +304,13 @@ async function verifyClaim(claim: string, banker: BankerForFactCheck): Promise<C
 
 /** Draft mode: check every specific claim in the email. */
 export async function factCheckDraft(emailBody: string, banker: BankerForFactCheck): Promise<FactCheckResult> {
-  const claims = await extractClaims(emailBody);
+  const claims = await extractClaims(emailBody, banker);
   if (claims.length === 0) {
     return { ok: true, checks: [] };
   }
   const checks: ClaimCheck[] = [];
   for (const c of claims) {
-    const verdict = await verifyClaim(c.text, banker);
+    const verdict = await verifyClaim(c.text, banker, c.verificationQuery);
     checks.push({ ...verdict, type: c.type });
   }
   const allVerified = checks.every((c) => c.verdict === "verified");
