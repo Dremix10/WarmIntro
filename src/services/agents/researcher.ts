@@ -5,7 +5,6 @@
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { findRealAlumni } from "@/services/linkedin-search";
 import { enrichEmailBatch } from "@/services/hunter/enrich";
-import { scrapeBankerLinkedIn } from "@/services/linkedin/proxycurl";
 import { getActiveScoringWeights } from "@/services/signals/aggregate";
 import { restSelect, restSelectOne, restUpdate, eq, isNull } from "@/lib/supabase-rest";
 import type { Banker } from "@/shared/ib-types";
@@ -357,11 +356,6 @@ export async function enrichBanker(bankerId: string): Promise<boolean> {
   if (!banker) return false;
 
   let enriched = false;
-
-  if (banker.linkedin_url) {
-    const profile = await scrapeBankerLinkedIn(banker.linkedin_url, { bankerId, cacheResult: true });
-    if (profile) enriched = true;
-  }
 
   if (!banker.email && banker.firm_id) {
     const firm = await restSelectOne("firms", { select: "domain", filters: { id: eq(banker.firm_id) } });

@@ -25,7 +25,7 @@ I've read the spec end-to-end, the agent code, the cron schedules, the API surfa
 **What looks weak / fake / incomplete:**
 
 - **No real users yet.** Per spec, launch was scheduled for **2026-04-25**. Today is 2026-04-26. The earliest users have ≤24h on the platform. The first weekly flywheel release runs **Sun 2026-04-27 11pm UTC**. As of YC submission window, there is no published flywheel release proving learning.
-- **Proxycurl is dead** — `BACKEND_HANDOFF.md` line 41 explicitly notes it shut down 2025-01 after the LinkedIn lawsuit. The Correspondent's `findCommonGround` tool — the *centerpiece of the "real shared ground" anti-AI-tells story* — currently falls back to Serper Google-search snippets. PDL replacement is documented but not implemented.
+- **No structured LinkedIn scraping** — Proxycurl shut down 2025-01 after the LinkedIn lawsuit. We removed scraping entirely; the Correspondent's `findCommonGround` tool — the *centerpiece of the "real shared ground" anti-AI-tells story* — runs on stored banker fields (title, firm, school) plus Serper snippets at fact-check time. Honest answer if asked: "We tried scraping providers, the legal landscape made them all temporary. Snippets-plus-cross-check is enough today; we'll layer richer profile data when we see a real signal we need it."
 - **Career services partnerships are aspirational.** Spec line 21 calls them a moat layer. `BACKEND_HANDOFF.md` says "formally asked" — not granted. There is no signed deal.
 - **Hackathon claim** (spec line 384) — "won a hackathon on v1" — no detail in the repo. YC will verify or discount.
 - **Several pages are still mock**: `/quests`, `/recap` (UI side; the email cron is real), `/cohort`, `/leaderboard`, plus parts of `/pipeline`, `/network`, `/crm`, `/profile`, `/companies` per `BACKEND_HANDOFF.md` "Fields the UI now has real data for" table — many fields exist on the backend but the UI hasn't been wired yet.
@@ -129,7 +129,7 @@ Real company aesthetics, *student-project traction*. Code depth is professional.
 
 ### What to fix in the next 7 days (toward Apr 30 submission)
 
-1. **PDL replacement** for Proxycurl, per `BACKEND_HANDOFF.md` line 51. The Correspondent's `findCommonGround` is the heart of the "we don't sound like AI" story. Without real LinkedIn data it leans on Serper snippets.
+1. **Decide on richer LinkedIn data**: only add a paid provider if the live test data shows fact-check / specificity is the actual conversion blocker. `findCommonGround` uses stored banker fields + Serper snippets today — measure first, scale provider second.
 2. **Pricing line** decided + on landing FAQ.
 3. **Cut expansion claim** to one next vertical (consulting). Update spec, landing, video, application.
 4. **Founders page** — 60 seconds of "who we are, why us." Even a static `/about`.
@@ -155,7 +155,7 @@ Real company aesthetics, *student-project traction*. Code depth is professional.
 - **30 API routes including 6 cron loops** (`src/app/api/`)
 - **4 SQL migrations, ~20KB**, with RLS on user-scoped tables (`supabase/migrations/`)
 - **Gmail OAuth integration** with token encryption + refresh (`src/services/gmail/`)
-- **Hunter.io + Proxycurl + Serper integrations** with graceful-degrade env handling (`CLAUDE.md` line 54)
+- **Hunter.io + Serper integrations** with graceful-degrade env handling (`CLAUDE.md` line 54)
 - **Sentinel monitoring agent** that watches API credit balance + agent error rate, posts Telegram alerts (`src/services/agents/sentinel.ts`)
 - **Trust gradient state machine** — per-user, per-capability C/B/A with auto-graduation, manual override, night-preview tomorrow-only override (`spec section 6`)
 - **Critic 4-axis review with calibration loop** — every approved draft carries scorecard, weekly batch correlates Critic score buckets to reply rate, miscalibrated axes get rubric updates (`spec section 3.4`, `services/agents/critic.ts`)
@@ -183,7 +183,7 @@ Real company aesthetics, *student-project traction*. Code depth is professional.
 ### Claims you should NOT make (the product doesn't yet support them)
 
 - ❌ "We have a defensible data moat." → It's *designed*; it hasn't *operated* yet. Say "we've shipped the data flywheel architecture; first release [date]."
-- ❌ "Our LinkedIn data is proprietary." → Proxycurl is dead. PDL not implemented. You currently rely on Serper snippets.
+- ❌ "Our LinkedIn data is proprietary." → No structured scrape. The banker graph is built from Serper snippets + Hunter + user/seed firms. Differentiation is the agent loop, not the data.
 - ❌ "We have signed partnerships with Rice + Brown career services." → You've sent the asks. They're not signed.
 - ❌ "We're expanding to consulting, law, tech, medicine." → Pick one.
 - ❌ "Won a hackathon" without naming the hackathon, the prize, the date. Either name it precisely or drop it.

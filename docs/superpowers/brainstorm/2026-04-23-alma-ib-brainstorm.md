@@ -52,7 +52,7 @@ With YC spring 2026 application due 2026-04-30 and the frontend already IB-niche
 - **Claude model:** Sonnet 4 → Opus 4.7 for resume parsing; Sonnet 4 fine for agent calls (cost + latency).
 - **Data model:** new migrations 003 (bank hierarchy + LinkedIn profiles + deals + trust levels) and 004 (agent runs + drafts + critic reviews + signals + flywheel + schema proposals).
 - **Gmail:** Testing-mode OAuth app for launch (≤100 users, no Google verification needed). Public launch post-YC.
-- **Enrichment:** Hunter.io Starter ($49/mo) + Proxycurl (pay-as-you-go).
+- **Enrichment:** Hunter.io Starter ($49/mo) for emails + Google Serper for LinkedIn discovery. (Original brainstorm picked Proxycurl for structured profile scrape; that was removed 2026-04-29 after Proxycurl shut down — we don't scrape LinkedIn pages anymore.)
 - **Scheduler:** Vercel Cron — tick every 15 min, curator-hot every 30 min, daily sweep, weekly flywheel batch (Sunday 11 PM UTC).
 - **Trust gradient:** per-user, per-capability (send_new_email / send_followup / send_reply). Auto-graduation C→B at 5 approvals, B→A at 10 more. Manual toggle always available.
 - **Flywheel:** signals table captures everything; weekly batch computes scoring weights + critic calibration; `flywheel_releases` records each "release" with headline + diff.

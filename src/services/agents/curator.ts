@@ -2,7 +2,7 @@
 // Enrichment backfill, freshness, dedup, discovery, quality audit, schema proposals
 
 import { startAgentRun, endAgentRun, logSignal, askClaudeJSON } from "./shared";
-import { scrapeBankerLinkedIn, discoverBankersAtFirm } from "@/services/linkedin/proxycurl";
+import { discoverBankersAtFirm } from "@/services/linkedin/discovery";
 import { enrichEmailBatch } from "@/services/hunter/enrich";
 import { FIRM_SEEDS, buildGroupSeeds } from "@/data/seed/firms-groups";
 import {
@@ -25,11 +25,10 @@ export type CuratorMode = "hot" | "daily" | "weekly" | "seed";
 export interface CuratorOutput {
   mode: CuratorMode;
   seeded: { firms: number; groups: number };
-  enriched: { profiles: number; emails: number };
+  enriched: { emails: number };
   discovered: number;
   deduped: number;
   proposalsDrafted: number;
-  stalenessRefreshed: number;
 }
 
 export async function runCurator(mode: CuratorMode): Promise<CuratorOutput> {
@@ -42,11 +41,10 @@ export async function runCurator(mode: CuratorMode): Promise<CuratorOutput> {
   const out: CuratorOutput = {
     mode,
     seeded: { firms: 0, groups: 0 },
-    enriched: { profiles: 0, emails: 0 },
+    enriched: { emails: 0 },
     discovered: 0,
     deduped: 0,
     proposalsDrafted: 0,
-    stalenessRefreshed: 0,
   };
 
   try {
@@ -61,7 +59,6 @@ export async function runCurator(mode: CuratorMode): Promise<CuratorOutput> {
     }
     if (mode === "weekly") {
       out.deduped = await dedupBankers();
-      out.stalenessRefreshed = await refreshStaleProfiles();
       out.proposalsDrafted = await generateSchemaProposals();
     }
 
@@ -107,26 +104,11 @@ async function seedFirmsAndGroups(): Promise<{ firms: number; groups: number }> 
 }
 
 // ===== Enrichment backfill =====
-async function enrichmentBackfill(): Promise<{ profiles: number; emails: number }> {
-  let profiles = 0;
+// Profile scraping was Proxycurl; that provider shut down. Now we only
+// backfill emails (Hunter), not LinkedIn profile structure. Researcher's
+// findCommonGround uses banker.title + firm + Serper snippets directly.
+async function enrichmentBackfill(): Promise<{ emails: number }> {
   let emails = 0;
-
-  const needProfile = await restSelect("bankers", {
-    select: "id, linkedin_url",
-    filters: { linkedin_url: notNull },
-    limit: 20,
-  });
-
-  for (const b of needProfile) {
-    const existing = await restSelectOne("banker_profiles", {
-      select: "banker_id",
-      filters: { banker_id: eq(b.id) },
-    });
-    if (existing) continue;
-    if (!b.linkedin_url) continue;
-    const scraped = await scrapeBankerLinkedIn(b.linkedin_url, { bankerId: b.id, cacheResult: true });
-    if (scraped) profiles++;
-  }
 
   const needEmail = await restSelect("bankers", {
     select: "id, name, firm_id",
@@ -160,7 +142,7 @@ async function enrichmentBackfill(): Promise<{ profiles: number; emails: number 
     emails = results.filter((r) => r?.email).length;
   }
 
-  return { profiles, emails };
+  return { emails };
 }
 
 // ===== Discovery =====
@@ -256,30 +238,6 @@ async function dedupBankers(): Promise<number> {
     merged++;
   }
   return merged;
-}
-
-// ===== Staleness =====
-async function refreshStaleProfiles(): Promise<number> {
-  const STALE_DAYS = 60;
-  const threshold = new Date(Date.now() - STALE_DAYS * 24 * 60 * 60 * 1000).toISOString();
-
-  const stale = await restSelect("banker_profiles", {
-    select: "banker_id, scraped_at",
-    filters: { scraped_at: lt(threshold) },
-    limit: 10,
-  });
-
-  let count = 0;
-  for (const row of stale) {
-    const banker = await restSelectOne("bankers", {
-      select: "linkedin_url",
-      filters: { id: eq(row.banker_id) },
-    });
-    if (!banker?.linkedin_url) continue;
-    const scraped = await scrapeBankerLinkedIn(banker.linkedin_url, { bankerId: row.banker_id, cacheResult: true });
-    if (scraped) count++;
-  }
-  return count;
 }
 
 // ===== Schema proposals =====

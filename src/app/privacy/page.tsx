@@ -47,7 +47,7 @@ export default function PrivacyPage() {
               <li><strong>Supabase</strong> — database and authentication (your data is stored with row-level security so only you can access it)</li>
               <li><strong>Anthropic (Claude API)</strong> — AI text generation for resume parsing, outreach drafts, coaching, and note summaries. Your prompts are sent to Claude but are not used to train their models.</li>
               <li><strong>Google OAuth + Gmail API</strong> — if you opt in, used to send outreach and detect replies</li>
-              <li><strong>Hunter.io + Proxycurl + Google Serper</strong> — banker email lookup and LinkedIn enrichment</li>
+              <li><strong>Hunter.io + Google Serper</strong> — banker email lookup and LinkedIn discovery</li>
               <li><strong>Vercel</strong> — application hosting</li>
             </ul>
           </Section>

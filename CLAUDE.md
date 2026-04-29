@@ -46,7 +46,6 @@ Requires `.env.local` with:
 - `ANTHROPIC_API_KEY` — Claude API key (used by `src/services/claude.ts`)
 - `SERPER_API_KEY` — Google Serper fallback for LinkedIn search (gracefully degrades if missing)
 - `HUNTER_API_KEY` — Hunter.io email enrichment (Curator + Researcher; gracefully degrades)
-- `PROXYCURL_API_KEY` — Proxycurl LinkedIn profile scraping (Curator + Correspondent's `findCommonGround`; gracefully degrades)
 - `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` — Gmail OAuth (send + readonly + modify scopes)
 - `ALMA_CRON_SECRET` — bearer token protecting `/api/cron/*` endpoints
 - `SUPABASE_SERVICE_ROLE_KEY` — used server-side for service-role writes (bankers, signals, flywheel tables)
@@ -72,14 +71,14 @@ Frontend (React Context)  →  useApi.ts  →  /api/* routes  →  services/*  �
 |---|---|---|
 | `resume-parser.ts` | Extract structured UserProfile from resume text (Opus 4.7, Rice+Brown club list baked in) | Yes |
 | `agents/planner.ts` | Deterministic orchestrator; dispatches agents per user tick | No |
-| `agents/researcher.ts` | Find + rank bankers; reuses Serper/Proxycurl/Hunter | Yes |
+| `agents/researcher.ts` | Find + rank bankers; reuses Serper/Hunter | Yes |
 | `agents/correspondent.ts` | Draft emails with `findCommonGround` tool | Yes |
 | `agents/critic.ts` | Review drafts; 4-axis score; reject/revise loop | Yes |
 | `agents/watcher.ts` | Poll Gmail, classify intent, extract signals | Yes |
 | `agents/curator.ts` | 24/7 DB steward; enrichment + freshness + dedup + discovery | Yes |
 | `gmail/*` | OAuth, send, poll, thread-match | No |
 | `hunter/enrich.ts` | Email enrichment by name + domain | No |
-| `linkedin/proxycurl.ts` | Structured LinkedIn profile scrape | No |
+| `linkedin/discovery.ts` | Serper-driven LinkedIn banker discovery for the Curator | No |
 | `signals/{log,aggregate}.ts` | Flywheel writes + weekly batch | No |
 | `guardrails.ts` | Student-voice copy linting (no em-dashes, banned words) | No |
 | `linkedin-search.ts` *(legacy)* | Google Serper fallback | No |
@@ -176,4 +175,4 @@ Seed data: `src/data/` holds legacy JSON (`alumni.json`, `companies.json`, etc.)
 - Gmail OAuth app is in Google **Testing mode** for launch (≤ 100 test users, no verification required). Verification submission happens post-YC.
 - Rice + Brown alumni directory access is pending (both founders have formally asked their schools). Design treats it as a bonus `ContactSource`, never a launch gate.
 - Curator schema-proposal authority is admin-gated for v1 (all proposals land in `schema_proposals` as `pending` — Dremix approves manually). Autonomous execution is a post-launch decision.
-- Agents ship with graceful env degradation: without `ANTHROPIC_API_KEY` / `HUNTER_API_KEY` / `PROXYCURL_API_KEY` / Google OAuth creds, they log warnings and return safe defaults. The app boots regardless.
+- Agents ship with graceful env degradation: without `ANTHROPIC_API_KEY` / `HUNTER_API_KEY` / `SERPER_API_KEY` / Google OAuth creds, they log warnings and return safe defaults. The app boots regardless.

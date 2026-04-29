@@ -215,8 +215,8 @@ Logic per user per tick:
 **24/7 background worker.** Runs independent of user activity. Makes Alma's data asset a live moat instead of a frozen snapshot.
 
 **Responsibilities:**
-1. Enrichment backfill — find bankers missing LinkedIn/email/deals, queue Proxycurl/Hunter/deal-source queries.
-2. Freshness — re-scrape profiles > 60 days old.
+1. Enrichment backfill — find bankers missing LinkedIn/email/deals, queue Hunter/deal-source queries.
+2. Freshness — flag stale rows for re-discovery via Serper. (No structured LinkedIn scrape — Proxycurl removed 2026-04-29.)
 3. Discovery — scan target firms for new bankers (job changes, new hires on LinkedIn).
 4. Dedup + integrity — merge duplicates, resolve email/domain mismatches.
 5. Weekly quality audit — flag low-confidence rows, report coverage gaps to Planner.
@@ -296,12 +296,11 @@ Exact column types and FKs are owned by Dremix (user said: "u own the data"). Cu
 - Cache in Supabase (never re-bill for same name+domain)
 - Budget monitor: Curator pauses enrichment if monthly credit threshold breached
 
-### Proxycurl (or equivalent — Nubela, Coresignal, PDL)
+### LinkedIn data (no structured scrape)
 
-- Pay-as-you-go to start ($0.01-0.10 per profile)
-- `services/linkedin/proxycurl.ts` — given LinkedIn URL, return structured profile
-- Cache in `banker_profiles` table
-- 60-day re-scrape cadence via Curator
+- Original spec called for Proxycurl-style profile scrape into `banker_profiles`. Proxycurl shut down 2026-01 after the LinkedIn lawsuit; we removed all scraping code 2026-04-29.
+- Today: Curator's discovery loop uses `services/linkedin/discovery.ts` (Serper-driven LinkedIn URL harvesting) and the fact-checker re-queries Serper at draft-review time to verify role/firm claims. No banker_profiles writes.
+- If we add a paid replacement later (PDL / Apollo / Clay), it'd plug in here.
 
 ### Vercel Cron
 
@@ -331,12 +330,12 @@ Per-user, per-capability. Capabilities: `send_new_email`, `send_followup`, `send
 ### Pre-flight (tonight, 2026-04-23)
 
 - Pull `origin/main` to local
-- Sign up: Hunter.io (Starter $49/mo), Proxycurl ($10 prepaid), Vercel Cron (free), Google Cloud OAuth (Testing mode)
+- Sign up: Hunter.io (Starter $49/mo), Vercel Cron (free), Google Cloud OAuth (Testing mode). (Original plan included Proxycurl — removed 2026-04-29.)
 - Budget envelope: ~$100 across APIs for launch + first week
 
 ### Day 1 — 2026-04-24 (Dremix, backend)
 
-- **Morning:** Migration 003 + seed `firms`/`groups` from cofounder's BB/EB/MM list. Gmail OAuth integration. Hunter.io + Proxycurl clients.
+- **Morning:** Migration 003 + seed `firms`/`groups` from cofounder's BB/EB/MM list. Gmail OAuth integration. Hunter.io client.
 - **Afternoon:** Pre-launch data seeding pass — batch enrich ~500-900 bankers across 30 banks × 10 groups × 3 seniority tiers. Resume parser upgrade (Opus 4.7 + club list + verification UI).
 - **Evening:** Researcher agent. Correspondent agent with `findCommonGround`. IB-specific prompts + guardrails.
 
@@ -364,7 +363,7 @@ Per-user, per-capability. Capabilities: `send_new_email`, `send_followup`, `send
 | Risk | Mitigation |
 |---|---|
 | Gmail sensitive-scope verification | Stays in Testing mode (≤ 100 users) for launch + YC. Verification submitted post-YC. |
-| Hunter/Proxycurl credit burn | Curator throttles if > $20/day. Daily spend monitor. |
+| Hunter / Serper credit burn | Curator throttles if > $20/day. Daily spend monitor. |
 | Zero users on launch day | Pre-curated target list of ~60 known recruiters at Rice + Brown. Personal DMs, not broadcast. |
 | Critic over-rejecting | If > 50% first-48h rejection rate, drop threshold; re-tune after day 3 data. |
 | Reply-detection false positives | Start conservative (in-thread only). Loosen after day 3 review. |

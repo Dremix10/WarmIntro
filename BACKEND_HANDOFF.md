@@ -38,7 +38,6 @@ The backend for Alma IB is live. This doc tells you what it exposes, what env it
 |---|---|---|
 | Claude API | `ANTHROPIC_API_KEY` | Agents log warnings, resume parser returns empty profile. |
 | Hunter.io | `HUNTER_API_KEY` | Email enrichment returns null. |
-| Proxycurl | `PROXYCURL_API_KEY` | **Proxycurl shut down 2025-01 after LinkedIn lawsuit.** Code left in place but returns null without a key. Correspondent falls back to Serper snippets via `linkedin-search.ts`. Post-launch replacement plan below. |
 | Gmail OAuth | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` | OAuth flow returns 503. Users can't connect Gmail. |
 | Serper (legacy fallback) | `SERPER_API_KEY` | LinkedIn search returns empty. |
 | Supabase service role (for agents writing across users) | `SUPABASE_SERVICE_ROLE_KEY` | Admin client throws — agents fail loudly. |
@@ -46,17 +45,14 @@ The backend for Alma IB is live. This doc tells you what it exposes, what env it
 
 Graceful degradation is the rule: every integration boots without its key and logs a single warning.
 
-### Post-launch LinkedIn data wiring (Proxycurl replacement)
+### LinkedIn data strategy
 
-**Recommendation: People Data Labs (PDL).** Free tier: 100 credits/month, enough to validate fit on ~100 bankers. Paid: ~$50/mo for more credits. Post-lawsuit safe (licensed dataset, not scraped from LinkedIn). Same "profile by LinkedIn URL" pattern as Proxycurl.
+We **do not scrape LinkedIn profile pages.** The previous provider (Proxycurl) shut down after the LinkedIn lawsuit; we removed all scraping code rather than swap providers. Today the banker graph is built from:
 
-Implementation when ready (~2 hours):
-1. Create `services/linkedin/pdl.ts` with the same exports as the current `proxycurl.ts` — `scrapeBankerLinkedIn(linkedinUrl, opts)` returning a `BankerProfile` and `discoverBankersAtFirm(firmName, groupName, limit)` returning candidates.
-2. PDL endpoint: `POST https://api.peopledatalabs.com/v5/person/enrich` with `linkedin_url` param. Map their response fields into `BankerProfile` (education, experience, skills, interests all map cleanly).
-3. Swap the imports in `services/agents/researcher.ts`, `correspondent.ts`, `curator.ts` from `@/services/linkedin/proxycurl` to `@/services/linkedin/pdl`.
-4. Add `PDL_API_KEY` to env.
+- `bankers.title` / `firm_id` / `linkedin_url` — populated by Curator's discovery loop (Serper + LinkedIn URL parsing) and Hunter (email + position)
+- Serper snippets queried at fact-check time (Critic verifies claims by searching for name + role + firm and checking that all three co-appear in any snippet)
 
-Alternatives considered: **Apollo.io** (consolidates email + profile into one API, but forces Hunter migration — extra work for v1), **Clay.com** (aggregator, too expensive for launch), **NinjaPear** (Nubela's pivot post-Proxycurl, but it's focused on B2B company data, not individuals — wrong fit for our banker graph).
+`findCommonGround` works off these fields plus the user's profile (school overlap, major, clubs). No structured profile JSON, no recent-posts harvest. If we want richer LinkedIn data later, candidates worth evaluating: **People Data Labs** (licensed dataset, post-lawsuit safe), **Apollo.io** (consolidates email + profile), **Clay.com** (aggregator). All gated on real signal that we need them; current testing hasn't shown a gap that scraping would fill.
 
 ### Cron schedule (`vercel.json`)
 
@@ -195,7 +191,7 @@ Three capabilities, each independently at C / B / A:
 
 ### Requires Dremix (env + keys)
 
-1. Hunter.io / Proxycurl / Google OAuth accounts + keys land in `.env.local` + Vercel env. Will wire tonight.
+1. Hunter.io / Google OAuth accounts + keys land in `.env.local` + Vercel env. Will wire tonight.
 2. Supabase service role key → Vercel env (already in Supabase, just set as `SUPABASE_SERVICE_ROLE_KEY`).
 3. `ALMA_CRON_SECRET` → new random token, set in Vercel env + on the Vercel Cron entries.
 4. Gmail OAuth app published in Google Cloud (Testing mode, ≤100 users, no verification needed for launch).

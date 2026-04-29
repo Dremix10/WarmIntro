@@ -34,7 +34,7 @@ export interface Banker {
   linkedinUrl?: string;
   email?: string;
   emailVerified: boolean;
-  source: "hunter" | "serper" | "rice_directory" | "brown_directory" | "user_added" | "manual_seed" | "proxycurl" | "curator";
+  source: "hunter" | "serper" | "rice_directory" | "brown_directory" | "user_added" | "manual_seed" | "curator";
 }
 
 export interface BankerProfile {
@@ -49,7 +49,7 @@ export interface BankerProfile {
   certifications: Array<{ name: string; issuer?: string }>;
   interests: string[];
   scrapedAt?: string;
-  scrapeSource?: "proxycurl" | "serper" | "manual";
+  scrapeSource?: "serper" | "manual";
 }
 
 export interface BankerDeal {
