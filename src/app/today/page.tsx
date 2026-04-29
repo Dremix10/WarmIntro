@@ -117,6 +117,8 @@ function groupByDay(events: RecentEvent[]): Array<[string, RecentEvent[]]> {
   return [...groups.entries()];
 }
 
+interface ActionToast { id: number; message: string }
+
 export default function TodayPage() {
   const { session, authLoading } = useAppState();
   const router = useRouter();
@@ -124,6 +126,13 @@ export default function TodayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sentToast, setSentToast] = useState<{ banker: string; firm: string | null } | null>(null);
+  const [actionToasts, setActionToasts] = useState<ActionToast[]>([]);
+
+  function pushActionToast(message: string) {
+    const id = Date.now() + Math.random();
+    setActionToasts((ts) => [...ts, { id, message }]);
+    setTimeout(() => setActionToasts((ts) => ts.filter((t) => t.id !== id)), 4500);
+  }
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -168,6 +177,26 @@ export default function TodayPage() {
     payload?: Record<string, unknown>,
     opts: { deferReload?: boolean } = {}
   ): Promise<{ ok: boolean; error?: string }> {
+    // Optimistic mutation for the fast, low-risk actions: skip/mark_sent
+    // remove the draft from the queue; approve flips its status. send/stop
+    // keep their explicit in-flight state machines (sendState, scheduling
+    // pill) — those signal mid-operation progress to the user, so jumping
+    // ahead would be confusing rather than snappy.
+    let snapshot: TodayResponse | null = null;
+    setData((d) => {
+      if (!d) return d;
+      if (action === "skip" || action === "mark_sent") {
+        snapshot = d;
+        return { ...d, drafts: d.drafts.filter((x) => x.id !== draftId) };
+      }
+      if (action === "approve") {
+        snapshot = d;
+        return { ...d, drafts: d.drafts.map((x) => (x.id === draftId ? { ...x, status: "approved" } : x)) };
+      }
+      return d;
+    });
+    const didOptimistic = snapshot !== null;
+
     const { data: { session: s } } = await supabase.auth.getSession();
     let result: { ok: boolean; error?: string } = { ok: true };
     try {
@@ -186,7 +215,19 @@ export default function TodayPage() {
     } catch (err) {
       result = { ok: false, error: String(err) };
     }
-    if (!opts.deferReload) await load({ silent: true });
+
+    // Revert on failure: restore snapshot + surface the error.
+    if (!result.ok && didOptimistic && snapshot) {
+      setData(snapshot);
+      pushActionToast(`Couldn't ${action.replace("_", " ")}: ${result.error ?? "unknown error"}`);
+    }
+
+    // Skip the silent reload on optimistic success — local state is already
+    // correct. Saves a full /api/today round-trip per click. Reload on
+    // failure (to resync) or for non-optimistic actions (send/stop).
+    if (!opts.deferReload && (!didOptimistic || !result.ok)) {
+      await load({ silent: true });
+    }
     return result;
   }
 
@@ -441,6 +482,23 @@ export default function TodayPage() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Revert toasts — surfaced when an optimistic skip / approve / mark-sent
+          fails on the server. Bottom-right, auto-dismiss after 4.5s. */}
+      {actionToasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm">
+          {actionToasts.map((t) => (
+            <div
+              key={t.id}
+              role="alert"
+              className="rounded-xl bg-white border border-[#C86B4F]/40 shadow-lg px-4 py-3 text-sm text-[#14182A]"
+            >
+              <p className="text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-[#C86B4F]">Reverted</p>
+              <p>{t.message}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
