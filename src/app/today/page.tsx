@@ -29,6 +29,7 @@ interface DraftWithBanker {
   fact_check: FactCheckResult | null;
   critic_override: boolean;
   latest_review: { verdict: string; feedback: string | null; overall_score: number; created_at: string } | null;
+  iterations: Array<{ iteration: number; subject: string | null; body: string; critic_verdict: string | null; critic_feedback: string | null; critic_score: number | null; created_at: string }>;
   bankers: { name: string; title: string; email: string | null; linkedin_url: string | null; firms: { name: string } | null } | null;
 }
 
@@ -927,6 +928,36 @@ function DraftCard({
                 </ul>
               );
             })()}
+            {draft.iterations.length > 1 && (
+              <details className="mb-4 text-xs">
+                <summary className="cursor-pointer text-[10px] uppercase tracking-wider text-[#14182A]/55 hover:text-[#2E5A88] font-semibold">
+                  See all {draft.iterations.length} rejected versions
+                </summary>
+                <div className="mt-2 space-y-3">
+                  {draft.iterations.map((it) => (
+                    <div key={it.iteration} className="rounded-lg bg-[#EAE3D2]/30 p-3 border border-[#D9CFB5]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold">
+                          Iteration {it.iteration}
+                        </span>
+                        {it.critic_score !== null && (
+                          <span className="text-[10px] text-[#C86B4F] font-medium">
+                            score {it.critic_score.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {it.subject && <p className="font-medium text-[#14182A]/80 italic font-[family-name:var(--font-fraunces)] mb-1">{it.subject}</p>}
+                      <pre className="text-[#14182A]/70 whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[11px]">{it.body}</pre>
+                      {it.critic_feedback && (
+                        <p className="mt-2 pt-2 border-t border-[#D9CFB5] text-[#C86B4F] italic">
+                          Critic: &ldquo;{it.critic_feedback}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
             <div className="flex gap-2 justify-end">
               <button
                 type="button"

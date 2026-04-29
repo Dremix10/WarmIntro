@@ -60,12 +60,25 @@ function classifySource(url: string): ScoutedFinding["sourceType"] {
   return "other";
 }
 
-// Filter results: must reference the banker by name in title or snippet.
-// Stops Serper from returning generic "Morgan Stanley TMT outlook" articles
-// that don't actually mention the specific banker.
+// Filter results: must reference THIS specific banker, not just someone
+// who shares the name. For common names ("Christian Saldana", "John Smith")
+// the name alone is a terrible filter — Serper returns articles about high
+// school football players, middle schoolers, etc. So we ALSO require either
+// (a) the firm name appearing in the same result, OR (b) the result being
+// the banker's own LinkedIn URL slug. Without this gate, the cache fills
+// with wrong-person mentions that the Correspondent then treats as real.
 function mentionsBanker(banker: ScoutInput, organic: SerperOrganic): boolean {
-  const haystack = `${organic.title} ${organic.snippet ?? ""}`.toLowerCase();
-  return haystack.includes(banker.bankerName.toLowerCase());
+  const haystack = `${organic.title} ${organic.snippet ?? ""} ${organic.link}`.toLowerCase();
+  const nameHit = haystack.includes(banker.bankerName.toLowerCase());
+  if (!nameHit) return false;
+  // Disambiguation: require firm or the banker's exact LinkedIn slug.
+  const firmHit = banker.firmName ? haystack.includes(banker.firmName.toLowerCase()) : false;
+  let slugHit = false;
+  if (banker.linkedinUrl) {
+    const slug = banker.linkedinUrl.replace(/.*linkedin\.com\/in\//, "").replace(/[/?#].*$/, "").toLowerCase();
+    if (slug && organic.link.toLowerCase().includes(`/in/${slug}`)) slugHit = true;
+  }
+  return firmHit || slugHit;
 }
 
 // Drop the generic LinkedIn directory pages — they aren't findings.

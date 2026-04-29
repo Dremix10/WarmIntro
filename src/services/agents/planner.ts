@@ -224,7 +224,11 @@ async function draftWithCriticLoop(
   threadContext?: { daysSilent?: number; incomingReplyBody?: string; previousMessageBodyPreview?: string }
 ): Promise<"approved" | "rejected" | "escalated" | "no_anchor"> {
   let iteration = 0;
-  let revisionFeedback: string | undefined;
+  // Cumulative feedback — every prior Critic verdict, not just the latest.
+  // Without this, the Correspondent forgets iter 0's "no career-arc framing"
+  // lesson when it sees iter 1's different feedback, and we end up
+  // reintroducing banned phrases on iter 2. Empirically observed.
+  const revisionFeedbackHistory: string[] = [];
   let existingDraftId: string | undefined;
 
   while (iteration < MAX_ITERATIONS_CORRESPONDENT_CRITIC) {
@@ -234,7 +238,7 @@ async function draftWithCriticLoop(
       bankerId,
       connectionId,
       threadContext,
-      revisionFeedback,
+      revisionFeedbackHistory: revisionFeedbackHistory.length > 0 ? [...revisionFeedbackHistory] : undefined,
       existingDraftId,
       iteration,
     });
@@ -246,7 +250,7 @@ async function draftWithCriticLoop(
     const review = await runCritic({ draftId: draft.draftId });
     if (review.verdict === "approve") return "approved";
     if (review.verdict === "escalate_to_planner") return "escalated";
-    revisionFeedback = review.feedback;
+    if (review.feedback) revisionFeedbackHistory.push(review.feedback);
     iteration++;
   }
   return "rejected";

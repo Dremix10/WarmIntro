@@ -21,15 +21,25 @@ export async function GET(request: Request) {
   // claims). Single roundtrip — pull all reviews for these drafts and
   // collapse to the latest per draft on the server.
   const draftIds = (drafts ?? []).map((d) => d.id);
-  let latestReviewByDraft: Record<string, { verdict: string; feedback: string | null; overall_score: number; created_at: string } | undefined> = {};
+  const latestReviewByDraft: Record<string, { verdict: string; feedback: string | null; overall_score: number; created_at: string } | undefined> = {};
+  // Plus all iteration history so the user can review every rejected
+  // version, not just the final body. Especially important for escalated
+  // drafts where the user is being asked to override.
+  const iterationsByDraft: Record<string, Array<{ iteration: number; subject: string | null; body: string; critic_verdict: string | null; critic_feedback: string | null; critic_score: number | null; created_at: string }>> = {};
   if (draftIds.length > 0) {
-    const { data: reviews } = await ctx.supabase
-      .from("critic_reviews")
-      .select("draft_id, verdict, feedback, overall_score, created_at")
-      .in("draft_id", draftIds)
-      .order("created_at", { ascending: false });
-    latestReviewByDraft = {};
-    for (const r of reviews ?? []) {
+    const [reviewsRes, iterRes] = await Promise.all([
+      ctx.supabase
+        .from("critic_reviews")
+        .select("draft_id, verdict, feedback, overall_score, created_at")
+        .in("draft_id", draftIds)
+        .order("created_at", { ascending: false }),
+      ctx.supabase
+        .from("draft_iterations")
+        .select("draft_id, iteration, subject, body, critic_verdict, critic_feedback, critic_score, created_at")
+        .in("draft_id", draftIds)
+        .order("iteration", { ascending: true }),
+    ]);
+    for (const r of reviewsRes.data ?? []) {
       if (!latestReviewByDraft[r.draft_id]) {
         latestReviewByDraft[r.draft_id] = {
           verdict: r.verdict,
@@ -39,8 +49,24 @@ export async function GET(request: Request) {
         };
       }
     }
+    for (const it of iterRes.data ?? []) {
+      if (!iterationsByDraft[it.draft_id]) iterationsByDraft[it.draft_id] = [];
+      iterationsByDraft[it.draft_id].push({
+        iteration: it.iteration,
+        subject: it.subject,
+        body: it.body,
+        critic_verdict: it.critic_verdict,
+        critic_feedback: it.critic_feedback,
+        critic_score: it.critic_score === null ? null : Number(it.critic_score),
+        created_at: it.created_at,
+      });
+    }
   }
-  const draftsWithReview = (drafts ?? []).map((d) => ({ ...d, latest_review: latestReviewByDraft[d.id] ?? null }));
+  const draftsWithReview = (drafts ?? []).map((d) => ({
+    ...d,
+    latest_review: latestReviewByDraft[d.id] ?? null,
+    iterations: iterationsByDraft[d.id] ?? [],
+  }));
 
   const { data: trust } = await ctx.supabase
     .from("trust_levels")

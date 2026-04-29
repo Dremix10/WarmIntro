@@ -279,6 +279,30 @@ async function persistReview(opts: {
   if (reviewId) {
     await restUpdate("drafts", { critic_review_id: reviewId }, { id: eq(opts.draftId) });
   }
+
+  // Snapshot the draft's current body+verdict into draft_iterations so we
+  // preserve every revise step. Without this, the iter 0 and iter 1 bodies
+  // are lost when the Correspondent UPDATEs the row in place. Subsequent
+  // iterations of Correspondent now have access to their own past attempts.
+  const draft = await restSelectOne("drafts", {
+    select: "subject, body, guardrail_flags, fact_check, iteration_count",
+    filters: { id: eq(opts.draftId) },
+  });
+  if (draft) {
+    await restInsert("draft_iterations", {
+      draft_id: opts.draftId,
+      iteration: draft.iteration_count,
+      subject: draft.subject,
+      body: draft.body,
+      guardrail_flags: draft.guardrail_flags,
+      fact_check: draft.fact_check,
+      critic_review_id: reviewId || null,
+      critic_verdict: opts.verdict,
+      critic_feedback: opts.feedback ?? null,
+      critic_score: opts.overallScore,
+    });
+  }
+
   return {
     reviewId,
     scores: opts.scores,

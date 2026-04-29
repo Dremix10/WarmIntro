@@ -17,7 +17,11 @@ export interface CorrespondentInput {
     daysSilent?: number;
     incomingReplyBody?: string;
   };
-  revisionFeedback?: string; // from Critic on re-draft
+  // Cumulative feedback from EVERY prior Critic iteration on this draft.
+  // The model needs the full history — without it, iter 2 forgets what
+  // iter 0 said and re-introduces the same banned phrasing. Index 0 is
+  // iter 0's feedback, index 1 is iter 1's, etc.
+  revisionFeedbackHistory?: string[];
   // Set by the Critic-loop on revise iterations. The unique index
   // uq_drafts_active_user_banker_type forbids two active drafts for the same
   // (user, banker, type), so revise iterations MUST UPDATE the existing draft
@@ -204,7 +208,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
     const drafted = await askClaudeJSON<{ subject: string; body: string }>(draftingPrompt, {
       systemPrompt: systemPromptForType(input.type),
       maxTokens: 1024,
-      skipCache: Boolean(input.revisionFeedback), // on revision, don't reuse cache
+      skipCache: Boolean(input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0), // on revision, don't reuse cache
     });
 
     // Step 3: Apply guardrails
@@ -361,8 +365,17 @@ function buildDraftPrompt(
   if (input.threadContext?.daysSilent !== undefined) {
     parts.push(`DAYS SINCE LAST CONTACT: ${input.threadContext.daysSilent}\n`);
   }
-  if (input.revisionFeedback) {
-    parts.push(`REVISION FEEDBACK FROM CRITIC (address these specifically):\n${input.revisionFeedback}\n`);
+  if (input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0) {
+    // Show ALL prior Critic verdicts so the model sees the cumulative
+    // critique. Without this, iter 2 forgets iter 0's lesson and re-
+    // introduces the same banned framing the Critic already rejected.
+    parts.push(
+      `CRITIC REVISION HISTORY — every prior attempt got rejected for the reason listed. Address ALL of these in this rewrite, not just the latest:\n` +
+        input.revisionFeedbackHistory
+          .map((f, i) => `[Iteration ${i} REJECTED]: ${f}`)
+          .join("\n") +
+        `\n\nThis is your FINAL attempt before the draft escalates. If you reuse a pattern any prior iteration was rejected for, the draft fails.\n`
+    );
   }
 
   parts.push(`Return JSON: {"subject": string, "body": string}`);

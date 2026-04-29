@@ -92,4 +92,35 @@ export const BANNED_PHRASES = [
   "reaching out to",
   "please find attached",
   "at your earliest convenience",
+  // Career-arc framing — the Correspondent's most stubborn AI tell.
+  // These all imply the student knows the banker's career history they
+  // don't actually know. Critic flags them every time, so we catch them
+  // deterministically in guardrails before Critic even has to weigh in.
+  "made the move from",
+  "made the switch from",
+  "made the transition from",
+  "made the jump from",
+  "made the leap from",
+  "your move from",
+  "your switch from",
+  "your transition from",
+  "your jump from",
+  "your leap from",
+  "your path from",
+  "your journey from",
+  "the move from",
+  "the switch from",
+  "the transition from",
+  "transitioning from",
+  "transitioned from",
+  "from our campus to",
+  "from school to",
+  // Other common AI-tells
+  "i am writing to",
+  "i wanted to reach out",
+  "i would love the opportunity",
+  "would love the opportunity to",
+  "your impressive",
+  "your fascinating",
+  "i greatly admire",
 ];
