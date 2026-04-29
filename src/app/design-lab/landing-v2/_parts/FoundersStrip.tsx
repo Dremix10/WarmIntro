@@ -14,11 +14,11 @@ export function FoundersStrip() {
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
           Who built this
         </p>
-        <h2 className="mt-3 text-[34px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[56px]">
-          <span className="block whitespace-nowrap italic text-[#2E5A88]">
+        <h2 className="mt-3 text-[30px] leading-[1.1] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[56px]">
+          <span className="block italic text-[#2E5A88] md:whitespace-nowrap">
             We&rsquo;re sophomores too.
           </span>
-          <span className="block whitespace-nowrap">We built Alma for our cycle.</span>
+          <span className="block md:whitespace-nowrap">We built Alma for our cycle.</span>
         </h2>
       </Reveal>
 

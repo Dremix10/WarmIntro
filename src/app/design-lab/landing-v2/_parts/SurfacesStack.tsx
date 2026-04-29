@@ -112,8 +112,7 @@ export function SurfacesStack() {
   return (
     <section
       ref={sectionRef}
-      className="relative"
-      style={{ minHeight: "180vh" }}
+      className="relative min-h-[150vh] md:min-h-[180vh]"
       aria-label="Three product surfaces"
     >
       <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-6xl flex-col justify-center px-6 py-10 md:py-14">

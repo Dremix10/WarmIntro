@@ -154,8 +154,7 @@ export function AgentLoop() {
   return (
     <section
       ref={sectionRef}
-      className="relative"
-      style={{ minHeight: "180vh" }}
+      className="relative min-h-[140vh] md:min-h-[180vh]"
       aria-label="The agent loop, one banker through the pipeline"
     >
       <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-6xl flex-col justify-center px-6 py-10 md:py-14">
@@ -169,7 +168,7 @@ export function AgentLoop() {
         </div>
 
         {/* Horizontal pipeline of step chips */}
-        <div className="agent-pipeline mx-auto mt-12 flex w-full max-w-5xl items-stretch gap-2 overflow-x-auto pb-2 md:gap-3 md:overflow-visible">
+        <div className="agent-pipeline mx-auto mt-10 hidden w-full max-w-5xl items-stretch gap-2 md:mt-12 md:flex md:gap-3">
           {STEPS.map((s, i) => {
             const state =
               i < activeIndex ? "done" : i === activeIndex ? "active" : "folded";
@@ -177,7 +176,7 @@ export function AgentLoop() {
               <div
                 key={i}
                 data-state={state}
-                className="agent-chip relative flex w-[122px] shrink-0 flex-col rounded-xl border border-[#D9CFB5] bg-white p-3 md:w-auto md:flex-1"
+                className="agent-chip relative flex flex-1 flex-col rounded-xl border border-[#D9CFB5] bg-white p-3"
               >
                 <div className="flex items-center justify-between gap-1">
                   <span className="font-mono text-[10px] tracking-[0.08em] text-[#8A8674]">

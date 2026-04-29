@@ -115,8 +115,7 @@ export function TrustGradient() {
   return (
     <section
       ref={sectionRef}
-      className="relative"
-      style={{ minHeight: "150vh" }}
+      className="relative min-h-[120vh] md:min-h-[150vh]"
       aria-label="Trust gradient"
     >
       <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-3xl flex-col justify-center px-6 py-10 md:py-14">
