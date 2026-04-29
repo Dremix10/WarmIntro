@@ -1,7 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic();
+// Default model for cheap/parallel work (Researcher Serper synthesis,
+// fact-check extract, Scout classification). Correspondent + Critic
+// override to Opus because Sonnet ignored both system-prompt HARD BANS
+// and cumulative revision history during testing — Opus follows
+// instructions more reliably and the per-call cost is justified.
 const MODEL = "claude-sonnet-4-20250514";
+export const OPUS_MODEL = "claude-opus-4-20250514";
 
 const MAX_CACHE_SIZE = 200;
 const cache = new Map<string, string>();
@@ -22,17 +28,21 @@ export async function askClaude(
     systemPrompt?: string;
     maxTokens?: number;
     skipCache?: boolean;
+    model?: string;
   }
 ): Promise<string> {
   const maxTokens = options?.maxTokens ?? 1024;
-  const key = hashKey(prompt, options?.systemPrompt);
+  const model = options?.model ?? MODEL;
+  // Cache is keyed on (model + system + prompt) so two callers with
+  // different models don't collide.
+  const key = hashKey(prompt, `${model}::${options?.systemPrompt ?? ""}`);
 
   if (!options?.skipCache && cache.has(key)) {
     return cache.get(key)!;
   }
 
   const response = await client.messages.create({
-    model: MODEL,
+    model,
     max_tokens: maxTokens,
     ...(options?.systemPrompt ? { system: options.systemPrompt } : {}),
     messages: [{ role: "user", content: prompt }],
@@ -57,6 +67,7 @@ export async function askClaudeJSON<T>(
     systemPrompt?: string;
     maxTokens?: number;
     skipCache?: boolean;
+    model?: string;
   }
 ): Promise<T> {
   const systemPrompt = [

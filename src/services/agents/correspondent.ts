@@ -2,6 +2,7 @@
 // Uses findCommonGround tool; applies guardrails; Critic reviews the output
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
+import { OPUS_MODEL } from "@/services/claude";
 import { restSelectOne, restSelect, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
 import { applyGuardrails } from "@/services/guardrails";
 import { scoutBankerFindings, type ScoutedFinding } from "./scout";
@@ -208,7 +209,11 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
     const drafted = await askClaudeJSON<{ subject: string; body: string }>(draftingPrompt, {
       systemPrompt: systemPromptForType(input.type),
       maxTokens: 1024,
-      skipCache: Boolean(input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0), // on revision, don't reuse cache
+      // Opus follows the HARD BANS list and cumulative revision history more
+      // reliably than Sonnet. The drafted email is the centerpiece of the
+      // product — instruction-following matters more than per-call cost.
+      model: OPUS_MODEL,
+      skipCache: Boolean(input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0),
     });
 
     // Step 3: Apply guardrails
