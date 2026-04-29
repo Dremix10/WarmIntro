@@ -28,6 +28,8 @@ interface DraftWithBanker {
   scheduled_send_at: string | null;
   fact_check: FactCheckResult | null;
   critic_override: boolean;
+  latest_review: { verdict: string; feedback: string | null; overall_score: number; created_at: string } | null;
+  iterations: Array<{ iteration: number; subject: string | null; body: string; critic_verdict: string | null; critic_feedback: string | null; critic_score: number | null; created_at: string }>;
   bankers: { name: string; title: string; email: string | null; linkedin_url: string | null; firms: { name: string } | null } | null;
 }
 
@@ -115,6 +117,8 @@ function groupByDay(events: RecentEvent[]): Array<[string, RecentEvent[]]> {
   return [...groups.entries()];
 }
 
+interface ActionToast { id: number; message: string }
+
 export default function TodayPage() {
   const { session, authLoading } = useAppState();
   const router = useRouter();
@@ -122,6 +126,13 @@ export default function TodayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sentToast, setSentToast] = useState<{ banker: string; firm: string | null } | null>(null);
+  const [actionToasts, setActionToasts] = useState<ActionToast[]>([]);
+
+  function pushActionToast(message: string) {
+    const id = Date.now() + Math.random();
+    setActionToasts((ts) => [...ts, { id, message }]);
+    setTimeout(() => setActionToasts((ts) => ts.filter((t) => t.id !== id)), 4500);
+  }
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -166,6 +177,36 @@ export default function TodayPage() {
     payload?: Record<string, unknown>,
     opts: { deferReload?: boolean } = {}
   ): Promise<{ ok: boolean; error?: string }> {
+    // Optimistic mutation for the fast, low-risk actions: skip/mark_sent
+    // remove the draft from the queue; approve flips its status. send/stop
+    // keep their explicit in-flight state machines (sendState, scheduling
+    // pill) — those signal mid-operation progress to the user, so jumping
+    // ahead would be confusing rather than snappy.
+    //
+    // Revert is per-draft (not whole-snapshot). If a parallel skip on a
+    // different draft fails while ours succeeds, we don't want to restore
+    // the whole list and undo the parallel optimistic update — only the
+    // failing row's prior state should come back.
+    let prevDraftSnapshot: DraftWithBanker | null = null;
+    let prevIndex = -1;
+    const isOptimistic = action === "skip" || action === "mark_sent" || action === "approve";
+
+    if (isOptimistic) {
+      setData((d) => {
+        if (!d) return d;
+        const idx = d.drafts.findIndex((x) => x.id === draftId);
+        if (idx === -1) return d;
+        prevDraftSnapshot = d.drafts[idx];
+        prevIndex = idx;
+        if (action === "skip" || action === "mark_sent") {
+          return { ...d, drafts: d.drafts.filter((x) => x.id !== draftId) };
+        }
+        // approve
+        return { ...d, drafts: d.drafts.map((x) => (x.id === draftId ? { ...x, status: "approved" } : x)) };
+      });
+    }
+    const didOptimistic = isOptimistic && prevDraftSnapshot !== null;
+
     const { data: { session: s } } = await supabase.auth.getSession();
     let result: { ok: boolean; error?: string } = { ok: true };
     try {
@@ -184,7 +225,35 @@ export default function TodayPage() {
     } catch (err) {
       result = { ok: false, error: String(err) };
     }
-    if (!opts.deferReload) await load({ silent: true });
+
+    // Revert on failure: only this draft, not the whole snapshot. Other
+    // optimistic updates that landed in parallel are preserved.
+    if (!result.ok && didOptimistic && prevDraftSnapshot) {
+      const original = prevDraftSnapshot as DraftWithBanker;
+      const insertAt = prevIndex;
+      setData((d) => {
+        if (!d) return d;
+        // If the draft already exists in the list (approve revert), flip its
+        // status back. Otherwise (skip/mark_sent revert), splice it back at
+        // its prior index.
+        const exists = d.drafts.some((x) => x.id === original.id);
+        if (exists) {
+          return { ...d, drafts: d.drafts.map((x) => (x.id === original.id ? original : x)) };
+        }
+        const next = [...d.drafts];
+        const safeIndex = Math.min(Math.max(insertAt, 0), next.length);
+        next.splice(safeIndex, 0, original);
+        return { ...d, drafts: next };
+      });
+      pushActionToast(`Couldn't ${action.replace("_", " ")}: ${result.error ?? "unknown error"}`);
+    }
+
+    // Skip the silent reload on optimistic success — local state is already
+    // correct. Saves a full /api/today round-trip per click. Reload on
+    // failure (to resync) or for non-optimistic actions (send/stop).
+    if (!opts.deferReload && (!didOptimistic || !result.ok)) {
+      await load({ silent: true });
+    }
     return result;
   }
 
@@ -220,9 +289,14 @@ export default function TodayPage() {
 
   if (!data) return null;
 
-  const pending = data.drafts.filter((d) => d.status === "pending_critic" || d.status === "needs_revision");
+  // Bucket all "user needs to act" drafts together. Escalated drafts
+  // (Critic stuck after 3 iterations) are real drafts with real bodies — they
+  // need to render through the same DraftCard as needs_revision, just with
+  // the "Critic stuck" badge so the user sees the override flow.
+  const pending = data.drafts.filter(
+    (d) => d.status === "pending_critic" || d.status === "needs_revision" || d.status === "rejected_unresolvable"
+  );
   const approved = data.drafts.filter((d) => d.status === "approved");
-  const escalated = data.drafts.filter((d) => d.status === "rejected_unresolvable");
   // Split active drafts by type so cold outreach and follow-ups visually
   // separate. The user asked for clarity on which is which (some users
   // want to send cold first and bench follow-ups, or vice versa).
@@ -243,7 +317,7 @@ export default function TodayPage() {
               Your queue
             </h1>
             <p className="mt-2 text-sm text-[#14182A]/70">
-              {approved.length} ready to send · {pending.length} in review · {escalated.length} need data
+              {approved.length} ready to send · {pending.length} in review
             </p>
             {/* Anchor jumps — quick navigation between sections */}
             {(approvedCold.length + approvedFollowup.length + pendingCold.length + pendingFollowup.length) > 0 && (
@@ -378,22 +452,6 @@ export default function TodayPage() {
           );
         })()}
 
-        {/* Escalated */}
-        {escalated.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-xs uppercase tracking-wider text-[#14182A]/40 font-semibold mb-3">Need more data</h2>
-            <div className="space-y-3">
-              {escalated.map((d) => (
-                <div key={d.id} className="rounded-2xl bg-white p-4 border border-[#D9CFB5] opacity-70">
-                  <p className="text-sm">
-                    Critic rejected this draft 3 times. Researcher will enrich the banker and retry this week.
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Empty state — RunAlmaNowButton already lives in the page header,
             so we just point to it here. Two buttons that fire the same API
             in parallel was producing duplicate drafts when spam-clicked. */}
@@ -450,6 +508,23 @@ export default function TodayPage() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Revert toasts — surfaced when an optimistic skip / approve / mark-sent
+          fails on the server. Bottom-right, auto-dismiss after 4.5s. */}
+      {actionToasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm">
+          {actionToasts.map((t) => (
+            <div
+              key={t.id}
+              role="alert"
+              className="rounded-xl bg-white border border-[#C86B4F]/40 shadow-lg px-4 py-3 text-sm text-[#14182A]"
+            >
+              <p className="text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-[#C86B4F]">Reverted</p>
+              <p>{t.message}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -709,6 +784,36 @@ function DraftCard({
               </details>
             );
           })()}
+          {draft.iterations.length > 1 && (
+            <details className="mt-3 rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-3 text-xs">
+              <summary className="cursor-pointer text-[10px] uppercase tracking-[0.15em] font-semibold text-[#14182A]/60 hover:text-[#2E5A88]">
+                Critic history · {draft.iterations.length} attempts
+              </summary>
+              <div className="mt-3 space-y-3">
+                {draft.iterations.map((it) => (
+                  <div key={it.iteration} className="rounded-lg bg-white p-3 border border-[#D9CFB5]">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold">
+                        Iteration {it.iteration}
+                      </span>
+                      {it.critic_score !== null && (
+                        <span className="text-[10px] text-[#C86B4F] font-medium">
+                          score {it.critic_score.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    {it.subject && <p className="font-medium text-[#14182A]/80 italic font-[family-name:var(--font-fraunces)] mb-1">{it.subject}</p>}
+                    <pre className="text-[#14182A]/70 whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[11px]">{it.body}</pre>
+                    {it.critic_feedback && (
+                      <p className="mt-2 pt-2 border-t border-[#EAE3D2] text-[#C86B4F] italic">
+                        Critic: &ldquo;{it.critic_feedback}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             {draft.status === "approved" ? (
               <>
@@ -909,22 +1014,25 @@ function DraftCard({
             className="bg-white rounded-2xl border border-[#C86B4F]/40 max-w-md w-full p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Override fact-check</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Override Critic</p>
             <h3 className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Send despite Critic flag?</h3>
             <p className="text-sm text-[#14182A]/70 mb-3">
-              Alma&rsquo;s Critic flagged claims it couldn&rsquo;t verify online. Sending anyway is fine if you know they&rsquo;re correct, but the override is recorded.
+              Sending anyway is fine if you know the email is right — the override is recorded so we can learn from these.
             </p>
+            {draft.latest_review?.feedback && (
+              <div className="mb-3 rounded-lg bg-[#EAE3D2]/40 p-3 text-xs">
+                <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50 font-semibold mb-1">
+                  Critic feedback (score {Number(draft.latest_review.overall_score).toFixed(2)} / 10)
+                </p>
+                <p className="text-[#14182A] italic">&ldquo;{draft.latest_review.feedback}&rdquo;</p>
+              </div>
+            )}
             {(() => {
               const flagged = draft.fact_check?.checks.filter((c) => c.verdict !== "verified") ?? [];
-              if (flagged.length === 0) {
-                return (
-                  <p className="text-xs text-[#14182A]/60 italic mb-4">
-                    No specific claims flagged — Critic rejected on tone or guardrails. Edit if you want, or send as-is.
-                  </p>
-                );
-              }
+              if (flagged.length === 0) return null;
               return (
                 <ul className="text-xs space-y-2 mb-4 bg-[#EAE3D2]/40 rounded-lg p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-[#14182A]/50 font-semibold mb-1">Unverifiable claims</p>
                   {flagged.map((c, i) => (
                     <li key={i} className="border-l-2 border-[#C86B4F] pl-2">
                       <p className="text-[#14182A]"><span className="text-[#C86B4F] font-semibold uppercase tracking-wider text-[10px]">{c.verdict}:</span> &ldquo;{c.claim}&rdquo;</p>
@@ -934,6 +1042,36 @@ function DraftCard({
                 </ul>
               );
             })()}
+            {draft.iterations.length > 1 && (
+              <details className="mb-4 text-xs">
+                <summary className="cursor-pointer text-[10px] uppercase tracking-wider text-[#14182A]/55 hover:text-[#2E5A88] font-semibold">
+                  See all {draft.iterations.length} rejected versions
+                </summary>
+                <div className="mt-2 space-y-3">
+                  {draft.iterations.map((it) => (
+                    <div key={it.iteration} className="rounded-lg bg-[#EAE3D2]/30 p-3 border border-[#D9CFB5]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold">
+                          Iteration {it.iteration}
+                        </span>
+                        {it.critic_score !== null && (
+                          <span className="text-[10px] text-[#C86B4F] font-medium">
+                            score {it.critic_score.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {it.subject && <p className="font-medium text-[#14182A]/80 italic font-[family-name:var(--font-fraunces)] mb-1">{it.subject}</p>}
+                      <pre className="text-[#14182A]/70 whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[11px]">{it.body}</pre>
+                      {it.critic_feedback && (
+                        <p className="mt-2 pt-2 border-t border-[#D9CFB5] text-[#C86B4F] italic">
+                          Critic: &ldquo;{it.critic_feedback}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
             <div className="flex gap-2 justify-end">
               <button
                 type="button"

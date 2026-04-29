@@ -186,15 +186,20 @@ async function alreadyContactedBankerIds(userId: string): Promise<string[]> {
     select: "banker_id",
     filters: { user_id: eq(userId) },
   });
-  // 2. Bankers we have an *active* draft for (queued, in review, approved-not-sent).
-  //    Without this, a parallel run-now click or a cron-overlap can produce two
-  //    drafts to the same banker. Skipped/sent drafts don't block — the user
-  //    might want to retry a skipped one later.
+  // 2. Bankers we have an *active* draft for (queued, in review,
+  //    approved-not-sent, or escalated). Without this, a parallel run-now
+  //    click or a cron-overlap can produce two drafts to the same banker.
+  //    rejected_unresolvable is included because once Critic gives up after
+  //    3 iterations, retrying the same banker with the same prompt would
+  //    just produce another rejection — better to surface the existing
+  //    draft for the user to override or skip than to spawn duplicates.
+  //    Skipped/sent drafts don't block — the user might want to retry a
+  //    skipped one later.
   const activeDrafts = await restSelect("drafts", {
     select: "banker_id",
     filters: {
       user_id: eq(userId),
-      status: `in.("pending_critic","needs_revision","approved")`,
+      status: `in.("pending_critic","needs_revision","approved","rejected_unresolvable")`,
       sent_at: isNull,
     },
   });

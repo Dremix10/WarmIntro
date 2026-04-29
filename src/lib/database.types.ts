@@ -54,6 +54,110 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_iterations: {
+        Row: {
+          id: string
+          draft_id: string
+          iteration: number
+          subject: string | null
+          body: string
+          guardrail_flags: Json | null
+          fact_check: Json | null
+          critic_review_id: string | null
+          critic_verdict: string | null
+          critic_feedback: string | null
+          critic_score: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          draft_id: string
+          iteration: number
+          subject?: string | null
+          body: string
+          guardrail_flags?: Json | null
+          fact_check?: Json | null
+          critic_review_id?: string | null
+          critic_verdict?: string | null
+          critic_feedback?: string | null
+          critic_score?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          draft_id?: string
+          iteration?: number
+          subject?: string | null
+          body?: string
+          guardrail_flags?: Json | null
+          fact_check?: Json | null
+          critic_review_id?: string | null
+          critic_verdict?: string | null
+          critic_feedback?: string | null
+          critic_score?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_iterations_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_iterations_critic_review_id_fkey"
+            columns: ["critic_review_id"]
+            isOneToOne: false
+            referencedRelation: "critic_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banker_findings: {
+        Row: {
+          id: string
+          banker_id: string
+          url: string
+          title: string
+          snippet: string | null
+          source_type: string
+          published_hint: string | null
+          scouted_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          banker_id: string
+          url: string
+          title: string
+          snippet?: string | null
+          source_type: string
+          published_hint?: string | null
+          scouted_at?: string
+          expires_at?: string
+        }
+        Update: {
+          id?: string
+          banker_id?: string
+          url?: string
+          title?: string
+          snippet?: string | null
+          source_type?: string
+          published_hint?: string | null
+          scouted_at?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banker_findings_banker_id_fkey"
+            columns: ["banker_id"]
+            isOneToOne: false
+            referencedRelation: "bankers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banker_deals: {
         Row: {
           acquirer_company: string | null
@@ -373,6 +477,7 @@ export type Database = {
           fact_check: Json | null
           guardrail_flags: Json
           critic_override: boolean
+          gmail_draft_id: string | null
           id: string
           iteration_count: number
           pre_edit_ai_body: string | null
@@ -394,6 +499,7 @@ export type Database = {
           critic_override?: boolean
           critic_review_id?: string | null
           fact_check?: Json | null
+          gmail_draft_id?: string | null
           guardrail_flags?: Json
           id?: string
           iteration_count?: number
@@ -416,6 +522,7 @@ export type Database = {
           critic_override?: boolean
           critic_review_id?: string | null
           fact_check?: Json | null
+          gmail_draft_id?: string | null
           guardrail_flags?: Json
           id?: string
           iteration_count?: number

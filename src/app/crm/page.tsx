@@ -67,17 +67,54 @@ const STAGE_COLOR: Record<Stage, string> = {
   closed_lost: "bg-[#5C6472]/20 text-[#5C6472]",
 };
 
+interface ToastMsg { id: number; message: string; kind: "error" | "info" }
+
 export default function CrmPage() {
   const { session, authLoading } = useAppState();
   const router = useRouter();
   const [rows, setRows] = useState<CrmRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeBankerId, setActiveBankerId] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastMsg[]>([]);
 
   useEffect(() => {
     if (!authLoading && !session) { router.push("/login"); return; }
     if (session) load();
   }, [authLoading, session?.user?.id]);
+
+  function pushToast(message: string, kind: ToastMsg["kind"] = "error") {
+    const id = Date.now() + Math.random();
+    setToasts((ts) => [...ts, { id, message, kind }]);
+    setTimeout(() => setToasts((ts) => ts.filter((t) => t.id !== id)), 4000);
+  }
+
+  // Optimistic stage move: update local state instantly, fire the request in
+  // the background, revert + toast on failure. Replaces the old "wait for
+  // server then re-load every row" flow that made every click feel sluggish.
+  async function moveStage(rowId: string, newStage: Stage) {
+    const target = rows.find((r) => r.id === rowId);
+    if (!target || target.stage === "draft") return;
+    const prevStage = target.stage;
+    const nowIso = new Date().toISOString();
+
+    setRows((rs) => rs.map((r) => (r.id === rowId ? { ...r, stage: newStage, updatedAt: nowIso } : r)));
+
+    try {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      const res = await fetch(`/api/connections/${rowId}/stage`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: newStage }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(err.error ?? `HTTP ${res.status}`);
+      }
+    } catch (err) {
+      setRows((rs) => rs.map((r) => (r.id === rowId ? { ...r, stage: prevStage } : r)));
+      pushToast(`Couldn't move ${target.name}: ${err instanceof Error ? err.message : "unknown error"}`);
+    }
+  }
 
   async function load() {
     if (!session) return;
@@ -211,7 +248,7 @@ export default function CrmPage() {
                         </div>
                       ) : (
                         items.map((r) => (
-                          <CrmCard key={r.id} row={r} onAdvanced={load} onOpen={() => setActiveBankerId(r.bankerId)} />
+                          <CrmCard key={r.id} row={r} onMove={moveStage} onOpen={() => setActiveBankerId(r.bankerId)} />
                         ))
                       )}
                     </div>
@@ -231,6 +268,29 @@ export default function CrmPage() {
           onClose={() => setActiveBankerId(null)}
         />
       )}
+
+      {/* Toast stack — renders revert messages from the optimistic move flow.
+          Stays bottom-right, auto-dismisses after 4s. */}
+      {toasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              role="alert"
+              className={`rounded-xl border shadow-lg px-4 py-3 text-sm ${
+                t.kind === "error"
+                  ? "bg-white border-[#C86B4F]/40 text-[#14182A]"
+                  : "bg-white border-[#D9CFB5] text-[#14182A]"
+              }`}
+            >
+              <p className={`text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${t.kind === "error" ? "text-[#C86B4F]" : "text-[#2E5A88]"}`}>
+                {t.kind === "error" ? "Reverted" : "Heads up"}
+              </p>
+              <p>{t.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -246,8 +306,7 @@ function Stat({ label, value, accent, muted }: { label: string; value: number | 
   );
 }
 
-function CrmCard({ row, onAdvanced, onOpen }: { row: CrmRow; onAdvanced: () => Promise<void> | void; onOpen: () => void }) {
-  const [busy, setBusy] = useState(false);
+function CrmCard({ row, onMove, onOpen }: { row: CrmRow; onMove: (rowId: string, stage: Stage) => void; onOpen: () => void }) {
   const [showLost, setShowLost] = useState(false);
 
   // Determine next/prev stage for the advance buttons. Draft → sent is handled
@@ -256,21 +315,9 @@ function CrmCard({ row, onAdvanced, onOpen }: { row: CrmRow; onAdvanced: () => P
   const next: Stage | null = idx >= 0 && idx < ADVANCEABLE.length - 1 ? ADVANCEABLE[idx + 1] : null;
   const prev: Stage | null = idx > 0 ? ADVANCEABLE[idx - 1] : null;
 
-  async function moveTo(stage: Stage) {
-    if (row.stage === "draft") return; // can't advance a draft from here
-    setBusy(true);
-    try {
-      const { data: { session: s } } = await supabase.auth.getSession();
-      await fetch(`/api/connections/${row.id}/stage`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ stage }),
-      });
-      await onAdvanced();
-    } finally {
-      setBusy(false);
-    }
-  }
+  // moveTo delegates to the parent's optimistic moveStage. No local busy
+  // state — the row updates instantly and reverts on failure (with toast).
+  const moveTo = (stage: Stage) => onMove(row.id, stage);
 
   const isDraft = row.stage === "draft";
 
@@ -304,7 +351,7 @@ function CrmCard({ row, onAdvanced, onOpen }: { row: CrmRow; onAdvanced: () => P
           <button
             type="button"
             onClick={() => prev && moveTo(prev)}
-            disabled={!prev || busy}
+            disabled={!prev}
             title={prev ? `Move back to ${STAGE_LABEL[prev]}` : "Already at first stage"}
             className="text-[10px] text-[#14182A]/40 hover:text-[#14182A]/80 disabled:opacity-30"
           >
@@ -314,8 +361,7 @@ function CrmCard({ row, onAdvanced, onOpen }: { row: CrmRow; onAdvanced: () => P
             <button
               type="button"
               onClick={() => moveTo(next)}
-              disabled={busy}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-[#1B3B5F] text-white hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+              className="text-[10px] px-2 py-0.5 rounded-full bg-[#1B3B5F] text-white hover:bg-[#2E5A88] transition-colors"
             >
               → {STAGE_LABEL[next]}
             </button>

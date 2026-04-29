@@ -6,6 +6,7 @@ import { runResearcher, enrichBanker } from "./researcher";
 import { runCorrespondent } from "./correspondent";
 import { runCritic } from "./critic";
 import { sendEmailAsUser, saveToDrafts, isGmailSendSuccess } from "@/services/gmail/send";
+import { ensureGmailDraft } from "@/services/gmail/sync-draft";
 import { restSelect, restSelectOne, restInsert, restUpdate, restCount, eq, isNull, gte } from "@/lib/supabase-rest";
 import type { TrustLevel, TrustCapability } from "@/shared/ib-types";
 import { TRUST_GRADUATION } from "@/shared/ib-constants";
@@ -195,11 +196,42 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
       if (result === "escalated") out.escalations++;
     }
 
-    // 8. Send approved drafts according to trust level
-    const sendResult = await sendApprovedDrafts(input.userId, t, p);
-    out.approved = sendResult.approved;
-    out.sent = sendResult.sent;
-    out.savedToDrafts = sendResult.savedToDrafts;
+    // 8. Send approved drafts according to trust level. SKIPPED on user-
+    //    triggered runs because:
+    //    - Trust C (Copilot): the level-C path saves drafts to Gmail and
+    //      marks our DB row as "skipped". When the user just clicked Run
+    //      Alma, that vanishes the new draft from /today before they can
+    //      see it. They expect /today to show the result of their click.
+    //    - Trust B (Preview-veto): scheduled sends in 30 min — same
+    //      argument, user wants to see the draft on /today first.
+    //    - Trust A (Autopilot): user opted into "send for me," but it's
+    //      still surprising on a user-triggered run vs a cron run. Keep
+    //      consistent: user_command never auto-sends.
+    //    Cron-driven runs still process approved drafts as before.
+    if (input.triggeredBy !== "user_command") {
+      const sendResult = await sendApprovedDrafts(input.userId, t, p);
+      out.approved = sendResult.approved;
+      out.sent = sendResult.sent;
+      out.savedToDrafts = sendResult.savedToDrafts;
+    } else {
+      // user_command path: don't auto-send, but DO mirror approved drafts
+      // into the user's Gmail Drafts folder so they can preview there
+      // (and the eventual Auto-send via Gmail uses drafts.send for atomic
+      // conversion). Status stays "approved" — drafts remain visible on
+      // /today with the action buttons.
+      const approvedNow = await restSelect("drafts", {
+        select: "id",
+        filters: { user_id: eq(input.userId), status: eq("approved"), sent_at: isNull },
+        limit: 10,
+      });
+      for (const d of approvedNow) {
+        try {
+          await ensureGmailDraft(d.id);
+        } catch (err) {
+          console.warn(`[planner] ensureGmailDraft failed for ${d.id}`, err);
+        }
+      }
+    }
 
     // 9. Trust-level auto-graduation
     await checkAndGraduate(input.userId, t);
@@ -224,7 +256,11 @@ async function draftWithCriticLoop(
   threadContext?: { daysSilent?: number; incomingReplyBody?: string; previousMessageBodyPreview?: string }
 ): Promise<"approved" | "rejected" | "escalated" | "no_anchor"> {
   let iteration = 0;
-  let revisionFeedback: string | undefined;
+  // Cumulative feedback — every prior Critic verdict, not just the latest.
+  // Without this, the Correspondent forgets iter 0's "no career-arc framing"
+  // lesson when it sees iter 1's different feedback, and we end up
+  // reintroducing banned phrases on iter 2. Empirically observed.
+  const revisionFeedbackHistory: string[] = [];
   let existingDraftId: string | undefined;
 
   while (iteration < MAX_ITERATIONS_CORRESPONDENT_CRITIC) {
@@ -234,7 +270,7 @@ async function draftWithCriticLoop(
       bankerId,
       connectionId,
       threadContext,
-      revisionFeedback,
+      revisionFeedbackHistory: revisionFeedbackHistory.length > 0 ? [...revisionFeedbackHistory] : undefined,
       existingDraftId,
       iteration,
     });
@@ -246,7 +282,7 @@ async function draftWithCriticLoop(
     const review = await runCritic({ draftId: draft.draftId });
     if (review.verdict === "approve") return "approved";
     if (review.verdict === "escalate_to_planner") return "escalated";
-    revisionFeedback = review.feedback;
+    if (review.feedback) revisionFeedbackHistory.push(review.feedback);
     iteration++;
   }
   return "rejected";

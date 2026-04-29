@@ -3,6 +3,7 @@
 // Writes critic_reviews row and signals scored outcomes for flywheel
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
+import { OPUS_MODEL } from "@/services/claude";
 import { restSelectOne, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
 import { factCheckDraft } from "./fact-checker";
 import type { CriticScores, CriticVerdict } from "@/shared/ib-types";
@@ -172,14 +173,42 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
       return review;
     }
 
+    // The Critic needs to know what's in our DB so it can distinguish
+    // "fabricated by the LLM" from "true and we already have it." Without
+    // this, claims like "you went to Rice" get flagged as fabrications even
+    // when banker.university IS Rice in the DB. Pull a minimal banker
+    // context once for the LLM-scoring step.
+    const bankerForCritic = draft.banker_id
+      ? await restSelectOne("bankers", {
+          select: "name, title, university, grad_year, firm_id, linkedin_url",
+          filters: { id: eq(draft.banker_id) },
+        })
+      : null;
+    const firmForCritic = bankerForCritic?.firm_id
+      ? await restSelectOne("firms", { select: "name", filters: { id: eq(bankerForCritic.firm_id) } })
+      : null;
+    const knownFactsBlock = bankerForCritic
+      ? `KNOWN BANKER FACTS (these are NOT fabrications — our DB has them. Do NOT flag the email for stating them):
+- Name: ${bankerForCritic.name}
+- Title: ${bankerForCritic.title}
+- Firm: ${firmForCritic?.name ?? "(unknown)"}
+- University: ${bankerForCritic.university ?? "(not in DB)"}
+- Graduation year: ${bankerForCritic.grad_year ?? "(not in DB)"}
+- LinkedIn: ${bankerForCritic.linkedin_url ?? "(not in DB)"}
+
+`
+      : "";
+
     const prompt = `Review this draft:
 
-SUBJECT: ${draft.subject ?? "(no subject)"}
+${knownFactsBlock}SUBJECT: ${draft.subject ?? "(no subject)"}
 
 BODY:
 ${draft.body}
 
 TYPE: ${draft.type} (${draft.type === "cold" ? "first-time cold outreach to this banker" : draft.type === "followup" ? "follow-up on a prior unanswered email" : draft.type === "reply" ? "response to the banker's reply" : "thank-you after a coffee chat"})
+
+Important: Stating any of the KNOWN BANKER FACTS above (name, title, firm, university, grad year) is fine — that's data we have. Only flag if the email asserts something MORE SPECIFIC that's not in the known facts (e.g., a specific deal name, a specific post, a specific dated transition).
 
 Return JSON:
 {
@@ -196,7 +225,7 @@ Return JSON:
       verdict: "approve" | "reject";
       feedback: string;
       suggestedRevision?: string;
-    }>(prompt, { systemPrompt: SYSTEM_PROMPT, maxTokens: 1024, skipCache: true });
+    }>(prompt, { systemPrompt: SYSTEM_PROMPT, maxTokens: 1024, skipCache: true, model: OPUS_MODEL });
 
     const minAxis = Math.min(result.scores.specificity, result.scores.voiceMatch, result.scores.guardrails, result.scores.sharedGround);
     let verdict: CriticVerdict = minAxis >= APPROVAL_THRESHOLD ? "approve" : "reject";
@@ -251,6 +280,30 @@ async function persistReview(opts: {
   if (reviewId) {
     await restUpdate("drafts", { critic_review_id: reviewId }, { id: eq(opts.draftId) });
   }
+
+  // Snapshot the draft's current body+verdict into draft_iterations so we
+  // preserve every revise step. Without this, the iter 0 and iter 1 bodies
+  // are lost when the Correspondent UPDATEs the row in place. Subsequent
+  // iterations of Correspondent now have access to their own past attempts.
+  const draft = await restSelectOne("drafts", {
+    select: "subject, body, guardrail_flags, fact_check, iteration_count",
+    filters: { id: eq(opts.draftId) },
+  });
+  if (draft) {
+    await restInsert("draft_iterations", {
+      draft_id: opts.draftId,
+      iteration: draft.iteration_count,
+      subject: draft.subject,
+      body: draft.body,
+      guardrail_flags: draft.guardrail_flags,
+      fact_check: draft.fact_check,
+      critic_review_id: reviewId || null,
+      critic_verdict: opts.verdict,
+      critic_feedback: opts.feedback ?? null,
+      critic_score: opts.overallScore,
+    });
+  }
+
   return {
     reviewId,
     scores: opts.scores,

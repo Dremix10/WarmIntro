@@ -177,12 +177,37 @@ function UserRow({ user, resetState, onReset }: {
             <p><span className="text-[#14182A]/50">Why IB:</span> {user.profile.storyOneLiner}</p>
           )}
           {user.profile.hasResume && (
-            <details>
-              <summary className="cursor-pointer text-[#2E5A88] hover:underline">View resume text</summary>
-              <p className="mt-2 text-[10px] text-[#14182A]/70 italic">
-                Resume content omitted from this view (PII). Query Supabase profiles.resume_text directly.
-              </p>
-            </details>
+            <p>
+              <span className="text-[#14182A]/50">Resume:</span>{" "}
+              <button
+                type="button"
+                onClick={async () => {
+                  const { data: { session: s } } = await supabase.auth.getSession();
+                  const res = await fetch(`/api/admin/users/${user.id}/resume`, {
+                    headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+                  });
+                  if (!res.ok) {
+                    const json = await res.json().catch(() => ({}));
+                    alert(`Couldn't fetch resume: ${(json as { error?: string }).error ?? res.statusText}`);
+                    return;
+                  }
+                  // Trigger download via blob URL — the route already sets
+                  // Content-Disposition so the filename is clean.
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  // Don't override the server-supplied filename.
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                className="text-[#2E5A88] hover:underline"
+              >
+                Download .txt ({user.profile.resumeChars.toLocaleString()} chars)
+              </button>
+            </p>
           )}
 
           <div className="pt-3 border-t border-[#EAE3D2] flex items-center gap-2">

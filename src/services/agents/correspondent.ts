@@ -2,8 +2,10 @@
 // Uses findCommonGround tool; applies guardrails; Critic reviews the output
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
+import { OPUS_MODEL } from "@/services/claude";
 import { restSelectOne, restSelect, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
 import { applyGuardrails } from "@/services/guardrails";
+import { scoutBankerFindings, type ScoutedFinding } from "./scout";
 import type { CommonGroundAnchor, DraftType } from "@/shared/ib-types";
 
 export interface CorrespondentInput {
@@ -16,7 +18,11 @@ export interface CorrespondentInput {
     daysSilent?: number;
     incomingReplyBody?: string;
   };
-  revisionFeedback?: string; // from Critic on re-draft
+  // Cumulative feedback from EVERY prior Critic iteration on this draft.
+  // The model needs the full history — without it, iter 2 forgets what
+  // iter 0 said and re-introduces the same banned phrasing. Index 0 is
+  // iter 0's feedback, index 1 is iter 1's, etc.
+  revisionFeedbackHistory?: string[];
   // Set by the Critic-loop on revise iterations. The unique index
   // uq_drafts_active_user_banker_type forbids two active drafts for the same
   // (user, banker, type), so revise iterations MUST UPDATE the existing draft
@@ -51,6 +57,8 @@ interface BankerContext {
   name: string;
   title: string;
   firm: string;
+  firmName?: string;
+  linkedinUrl?: string;
   group?: string;
   university?: string;
   gradYear?: number;
@@ -118,6 +126,8 @@ async function getBankerContext(bankerId: string): Promise<BankerContext | null>
     name: banker.name,
     title: banker.title,
     firm: firmName ?? banker.firm_id ?? "",
+    firmName,
+    linkedinUrl: banker.linkedin_url ?? undefined,
     group: banker.group_id ?? undefined,
     university: banker.university ?? undefined,
     gradYear: banker.grad_year ?? undefined,
@@ -164,10 +174,22 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
       return { subject: "", body: "", anchors: [], rejectedForNoAnchor: false, guardrailFlags: { emDashesReplaced: 0, bannedWordsFound: [], bannedPhrasesFound: [], tooLong: false, tooShort: false } };
     }
 
-    // Step 1: Find common ground (only for cold outreach; follow-ups and replies use prior thread)
+    // Step 1: Find common ground + scout for recent findings in parallel
+    // (only for cold outreach; follow-ups and replies use prior thread).
     let anchors: CommonGroundAnchor[] = [];
+    let scoutedFindings: ScoutedFinding[] = [];
     if (input.type === "cold") {
-      anchors = await findCommonGround(user, banker);
+      const [cg, sc] = await Promise.all([
+        findCommonGround(user, banker),
+        scoutBankerFindings({
+          bankerId: input.bankerId,
+          bankerName: banker.name,
+          firmName: banker.firmName,
+          linkedinUrl: banker.linkedinUrl,
+        }),
+      ]);
+      anchors = cg;
+      scoutedFindings = sc;
       if (anchors.length === 0) {
         // Researcher rejection path — bubble back
         await logSignal({
@@ -183,11 +205,15 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
     }
 
     // Step 2: Draft the email
-    const draftingPrompt = buildDraftPrompt(input, user, banker, anchors);
+    const draftingPrompt = buildDraftPrompt(input, user, banker, anchors, scoutedFindings);
     const drafted = await askClaudeJSON<{ subject: string; body: string }>(draftingPrompt, {
       systemPrompt: systemPromptForType(input.type),
       maxTokens: 1024,
-      skipCache: Boolean(input.revisionFeedback), // on revision, don't reuse cache
+      // Opus follows the HARD BANS list and cumulative revision history more
+      // reliably than Sonnet. The drafted email is the centerpiece of the
+      // product — instruction-following matters more than per-call cost.
+      model: OPUS_MODEL,
+      skipCache: Boolean(input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0),
     });
 
     // Step 3: Apply guardrails
@@ -310,13 +336,30 @@ function buildDraftPrompt(
   input: CorrespondentInput,
   user: UserContext,
   banker: BankerContext,
-  anchors: CommonGroundAnchor[]
+  anchors: CommonGroundAnchor[],
+  scoutedFindings: ScoutedFinding[] = []
 ): string {
   const parts: string[] = [];
   parts.push(`STUDENT:\n${JSON.stringify(user, null, 2)}\n`);
   parts.push(`BANKER:\n${JSON.stringify(banker, null, 2)}\n`);
   if (anchors.length > 0) {
     parts.push(`COMMON-GROUND ANCHORS (use the highest-confidence one for the opener):\n${JSON.stringify(anchors, null, 2)}\n`);
+  }
+  if (scoutedFindings.length > 0) {
+    // Real-time-scouted findings about this banker (LinkedIn posts, press
+    // mentions, podcast appearances). Use AT MOST one in the email, and only
+    // if it's relevant — fact-checker will verify against the source URL.
+    parts.push(
+      `SCOUTED FINDINGS (real-time web search; use AT MOST one as a concrete reference, ONLY if naturally relevant — do NOT force):\n` +
+        scoutedFindings
+          .slice(0, 4)
+          .map(
+            (f, i) =>
+              `[${i + 1}] type=${f.sourceType} title="${f.title}" url=${f.url}${f.snippet ? ` snippet="${f.snippet.slice(0, 200)}"` : ""}`
+          )
+          .join("\n") +
+        `\n`
+    );
   }
   if (input.threadContext?.previousMessageBodyPreview) {
     parts.push(`PRIOR MESSAGE (your previous outreach, paraphrase don't repeat):\n${input.threadContext.previousMessageBodyPreview.slice(0, 600)}\n`);
@@ -327,8 +370,17 @@ function buildDraftPrompt(
   if (input.threadContext?.daysSilent !== undefined) {
     parts.push(`DAYS SINCE LAST CONTACT: ${input.threadContext.daysSilent}\n`);
   }
-  if (input.revisionFeedback) {
-    parts.push(`REVISION FEEDBACK FROM CRITIC (address these specifically):\n${input.revisionFeedback}\n`);
+  if (input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0) {
+    // Show ALL prior Critic verdicts so the model sees the cumulative
+    // critique. Without this, iter 2 forgets iter 0's lesson and re-
+    // introduces the same banned framing the Critic already rejected.
+    parts.push(
+      `CRITIC REVISION HISTORY — every prior attempt got rejected for the reason listed. Address ALL of these in this rewrite, not just the latest:\n` +
+        input.revisionFeedbackHistory
+          .map((f, i) => `[Iteration ${i} REJECTED]: ${f}`)
+          .join("\n") +
+        `\n\nThis is your FINAL attempt before the draft escalates. If you reuse a pattern any prior iteration was rejected for, the draft fails.\n`
+    );
   }
 
   parts.push(`Return JSON: {"subject": string, "body": string}`);
