@@ -158,11 +158,11 @@ async function queryBankerDB(
 
   return rows
     .filter((b) => !excludeIds.includes(b.id))
-    .filter((b) => {
-      if (targetGroups.length === 0) return true;
-      if (!b.group_id) return false;
-      return targetGroups.some((g) => b.group_id?.endsWith(`-${g}`) || b.group_id === g);
-    })
+    // target_groups is a SOFT preference — bankers with null group_id (most
+    // Serper-discovered rows) shouldn't be excluded entirely just because we
+    // don't yet know their team. Warmth scoring still favors matching groups
+    // when the data is there. Hard-filtering produced 0 candidates after we
+    // wiped the seed bankers (the only rows that had group_id populated).
     .map(
       (b): Banker => ({
         id: b.id,

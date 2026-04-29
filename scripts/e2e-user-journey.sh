@@ -108,9 +108,11 @@ if [ "$NEEDS_SETUP" = "False" ]; then ok "/api/today says needsSetup=false (prof
 step "5. POST /api/planner/run-now (cap=1, ~50s)"
 PLAN=$(curl -s -X POST "$BASE/api/planner/run-now" \
   -H "User-Agent: $UA" -H "Authorization: Bearer $ACCESS" --max-time 90)
+echo "  raw planner response: $(echo "$PLAN" | head -c 400)"
 SOURCED=$(echo "$PLAN" | python3 -c "import json,sys;d=json.load(sys.stdin);print(d.get('result',{}).get('researcherSourced',0))" 2>/dev/null)
 DRAFTED=$(echo "$PLAN" | python3 -c "import json,sys;d=json.load(sys.stdin);r=d.get('result',{});print(r.get('coldDrafted',0)+r.get('approved',0))" 2>/dev/null)
-if [ "${SOURCED:-0}" -ge 1 ]; then ok "Researcher sourced $SOURCED candidate(s)"; else err "Researcher" "sourced $SOURCED"; fi
+QUEUE_FULL=$(echo "$PLAN" | python3 -c "import json,sys;d=json.load(sys.stdin);print(d.get('result',{}).get('queueFull',False))" 2>/dev/null)
+if [ "${SOURCED:-0}" -ge 1 ]; then ok "Researcher sourced $SOURCED candidate(s)"; else err "Researcher" "sourced $SOURCED (queueFull=$QUEUE_FULL)"; fi
 if [ "${DRAFTED:-0}" -ge 1 ]; then ok "Correspondent + Critic produced $DRAFTED draft(s)"; else err "Correspondent/Critic" "drafted $DRAFTED"; fi
 
 # ── 6. /api/today AFTER Planner ─────────────────────────────────
