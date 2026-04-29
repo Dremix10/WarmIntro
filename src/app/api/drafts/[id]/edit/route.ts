@@ -1,7 +1,13 @@
-// POST /api/drafts/[id]/edit — user edits draft body
+// POST /api/drafts/[id]/edit — user edits draft body. Logs a `draft_edited`
+// signal and, on the FIRST edit, snapshots the AI-authored body into
+// pre_edit_ai_body so we can learn from "AI wrote X, user shipped Y" diffs.
 
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
+import { logSignal } from "@/services/signals/log";
+import type { Database } from "@/lib/database.types";
+
+type DraftUpdate = Database["public"]["Tables"]["drafts"]["Update"];
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -11,12 +17,46 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { subject, body } = (await request.json()) as { subject?: string; body?: string };
   if (!body) return NextResponse.json({ error: "missing_body" }, { status: 400 });
 
-  const { data: draft } = await ctx.supabase.from("drafts").select("id, user_id").eq("id", id).single();
+  const { data: draft } = await ctx.supabase
+    .from("drafts")
+    .select("id, user_id, banker_id, type, status, body, subject, pre_edit_ai_body")
+    .eq("id", id)
+    .single();
   if (!draft || draft.user_id !== ctx.user.id) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  await ctx.supabase
-    .from("drafts")
-    .update({ subject, user_edited_body: body, body, status: "approved", updated_at: new Date().toISOString() })
-    .eq("id", id);
-  return NextResponse.json({ ok: true });
+  const subjectChanged = (subject ?? "") !== (draft.subject ?? "");
+  const bodyChanged = body !== draft.body;
+  const charsBefore = (draft.body ?? "").length;
+  const charsAfter = body.length;
+
+  const update: DraftUpdate = {
+    subject,
+    body,
+    user_edited_body: body,
+    status: "approved",
+    updated_at: new Date().toISOString(),
+  };
+  if (!draft.pre_edit_ai_body) update.pre_edit_ai_body = draft.body;
+
+  await ctx.supabase.from("drafts").update(update).eq("id", id);
+
+  await logSignal({
+    userId: ctx.user.id,
+    bankerId: draft.banker_id ?? undefined,
+    draftId: id,
+    agent: "planner",
+    signalType: "draft_edited",
+    metadata: {
+      type: draft.type,
+      fromStatus: draft.status,
+      hadPriorEdit: Boolean(draft.pre_edit_ai_body),
+      bodyChanged,
+      subjectChanged,
+      charsBefore,
+      charsAfter,
+      charDelta: charsAfter - charsBefore,
+    },
+  });
+
+  return NextResponse.json({ ok: true, subject: subject ?? null, body });
 }

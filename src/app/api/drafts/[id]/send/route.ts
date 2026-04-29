@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const admin = getAdminClient();
   const { data: draft } = await admin
     .from("drafts")
-    .select("id, user_id, banker_id, connection_id, subject, body, bankers(name, title, linkedin_url, firm_id, firms(name))")
+    .select("id, user_id, banker_id, connection_id, subject, body, user_edited_body, type, bankers(name, title, linkedin_url, firm_id, firms(name))")
     .eq("id", id)
     .single();
   if (!draft || draft.user_id !== ctx.user.id) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -126,7 +126,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     draftId: id,
     agent: "planner",
     signalType: "draft_sent",
-    metadata: { manual: true, gmailThreadId: res.gmailThreadId },
+    metadata: {
+      manual: true,
+      gmailThreadId: res.gmailThreadId,
+      via: "send_button",
+      type: draft.type,
+      userEdited: Boolean(draft.user_edited_body),
+      bodyLength: draft.body.length,
+    },
   });
 
   return NextResponse.json({ ok: true, messageId: res.sentMessageId });

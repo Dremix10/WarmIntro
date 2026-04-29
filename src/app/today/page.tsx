@@ -485,7 +485,7 @@ function DraftCard({
   const [fading, setFading] = useState(false);
   const banker = draft.bankers;
 
-  async function saveEdit() {
+  async function saveEdit(opts: { reload?: boolean } = { reload: true }): Promise<boolean> {
     setSavingEdit(true);
     try {
       const { data: { session: s } } = await supabase.auth.getSession();
@@ -494,10 +494,10 @@ function DraftCard({
         headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
         body: JSON.stringify({ subject: editedSubject, body: editedBody }),
       });
-      if (res.ok) {
-        setEditing(false);
-        await onReload();
-      }
+      if (!res.ok) return false;
+      setEditing(false);
+      if (opts.reload) await onReload();
+      return true;
     } finally {
       setSavingEdit(false);
     }
@@ -506,6 +506,22 @@ function DraftCard({
     setEditedSubject(draft.subject ?? "");
     setEditedBody(draft.body);
     setEditing(false);
+  }
+  // Flush any unsaved local edits to the server BEFORE sending or copying so
+  // what we ship matches what the user sees on screen. Without this, typing
+  // into the textarea and then clicking Auto-send / Copy / I sent it would
+  // dispatch the stale server-side body. Returns the body+subject that's now
+  // canonical (DB matches this, send routes will read it).
+  async function ensureSavedBeforeAction(): Promise<{ body: string; subject: string } | null> {
+    if (!editing) return { body: draft.body, subject: draft.subject ?? "" };
+    const dirty = editedBody !== draft.body || editedSubject !== (draft.subject ?? "");
+    if (!dirty) {
+      setEditing(false);
+      return { body: draft.body, subject: draft.subject ?? "" };
+    }
+    const ok = await saveEdit({ reload: false });
+    if (!ok) return null;
+    return { body: editedBody, subject: editedSubject };
   }
 
   // Visual treatment changes by status so the user knows at a glance whether
@@ -528,7 +544,9 @@ function DraftCard({
     window.setTimeout(() => setCopiedAddr(false), 1500);
   }
   async function copyBody() {
-    const text = `Subject: ${draft.subject ?? ""}\n\n${draft.body}`;
+    const flushed = await ensureSavedBeforeAction();
+    if (!flushed) return;
+    const text = `Subject: ${flushed.subject}\n\n${flushed.body}`;
     await navigator.clipboard.writeText(text);
     setCopiedBody(true);
     window.setTimeout(() => setCopiedBody(false), 1500);
@@ -622,7 +640,7 @@ function DraftCard({
                 </button>
                 <button
                   type="button"
-                  onClick={saveEdit}
+                  onClick={() => { void saveEdit(); }}
                   disabled={savingEdit || !editedBody.trim()}
                   className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50"
                 >
@@ -700,7 +718,11 @@ function DraftCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowSentConfirm(true)}
+                  onClick={async () => {
+                    const flushed = await ensureSavedBeforeAction();
+                    if (!flushed) return;
+                    setShowSentConfirm(true);
+                  }}
                   className="rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
                 >
                   I sent it
@@ -713,6 +735,15 @@ function DraftCard({
                   onClick={async () => {
                     setSendState("sending");
                     setSendError(null);
+                    // Flush any unsaved textarea edits FIRST so the body in the
+                    // DB (which /send reads from) matches what's on screen.
+                    const flushed = await ensureSavedBeforeAction();
+                    if (!flushed) {
+                      setSendState("error");
+                      setSendError("Couldn't save your edits — try again");
+                      window.setTimeout(() => setSendState("idle"), 5000);
+                      return;
+                    }
                     // Defer the data reload so we can animate the card out first.
                     const result = await onAction(draft.id, "send", undefined, { deferReload: true });
                     if (result.ok) {

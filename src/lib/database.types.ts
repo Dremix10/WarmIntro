@@ -374,6 +374,7 @@ export type Database = {
           guardrail_flags: Json
           id: string
           iteration_count: number
+          pre_edit_ai_body: string | null
           scheduled_send_at: string | null
           sent_at: string | null
           sent_message_id: string | null
@@ -394,6 +395,7 @@ export type Database = {
           guardrail_flags?: Json
           id?: string
           iteration_count?: number
+          pre_edit_ai_body?: string | null
           scheduled_send_at?: string | null
           sent_at?: string | null
           sent_message_id?: string | null
@@ -414,6 +416,7 @@ export type Database = {
           guardrail_flags?: Json
           id?: string
           iteration_count?: number
+          pre_edit_ai_body?: string | null
           scheduled_send_at?: string | null
           sent_at?: string | null
           sent_message_id?: string | null

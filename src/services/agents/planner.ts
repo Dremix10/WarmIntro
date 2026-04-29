@@ -254,7 +254,7 @@ async function sendApprovedDrafts(
   const out = { approved: 0, sent: 0, savedToDrafts: 0 };
 
   const approvedDrafts = await restSelect("drafts", {
-    select: "id, banker_id, connection_id, type, subject, body, scheduled_send_at",
+    select: "id, banker_id, connection_id, type, subject, body, user_edited_body, scheduled_send_at",
     filters: { user_id: eq(userId), status: eq("approved"), sent_at: isNull },
     limit: 10,
   });
@@ -328,7 +328,12 @@ async function sendApprovedDrafts(
             draftId: d.id,
             agent: "planner",
             signalType: "draft_sent",
-            metadata: { type: d.type },
+            metadata: {
+              type: d.type,
+              via: "preview_veto",
+              userEdited: Boolean(d.user_edited_body),
+              bodyLength: d.body.length,
+            },
           });
           out.sent++;
         }
@@ -363,7 +368,13 @@ async function sendApprovedDrafts(
           draftId: d.id,
           agent: "planner",
           signalType: "draft_sent",
-          metadata: { type: d.type, autopilot: true },
+          metadata: {
+            type: d.type,
+            autopilot: true,
+            via: "autopilot",
+            userEdited: Boolean(d.user_edited_body),
+            bodyLength: d.body.length,
+          },
         });
         out.sent++;
       }

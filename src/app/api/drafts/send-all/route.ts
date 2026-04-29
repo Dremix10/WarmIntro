@@ -17,7 +17,7 @@ export const maxDuration = 60;
 const BATCH_CAP = 5;
 
 interface BankerJoin { name: string; email: string | null; firm_id: string | null; firms: { name: string } | null }
-interface DraftRow { id: string; banker_id: string | null; subject: string | null; body: string; bankers: BankerJoin | null }
+interface DraftRow { id: string; banker_id: string | null; subject: string | null; body: string; user_edited_body: string | null; type: "cold" | "followup" | "reply" | "thank_you"; bankers: BankerJoin | null }
 
 export async function POST(request: Request) {
   const ctx = await getUser(request);
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
   const { data: drafts } = await admin
     .from("drafts")
-    .select("id, banker_id, subject, body, bankers(name, email, firm_id, firms(name))")
+    .select("id, banker_id, subject, body, user_edited_body, type, bankers(name, email, firm_id, firms(name))")
     .eq("user_id", ctx.user.id)
     .eq("status", "approved")
     .is("sent_at", null)
@@ -109,7 +109,13 @@ export async function POST(request: Request) {
       draftId: d.id,
       agent: "planner",
       signalType: "draft_sent",
-      metadata: { batch: true, via: "send_all" },
+      metadata: {
+        batch: true,
+        via: "send_all",
+        type: d.type,
+        userEdited: Boolean(d.user_edited_body),
+        bodyLength: d.body.length,
+      },
     });
 
     results.push({ draftId: d.id, banker: banker.name, ok: true });
