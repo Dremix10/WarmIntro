@@ -110,7 +110,7 @@ export async function runSentinel(): Promise<SentinelOutput> {
       const errorBucket = total > 10 ? "lt5" : total > 4 ? "lt10" : "lt20";
       if (await shouldAlert("agent_errors", errorBucket)) {
         const summary = Object.entries(errorsBy).map(([a, n]) => `${a}: ${n}`).join(", ");
-        const sent = await sendTelegram(`🔴 *Alma alerts* · last 30 min\n\nAgent errors: ${summary}\n\nFirst error: \`${String(errorRuns[0].error).slice(0, 200)}\``);
+        const sent = (await sendTelegram(`🔴 Alma alerts · last 30 min\n\nAgent errors: ${summary}\n\nFirst error: ${String(errorRuns[0].error).slice(0, 200)}`)).sent;
         if (sent) {
           out.alertsSent++;
           await recordAlert("agent_errors", errorBucket, { total, errorsBy });
@@ -126,7 +126,7 @@ export async function runSentinel(): Promise<SentinelOutput> {
         const bucket = bucketForPct(pctRemaining);
         out.creditWarnings.push(`Hunter: ${hunter.available}/${hunter.total} credits (${Math.round(pctRemaining * 100)}% left)`);
         if (await shouldAlert("hunter_credit", bucket)) {
-          const sent = await sendTelegram(`💰 *Hunter.io credit warning*\n\n${hunter.available} of ${hunter.total} credits left (${Math.round(pctRemaining * 100)}%).\n\nTime to top up: https://hunter.io/pricing`);
+          const sent = (await sendTelegram(`💰 Hunter.io credit warning\n\n${hunter.available} of ${hunter.total} credits left (${Math.round(pctRemaining * 100)}%).\n\nTime to top up: https://hunter.io/pricing`)).sent;
           if (sent) {
             out.alertsSent++;
             await recordAlert("hunter_credit", bucket, { available: hunter.available, total: hunter.total });
@@ -155,7 +155,7 @@ export async function runSentinel(): Promise<SentinelOutput> {
         const breakdown: Record<string, number> = {};
         for (const s of criticalSignals) breakdown[s.signal_type as string] = (breakdown[s.signal_type as string] ?? 0) + 1;
         const summary = Object.entries(breakdown).map(([k, n]) => `${k}: ${n}`).join(", ");
-        const sent = await sendTelegram(`⚠️ *Alma critical signals* · last 30 min\n\n${summary}\n\nCheck /agents.`);
+        const sent = (await sendTelegram(`⚠️ Alma critical signals · last 30 min\n\n${summary}\n\nCheck /agents.`)).sent;
         if (sent) {
           out.alertsSent++;
           await recordAlert("critical_signal", bucket, { count: criticalSignals.length, breakdown });

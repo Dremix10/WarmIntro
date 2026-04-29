@@ -36,19 +36,26 @@ export async function POST(request: Request) {
     const durationMs = Date.now() - startedAt;
 
     // Slow-run alert: succeeded but the user waited too long. We still want
-    // to know — eventually we'll either make it faster or chunk it. Logged
-    // + Telegram'd but doesn't fail the response.
+    // to know — eventually we'll either make it faster or chunk it. Telegram
+    // is awaited (not fire-and-forget) so we can capture delivery status in
+    // the signal — fire-and-forget swallowed the only signal we'd have that
+    // the alert never reached us. Latency cost is ~200-500ms, fine.
     if (durationMs > SLOW_THRESHOLD_MS) {
+      const tgResult = await sendTelegram(
+        `🐢 Run Alma slow\n\nUser: ${userEmail}\nDuration: ${(durationMs / 1000).toFixed(1)}s (threshold ${SLOW_THRESHOLD_MS / 1000}s)\nResult: ${JSON.stringify(result).slice(0, 250)}`
+      );
       await logSignal({
         userId,
         agent: "planner",
         signalType: "planner_run_slow",
-        metadata: { durationMs, threshold: SLOW_THRESHOLD_MS, result: result as unknown as Record<string, unknown> },
+        metadata: {
+          durationMs,
+          threshold: SLOW_THRESHOLD_MS,
+          result: result as unknown as Record<string, unknown>,
+          telegramSent: tgResult.sent,
+          telegramReason: tgResult.reason ?? null,
+        },
       });
-      // Fire-and-forget Telegram so we don't add latency to the user's response.
-      void sendTelegram(
-        `🐢 *Run Alma slow*\n\nUser: \`${userEmail}\`\nDuration: ${(durationMs / 1000).toFixed(1)}s (threshold ${SLOW_THRESHOLD_MS / 1000}s)\nResult: \`${JSON.stringify(result).slice(0, 250)}\``
-      );
     }
 
     return NextResponse.json({ ok: true, result, durationMs });
@@ -56,6 +63,13 @@ export async function POST(request: Request) {
     const durationMs = Date.now() - startedAt;
     const errMsg = err instanceof Error ? err.message : String(err);
     const errStack = err instanceof Error ? err.stack?.slice(0, 800) : undefined;
+
+    // Hot alert: user waited, then it failed. Fire Telegram immediately —
+    // don't wait for the 30-min Sentinel cron. Awaited so we can record
+    // delivery status in the signal metadata for audit.
+    const tgResult = await sendTelegram(
+      `🔥 Run Alma FAILED\n\nUser: ${userEmail}\nDuration: ${(durationMs / 1000).toFixed(1)}s\nError: ${errMsg.slice(0, 300)}${errStack ? `\n\nStack:\n${errStack.slice(0, 500)}` : ""}`
+    );
 
     // Log a structured signal so Sentinel sees it on the next sweep, AND
     // (critically) so we have an audit row independent of Telegram delivery.
@@ -67,15 +81,10 @@ export async function POST(request: Request) {
         durationMs,
         error: errMsg.slice(0, 500),
         triggeredBy: "user_command",
+        telegramSent: tgResult.sent,
+        telegramReason: tgResult.reason ?? null,
       },
     });
-
-    // Hot alert: user waited, then it failed. Fire Telegram immediately,
-    // don't wait for the 30-min Sentinel cron — this is the kind of
-    // breakage that ruins onboarding.
-    void sendTelegram(
-      `🔥 *Run Alma FAILED*\n\nUser: \`${userEmail}\`\nDuration: ${(durationMs / 1000).toFixed(1)}s\nError: \`${errMsg.slice(0, 300)}\`${errStack ? `\n\nStack:\n\`\`\`\n${errStack.slice(0, 500)}\n\`\`\`` : ""}`
-    );
 
     return NextResponse.json({ ok: false, error: errMsg, durationMs }, { status: 500 });
   }
