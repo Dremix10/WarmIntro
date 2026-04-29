@@ -48,7 +48,8 @@ function useReducedMotion() {
 
 export function SurfacesStack() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [activeIdx, setActiveIdx] = useState(0);
+  // -1 = all cards closed. Cards open as activeIdx advances 0, 1, 2.
+  const [activeIdx, setActiveIdx] = useState(-1);
   const reducedMotion = useReducedMotion();
 
   // Reduced-motion fallback: auto-unfold all panels once on viewport entry.
@@ -59,8 +60,9 @@ export function SurfacesStack() {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          window.setTimeout(() => setActiveIdx(1), 350);
-          window.setTimeout(() => setActiveIdx(2), 700);
+          window.setTimeout(() => setActiveIdx(0), 250);
+          window.setTimeout(() => setActiveIdx(1), 600);
+          window.setTimeout(() => setActiveIdx(2), 950);
           observer.disconnect();
         }
       },
@@ -70,7 +72,7 @@ export function SurfacesStack() {
     return () => observer.disconnect();
   }, [reducedMotion]);
 
-  // Scroll-progress driven (default).
+  // Scroll-progress driven (default). Four phases: -1 (all closed) and 0-2.
   useEffect(() => {
     if (reducedMotion) return;
     let rafId = 0;
@@ -84,9 +86,11 @@ export function SurfacesStack() {
       const pinRange = rect.height - vh;
       const raw = pinRange > 0 ? pinTop / pinRange : 0;
       const progress = Math.max(0, Math.min(1, raw));
+      // 4 buckets: progress in [0, 0.25) → -1 (all closed),
+      // [0.25, 0.5) → 0, [0.5, 0.75) → 1, [0.75, 1] → 2.
       const idx = Math.min(
         SURFACES.length - 1,
-        Math.max(0, Math.floor(progress * SURFACES.length))
+        Math.floor(progress * (SURFACES.length + 1)) - 1
       );
       setActiveIdx((prev) => (prev === idx ? prev : idx));
     };
