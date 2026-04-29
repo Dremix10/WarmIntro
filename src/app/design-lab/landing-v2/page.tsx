@@ -172,8 +172,28 @@ function Hero() {
         </div>
 
         <div
+          className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-dashed border-[#D9CFB5] pt-4 opacity-0"
+          style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 2200ms forwards" }}
+        >
+          <span className="inline-flex items-center gap-2 text-xs text-[#5C6472]">
+            <span
+              className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-[4px] border border-[#FCD34D] bg-[#FEF3C7] text-[10px] font-bold text-[#92400E]"
+              aria-hidden
+            >
+              ★
+            </span>
+            <span>
+              <strong className="text-[#14182A]">Track winner</strong>, Y-Claude Builder Club Hackathon at Rice · April 2026
+            </span>
+          </span>
+          <span className="text-xs text-[#5C6472]">
+            Built by <strong className="text-[#14182A]">2 Rice · 1 Brown · 1 MIT</strong> sophomores
+          </span>
+        </div>
+
+        <div
           className="mt-12 overflow-hidden rounded-3xl border border-[#D9CFB5] bg-white shadow-sm opacity-0"
-          style={{ animation: "fade-rise 900ms cubic-bezier(.22,.75,.3,1) 2000ms forwards" }}
+          style={{ animation: "fade-rise 900ms cubic-bezier(.22,.75,.3,1) 2400ms forwards" }}
         >
           <ScenePreviewTilted />
         </div>
