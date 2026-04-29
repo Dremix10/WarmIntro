@@ -88,11 +88,14 @@ const FAQ = [
   },
 ];
 
+import { RecoveryHashRedirect } from "@/components/RecoveryHashRedirect";
+
 export default function LandingV2() {
   return (
     <div className="relative bg-[#EAE3D2] text-[#14182A]">
       <GrainOverlay />
 
+      <RecoveryHashRedirect />
       <TopBar />
 
       <Hero />
