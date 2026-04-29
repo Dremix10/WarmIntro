@@ -74,22 +74,80 @@ function classifySource(url: string): ScoutedFinding["sourceType"] {
 // (a) the firm name appearing in the same result, OR (b) the result being
 // the banker's own LinkedIn URL slug. Without this gate, the cache fills
 // with wrong-person mentions that the Correspondent then treats as real.
+// Domains that count as authoritative for banker findings. Anything
+// outside these sources is rejected even if name + firm appear in the
+// snippet — observed real failure: Facebook / Twitter / Reddit posts
+// where the banker's name was mentioned in a tangential comment thread,
+// firm name was mentioned for unrelated reasons, snippet matched, but
+// the actual URL was about something else entirely.
+const AUTHORITATIVE_DOMAINS = [
+  "linkedin.com",
+  "bloomberg.com",
+  "wsj.com",
+  "ft.com",
+  "reuters.com",
+  "axios.com",
+  "forbes.com",
+  "businesswire.com",
+  "prnewswire.com",
+  "globenewswire.com",
+  "cnbc.com",
+  "nytimes.com",
+  "barrons.com",
+  "marketwatch.com",
+  // Firm-tier domains worth pulling in directly.
+  "goldmansachs.com",
+  "morganstanley.com",
+  "jpmorgan.com",
+  "citi.com",
+  "bofa.com",
+  "evercore.com",
+  "centerview.com",
+  "lazard.com",
+  "pjt.com",
+  "moelis.com",
+  "houlihanlokey.com",
+  "guggenheim.com",
+  "perella.com",
+  "rothschildandco.com",
+  "raine.com",
+  "jefferies.com",
+];
+
+function isAuthoritativeUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return AUTHORITATIVE_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
+
 function mentionsBanker(banker: ScoutInput, organic: SerperOrganic): boolean {
+  // Hard gate 1: source must be authoritative. Drops Facebook / random
+  // news aggregators / forum posts that share name+firm tokens with the
+  // real banker but are tangential.
+  if (!isAuthoritativeUrl(organic.link)) return false;
+
   const haystack = `${organic.title} ${organic.snippet ?? ""} ${organic.link}`.toLowerCase();
   const nameHit = haystack.includes(banker.bankerName.toLowerCase());
   if (!nameHit) return false;
-  // Disambiguation: require firm OR the banker's exact LinkedIn slug
-  // anywhere in the URL. The slug is unique per LinkedIn user, so its
-  // presence is a strong "this is the right person" signal — works for
-  // /in/<slug> (profile pages) AND /posts/<slug>_... (post pages) AND
-  // /pulse/<slug>-... (article pages).
-  const firmHit = banker.firmName ? haystack.includes(banker.firmName.toLowerCase()) : false;
-  let slugHit = false;
-  if (banker.linkedinUrl) {
+
+  // Hard gate 2: for LinkedIn URLs (the most common source), require the
+  // banker's exact slug to appear in the URL — that's the only signal
+  // that this is *their* post/profile, not someone else's that happens
+  // to mention them. For non-LinkedIn authoritative sources, fall back
+  // to firm-name match (a Bloomberg article about Goldman that names
+  // the banker is a real finding).
+  if (organic.link.toLowerCase().includes("linkedin.com")) {
+    if (!banker.linkedinUrl) return false;
     const slug = banker.linkedinUrl.replace(/.*linkedin\.com\/in\//, "").replace(/[/?#].*$/, "").toLowerCase();
-    if (slug && slug.length >= 4 && organic.link.toLowerCase().includes(slug)) slugHit = true;
+    if (!slug || slug.length < 4) return false;
+    return organic.link.toLowerCase().includes(slug);
   }
-  return firmHit || slugHit;
+
+  // Non-LinkedIn authoritative source: require firm name in snippet.
+  return banker.firmName ? haystack.includes(banker.firmName.toLowerCase()) : false;
 }
 
 // Drop the generic LinkedIn directory pages — they aren't findings.

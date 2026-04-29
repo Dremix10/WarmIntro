@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { logSignal } from "@/services/signals/log";
+import { ensureGmailDraft } from "@/services/gmail/sync-draft";
 import type { Database } from "@/lib/database.types";
 
 type DraftUpdate = Database["public"]["Tables"]["drafts"]["Update"];
@@ -57,6 +58,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       charDelta: charsAfter - charsBefore,
     },
   });
+
+  // Push the edited body to Gmail Drafts so the two surfaces stay in
+  // sync. ensureGmailDraft uses PUT on the existing gmail_draft_id
+  // when present, so the user sees the updated content in place.
+  try {
+    await ensureGmailDraft(id);
+  } catch (err) {
+    console.warn(`[edit] ensureGmailDraft failed for ${id}`, err);
+  }
 
   return NextResponse.json({ ok: true, subject: subject ?? null, body });
 }

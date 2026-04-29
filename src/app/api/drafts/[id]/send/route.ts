@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { sendEmailAsUser, isGmailSendSuccess } from "@/services/gmail/send";
+import { sendEmailAsUser, sendGmailDraft, isGmailSendSuccess } from "@/services/gmail/send";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { logSignal } from "@/services/signals/log";
 
@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const admin = getAdminClient();
   const { data: draft } = await admin
     .from("drafts")
-    .select("id, user_id, banker_id, connection_id, subject, body, user_edited_body, type, critic_override, bankers(name, title, linkedin_url, firm_id, firms(name))")
+    .select("id, user_id, banker_id, connection_id, subject, body, user_edited_body, type, critic_override, gmail_draft_id, bankers(name, title, linkedin_url, firm_id, firms(name))")
     .eq("id", id)
     .single();
   if (!draft || draft.user_id !== ctx.user.id) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -28,13 +28,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "No email on file for this banker. Use Copy + I sent it instead." }, { status: 400 });
   }
 
-  const res = await sendEmailAsUser({
-    userId: ctx.user.id,
-    fromEmail: profile.gmail_email,
-    toEmail: banker.email,
-    subject: draft.subject ?? "",
-    body: draft.body,
-  });
+  // Two-way Gmail sync: if we already saved a Gmail draft for this row,
+  // use Gmail's drafts.send API to convert the draft → sent message
+  // atomically. That removes the draft from the user's Gmail Drafts
+  // folder in the same call as sending — no duplicate cleanup needed.
+  // If we don't have a stored draft ID, fall back to a fresh send.
+  const res = draft.gmail_draft_id
+    ? await sendGmailDraft({ userId: ctx.user.id, gmailDraftId: draft.gmail_draft_id })
+    : await sendEmailAsUser({
+        userId: ctx.user.id,
+        fromEmail: profile.gmail_email,
+        toEmail: banker.email,
+        subject: draft.subject ?? "",
+        body: draft.body,
+      });
 
   if (!isGmailSendSuccess(res)) {
     // Log a signal so we can see exactly why this failed across the fleet.
@@ -74,7 +81,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const now = new Date().toISOString();
   await admin
     .from("drafts")
-    .update({ status: "sent", sent_at: now, sent_message_id: res.sentMessageId, updated_at: now })
+    .update({
+      status: "sent",
+      sent_at: now,
+      sent_message_id: res.sentMessageId,
+      // The Gmail draft has been converted to a sent message — clear our
+      // pointer so we don't try to delete/send the same ID again.
+      gmail_draft_id: null,
+      updated_at: now,
+    })
     .eq("id", id);
 
   // Create / advance the connection so /crm and /network reflect the send.

@@ -6,6 +6,7 @@ import { runResearcher, enrichBanker } from "./researcher";
 import { runCorrespondent } from "./correspondent";
 import { runCritic } from "./critic";
 import { sendEmailAsUser, saveToDrafts, isGmailSendSuccess } from "@/services/gmail/send";
+import { ensureGmailDraft } from "@/services/gmail/sync-draft";
 import { restSelect, restSelectOne, restInsert, restUpdate, restCount, eq, isNull, gte } from "@/lib/supabase-rest";
 import type { TrustLevel, TrustCapability } from "@/shared/ib-types";
 import { TRUST_GRADUATION } from "@/shared/ib-constants";
@@ -212,6 +213,24 @@ export async function runPlanner(input: PlannerInput): Promise<PlannerOutput> {
       out.approved = sendResult.approved;
       out.sent = sendResult.sent;
       out.savedToDrafts = sendResult.savedToDrafts;
+    } else {
+      // user_command path: don't auto-send, but DO mirror approved drafts
+      // into the user's Gmail Drafts folder so they can preview there
+      // (and the eventual Auto-send via Gmail uses drafts.send for atomic
+      // conversion). Status stays "approved" — drafts remain visible on
+      // /today with the action buttons.
+      const approvedNow = await restSelect("drafts", {
+        select: "id",
+        filters: { user_id: eq(input.userId), status: eq("approved"), sent_at: isNull },
+        limit: 10,
+      });
+      for (const d of approvedNow) {
+        try {
+          await ensureGmailDraft(d.id);
+        } catch (err) {
+          console.warn(`[planner] ensureGmailDraft failed for ${d.id}`, err);
+        }
+      }
     }
 
     // 9. Trust-level auto-graduation

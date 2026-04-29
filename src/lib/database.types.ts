@@ -477,6 +477,7 @@ export type Database = {
           fact_check: Json | null
           guardrail_flags: Json
           critic_override: boolean
+          gmail_draft_id: string | null
           id: string
           iteration_count: number
           pre_edit_ai_body: string | null
@@ -498,6 +499,7 @@ export type Database = {
           critic_override?: boolean
           critic_review_id?: string | null
           fact_check?: Json | null
+          gmail_draft_id?: string | null
           guardrail_flags?: Json
           id?: string
           iteration_count?: number
@@ -520,6 +522,7 @@ export type Database = {
           critic_override?: boolean
           critic_review_id?: string | null
           fact_check?: Json | null
+          gmail_draft_id?: string | null
           guardrail_flags?: Json
           id?: string
           iteration_count?: number

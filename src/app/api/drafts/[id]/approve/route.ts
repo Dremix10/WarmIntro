@@ -10,6 +10,7 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { logSignal } from "@/services/signals/log";
+import { ensureGmailDraft } from "@/services/gmail/sync-draft";
 
 interface ApproveBody { override?: boolean }
 
@@ -77,6 +78,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         criticFeedback: latestReview.feedback?.slice(0, 280) ?? null,
       },
     });
+  }
+
+  // Mirror to Gmail Drafts now that the row is approved. Best-effort —
+  // failure here doesn't block the approve. /today still surfaces the
+  // draft for manual action either way.
+  try {
+    await ensureGmailDraft(id);
+  } catch (err) {
+    console.warn(`[approve] ensureGmailDraft failed for ${id}`, err);
   }
 
   return NextResponse.json({ ok: true, criticOverride: wasRejected });
