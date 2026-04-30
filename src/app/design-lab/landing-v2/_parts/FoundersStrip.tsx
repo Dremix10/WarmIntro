@@ -1,10 +1,10 @@
 import { Reveal } from "@/components/Reveal";
 
 const TILES = [
-  { mono: "R", school: "Rice", color: "#1B3B5F" },
-  { mono: "R", school: "Rice", color: "#1B3B5F" },
-  { mono: "B", school: "Brown", color: "#7B1F2C" },
-  { mono: "M", school: "MIT", color: "#8A8674" },
+  { name: "Demetris", initial: "D", school: "Rice", color: "#1B3B5F" },
+  { name: "Christos", initial: "C", school: "Rice", color: "#1B3B5F" },
+  { name: "Evangelos", initial: "E", school: "Brown", color: "#7B1F2C" },
+  { name: "Theofanis", initial: "T", school: "MIT", color: "#8A8674" },
 ];
 
 export function FoundersStrip() {
@@ -29,11 +29,12 @@ export function FoundersStrip() {
               <div
                 className="flex h-16 w-16 items-center justify-center rounded-full text-2xl font-[family-name:var(--font-fraunces)] text-white"
                 style={{ backgroundColor: t.color }}
-                aria-label={`Founder from ${t.school}`}
+                aria-label={`${t.name}, ${t.school}`}
               >
-                {t.mono}
+                {t.initial}
               </div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5C6472]">
+              <p className="text-sm font-semibold text-[#14182A]">{t.name}</p>
+              <p className="-mt-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-[#5C6472]">
                 {t.school}
               </p>
             </div>
@@ -51,10 +52,10 @@ export function FoundersStrip() {
           </span>
           <div>
             <p className="text-sm font-semibold text-[#14182A]">
-              Track winner. Y-Claude Builder Club Hackathon at Rice.
+              Track winner · Y-Claude Hackathon at Rice
             </p>
             <p className="mt-1 text-xs text-[#5C6472]">
-              April 2026 · 6,047 lines of TypeScript shipped in 4 hours, zero merge conflicts
+              April 2026 · Now in private beta with Rice, Brown &amp; MIT testers
             </p>
           </div>
         </div>
