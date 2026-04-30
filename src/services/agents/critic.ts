@@ -225,7 +225,7 @@ Return JSON:
       verdict: "approve" | "reject";
       feedback: string;
       suggestedRevision?: string;
-    }>(prompt, { systemPrompt: SYSTEM_PROMPT, maxTokens: 1024, skipCache: true, model: OPUS_MODEL });
+    }>(prompt, { systemPrompt: SYSTEM_PROMPT, maxTokens: 1024, model: OPUS_MODEL });
 
     const minAxis = Math.min(result.scores.specificity, result.scores.voiceMatch, result.scores.guardrails, result.scores.sharedGround);
     let verdict: CriticVerdict = minAxis >= APPROVAL_THRESHOLD ? "approve" : "reject";

@@ -174,7 +174,6 @@ Rules:
     return await askClaudeJSON<ClassificationResult>(prompt, {
       systemPrompt: CLASSIFY_SYSTEM,
       maxTokens: 768,
-      skipCache: true,
     });
   } catch {
     return {
@@ -219,7 +218,7 @@ REPLY BODY:
 ${msg.body.slice(0, 800)}
 
 Return JSON: {"sendTime"?: "HH:MM", "extraDrafts"?: number, "skipDay"?: boolean, "trustLevel"?: "C"|"B"|"A"}. Omit fields the reply doesn't address.`,
-        { maxTokens: 256, skipCache: true }
+        { maxTokens: 256 }
       );
       override = { ...parsed };
     } catch {

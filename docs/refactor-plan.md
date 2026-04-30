@@ -439,7 +439,10 @@ Trade-off: a "Send" click takes up to 10s to reflect in funnel counts on the Tod
 **D3.** `[Batch 0.7]` In-process caches — *recommended: delete them.*
 They're per-instance only and don't help cold starts. Alternative: move to Upstash Redis ($0 free tier, $10/mo at scale) as a real shared cache. Worth doing if we're going to need cache for the agent system anyway; not worth it for the current footprint.
 
-> Answer:
+> Answer: **Option A′ — delete the two useless caches, keep the rate-limit map as-is.** The pure "delete everything" answer would also remove `proxy.ts:rateLimitMap`, which weakens security (a per-instance limit is weak but not zero — deleting it is strictly worse). Compromise:
+> - Deleted `claude.ts` Map + `hashKey` + `MAX_CACHE_SIZE` + `getCacheSize` + `clearCache` + `skipCache` option (and stripped `skipCache: true` from the 5 callers in `fact-checker.ts`, `correspondent.ts`, `watcher.ts` ×2, `curator.ts`, `critic.ts`). The "LRU" was actually FIFO (S1) and hit rate was ~0% at any scale; deleting kills both problems at once.
+> - Deleted the three Maps in `linkedin-search.ts` (profile, alumni, email caches). Same reasoning.
+> - **Kept `proxy.ts:rateLimitMap`** with an explicit comment documenting the per-instance limitation (S7) and the upgrade path (`@upstash/ratelimit` or Vercel Firewall) once traffic justifies it. Zero new dependency, zero new cost, security posture unchanged.
 
 ### Blocks Batch 6 (scaling)
 

@@ -42,6 +42,16 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
+// Known limitation (S7 in the codebase analysis, D3 in the refactor plan):
+// this Map is per-serverless-instance. Vercel can have multiple warm instances
+// of this middleware running concurrently; each maintains its own counter, so
+// the effective limit is `RATE_LIMITS[tier].max × instance_count`. A patient
+// attacker rotating across instances bypasses the documented limit.
+//
+// Acceptable for the private-beta phase (no real users, no abuse signal).
+// When traffic justifies, replace with a distributed store —
+// `@upstash/ratelimit` + Upstash Redis (free tier covers ~10k cmds/day) is the
+// shortest path; Vercel Firewall (dashboard-configured) is a no-code alternative.
 const rateLimitMap = new Map<string, RateLimitEntry>();
 
 function getClientIp(request: NextRequest): string {
