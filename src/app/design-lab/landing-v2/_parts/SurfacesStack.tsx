@@ -73,69 +73,38 @@ export function SurfacesStack() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const reducedMotion = useReducedMotion();
 
-  // Reduced-motion fallback: auto-unfold all panels once on viewport entry.
+  // Auto-unfold cards on viewport entry, staggered. Independent of scroll
+  // position from then on; speed-scrolling never interrupts.
   useEffect(() => {
-    if (!reducedMotion) return;
     const sec = sectionRef.current;
     if (!sec) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          window.setTimeout(() => setActiveIdx(0), 250);
-          window.setTimeout(() => setActiveIdx(1), 600);
-          window.setTimeout(() => setActiveIdx(2), 950);
+          if (reducedMotion) {
+            setActiveIdx(SURFACES.length - 1);
+          } else {
+            // Stagger card 1, 2, 3 unfolds. Activeidx -1 = all closed; 0/1/2 reveal each.
+            window.setTimeout(() => setActiveIdx(0), 600);
+            window.setTimeout(() => setActiveIdx(1), 1300);
+            window.setTimeout(() => setActiveIdx(2), 2000);
+          }
           observer.disconnect();
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.35 }
     );
     observer.observe(sec);
     return () => observer.disconnect();
   }, [reducedMotion]);
 
-  // Scroll-progress driven (default). Four phases: -1 (all closed) and 0-2.
-  useEffect(() => {
-    if (reducedMotion) return;
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      const sec = sectionRef.current;
-      if (!sec) return;
-      const rect = sec.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const pinTop = -rect.top;
-      const pinRange = rect.height - vh;
-      const raw = pinRange > 0 ? pinTop / pinRange : 0;
-      const progress = Math.max(0, Math.min(1, raw));
-      // 4 buckets: progress in [0, 0.25) → -1 (all closed),
-      // [0.25, 0.5) → 0, [0.5, 0.75) → 1, [0.75, 1] → 2.
-      const idx = Math.min(
-        SURFACES.length - 1,
-        Math.floor(progress * (SURFACES.length + 1)) - 1
-      );
-      setActiveIdx((prev) => (prev === idx ? prev : idx));
-    };
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (rafId) window.cancelAnimationFrame(rafId);
-    };
-  }, [reducedMotion]);
-
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[150vh] md:min-h-[180vh]"
+      className="relative"
       aria-label="Three product surfaces"
     >
-      <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-6xl flex-col justify-center px-6 py-10 md:py-14">
+      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Your week in Alma
