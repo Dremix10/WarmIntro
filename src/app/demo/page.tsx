@@ -101,7 +101,9 @@ function personalize(template: string, p: ParsedProfile): string {
       : "student";
   return template
     .replaceAll("{{name}}", p.name || "Student")
-    .replaceAll("{{university}}", p.university || "Rice")
+    // Don't fall back to a specific school — the demo showing "Rice" to a
+    // Brown student (Krish bug) was the bigger sin than a generic phrase.
+    .replaceAll("{{university}}", p.university || "your school")
     .replaceAll("{{major}}", p.major || "Economics")
     .replaceAll("{{year}}", yearWord)
     .replaceAll("{{yy}}", yy);
@@ -371,7 +373,7 @@ export default function DemoPage() {
                 </button>
               </form>
               {signupError && <p className="text-xs text-[#E8B339] mt-3">{signupError}</p>}
-              <p className="text-[10px] text-white/40 mt-4">Private beta · Rice &amp; Brown undergrads · Spring 2026</p>
+              <p className="text-[10px] text-white/40 mt-4">Closed beta · Brown, Rice &amp; MIT undergrads · 2026 cycle</p>
             </div>
           </div>
         )}

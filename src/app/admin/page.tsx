@@ -158,6 +158,10 @@ export default function AdminPage() {
           <Stat label="Have a thread" value={stats.hasReplies} />
         </div>
 
+        <div className="mb-6 flex items-center justify-end gap-2">
+          <TestWelcomeButton />
+        </div>
+
         {/* Waitlist queue — pilot_signups rows pending admin approval.
             Shows up only if there's something to act on; click "Approve"
             to mint a setup link + fire Telegram alert. */}
@@ -390,5 +394,47 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
     <span className={`px-2 py-0.5 rounded-full ${ok ? "bg-[#2E5A88]/15 text-[#2E5A88]" : "bg-[#C86B4F]/15 text-[#C86B4F]"}`}>
       {label}
     </span>
+  );
+}
+
+function TestWelcomeButton() {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function send() {
+    setState("sending");
+    setMsg(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/test-welcome", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(json.error ?? `HTTP ${res.status}`);
+      setState("error");
+      return;
+    }
+    setMsg(`sent to ${json.sentTo} · reply-to ${json.replyTo}`);
+    setState("sent");
+    window.setTimeout(() => setState("idle"), 6000);
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={send}
+        disabled={state === "sending"}
+        className="rounded-lg border border-[#D9CFB5] bg-white px-3 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88] disabled:opacity-50"
+      >
+        {state === "sending" ? "Sending…" : "Test welcome email"}
+      </button>
+      {msg && (
+        <span className={`text-[10px] ${state === "error" ? "text-[#C86B4F]" : "text-[#14182A]/60"}`}>
+          {msg}
+        </span>
+      )}
+    </div>
   );
 }
