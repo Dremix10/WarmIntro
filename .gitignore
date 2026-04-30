@@ -38,6 +38,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 prompt.md
-
 # claude code worktrees + local state
 .claude/
+.superpowers/
