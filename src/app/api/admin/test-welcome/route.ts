@@ -26,14 +26,22 @@ export async function POST(request: Request) {
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isAdmin(ctx.user.email)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
-  // Admin can override the recipient — useful for testing whether a particular
-  // mailbox (e.g. dc118@rice.edu) is filtering vs. whether Resend itself is
-  // healthy (test against a gmail address as a control).
-  const body = (await request.json().catch(() => ({}))) as { to?: string };
+  // Admin can override the recipient AND the FROM alias. Recipient override
+  // isolates Rice-side filtering (gmail control). FROM override lets us A/B
+  // sender reputation — e.g. test if `hello@alma.careers` lands when
+  // `noreply@alma.careers` is on a per-sender hold.
+  const body = (await request.json().catch(() => ({}))) as { to?: string; fromAlias?: string };
   const adminEmail = ctx.user.email!;
   const targetEmail = (typeof body?.to === "string" && body.to.trim().includes("@"))
     ? body.to.trim()
     : adminEmail;
+  // Whitelist of allowed FROM aliases — must be on alma.careers (DKIM signed).
+  // Empty/invalid input falls back to noreply@.
+  const fromAliasRaw = typeof body?.fromAlias === "string" ? body.fromAlias.trim().toLowerCase() : "";
+  const fromAlias = /^[a-z0-9.+_-]+$/.test(fromAliasRaw) && fromAliasRaw.length <= 32
+    ? fromAliasRaw
+    : "noreply";
+  const fromAddress = `Alma <${fromAlias}@alma.careers>`;
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (!resendKey) return NextResponse.json({ error: "RESEND_API_KEY not set" }, { status: 500 });
 
@@ -56,7 +64,7 @@ export async function POST(request: Request) {
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Alma <noreply@alma.careers>",
+        from: fromAddress,
         to: [targetEmail],
         reply_to: replyTo,
         subject: "You're in — Alma is yours",
@@ -97,6 +105,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       sentTo: targetEmail,
+      sentFrom: fromAddress,
       replyTo,
       emailId,
       deliveryStatus,

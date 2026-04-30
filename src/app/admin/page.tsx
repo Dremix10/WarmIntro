@@ -487,18 +487,22 @@ function TestWelcomeButton() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [msg, setMsg] = useState<string | null>(null);
   const [override, setOverride] = useState("");
+  const [fromAlias, setFromAlias] = useState("");
 
   async function send() {
     setState("sending");
     setMsg(null);
     const { data: { session: s } } = await supabase.auth.getSession();
+    const reqBody: { to?: string; fromAlias?: string } = {};
+    if (override.trim().includes("@")) reqBody.to = override.trim();
+    if (fromAlias.trim()) reqBody.fromAlias = fromAlias.trim();
     const res = await fetch("/api/admin/test-welcome", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${s?.access_token ?? ""}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(override.trim().includes("@") ? { to: override.trim() } : {}),
+      body: JSON.stringify(reqBody),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -508,19 +512,31 @@ function TestWelcomeButton() {
     }
     const idShort = json.emailId ? String(json.emailId).slice(0, 8) : "no-id";
     const status = json.lastEvent ?? json.deliveryStatus ?? "unknown";
-    setMsg(`→ ${json.sentTo} · resend:${idShort} · status:${status}`);
+    const fromShort = json.sentFrom ? String(json.sentFrom).match(/<([^>]+)>/)?.[1] ?? "noreply@alma.careers" : "noreply@alma.careers";
+    setMsg(`${fromShort} → ${json.sentTo} · resend:${idShort} · status:${status}`);
     setState("sent");
     window.setTimeout(() => setState("idle"), 12000);
   }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[10px] text-[#5C6472]">from:</span>
+      <div className="flex items-center rounded-lg border border-[#D9CFB5] bg-white">
+        <input
+          type="text"
+          value={fromAlias}
+          onChange={(e) => setFromAlias(e.target.value)}
+          placeholder="noreply"
+          className="px-2 py-1.5 text-xs bg-transparent outline-none w-[100px]"
+        />
+        <span className="pr-2 text-[10px] text-[#8A8674]">@alma.careers</span>
+      </div>
       <input
         type="email"
         value={override}
         onChange={(e) => setOverride(e.target.value)}
-        placeholder="optional override (e.g. dremixc10@gmail.com)"
-        className="rounded-lg border border-[#D9CFB5] px-2 py-1.5 text-xs bg-white min-w-[260px]"
+        placeholder="to override (e.g. dremixc10@gmail.com)"
+        className="rounded-lg border border-[#D9CFB5] px-2 py-1.5 text-xs bg-white min-w-[240px]"
       />
       <button
         type="button"
