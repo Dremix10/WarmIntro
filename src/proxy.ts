@@ -225,8 +225,13 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
     );
   }
 
-  // For pages: redirect to /demo so non-testers get value + lead capture
-  return NextResponse.redirect(new URL("/demo", origin));
+  // For pages: redirect to the public landing. The landing's CTAs route
+  // them to /demo (try it without an account), /request-access (ask for
+  // closed-beta access), or /login (existing testers). /demo as a hard
+  // redirect was correct when there was no public landing — now that
+  // / IS the public landing, dropping someone there is more honest and
+  // gives them every option instead of forcing the demo.
+  return NextResponse.redirect(new URL("/", origin));
 }
 
 export async function proxy(request: NextRequest) {
