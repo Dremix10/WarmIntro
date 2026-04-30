@@ -7,12 +7,13 @@
 //    Most ticks process 0–1 users because send times are spread across the day.
 //
 // 2) Watcher — process the next bucket of up to 50 gmail-connected users whose
-//    last Watcher run is older than 40 minutes (oldest first). Self-balancing:
-//    at <2k users we cycle through everyone in 40 min and idle for the rest;
-//    at ≥2k users we run flat-out and the cycle stretches naturally. No queue
-//    needed at this scale — the 50-per-minute batch fits inside a 60s function
-//    because Watcher is I/O-bound (Gmail history-id check + optional Claude
-//    classify only when there are actual new messages).
+//    last Watcher run is older than ~20 minutes (oldest first). Self-balancing:
+//    at <1k users we cycle through everyone in ~21 min and idle for the rest;
+//    at ≥1k users we run flat-out and the cycle stretches naturally (e.g. 1500
+//    users → ~30-min cycle, 2000 → ~40-min cycle). No queue needed at this
+//    scale — the 50-per-minute batch fits inside a 60s function because
+//    Watcher is I/O-bound (Gmail history-id check + optional Claude classify
+//    only when there are actual new messages).
 //
 // Cost guards already baked into runWatcher (see services/agents/watcher.ts):
 //   - sinceTimestamp uses agent_runs.started_at from the previous run, so we
@@ -32,7 +33,7 @@ export const maxDuration = 60;
 
 const TICK_WINDOW_MIN = 1;          // matches users whose send_time is within ±1 min of now
 const WATCHER_BATCH_SIZE = 50;      // max gmail polls dispatched per tick
-const WATCHER_CYCLE_MIN = 40;       // each gmail-connected user gets re-polled once per 40 min
+const WATCHER_CYCLE_MIN = 20;       // each gmail-connected user gets re-polled once per ~20 min
 const PLANNER_DEDUP_MIN = 30;       // don't fire planner twice within 30 min for the same user
 
 function isCronAuthorized(req: Request): boolean {
