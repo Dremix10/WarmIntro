@@ -539,6 +539,42 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          kind: string
+          body: string
+          page: string | null
+          user_agent: string | null
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          kind: string
+          body: string
+          page?: string | null
+          user_agent?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          kind?: string
+          body?: string
+          page?: string | null
+          user_agent?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string

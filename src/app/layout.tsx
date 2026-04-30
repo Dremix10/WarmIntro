@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import { AppProvider } from "@/components/AppProvider";
 import { NavHeader } from "@/components/NavHeader";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -40,6 +41,7 @@ export default function RootLayout({
         <AppProvider>
           <NavHeader />
           {children}
+          <FeedbackButton />
         </AppProvider>
       </body>
     </html>

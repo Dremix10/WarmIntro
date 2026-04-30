@@ -156,7 +156,7 @@ function Hero() {
             </span>
           </span>
           <span className="text-xs text-[#5C6472]">
-            Built by <strong className="text-[#14182A]">underclassmen at Rice, Brown, and MIT</strong> — going through recruiting ourselves
+            Built by <strong className="text-[#14182A]">4 students at Rice, Brown, and MIT</strong> — recruiting alongside you
           </span>
         </div>
       </div>
