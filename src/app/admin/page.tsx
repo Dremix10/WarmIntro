@@ -158,7 +158,13 @@ export default function AdminPage() {
           <Stat label="Have a thread" value={stats.hasReplies} />
         </div>
 
-        <div className="mb-6 flex items-center justify-end gap-2">
+        <div className="mb-6 rounded-2xl bg-white p-4 border border-[#D9CFB5] flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold mb-0.5">Admin tools</p>
+            <p className="text-xs text-[#14182A]/70">
+              Preview the welcome email by sending a sample to your own admin address.
+            </p>
+          </div>
           <TestWelcomeButton />
         </div>
 
@@ -426,9 +432,9 @@ function TestWelcomeButton() {
         type="button"
         onClick={send}
         disabled={state === "sending"}
-        className="rounded-lg border border-[#D9CFB5] bg-white px-3 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88] disabled:opacity-50"
+        className="shrink-0 rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
       >
-        {state === "sending" ? "Sending…" : "Test welcome email"}
+        {state === "sending" ? "Sending…" : "Send test email →"}
       </button>
       {msg && (
         <span className={`text-[10px] ${state === "error" ? "text-[#C86B4F]" : "text-[#14182A]/60"}`}>
