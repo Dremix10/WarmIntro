@@ -16,13 +16,20 @@ const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate
 // Auth routes — brute-force protection
 const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup", "/api/auth/reset-password"];
 
-// Rate limit tiers (requests per window)
+// Rate limit tiers (requests per window).
+// Default bumped to 60/min on 2026-04-30 — observed: an authed user
+// running 3× "Run Alma now" + Auto-send via Gmail + a couple page
+// refreshes inside 2 minutes was tripping the old 20/min ceiling.
+// Each Run Alma fires planner/run-now + a /api/today reload; users
+// clicking around legitimately exceed 1-every-3-seconds.
+// AI / guest_ai stay tight (cost control), auth stays tight
+// (brute-force protection).
 const RATE_LIMITS = {
   ai: { max: 5, windowMs: 60_000 },
   guest_ai: { max: 5, windowMs: 60_000 },
   auth: { max: 3, windowMs: 60_000 },
-  default: { max: 20, windowMs: 60_000 },
-  global: { max: 60, windowMs: 60_000 },
+  default: { max: 60, windowMs: 60_000 },
+  global: { max: 120, windowMs: 60_000 },
 };
 
 // User-Agent substrings that indicate automated tooling (case-insensitive match)

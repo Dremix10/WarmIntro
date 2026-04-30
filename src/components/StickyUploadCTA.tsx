@@ -21,13 +21,19 @@ export function StickyUploadCTA({ afterPx = 700 }: { afterPx?: number }) {
       style={{ animation: "fade-up-center 700ms cubic-bezier(.22,.75,.3,1)" }}
     >
       <div className="flex items-center gap-2 rounded-full border border-[#D9CFB5] bg-white p-1.5 shadow-lg shadow-[#1B3B5F]/10">
-        <button
-          type="button"
+        <a
+          href="/demo"
           className="rounded-full bg-[#1B3B5F] px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           style={{ animation: "pulse-shadow 5.5s ease-in-out infinite" }}
         >
-          Upload your resume →
-        </button>
+          Try the demo →
+        </a>
+        <a
+          href="/request-access"
+          className="rounded-full px-4 py-2 text-xs font-medium text-[#1B3B5F] transition-colors hover:bg-[#1B3B5F]/5"
+        >
+          Request access
+        </a>
         <button
           type="button"
           onClick={() => setDismissed(true)}
