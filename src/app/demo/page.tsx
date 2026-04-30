@@ -267,6 +267,32 @@ export default function DemoPage() {
               className="w-full mt-5 rounded-xl bg-[#1B3B5F] text-white py-4 font-medium hover:bg-[#2E5A88] disabled:opacity-40 transition-colors">
               Show me what Alma would send
             </button>
+
+            {/* Skip-upload path: prefills a realistic sample resume so visitors
+                who don't want to share their PDF can still see the agent
+                output. Massive conversion lift on the "give me your file"
+                friction. */}
+            <button
+              type="button"
+              onClick={() => {
+                track("demo_sample_used");
+                setProfile({
+                  name: "Sam Rivera",
+                  email: null,
+                  university: "Rice University",
+                  graduationYear: 2028,
+                  major: "Computer Science",
+                  clubs: ["Rice Investment Banking Club", "Rice Quant Society"],
+                  technicalSkills: ["Python", "SQL", "Excel"],
+                  storyOneLiner: "CS sophomore curious about how tech deals get done — drawn to TMT and software M&A specifically.",
+                });
+                track("demo_parsed", { name: "Sam Rivera", major: "Computer Science", university: "Rice University", source: "sample" });
+                setStep("results");
+              }}
+              className="w-full mt-3 rounded-xl border border-[#D9CFB5] bg-white text-[#5C6472] py-3 text-sm font-medium hover:border-[#2E5A88] hover:text-[#1B3B5F] transition-colors"
+            >
+              Don&rsquo;t want to upload? See a sample run →
+            </button>
           </div>
         )}
 
