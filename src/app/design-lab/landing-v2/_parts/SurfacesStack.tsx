@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
-import { TodayMock, CrmMock } from "./SurfaceMocks";
+import { TodayMock, NetworkMock, CrmMock } from "./SurfaceMocks";
 
 type Surface = {
   eyebrow: string;
@@ -13,10 +13,6 @@ type Surface = {
   Mock: React.ComponentType;
 };
 
-// Archipelago dropped from the marketing surfaces — it's a whimsical
-// spatial view of the same data Pipeline already shows in a more
-// recruiter-readable way. /network still exists in-app for users who
-// want it; just not surfaced on the landing where simpler beats clever.
 const SURFACES: Surface[] = [
   {
     eyebrow: "Your queue",
@@ -24,6 +20,13 @@ const SURFACES: Surface[] = [
     body: "Drafts ready for review. Trust dial: Copilot, Preview-veto, Autopilot. You decide.",
     authedHref: "/today",
     Mock: TodayMock,
+  },
+  {
+    eyebrow: "Archipelago",
+    title: "Your network, as a place.",
+    body: "Every bank is an island. Every intro builds more of a home on it.",
+    authedHref: "/network",
+    Mock: NetworkMock,
   },
   {
     eyebrow: "Pipeline",
