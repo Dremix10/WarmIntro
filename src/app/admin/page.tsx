@@ -30,13 +30,27 @@ interface AdminUser {
   connections: number;
 }
 
+interface AccessRequest {
+  id: string;
+  email: string;
+  name: string | null;
+  university: string | null;
+  major: string | null;
+  graduationYear: number | null;
+  hasResume: boolean;
+  createdAt: string;
+  approved: boolean;
+}
+
 export default function AdminPage() {
   const { session, authLoading } = useAppState();
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resetState, setResetState] = useState<Record<string, { busy?: boolean; link?: string; sent?: boolean; error?: string }>>({});
+  const [approveState, setApproveState] = useState<Record<string, { busy?: boolean; link?: string; error?: string }>>({});
 
   useEffect(() => {
     if (!authLoading && !session) { router.push("/login"); return; }
@@ -48,22 +62,46 @@ export default function AdminPage() {
     setLoading(true);
     setError(null);
     const { data: { session: s } } = await supabase.auth.getSession();
-    const res = await fetch("/api/admin/users", {
-      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-    });
-    if (res.status === 403) {
+    const headers = { Authorization: `Bearer ${s?.access_token ?? ""}` };
+    // Two reads in parallel — saves the round-trip.
+    const [usersRes, requestsRes] = await Promise.all([
+      fetch("/api/admin/users", { headers }),
+      fetch("/api/admin/access-requests", { headers }),
+    ]);
+    if (usersRes.status === 403) {
       setError("Not an admin email. Add yours to ADMIN_EMAILS env.");
       setLoading(false);
       return;
     }
-    if (!res.ok) {
-      setError(`Load failed: HTTP ${res.status}`);
+    if (!usersRes.ok) {
+      setError(`Load failed: HTTP ${usersRes.status}`);
       setLoading(false);
       return;
     }
-    const json = await res.json();
-    setUsers(json.users ?? []);
+    const usersJson = await usersRes.json();
+    setUsers(usersJson.users ?? []);
+    if (requestsRes.ok) {
+      const reqJson = await requestsRes.json();
+      setRequests(reqJson.requests ?? []);
+    }
     setLoading(false);
+  }
+
+  async function approveRequest(requestId: string) {
+    setApproveState((s) => ({ ...s, [requestId]: { busy: true } }));
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/admin/access-requests/${requestId}/approve`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setApproveState((s) => ({ ...s, [requestId]: { error: json.error ?? `HTTP ${res.status}` } }));
+      return;
+    }
+    setApproveState((s) => ({ ...s, [requestId]: { link: json.setupLink } }));
+    // Mark this request as approved locally so the UI flips immediately
+    setRequests((rs) => rs.map((r) => (r.id === requestId ? { ...r, approved: true } : r)));
   }
 
   async function resetPassword(userId: string) {
@@ -107,9 +145,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-1">Admin</p>
-        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Users</h1>
+        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Alma control room</h1>
         <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] mb-8">
-          Every Alma user. Where they are in the funnel. Reset their password if they&apos;re stuck.
+          Approve waitlist. Reset passwords. See who&rsquo;s stuck.
         </p>
 
         <div className="mb-6 rounded-2xl bg-white p-5 border border-[#D9CFB5] grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -120,6 +158,74 @@ export default function AdminPage() {
           <Stat label="Have a thread" value={stats.hasReplies} />
         </div>
 
+        {/* Waitlist queue — pilot_signups rows pending admin approval.
+            Shows up only if there's something to act on; click "Approve"
+            to mint a setup link + fire Telegram alert. */}
+        {requests.filter((r) => !r.approved).length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Waitlist</h2>
+              <p className="text-xs text-[#14182A]/55">{requests.filter((r) => !r.approved).length} pending</p>
+            </div>
+            <div className="space-y-2">
+              {requests
+                .filter((r) => !r.approved)
+                .map((r) => {
+                  const state = approveState[r.id];
+                  return (
+                    <div key={r.id} className="rounded-xl bg-white p-4 border border-[#D9CFB5]">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{r.name ?? "(no name)"}</p>
+                          <p className="text-xs text-[#14182A]/60 truncate">{r.email}</p>
+                          <p className="text-[10px] text-[#14182A]/45 mt-1">
+                            {r.university ?? "—"}
+                            {r.major ? ` · ${r.major}` : ""}
+                            {r.graduationYear ? ` · ${r.graduationYear}` : ""}
+                            {r.hasResume ? " · resume ✓" : ""}
+                            {" · "}
+                            {new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          {!state?.link ? (
+                            <button
+                              type="button"
+                              onClick={() => approveRequest(r.id)}
+                              disabled={state?.busy}
+                              className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+                            >
+                              {state?.busy ? "Approving…" : "Approve"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => navigator.clipboard.writeText(state.link!)}
+                              className="rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors"
+                              title="Copy setup link to clipboard"
+                            >
+                              copy link ✓
+                            </button>
+                          )}
+                          {state?.link && (
+                            <span className="text-[10px] text-[#14182A]/55">link sent to Telegram</span>
+                          )}
+                          {state?.error && (
+                            <span className="text-[10px] text-[#C86B4F]">{state.error}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Users</h2>
+          <p className="text-xs text-[#14182A]/55">{users.length}</p>
+        </div>
         <div className="space-y-3">
           {users.map((u) => (
             <UserRow key={u.id} user={u} resetState={resetState[u.id]} onReset={() => resetPassword(u.id)} />
