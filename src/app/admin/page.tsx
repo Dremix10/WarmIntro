@@ -52,6 +52,8 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [resetState, setResetState] = useState<Record<string, { busy?: boolean; link?: string; sent?: boolean; error?: string }>>({});
   const [approveState, setApproveState] = useState<Record<string, { busy?: boolean; link?: string; error?: string }>>({});
+  const [rejectState, setRejectState] = useState<Record<string, { busy?: boolean; error?: string }>>({});
+  const [cleanupState, setCleanupState] = useState<{ busy?: boolean; deleted?: number; error?: string }>({});
 
   useEffect(() => {
     if (!authLoading && !session) { router.push("/login"); return; }
@@ -103,6 +105,40 @@ export default function AdminPage() {
     setApproveState((s) => ({ ...s, [requestId]: { link: json.setupLink } }));
     // Mark this request as approved locally so the UI flips immediately
     setRequests((rs) => rs.map((r) => (r.id === requestId ? { ...r, approved: true } : r)));
+  }
+
+  async function rejectRequest(requestId: string) {
+    setRejectState((s) => ({ ...s, [requestId]: { busy: true } }));
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/admin/access-requests/${requestId}/reject`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setRejectState((s) => ({ ...s, [requestId]: { error: json.error ?? `HTTP ${res.status}` } }));
+      return;
+    }
+    // Drop the row from local state so it disappears from the list immediately.
+    setRequests((rs) => rs.filter((r) => r.id !== requestId));
+  }
+
+  async function cleanupE2eRequests() {
+    if (!window.confirm("Delete all e2e-* test signups? This is irreversible.")) return;
+    setCleanupState({ busy: true });
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/access-requests/cleanup-e2e", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setCleanupState({ error: json.error ?? `HTTP ${res.status}` });
+      return;
+    }
+    setCleanupState({ deleted: json.deleted ?? 0 });
+    // Drop the matching rows locally so the count updates without a reload.
+    setRequests((rs) => rs.filter((r) => !/^e2e-\d+(?:-\d+)?@/i.test(r.email)));
   }
 
   async function resetPassword(userId: string) {
@@ -170,21 +206,48 @@ export default function AdminPage() {
         </div>
 
         {/* Waitlist queue — pilot_signups rows pending admin approval.
-            Shows up only if there's something to act on; click "Approve"
-            to mint a setup link + fire Telegram alert. */}
+            Shows up only if there's something to act on. */}
         {requests.filter((r) => !r.approved).length > 0 && (
           <div className="mb-8">
             <div className="flex items-baseline justify-between mb-3">
               <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Waitlist</h2>
-              <p className="text-xs text-[#14182A]/55">{requests.filter((r) => !r.approved).length} pending</p>
+              <div className="flex items-center gap-3">
+                {requests.some((r) => /^e2e-\d+(?:-\d+)?@/i.test(r.email)) && (
+                  <button
+                    type="button"
+                    onClick={cleanupE2eRequests}
+                    disabled={cleanupState.busy}
+                    className="text-[10px] text-[#C86B4F] hover:underline disabled:opacity-50"
+                    title="Bulk-delete all e2e-* CI smoke-test signups"
+                  >
+                    {cleanupState.busy
+                      ? "Cleaning…"
+                      : cleanupState.deleted !== undefined
+                        ? `Cleaned ${cleanupState.deleted} ✓`
+                        : "Clean e2e signups ↗"}
+                  </button>
+                )}
+                <p className="text-xs text-[#14182A]/55">{requests.filter((r) => !r.approved).length} pending</p>
+              </div>
             </div>
+            {cleanupState.error && (
+              <p className="text-[10px] text-[#C86B4F] mb-2">{cleanupState.error}</p>
+            )}
             <div className="space-y-2">
               {requests
                 .filter((r) => !r.approved)
                 .map((r) => {
-                  const state = approveState[r.id];
+                  const aState = approveState[r.id];
+                  const rState = rejectState[r.id];
                   return (
-                    <WaitlistRow key={r.id} r={r} state={state} onApprove={() => approveRequest(r.id)} />
+                    <WaitlistRow
+                      key={r.id}
+                      r={r}
+                      state={aState}
+                      rejectState={rState}
+                      onApprove={() => approveRequest(r.id)}
+                      onReject={() => rejectRequest(r.id)}
+                    />
                   );
                 })}
             </div>
@@ -208,11 +271,15 @@ export default function AdminPage() {
 function WaitlistRow({
   r,
   state,
+  rejectState,
   onApprove,
+  onReject,
 }: {
   r: AccessRequest;
   state: { busy?: boolean; link?: string; error?: string } | undefined;
+  rejectState: { busy?: boolean; error?: string } | undefined;
   onApprove: () => void;
+  onReject: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   // Google's OAuth testing-mode tester list — every approved user also needs
@@ -260,30 +327,46 @@ function WaitlistRow({
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
-          {!state?.link ? (
-            <button
-              type="button"
-              onClick={onApprove}
-              disabled={state?.busy}
-              className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
-            >
-              {state?.busy ? "Approving…" : "Approve"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => navigator.clipboard.writeText(state.link!)}
-              className="rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors"
-              title="Copy setup link to clipboard"
-            >
-              copy link ✓
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {!state?.link ? (
+              <button
+                type="button"
+                onClick={onApprove}
+                disabled={state?.busy || rejectState?.busy}
+                className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+              >
+                {state?.busy ? "Approving…" : "Approve"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(state.link!)}
+                className="rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors"
+                title="Copy setup link to clipboard"
+              >
+                copy link ✓
+              </button>
+            )}
+            {!state?.link && (
+              <button
+                type="button"
+                onClick={onReject}
+                disabled={state?.busy || rejectState?.busy}
+                className="rounded-lg border border-[#D9CFB5] text-[#14182A]/60 px-3 py-1.5 text-xs font-medium hover:bg-[#EAE3D2] hover:text-[#C86B4F] transition-colors disabled:opacity-50"
+                title="Permanently delete this waitlist row"
+              >
+                {rejectState?.busy ? "…" : "Reject"}
+              </button>
+            )}
+          </div>
           {state?.link && (
             <span className="text-[10px] text-[#14182A]/55">link sent to Telegram</span>
           )}
           {state?.error && (
             <span className="text-[10px] text-[#C86B4F]">{state.error}</span>
+          )}
+          {rejectState?.error && (
+            <span className="text-[10px] text-[#C86B4F]">{rejectState.error}</span>
           )}
         </div>
       </div>
