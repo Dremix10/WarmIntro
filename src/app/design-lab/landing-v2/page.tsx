@@ -7,7 +7,6 @@ import { AuthAwareLogin } from "@/components/AuthAwareLogin";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { AnimatedHeadline } from "./_parts/AnimatedHeadline";
 import { FunnelMathAnimated } from "./_parts/FunnelMathAnimated";
-import { ScenePreviewTilted } from "./_parts/ScenePreviewTilted";
 import { AgentLoop } from "./_parts/AgentLoop";
 import { NoAITells } from "./_parts/NoAITells";
 import { TrustGradient } from "./_parts/TrustGradient";
@@ -159,13 +158,6 @@ function Hero() {
           <span className="text-xs text-[#5C6472]">
             Built by <strong className="text-[#14182A]">2 Rice · 1 Brown · 1 MIT</strong> sophomores
           </span>
-        </div>
-
-        <div
-          className="mt-12 overflow-hidden rounded-3xl border border-[#D9CFB5] bg-white shadow-sm opacity-0"
-          style={{ animation: "fade-rise 900ms cubic-bezier(.22,.75,.3,1) 2400ms forwards" }}
-        >
-          <ScenePreviewTilted />
         </div>
       </div>
     </section>
