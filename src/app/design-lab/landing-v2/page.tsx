@@ -124,15 +124,21 @@ function Hero() {
             href="/demo"
             className="rounded-full bg-[#1B3B5F] px-7 py-3.5 text-base font-semibold text-white shadow-[0_8px_24px_-8px_rgba(27,59,95,.5)] transition-all hover:-translate-y-0.5 hover:bg-[#2E5A88] hover:shadow-[0_12px_32px_-8px_rgba(27,59,95,.6)]"
           >
-            Upload your resume →
+            Try the demo →
           </a>
           <a
-            href="#how"
-            className="alma-card rounded-full border border-[#D9CFB5] px-6 py-3.5 text-base font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
+            href="/request-access"
+            className="alma-card rounded-full border border-[#1B3B5F] px-6 py-3.5 text-base font-medium text-[#1B3B5F] hover:bg-[#1B3B5F]/5"
           >
-            See how it works
+            Request access
           </a>
-          <p className="ml-1 text-xs text-[#5C6472]">~3 min to set up · free for 2026 cycle</p>
+          <a
+            href="/login"
+            className="text-base font-medium text-[#1B3B5F]/70 hover:text-[#1B3B5F] underline-offset-4 hover:underline"
+          >
+            Sign in
+          </a>
+          <p className="ml-1 text-xs text-[#5C6472]">Closed beta · 100 founding users · free for 2026 cycle</p>
         </div>
 
         <div
@@ -255,7 +261,13 @@ function ClosingCTA() {
             href="/demo"
             className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           >
-            Upload your resume →
+            Try the demo →
+          </a>
+          <a
+            href="/request-access"
+            className="rounded-full border border-[#1B3B5F] px-6 py-3 text-sm font-semibold text-[#1B3B5F] transition-colors hover:bg-[#1B3B5F]/5"
+          >
+            Request access
           </a>
           <a
             href="mailto:founders@alma.careers"

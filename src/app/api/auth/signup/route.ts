@@ -1,38 +1,20 @@
+// POST /api/auth/signup — DISABLED. Alma is in closed beta; account creation
+// goes through admin invite (admin reset-password flow) only. Public users
+// who land here are routed to /request-access instead.
+//
+// We keep the route mounted (rather than deleting it) so old clients that
+// still POST here get a clear error + the redirect path, instead of a
+// generic 404.
+
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase-server";
 
-export async function POST(request: Request) {
-  try {
-    const { email, password } = (await request.json()) as {
-      email: string;
-      password: string;
-    };
-
-    if (!email || !password) {
-      return NextResponse.json({ error: "email and password are required" }, { status: 400 });
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
-    }
-
-    if (!email.endsWith('@rice.edu')) {
-      return NextResponse.json({ error: "Early access is limited to @rice.edu emails" }, { status: 400 });
-    }
-
-    const supabase = createServerClient();
-    const { data, error } = await supabase.auth.signUp({ email, password });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json({
-      user: data.user ? { id: data.user.id, email: data.user.email } : null,
-      session: data.session,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Signup failed";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: "closed_beta",
+      message: "Alma is in closed beta. Request access at /request-access — we'll email you when a spot opens.",
+      redirectTo: "/request-access",
+    },
+    { status: 403 }
+  );
 }
