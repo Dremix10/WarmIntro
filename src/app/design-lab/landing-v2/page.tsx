@@ -198,11 +198,10 @@ function FunnelSection() {
       </Reveal>
 
       <Reveal delay={200}>
-        <p className="mx-auto mt-10 max-w-md text-center text-sm font-[family-name:var(--font-fraunces)] italic text-[#5C6472]">
-          &ldquo;The point isn&rsquo;t to hustle harder. It&rsquo;s to be consistent. An hour, three
-          reaches, three times a week.&rdquo;
+        <p className="mx-auto mt-12 max-w-2xl text-center text-lg font-[family-name:var(--font-fraunces)] italic leading-snug text-[#4A5260] md:text-xl">
+          &ldquo;Five minutes a morning. Sixteen weeks of consistency. One offer.&rdquo;
           <br />
-          <span className="text-[11px] not-italic">· Alma</span>
+          <span className="text-xs not-italic text-[#5C6472]">· Alma</span>
         </p>
       </Reveal>
     </section>

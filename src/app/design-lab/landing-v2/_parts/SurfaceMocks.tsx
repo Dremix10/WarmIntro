@@ -336,12 +336,17 @@ export function NetworkMock() {
                 </g>
               )}
 
-              {/* Labels under island */}
+              {/* Labels under island. Bumped from 7/5 to 11/8 so they're
+                  actually readable at the rendered card size — the prior
+                  values were essentially decorative on anything below
+                  desktop-large. fontWeight on the name strengthens it
+                  against the sand background. */}
               <text
                 x={cx}
-                y={cy + base * 0.78}
+                y={cy + base * 0.78 + 2}
                 textAnchor="middle"
-                fontSize="7"
+                fontSize="11"
+                fontWeight="600"
                 fill={PALETTE.ink}
                 fontFamily="var(--font-fraunces)"
               >
@@ -349,9 +354,9 @@ export function NetworkMock() {
               </text>
               <text
                 x={cx}
-                y={cy + base * 0.78 + 8}
+                y={cy + base * 0.78 + 13}
                 textAnchor="middle"
-                fontSize="5"
+                fontSize="8"
                 fill={PALETTE.faint}
               >
                 {role}

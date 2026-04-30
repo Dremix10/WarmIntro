@@ -2,12 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type AgentId = "researcher" | "correspondent" | "critic" | "watcher" | "curator";
-
-type Variant = "default" | "draft" | "reject" | "approve";
+type Variant = "default" | "draft" | "approve";
 
 type Step = {
-  agent: AgentId;
   shortLabel: string;
   eyebrow: string;
   title: string;
@@ -15,59 +12,36 @@ type Step = {
   variant?: Variant;
 };
 
+// Four visitor-facing steps. Internal multi-agent architecture (the
+// revise loop, the per-axis Critic, the cross-user signal flywheel) is
+// intentionally not surfaced here — that's IP we don't hand to readers
+// of the marketing page.
 const STEPS: Step[] = [
   {
-    agent: "researcher",
     shortLabel: "Find",
-    eyebrow: "Researcher · just now",
-    title: "Found Maya Chen, VP TMT, Morgan Stanley",
-    body: "Brown CS '15 · same-school priority on · warmth 88 · public Q4 2025 software deal · most recent post 2 days ago.",
+    eyebrow: "Step 1 · just now",
+    title: "Maya Chen, VP TMT, Morgan Stanley",
+    body: "Brown CS alum · warmth 88 · led a software deal last quarter · posted 2 days ago.",
   },
   {
-    agent: "correspondent",
-    shortLabel: "Draft v1",
-    eyebrow: "Correspondent · drafting",
-    title: "First pass at the email",
-    body: "Hi Maya, I hope this email finds you well. I'm a sophomore at Brown studying CS, passionate about finance and excited about the intersection of technology and capital markets. I'd love to learn more about your journey at Morgan Stanley TMT.",
-    variant: "draft",
-  },
-  {
-    agent: "critic",
-    shortLabel: "Reject",
-    eyebrow: "Critic · reviewing v1",
-    title: "Rejected: too generic",
-    body: "Voice: too formal. Specificity: missing the recent deal reference. Send back to Correspondent for a revise.",
-    variant: "reject",
-  },
-  {
-    agent: "correspondent",
-    shortLabel: "Draft v2",
-    eyebrow: "Correspondent · revised",
-    title: "Tighter, in the student's voice",
+    shortLabel: "Write",
+    eyebrow: "Step 2 · in your voice",
+    title: "Email drafted, sounds like you",
     body: "Hi Maya, I'm a Brown CS sophomore looking at TMT and saw your team led the Q4 software deal. I'm trying to learn how a banker actually thinks about a deal like that. Free for 15 minutes next week?",
     variant: "draft",
   },
   {
-    agent: "critic",
-    shortLabel: "Approve",
-    eyebrow: "Critic · reviewing v2",
-    title: "Approved on all four axes",
-    body: "Voice ✓ · Specificity ✓ · Arc ✓ · Ask ✓. Ready to send from Gmail at the user's preferred time.",
+    shortLabel: "Send",
+    eyebrow: "Step 3 · from your Gmail",
+    title: "Sent from your inbox at your preferred time",
+    body: "Goes out at 8am Tuesday from your real address. Banker replies to you, not to a third-party system.",
     variant: "approve",
   },
   {
-    agent: "watcher",
     shortLabel: "Reply",
-    eyebrow: "Watcher · 2 days later",
+    eyebrow: "Step 4 · 2 days later",
     title: "Reply received from Maya",
-    body: "\"Tuesday 4pm work for you?\" Stage advanced from Sent → Coffee. Calendar invite drafted automatically.",
-  },
-  {
-    agent: "curator",
-    shortLabel: "Learn",
-    eyebrow: "Curator · background",
-    title: "Profile + signal updated",
-    body: "Maya's profile gets the recent_deal signal. Tomorrow's queue is sharper, for everyone using Alma.",
+    body: "\"Tuesday 4pm work for you?\" Pipeline advances from Sent → Coffee. Follow-up suggestions surface automatically.",
   },
 ];
 
@@ -156,15 +130,15 @@ export function AgentLoop() {
       id="how"
       ref={sectionRef}
       className="relative min-h-[140vh] md:min-h-[180vh]"
-      aria-label="The agent loop, one banker through the pipeline"
+      aria-label="One banker, end to end"
     >
       <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-6xl flex-col justify-center px-6 py-10 md:py-14">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
-            One banker, six agents
+            One banker, end to end
           </p>
           <h2 className="mt-4 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            The loop, in motion.
+            From cold name to coffee.
           </h2>
         </div>
 
@@ -183,17 +157,11 @@ export function AgentLoop() {
                   <span className="font-mono text-[10px] tracking-[0.08em] text-[#8A8674]">
                     {pad(i + 1)}
                   </span>
-                  {s.variant === "reject" && (
-                    <span className="text-[10px] font-bold text-[#991B1B]">✗</span>
-                  )}
                   {s.variant === "approve" && (
                     <span className="text-[10px] font-bold text-[#065F46]">✓</span>
                   )}
                 </div>
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#2E5A88]">
-                  {s.agent}
-                </p>
-                <p className="mt-0.5 text-sm font-[family-name:var(--font-fraunces)] leading-tight text-[#14182A]">
+                <p className="mt-3 text-base font-[family-name:var(--font-fraunces)] leading-tight text-[#14182A]">
                   {s.shortLabel}
                 </p>
               </div>
@@ -224,14 +192,9 @@ export function AgentLoop() {
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#2E5A88]">
                 {step.eyebrow}
               </p>
-              {step.variant === "reject" && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#991B1B]">
-                  ✗ rejected
-                </span>
-              )}
               {step.variant === "approve" && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#D1FAE5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#065F46]">
-                  ✓ approved
+                  ✓ ready
                 </span>
               )}
             </div>
@@ -243,8 +206,7 @@ export function AgentLoop() {
         </div>
 
         <p className="mx-auto mt-6 max-w-md text-center text-xs text-[#8A8674]">
-          Planner orchestrates this loop deterministically every fifteen minutes. Curator runs in the
-          background, keeping the banker graph fresh.
+          One banker takes about 90 seconds end to end. Multiply by your batch size — Alma runs while you sleep.
         </p>
       </div>
     </section>
