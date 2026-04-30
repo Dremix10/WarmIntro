@@ -101,7 +101,7 @@ function Hero() {
           className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472] opacity-0"
           style={{ animation: "fade-rise 700ms cubic-bezier(.22,.75,.3,1) 0ms forwards" }}
         >
-          Investment banking &middot; for Brown &amp; Rice students &middot; 2026 cycle
+          Investment banking &middot; for Brown, Rice &amp; MIT students &middot; 2026 cycle
         </p>
 
         <AnimatedHeadline />
@@ -156,7 +156,7 @@ function Hero() {
             </span>
           </span>
           <span className="text-xs text-[#5C6472]">
-            Built by <strong className="text-[#14182A]">4 students at Rice, Brown, and MIT</strong> — recruiting alongside you
+            Built by <strong className="text-[#14182A]">4 students at Rice, Brown, and MIT</strong> — going through the IB cycle right now ourselves
           </span>
         </div>
       </div>
