@@ -175,7 +175,10 @@ export default function DemoPage() {
       const res = await fetch("/api/parse-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText, university: "Rice University" }),
+        // Don't pass a hardcoded university — Krish from a non-Rice school
+        // saw himself classified as a Rice student because of this. The
+        // parser detects the school from the resume text on its own.
+        body: JSON.stringify({ resumeText }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       const { profile: p } = (await res.json()) as { profile: ParsedProfile };
