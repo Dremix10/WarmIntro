@@ -14,8 +14,6 @@ interface LinkedInProfile {
   headline: string;
 }
 
-const profileCache = new Map<string, LinkedInProfile | null>();
-
 let serperKeyWarned = false;
 
 async function searchSerper(query: string, num: number = 3): Promise<SerperResult[]> {
@@ -54,11 +52,6 @@ export async function findLinkedInProfile(
   company: string,
   university: string
 ): Promise<LinkedInProfile | null> {
-  const cacheKey = `${role}::${company}::${university}`;
-  if (profileCache.has(cacheKey)) {
-    return profileCache.get(cacheKey) ?? null;
-  }
-
   // Try specific query first, then broader fallback
   const queries = [
     `site:linkedin.com/in "${role}" "${company}" "${university}"`,
@@ -72,17 +65,14 @@ export async function findLinkedInProfile(
     );
 
     if (linkedinResult) {
-      const profile: LinkedInProfile = {
+      return {
         name: extractNameFromTitle(linkedinResult.title),
         linkedinUrl: linkedinResult.link,
         headline: linkedinResult.snippet.slice(0, 200),
       };
-      profileCache.set(cacheKey, profile);
-      return profile;
     }
   }
 
-  profileCache.set(cacheKey, null);
   return null;
 }
 
@@ -95,18 +85,11 @@ export async function findLinkedInProfiles(
   return results;
 }
 
-const alumniCache = new Map<string, LinkedInProfile[]>();
-
 export async function findRealAlumni(
   company: string,
   university: string,
   count: number = 5
 ): Promise<LinkedInProfile[]> {
-  const cacheKey = `real::${company}::${university}`;
-  if (alumniCache.has(cacheKey)) {
-    return alumniCache.get(cacheKey)!.slice(0, count);
-  }
-
   const query = `site:linkedin.com/in "${company}" "${university}"`;
   const results = await searchSerper(query, count + 2);
 
@@ -127,18 +110,10 @@ export async function findRealAlumni(
     if (profiles.length >= count) break;
   }
 
-  alumniCache.set(cacheKey, profiles);
   return profiles;
 }
 
-const emailCache = new Map<string, string | null>();
-
 export async function findEmail(name: string, companyDomain: string): Promise<string | null> {
-  const cacheKey = `${name}::${companyDomain}`;
-  if (emailCache.has(cacheKey)) {
-    return emailCache.get(cacheKey) ?? null;
-  }
-
   // Search for the person's email by looking for their name + domain
   const query = `"${name}" "@${companyDomain}"`;
   const results = await searchSerper(query, 5);
@@ -149,7 +124,6 @@ export async function findEmail(name: string, companyDomain: string): Promise<st
     const text = r.title + " " + r.snippet;
     const match = text.match(emailRegex);
     if (match) {
-      emailCache.set(cacheKey, match[0].toLowerCase());
       return match[0].toLowerCase();
     }
   }
@@ -161,10 +135,8 @@ export async function findEmail(name: string, companyDomain: string): Promise<st
 
   const verifyResults = await searchSerper(`"${guessedEmail}"`, 2);
   if (verifyResults.length > 0) {
-    emailCache.set(cacheKey, guessedEmail);
     return guessedEmail;
   }
 
-  emailCache.set(cacheKey, null);
   return null;
 }

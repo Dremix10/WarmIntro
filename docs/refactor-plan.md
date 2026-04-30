@@ -12,6 +12,27 @@
 
 ---
 
+## Status checkpoint (decisions D1–D5 resolved)
+
+Session worked through the decisions sequentially with security-first / no-cost / 1k-user-ready / don't-break-anything as the binding constraints. Detailed answers in the *Open decisions* section at the bottom; high-level summary here so anyone opening this doc sees current state first.
+
+| # | Item | Decision | Commit |
+|---|---|---|---|
+| **D1** | Auth header refactor | **Skip.** Double `getUser()` call is defense-in-depth, not a bug. Removing the second check trades immediate session-revocation detection for a JWT-TTL window of usable stolen tokens. The ~300ms tax is acceptable; perf wins from 0.2 + 0.3 + 0.4 cover most of the gap without touching the auth boundary. | — |
+| **D2** | Cache freshness | **Done.** `Cache-Control: private, max-age=0, stale-while-revalidate=300` on `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`. Always-fresh-on-next-nav, never-blocking paint, free at scale. | `efe1f33` |
+| **D3** | In-process caches | **Done (A′).** Deleted `claude.ts` Map (was misnamed FIFO-as-LRU, ~0% hit rate at scale) and three Maps in `linkedin-search.ts`. Stripped `skipCache` from 5 callers. Kept `proxy.ts:rateLimitMap` with explicit comment documenting per-instance limitation (S7) — deleting it would weaken security; upgrade path noted. | `904a1d3` |
+| **D4** | Cron fan-out | **Done (parallel-cron, no external queue).** Cron now fires every minute; each tick dispatches up to 50 gmail-connected users whose last Watcher run is older than ~20 min, oldest-first, parallel via `Promise.allSettled`. Self-balances: ≤1k users → ~21-min cycle with idle headroom; >1k users → cycle stretches naturally. Added `services/queue/dispatch.ts` abstraction so future QStash migration is a one-file change. $0 cost today, $0 at 1k users. | `78357d5` + `f1d7c4d` |
+| **D5** | Route groups + auth services | **Mostly skip; one targeted fix.** Hid `/design-lab/*` from production routing (404 in prod, accessible in `npm run dev`) — the only current bug. Backlogged `isAdmin` consolidation in `BACKEND_REQUESTS.md` (P2 tech debt) since the three copies are byte-identical today. Skipped route groups (~30 file moves, lost git blame, zero behavior gain) and gate extraction (cosmetic). | `55dbd12` |
+| D6 | Shared service helpers | open | — |
+| D7 | Test database | open | — |
+| D8 | (whatever's next) | open | — |
+
+**Branch:** `claude/explain-cache-freshness-5X676`. All commits pushed.
+
+**Tone of decisions so far:** prefer the smallest correct change. Skip cosmetics that don't fix current bugs. Document upgrade paths (Upstash Redis for D3, QStash for D4, isAdmin consolidation for D5) so future-us can pick them up the moment a real signal justifies the work.
+
+---
+
 ## Why now
 
 Two pressures forced a v2:
@@ -429,31 +450,34 @@ Ship one per week with a soak between. **2 hrs of code, weeks of soak.**
 **D1.** `[Batch 0.1]` Auth header refactor — *recommended: HMAC-signed `x-alma-user-id` header (simpler).*
 Alternative: verify the JWT in middleware and pass the parsed claims as plaintext headers (slightly safer if `ALMA_INTERNAL_SECRET` ever leaks).
 
-> Answer:
+> Answer: **Skip.** Security is the higher priority; the double `getUser()` call is defense-in-depth, not a bug. Removing the second check trades immediate session-revocation detection (logout / password reset / admin disable lock the user out within seconds) for up to a JWT-TTL-long window of usable stolen tokens. The ~300ms tax is acceptable; the perf wins in 0.2 (parallelize reads), 0.3 (HTTP caching), and 0.4 (optimistic UI) cover most of the gap without touching the auth boundary. Revisit only if those three together don't get clicks under 500ms.
 
 **D2.** `[Batch 0.3]` Cache freshness — *recommended: `Cache-Control: private, max-age=10, stale-while-revalidate=60` on `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`.*
 Trade-off: a "Send" click takes up to 10s to reflect in funnel counts on the Today page. If that's too long, we can drop to 5s or use `max-age=0, stale-while-revalidate=30` (always revalidates but serves stale instantly).
 
-> Answer:
+> Answer: **`Cache-Control: private, max-age=0, stale-while-revalidate=300`** on all four endpoints. Optimizes for minimum perceived delay at our current scale (~1k users target) while leaving an obvious upgrade path. `max-age=0` means every navigation triggers a background revalidation; `swr=300` means the user sees the cached paint instantly for up to 5 min of idle time. Combined with optimistic UI (0.4), users never see stale funnel counts. Server-load cost (~20k revalidations/day at 1k users) is trivial for Supabase Pro and the parallelized reads from 0.2. Upgrade levers when we cross ~10k users: (a) bump to `max-age=30, swr=600` (one-line change, ~30× fewer revalidations, accept 30s staleness), or (b) add Upstash Redis as a shared cache (D3) so origin reads stop mattering. Implemented in `src/app/api/{today,profile,connections,agents/runs}/route.ts`.
 
 **D3.** `[Batch 0.7]` In-process caches — *recommended: delete them.*
 They're per-instance only and don't help cold starts. Alternative: move to Upstash Redis ($0 free tier, $10/mo at scale) as a real shared cache. Worth doing if we're going to need cache for the agent system anyway; not worth it for the current footprint.
 
-> Answer:
+> Answer: **Option A′ — delete the two useless caches, keep the rate-limit map as-is.** The pure "delete everything" answer would also remove `proxy.ts:rateLimitMap`, which weakens security (a per-instance limit is weak but not zero — deleting it is strictly worse). Compromise:
+> - Deleted `claude.ts` Map + `hashKey` + `MAX_CACHE_SIZE` + `getCacheSize` + `clearCache` + `skipCache` option (and stripped `skipCache: true` from the 5 callers in `fact-checker.ts`, `correspondent.ts`, `watcher.ts` ×2, `curator.ts`, `critic.ts`). The "LRU" was actually FIFO (S1) and hit rate was ~0% at any scale; deleting kills both problems at once.
+> - Deleted the three Maps in `linkedin-search.ts` (profile, alumni, email caches). Same reasoning.
+> - **Kept `proxy.ts:rateLimitMap`** with an explicit comment documenting the per-instance limitation (S7) and the upgrade path (`@upstash/ratelimit` or Vercel Firewall) once traffic justifies it. Zero new dependency, zero new cost, security posture unchanged.
 
 ### Blocks Batch 6 (scaling)
 
 **D4.** `[Batch 6.4]` Cron fan-out queue — *recommended: QStash (Upstash, $0 free tier, simplest).*
 Alternatives: Vercel native queue (newer, limited features), Inngest (richer DX, more setup). Required before user count crosses ~50.
 
-> Answer:
+> Answer: **Skip the external queue. Use parallel-cron with self-balancing batches.** Cron fires every minute (`* * * * *` in `vercel.json`); each tick processes up to 50 gmail-connected users whose last Watcher run is older than ~20 min, sorted oldest-first. At ≤1k users this means full coverage in ~21 min and idle ticks the rest of the cycle (each user re-polled every ~21 min); at >1k users the cycle stretches proportionally (1500 users → ~30 min, 2000 users → ~40 min). Watcher is I/O-bound (Gmail history-id check + optional Claude classify only when there are new messages) so 50 in-flight async calls fit comfortably in a 60s function. The Planner side is naturally throttled by users' staggered `preferred_send_time` and now also dedups against `agent_runs` to prevent double-fires when cron drift straddles a tick boundary. Both sides parallelized via `Promise.allSettled`. Future scale-out path (>1k users or sub-20-min freshness): swap the bodies of `dispatchWatcher` / `dispatchPlanner` in `src/services/queue/dispatch.ts` from direct calls to `qstash.publishJSON(...)` — call sites in the cron tick don't change. Vendor-swap insurance was the whole point of the abstraction. Cost today: $0. Cost at 1k users: $0. No vendor account, no env vars, no new dependency.
 
 ### Blocks Batches 1-3 (structural)
 
 **D5.** `[Batch 3]` Route groups — *recommended: yes, `(marketing)` / `(auth)` / `(app)` groups.*
 Alternative: keep flat layout. Groups give a clearer mental model but mean every existing page-import path changes.
 
-> Answer:
+> Answer: **Mostly skip; one targeted fix.** Of the three Batch 3 items, only the `isAdmin` duplication has any security relevance, and the three copies are byte-identical today (no current bug, only future drift risk) — backlogged in `BACKEND_REQUESTS.md` under "P2 — tech debt / code hygiene." Route groups and gate extraction are pure code-organization moves with zero current bug, so they're not worth the file-move blast radius. The one current issue worth fixing now is `/design-lab/*` being publicly routable: added a production-only 404 in `src/proxy.ts` so the reference UIs are reachable in `npm run dev` (Option 3, dev-only) but return 404 on Vercel deploys. Files stay in `src/app/design-lab/` for cofounder editing access.
 
 **D6.** `[Batch 1]` Shared service helpers — *recommended: keep `services/outreach/` and `services/pipeline/` independent for now.*
 Alternative: introduce `services/core/` upfront for cross-cutting helpers. Premature unless real overlap shows up.

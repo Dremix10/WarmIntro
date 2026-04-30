@@ -268,7 +268,7 @@ Constraints: Don't propose anything that drops or modifies existing columns. Onl
 
     const { proposals } = await askClaudeJSON<{ proposals: Array<{ change_type: string; sql: string; rationale: string }> }>(
       prompt,
-      { maxTokens: 1024, skipCache: true }
+      { maxTokens: 1024 }
     );
 
     let drafted = 0;

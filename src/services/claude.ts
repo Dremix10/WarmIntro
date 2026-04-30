@@ -12,37 +12,16 @@ const MODEL = "claude-sonnet-4-20250514";
 // revision history; Opus 4.7 reliably honors multi-step constraint prompts.
 export const OPUS_MODEL = "claude-opus-4-7";
 
-const MAX_CACHE_SIZE = 200;
-const cache = new Map<string, string>();
-
-function hashKey(prompt: string, systemPrompt?: string): string {
-  const input = `${systemPrompt ?? ""}::${prompt}`;
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
-  }
-  return hash.toString(36);
-}
-
 export async function askClaude(
   prompt: string,
   options?: {
     systemPrompt?: string;
     maxTokens?: number;
-    skipCache?: boolean;
     model?: string;
   }
 ): Promise<string> {
   const maxTokens = options?.maxTokens ?? 1024;
   const model = options?.model ?? MODEL;
-  // Cache is keyed on (model + system + prompt) so two callers with
-  // different models don't collide.
-  const key = hashKey(prompt, `${model}::${options?.systemPrompt ?? ""}`);
-
-  if (!options?.skipCache && cache.has(key)) {
-    return cache.get(key)!;
-  }
 
   const response = await client.messages.create({
     model,
@@ -51,17 +30,10 @@ export async function askClaude(
     messages: [{ role: "user", content: prompt }],
   });
 
-  const text = response.content
+  return response.content
     .filter((block): block is Anthropic.TextBlock => block.type === "text")
     .map((block) => block.text)
     .join("");
-
-  if (cache.size >= MAX_CACHE_SIZE) {
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-  cache.set(key, text);
-  return text;
 }
 
 export async function askClaudeJSON<T>(
@@ -69,7 +41,6 @@ export async function askClaudeJSON<T>(
   options?: {
     systemPrompt?: string;
     maxTokens?: number;
-    skipCache?: boolean;
     model?: string;
   }
 ): Promise<T> {
@@ -91,12 +62,4 @@ export async function askClaudeJSON<T>(
     .trim();
 
   return JSON.parse(cleaned) as T;
-}
-
-export function getCacheSize(): number {
-  return cache.size;
-}
-
-export function clearCache(): void {
-  cache.clear();
 }

@@ -196,5 +196,15 @@ Once web push feels stale; out of scope for MVP.
 
 ---
 
+## P2 — tech debt / code hygiene
+
+### Consolidate `isAdmin` into a single helper
+- **Why:** `isAdmin(email)` is currently copy-pasted in three admin routes (`api/admin/users/route.ts`, `api/admin/users/[id]/resume/route.ts`, `api/admin/users/[id]/reset-password/route.ts`). All three are byte-identical today, but the next time someone updates the allowlist they'll silently miss two copies — exactly the kind of drift that creates a security inconsistency (admin route X accepts an email that admin route Y rejects).
+- **What to build:** `src/services/auth/admin.ts` exporting `isAdmin(email)` and `assertAdmin(ctx)`. Replace the three inline copies. ~10 min of work, near-zero break risk.
+- **Acceptance:** all three admin routes import from one module; grep for the old inline `isAdmin` definitions returns zero hits.
+- **Reference:** D5 / Batch 3 in `docs/refactor-plan.md`.
+
+---
+
 ## Completed
 *(none yet — backend work begins tomorrow)*

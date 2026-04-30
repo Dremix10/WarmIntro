@@ -17,7 +17,14 @@ export async function GET(request: Request) {
       .eq("user_id", user.id)
       .order("sent_at", { ascending: false });
 
-    return NextResponse.json({ connections: data ?? [] });
+    return NextResponse.json(
+      { connections: data ?? [] },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
+        },
+      },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load connections";
     return NextResponse.json({ error: message }, { status: 500 });

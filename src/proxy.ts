@@ -49,6 +49,16 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
+// Known limitation (S7 in the codebase analysis, D3 in the refactor plan):
+// this Map is per-serverless-instance. Vercel can have multiple warm instances
+// of this middleware running concurrently; each maintains its own counter, so
+// the effective limit is `RATE_LIMITS[tier].max × instance_count`. A patient
+// attacker rotating across instances bypasses the documented limit.
+//
+// Acceptable for the private-beta phase (no real users, no abuse signal).
+// When traffic justifies, replace with a distributed store —
+// `@upstash/ratelimit` + Upstash Redis (free tier covers ~10k cmds/day) is the
+// shortest path; Vercel Firewall (dashboard-configured) is a no-code alternative.
 const rateLimitMap = new Map<string, RateLimitEntry>();
 
 function getClientIp(request: NextRequest): string {
@@ -236,6 +246,14 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // /design-lab/* is dev-only — reference UIs for staged migration. Routable
+  // when NODE_ENV !== "production" (i.e. `npm run dev`); 404 in prod and on
+  // Vercel deploys. Files stay in src/app/design-lab/ for editor access; the
+  // router just refuses to serve them outside local dev.
+  if (pathname.startsWith("/design-lab") && process.env.NODE_ENV === "production") {
+    return new NextResponse(null, { status: 404 });
+  }
 
   // Private-beta gate runs FIRST — everything else is inside the gate
   const gate = await checkTestingGate(request);
