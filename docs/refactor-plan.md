@@ -456,7 +456,7 @@ Alternatives: Vercel native queue (newer, limited features), Inngest (richer DX,
 **D5.** `[Batch 3]` Route groups — *recommended: yes, `(marketing)` / `(auth)` / `(app)` groups.*
 Alternative: keep flat layout. Groups give a clearer mental model but mean every existing page-import path changes.
 
-> Answer:
+> Answer: **Mostly skip; one targeted fix.** Of the three Batch 3 items, only the `isAdmin` duplication has any security relevance, and the three copies are byte-identical today (no current bug, only future drift risk) — backlogged in `BACKEND_REQUESTS.md` under "P2 — tech debt / code hygiene." Route groups and gate extraction are pure code-organization moves with zero current bug, so they're not worth the file-move blast radius. The one current issue worth fixing now is `/design-lab/*` being publicly routable: added a production-only 404 in `src/proxy.ts` so the reference UIs are reachable in `npm run dev` (Option 3, dev-only) but return 404 on Vercel deploys. Files stay in `src/app/design-lab/` for cofounder editing access.
 
 **D6.** `[Batch 1]` Shared service helpers — *recommended: keep `services/outreach/` and `services/pipeline/` independent for now.*
 Alternative: introduce `services/core/` upfront for cross-cutting helpers. Premature unless real overlap shows up.
