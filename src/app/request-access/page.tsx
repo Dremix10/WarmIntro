@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 // Public access-request page. Sits next to /demo as the lighter-weight
 // option for visitors who don't want to upload a resume just to ask for
@@ -48,7 +49,8 @@ export default function RequestAccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6 py-16">
+    <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6 py-16">
+      <PublicTopBar />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Closed beta</p>

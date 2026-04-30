@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
 import { useAppState } from "@/components/AppProvider";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 export default function LoginPage() {
   const { session, authLoading } = useAppState();
@@ -30,7 +31,8 @@ export default function LoginPage() {
   }, [authLoading, session, router]);
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6">
+    <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6">
+      <PublicTopBar />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Private beta</p>
@@ -63,7 +65,7 @@ export default function LoginPage() {
         <p className="text-center mt-6 text-xs text-[#14182A]/40">
           <a href="/forgot-password" className="underline hover:text-[#2E5A88]">Forgot password</a>
           <span className="mx-2">·</span>
-          Not a tester yet? <a href="/coming-soon" className="underline hover:text-[#2E5A88]">Join the waitlist</a>
+          Not a tester yet? <a href="/request-access" className="underline hover:text-[#2E5A88]">Request access</a>
         </p>
       </div>
     </div>

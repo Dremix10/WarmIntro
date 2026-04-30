@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 // Self-owned recovery flow — no Supabase Auth in the loop. Page reads
 // ?token= from the query, posts to /api/auth/set-password with the
@@ -52,7 +53,8 @@ function ResetPasswordInner() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6">
+    <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6">
+      <PublicTopBar />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Reset password</p>
