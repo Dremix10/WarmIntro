@@ -28,6 +28,7 @@ interface AdminUser {
   } | null;
   drafts: { pending: number; sent: number };
   connections: number;
+  cost24hUsd: number;
 }
 
 interface AccessRequest {
@@ -319,6 +320,7 @@ function UserRow({ user, resetState, onReset }: {
               <Badge ok={user.profile?.gmailConnected ?? false} label={user.profile?.gmailConnected ? `Gmail ${user.profile.gmailEmail ?? ""}` : "No Gmail"} />
               <Badge ok={user.drafts.sent > 0} label={`${user.drafts.sent} sent · ${user.drafts.pending} queued`} />
               <Badge ok={user.connections > 0} label={`${user.connections} connections`} />
+              <Badge ok={user.cost24hUsd < 5} label={`$${user.cost24hUsd.toFixed(2)} / 24h`} />
             </div>
           </div>
           <div className="text-right text-[10px] text-[#14182A]/50 shrink-0">

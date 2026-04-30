@@ -213,6 +213,8 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
       // reliably than Sonnet. The drafted email is the centerpiece of the
       // product — instruction-following matters more than per-call cost.
       model: OPUS_MODEL,
+      userId: input.userId,
+      agent: "correspondent",
     });
 
     // Step 3: Apply guardrails

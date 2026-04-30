@@ -64,6 +64,20 @@ export async function GET(request: Request) {
   const connStats: Record<string, number> = {};
   for (const c of connRows ?? []) connStats[c.user_id] = (connStats[c.user_id] ?? 0) + 1;
 
+  // Per-user Anthropic spend, last 24h. Aggregating client-side because
+  // Supabase JS doesn't expose group-by directly. cost_usd is tiny per
+  // row but we have a sane upper bound (~hundreds of rows/user/day).
+  const { data: usageRows } = await admin
+    .from("claude_usage")
+    .select("user_id, cost_usd, occurred_at")
+    .in("user_id", userIds)
+    .gte("occurred_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+  const cost24h: Record<string, number> = {};
+  for (const r of usageRows ?? []) {
+    if (!r.user_id) continue;
+    cost24h[r.user_id] = (cost24h[r.user_id] ?? 0) + Number(r.cost_usd ?? 0);
+  }
+
   const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
 
   const users = authData.users.map((u) => {
@@ -93,6 +107,7 @@ export async function GET(request: Request) {
         : null,
       drafts: stats,
       connections: connStats[u.id] ?? 0,
+      cost24hUsd: Number((cost24h[u.id] ?? 0).toFixed(4)),
     };
   });
 

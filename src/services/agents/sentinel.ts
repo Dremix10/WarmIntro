@@ -16,10 +16,12 @@ export interface SentinelOutput {
 }
 
 const HUNTER_LOW_CREDIT_PCT = 0.2; // alert when <20% remaining
+const USER_DAILY_SPEND_THRESHOLD_USD = Number(process.env.ALMA_USER_SPEND_ALERT_USD ?? "5");
 const ALERT_COOLDOWN_HOURS = {
   hunter_credit: 24,    // once a day max for credit warnings
   agent_errors: 1,      // once an hour for error bursts
   critical_signal: 1,   // once an hour for critical signals
+  user_spend: 6,        // re-fire every 6h if a user keeps burning
 } as const;
 
 type AlertKey = keyof typeof ALERT_COOLDOWN_HOURS;
@@ -163,10 +165,43 @@ export async function runSentinel(): Promise<SentinelOutput> {
       }
     }
 
+    // Check 4: per-user Anthropic spend in last 24h. Alert if any user
+    // crosses ALMA_USER_SPEND_ALERT_USD (default $5) — protects us from a
+    // user accidentally (or maliciously) burning credits in a loop.
+    const usageRows = await restSelect("claude_usage", {
+      select: "user_id, cost_usd, occurred_at",
+      filters: { occurred_at: gte(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) },
+      limit: 5000,
+    });
+    const spendByUser: Record<string, number> = {};
+    for (const r of usageRows) {
+      const uid = r.user_id as string | null;
+      if (!uid) continue;
+      spendByUser[uid] = (spendByUser[uid] ?? 0) + Number(r.cost_usd ?? 0);
+    }
+    const overBudget = Object.entries(spendByUser).filter(([, v]) => v >= USER_DAILY_SPEND_THRESHOLD_USD);
+    if (overBudget.length > 0) {
+      const bucket = overBudget.length > 3 ? "lt5" : "lt10";
+      if (await shouldAlert("user_spend", bucket)) {
+        const topLines = overBudget
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([uid, cost]) => `${uid.slice(0, 8)}…: $${cost.toFixed(2)}`)
+          .join("\n");
+        const sent = (await sendTelegram(
+          `💸 User spend alert · last 24h (threshold $${USER_DAILY_SPEND_THRESHOLD_USD})\n\n${overBudget.length} user(s) over:\n${topLines}\n\nCheck /admin.`
+        )).sent;
+        if (sent) {
+          out.alertsSent++;
+          await recordAlert("user_spend", bucket, { count: overBudget.length, threshold: USER_DAILY_SPEND_THRESHOLD_USD });
+        }
+      }
+    }
+
     await logSignal({
       agent: "curator",
       signalType: "sentinel_run",
-      metadata: { alertsSent: out.alertsSent, errors: out.errors, hunterAvailable: hunter?.available, hunterTotal: hunter?.total },
+      metadata: { alertsSent: out.alertsSent, errors: out.errors, hunterAvailable: hunter?.available, hunterTotal: hunter?.total, overBudgetUsers: overBudget.length },
     });
     await endAgentRun(ctx, out as unknown as Record<string, unknown>);
     return out;
