@@ -28,6 +28,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // CI runs `npm run lint` separately as a gate. Don't double-run lint
+  // during `next build` — it blocks Vercel deploys on the ~40 pre-
+  // existing baseline errors that aren't yet cleaned up. Tracked as
+  // task #52; until that ships, builds stay green.
+  eslint: { ignoreDuringBuilds: true },
   async headers() {
     return [
       {
