@@ -16,7 +16,7 @@ export function FoundersStrip() {
         </p>
         <h2 className="mt-3 text-[30px] leading-[1.1] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[56px]">
           <span className="block italic text-[#2E5A88] md:whitespace-nowrap">
-            We&rsquo;re sophomores too.
+            We&rsquo;re underclassmen too.
           </span>
           <span className="block md:whitespace-nowrap">We built Alma for our cycle.</span>
         </h2>
