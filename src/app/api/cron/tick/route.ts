@@ -105,7 +105,7 @@ async function handleTick() {
   const nudgedIds = new Set(
     (recentNudges ?? [])
       .map((r) => r.user_id)
-      .filter((id): id is string => Boolean(id) && completeIds.has(id))
+      .filter((id): id is string => typeof id === "string" && completeIds.has(id))
   );
 
   // Dedup: skip users who already had a planner run in the last 30 min so cron
