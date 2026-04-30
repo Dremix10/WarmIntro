@@ -176,9 +176,9 @@ export default function ProfileTemplate() {
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">Alma’s take on you</p>
               <p className="mt-2 text-sm leading-relaxed text-[#14182A] font-[family-name:var(--font-fraunces)] italic">
-                “You're positioned well for banking. 3.78 GPA clears the BB screen, the Cloudflare
+                “You&rsquo;re positioned well for banking. 3.78 GPA clears the BB screen, the Cloudflare
                 intern is a real story to pitch, and WICS leadership is a strong narrative. TMT is
-                the obvious group given your CS background, but don't sleep on M&A or Healthcare —
+                the obvious group given your CS background, but don&rsquo;t sleep on M&A or Healthcare —
                 your bullets convert there too. Start calls by Labor Day; apps open in September.”
               </p>
             </div>
