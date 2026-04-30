@@ -119,10 +119,13 @@ function isAllowlisted(email: string): boolean {
   return TESTING_ALLOWED_DOMAINS.some((domain) => lower.endsWith(`@${domain}`));
 }
 
-// Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself)
+// Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself).
+// NOTE: "/" is handled separately via exact match — startsWith("/") would
+// match every path on the site and disable the gate entirely.
 const GATE_BYPASS_PREFIXES = [
   "/coming-soon",
   "/demo", // public-facing demo for lead capture
+  "/request-access", // closed-beta waitlist form
   "/login", // testers sign in here
   "/forgot-password",
   "/reset-password",
@@ -139,6 +142,11 @@ const GATE_BYPASS_PREFIXES = [
   "/api/analytics",
   "/auth/callback",
 ];
+
+// Paths matched by exact equality (not prefix). Used for the root landing
+// page — "/" can't go in GATE_BYPASS_PREFIXES because startsWith("/") would
+// short-circuit the gate for every URL.
+const GATE_BYPASS_EXACT = ["/"];
 
 // Gate passthrough API pattern — these run after Supabase auth check and emit a 403 if email isn't whitelisted
 function isGatedApiRoute(pathname: string): boolean {
@@ -193,7 +201,11 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
   const { pathname, origin } = request.nextUrl;
 
   // Always allow the gate page itself + bypass routes + Next internals
-  if (pathname === "/coming-soon" || GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p))) {
+  if (
+    pathname === "/coming-soon" ||
+    GATE_BYPASS_EXACT.includes(pathname) ||
+    GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p))
+  ) {
     return null;
   }
 
