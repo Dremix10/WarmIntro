@@ -74,8 +74,11 @@ export function AgentLoop() {
   const [userOverride, setUserOverride] = useState(false);
   const reducedMotion = useReducedMotion();
 
-  // Trigger the loop when the section enters the viewport. Independent of
-  // scroll position from then on; speed-scrolling never interrupts.
+  // Trigger the loop only when the user has actually scrolled the section
+  // into the upper part of the viewport. rootMargin shrinks the virtual
+  // viewport from the bottom by 30%, so the section's top must cross above
+  // the lower 30% before the observer fires. Once started, the timer drives
+  // step changes — scroll speed has no effect.
   useEffect(() => {
     const sec = sectionRef.current;
     if (!sec || started) return;
@@ -86,7 +89,7 @@ export function AgentLoop() {
           observer.disconnect();
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0, rootMargin: "0px 0px -30% 0px" }
     );
     observer.observe(sec);
     return () => observer.disconnect();
