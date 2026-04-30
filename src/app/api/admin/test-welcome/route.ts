@@ -38,9 +38,14 @@ export async function POST(request: Request) {
   // Whitelist of allowed FROM aliases — must be on alma.careers (DKIM signed).
   // Empty/invalid input falls back to noreply@.
   const fromAliasRaw = typeof body?.fromAlias === "string" ? body.fromAlias.trim().toLowerCase() : "";
+  // Default to whatever ALMA_FROM_EMAIL is configured to (or the welcome@
+  // default) so the test mirrors what real testers will receive. Override
+  // remains available for A/B'ing alias reputation.
+  const defaultFrom = (process.env.ALMA_FROM_EMAIL?.trim() ?? "Alma <welcome@alma.careers>")
+    .match(/<([^@]+)@/)?.[1] ?? "welcome";
   const fromAlias = /^[a-z0-9.+_-]+$/.test(fromAliasRaw) && fromAliasRaw.length <= 32
     ? fromAliasRaw
-    : "noreply";
+    : defaultFrom;
   const fromAddress = `Alma <${fromAlias}@alma.careers>`;
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (!resendKey) return NextResponse.json({ error: "RESEND_API_KEY not set" }, { status: 500 });

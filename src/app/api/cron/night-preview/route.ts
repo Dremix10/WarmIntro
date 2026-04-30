@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
+import { getFromAddress } from "@/lib/email-from";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -172,7 +173,7 @@ Reply with:
     method: "POST",
     headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify({
-      from: "Alma <noreply@alma.careers>",
+      from: getFromAddress(),
       to: [opts.to],
       subject,
       text,

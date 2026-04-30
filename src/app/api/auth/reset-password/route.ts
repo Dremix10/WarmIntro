@@ -15,10 +15,11 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { logSignal } from "@/services/signals/log";
+import { getFromAddress } from "@/lib/email-from";
 
 export const runtime = "nodejs";
 
-const FROM_ADDRESS = "Alma <noreply@alma.careers>";
+const FROM_ADDRESS = getFromAddress();
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
 const TOKEN_TTL_MIN = 60;
 

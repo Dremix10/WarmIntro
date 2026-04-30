@@ -63,8 +63,14 @@ export default function RequestAccessPage() {
         {state === "submitted" ? (
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Got it.</p>
-            <p className="text-sm text-[#14182A]/70 mb-4">
-              We&rsquo;ll email <strong>{email}</strong> when there&rsquo;s a spot. Meanwhile, see what Alma does:
+            <p className="text-sm text-[#14182A]/70 mb-3">
+              We&rsquo;ll email <strong>{email}</strong> when there&rsquo;s a spot.
+            </p>
+            <p className="text-xs text-[#14182A]/55 mb-4 leading-relaxed">
+              School inboxes (Rice, Brown, MIT, anywhere on Microsoft 365) sometimes route
+              new senders to <strong>spam</strong> on first contact. If you don&rsquo;t see the
+              invite in your inbox, check there and mark <code className="bg-[#EAE3D2] px-1 rounded">welcome@alma.careers</code> as
+              not-spam so future emails land cleanly.
             </p>
             <a
               href="/demo"

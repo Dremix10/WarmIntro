@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
+import { getFromAddress } from "@/lib/email-from";
 
 export const runtime = "nodejs";
 
@@ -68,7 +69,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Alma <noreply@alma.careers>",
+        from: getFromAddress(),
         to: [email],
         subject: "Reset your Alma password (admin-triggered)",
         text: `Reset your password: ${link}\n\nGood for one hour.`,

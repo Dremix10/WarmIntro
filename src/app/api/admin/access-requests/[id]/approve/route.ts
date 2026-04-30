@@ -11,6 +11,7 @@ import { getUser } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { sendTelegram } from "@/lib/telegram";
+import { getFromAddress } from "@/lib/email-from";
 
 export const runtime = "nodejs";
 
@@ -114,7 +115,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         method: "POST",
         headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Alma <noreply@alma.careers>",
+          from: getFromAddress(),
           to: [email],
           reply_to: replyTo,
           subject: "You're in — Alma is yours",
