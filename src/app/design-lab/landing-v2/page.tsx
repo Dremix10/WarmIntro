@@ -134,12 +134,12 @@ function Hero() {
           </a>
           <a
             href="/login"
-            className="text-base font-medium text-[#1B3B5F]/70 hover:text-[#1B3B5F] underline-offset-4 hover:underline"
+            className="alma-card rounded-full border border-[#1B3B5F]/40 bg-white px-6 py-3.5 text-base font-medium text-[#1B3B5F] hover:border-[#1B3B5F] hover:bg-[#1B3B5F]/5"
           >
-            Sign in
+            Already in? Sign in →
           </a>
-          <p className="ml-1 text-xs text-[#5C6472]">Closed beta · 100 founding users · free for 2026 cycle</p>
         </div>
+        <p className="mt-4 ml-1 text-xs text-[#5C6472]">Closed beta · 100 founding users · free for 2026 cycle</p>
 
         <div
           className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-dashed border-[#D9CFB5] pt-4 opacity-0"
