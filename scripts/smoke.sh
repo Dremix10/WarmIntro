@@ -41,23 +41,20 @@ echo ""
 echo "smoke: $BASE"
 echo ""
 
-# 1. Public routes
+# 1. Public routes — / is the landing, /demo + /request-access + /login are CTAs from it
 echo "[public routes]"
-for p in /demo /login /coming-soon /privacy /terms /forgot-password /reset-password; do
+for p in / /demo /login /request-access /coming-soon /privacy /terms /forgot-password /reset-password; do
   CODE=$(http_code "$BASE$p")
   if [ "$CODE" = "200" ]; then run "$p returns 200" 1; else run "$p returns 200 (got $CODE)" 0; fi
 done
 
-# 2. Root redirect to /demo
+# 2. Gated routes redirect unauth'd users to / (the landing). Was /demo before
+#    the landing existed; flipped on 2026-04-30.
 echo ""
 echo "[gate]"
-LOC=$(http_redirect "$BASE/")
-if [ "$LOC" = "/demo" ]; then run "/ redirects unauth'd to /demo" 1; else run "/ redirects to /demo (got $LOC)" 0; fi
-
-# 3. Gated routes redirect to /demo
 for p in /today /setup /agents /account /account/privacy; do
   LOC=$(http_redirect "$BASE$p")
-  if [ "$LOC" = "/demo" ]; then run "$p gated -> /demo" 1; else run "$p gated -> /demo (got $LOC)" 0; fi
+  if [ "$LOC" = "/" ]; then run "$p gated -> /" 1; else run "$p gated -> / (got $LOC)" 0; fi
 done
 
 # 4. Public APIs respond with valid JSON
