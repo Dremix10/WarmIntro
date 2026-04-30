@@ -389,6 +389,84 @@ function UserRow({ user, resetState, onReset }: {
               <span className="text-[10px] text-[#C86B4F]">{resetState.error}</span>
             )}
           </div>
+
+          <EventsPanel userId={user.id} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface AdminEvent {
+  event: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+function EventsPanel({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+  const [events, setEvents] = useState<AdminEvent[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function load() {
+    if (events !== null) return; // already loaded
+    setLoading(true);
+    setErr(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/admin/users/${userId}/events`, {
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr(json.error ?? `HTTP ${res.status}`);
+      setLoading(false);
+      return;
+    }
+    setEvents(json.events ?? []);
+    setLoading(false);
+  }
+
+  return (
+    <div className="pt-3 border-t border-[#EAE3D2]">
+      <button
+        type="button"
+        onClick={() => {
+          const next = !open;
+          setOpen(next);
+          if (next) void load();
+        }}
+        className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold hover:text-[#2E5A88]"
+      >
+        {open ? "▾" : "▸"} Recent events {events ? `(${events.length})` : ""}
+      </button>
+      {open && (
+        <div className="mt-2 max-h-72 overflow-y-auto rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-2">
+          {loading && <p className="text-[10px] text-[#14182A]/50 italic">Loading…</p>}
+          {err && <p className="text-[10px] text-[#C86B4F]">{err}</p>}
+          {events && events.length === 0 && (
+            <p className="text-[10px] text-[#14182A]/50 italic">No events yet — tracking is on, they just haven&apos;t done anything.</p>
+          )}
+          {events && events.length > 0 && (
+            <ul className="space-y-0.5 font-mono text-[10px]">
+              {events.map((e, i) => {
+                const path = (e.metadata?.path as string | undefined) ?? "";
+                const isError = e.event === "js_error" || e.event === "promise_rejection" || e.event === "error";
+                return (
+                  <li key={i} className={`flex items-baseline gap-2 ${isError ? "text-[#C86B4F]" : "text-[#14182A]/75"}`}>
+                    <span className="text-[#14182A]/40 shrink-0 w-20">
+                      {new Date(e.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+                    </span>
+                    <span className="font-semibold shrink-0">{e.event}</span>
+                    {path && <span className="text-[#14182A]/55 truncate">{path}</span>}
+                    {isError && (e.metadata?.message as string) && (
+                      <span className="text-[#C86B4F] truncate">— {String(e.metadata.message).slice(0, 100)}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
     </div>

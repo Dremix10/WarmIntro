@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import { AppProvider } from "@/components/AppProvider";
 import { NavHeader } from "@/components/NavHeader";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { TrackEvents } from "@/components/TrackEvents";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -42,6 +43,7 @@ export default function RootLayout({
           <NavHeader />
           {children}
           <FeedbackButton />
+          <TrackEvents />
         </AppProvider>
       </body>
     </html>
