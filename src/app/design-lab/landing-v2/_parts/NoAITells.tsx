@@ -34,7 +34,7 @@ export function NoAITells() {
         </div>
       </Reveal>
 
-      <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="relative mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Reveal>
           <div className="h-full rounded-2xl border border-dashed border-[#C9BFA5] bg-[#F9F5EB] p-5 text-[#8A8674]">
             <p className="text-[10px] font-bold uppercase tracking-[0.1em]">Typical AI cold email</p>
@@ -43,6 +43,49 @@ export function NoAITells() {
             </pre>
           </div>
         </Reveal>
+
+        {/* Leap arc — connects the two cards, hidden on mobile (cards stack). */}
+        <div
+          className="alma-leap-arc pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:block"
+          aria-hidden
+        >
+          <svg width="80" height="64" viewBox="0 0 80 64" fill="none">
+            <defs>
+              <marker
+                id="leap-arrow"
+                viewBox="0 0 8 8"
+                refX="6"
+                refY="4"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 8 4 L 0 8 Z" fill="#2E5A88" />
+              </marker>
+            </defs>
+            <path
+              d="M 6 36 Q 40 -8 74 36"
+              stroke="#2E5A88"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+              fill="none"
+              strokeLinecap="round"
+              markerEnd="url(#leap-arrow)"
+            />
+            <text
+              x="40"
+              y="58"
+              textAnchor="middle"
+              fontSize="11"
+              fill="#2E5A88"
+              fontFamily="var(--font-fraunces)"
+              fontStyle="italic"
+            >
+              leap
+            </text>
+          </svg>
+        </div>
+
         <Reveal delay={200}>
           <div className="h-full alma-card rounded-2xl border border-[#2E5A88] p-5 text-[#14182A] shadow-[0_0_0_4px_rgba(46,90,136,.08)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">What Alma sends</p>

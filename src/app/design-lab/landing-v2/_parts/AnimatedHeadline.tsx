@@ -38,7 +38,7 @@ export function AnimatedHeadline() {
           investment banking
         </span>
         <span
-          className="inline opacity-0"
+          className="inline text-[#2E5A88] opacity-0"
           style={{
             animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${dotStart}ms forwards`,
           }}
