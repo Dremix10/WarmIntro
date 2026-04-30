@@ -56,7 +56,40 @@ export async function POST(request: Request) {
       const detail = await r.text().catch(() => "");
       return NextResponse.json({ error: `Resend ${r.status}: ${detail.slice(0, 300)}` }, { status: 502 });
     }
-    return NextResponse.json({ ok: true, sentTo: adminEmail, replyTo });
+    const sendBody = (await r.json().catch(() => ({}))) as { id?: string };
+    const emailId = sendBody.id ?? null;
+
+    // Poll Resend for delivery status — they process async, so the first
+    // GET right after POST is usually still 'sent' but bounces/blocks
+    // surface within a few seconds. We try twice with a small gap.
+    let deliveryStatus: string | null = null;
+    let lastEvent: string | null = null;
+    if (emailId) {
+      for (const wait of [1500, 3000]) {
+        await new Promise((resolve) => setTimeout(resolve, wait));
+        const statusRes = await fetch(`https://api.resend.com/emails/${emailId}`, {
+          headers: { Authorization: `Bearer ${resendKey}` },
+        });
+        if (statusRes.ok) {
+          const j = (await statusRes.json().catch(() => ({}))) as {
+            last_event?: string;
+            status?: string;
+          };
+          deliveryStatus = j.status ?? deliveryStatus;
+          lastEvent = j.last_event ?? lastEvent;
+          if (lastEvent && lastEvent !== "sent") break;
+        }
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      sentTo: adminEmail,
+      replyTo,
+      emailId,
+      deliveryStatus,
+      lastEvent,
+    });
   } catch (err) {
     return NextResponse.json({ error: String(err).slice(0, 300) }, { status: 500 });
   }

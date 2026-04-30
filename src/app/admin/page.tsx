@@ -501,9 +501,11 @@ function TestWelcomeButton() {
       setState("error");
       return;
     }
-    setMsg(`sent to ${json.sentTo} · reply-to ${json.replyTo}`);
+    const idShort = json.emailId ? String(json.emailId).slice(0, 8) : "no-id";
+    const status = json.lastEvent ?? json.deliveryStatus ?? "unknown";
+    setMsg(`→ ${json.sentTo} · resend:${idShort} · status:${status}`);
     setState("sent");
-    window.setTimeout(() => setState("idle"), 6000);
+    window.setTimeout(() => setState("idle"), 12000);
   }
 
   return (
