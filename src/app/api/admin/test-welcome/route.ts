@@ -25,7 +25,14 @@ export async function POST(request: Request) {
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isAdmin(ctx.user.email)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
+  // Admin can override the recipient — useful for testing whether a particular
+  // mailbox (e.g. dc118@rice.edu) is filtering vs. whether Resend itself is
+  // healthy (test against a gmail address as a control).
+  const body = (await request.json().catch(() => ({}))) as { to?: string };
   const adminEmail = ctx.user.email!;
+  const targetEmail = (typeof body?.to === "string" && body.to.trim().includes("@"))
+    ? body.to.trim()
+    : adminEmail;
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (!resendKey) return NextResponse.json({ error: "RESEND_API_KEY not set" }, { status: 500 });
 
@@ -33,11 +40,15 @@ export async function POST(request: Request) {
   // try to use it. Lands on /forgot-password if clicked.
   const setupLink = `${SITE_URL}/reset-password?token=test-preview-token-not-real`;
   const forgotPath = `${SITE_URL.replace(/\/$/, "")}/forgot-password`;
-  const greeting = "Hi (test preview)";
+  // Greeting/subject mirror the real welcome — earlier "[Test preview]"
+  // subject + "not a real invite" body language tripped Microsoft Defender's
+  // phishing-simulation detector and the message was silently quarantined
+  // outside the user's normal junk folder.
+  const greeting = "Hi";
   const replyTo = (process.env.ALMA_REPLY_TO_EMAIL ?? "founders@alma.careers").trim();
 
-  const html = `<!DOCTYPE html><html><body style="font-family:Georgia,serif;background:#EAE3D2;padding:48px 24px;color:#14182A;line-height:1.6"><div style="max-width:520px;margin:0 auto;background:white;border:1px solid #D9CFB5;border-radius:16px;padding:36px"><p style="font-size:11px;text-transform:uppercase;letter-spacing:0.2em;color:#C86B4F;margin:0 0 8px 0">⚠ Test preview — not a real invite</p><p style="font-size:24px;font-style:italic;color:#1B3B5F;margin:0 0 24px 0">alma</p><p style="font-size:18px;font-weight:500;margin:0 0 12px 0">${greeting} — you&rsquo;re in.</p><p style="margin:0 0 18px 0">Your access to Alma&rsquo;s closed beta is approved. Click below to set a password and finish onboarding right inside the app.</p><p style="margin:24px 0;text-align:center"><a href="${setupLink}" style="display:inline-block;background:#1B3B5F;color:white;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600">Set up my account →</a></p><p style="margin:0 0 8px 0;font-size:13px;color:#5C6472">The link is good for one hour. Once you&rsquo;re in, Alma walks you through resume upload and firm picks — about three minutes.</p><p style="margin:0 0 18px 0;font-size:13px;color:#5C6472">Missed the window? Head to <a href="${forgotPath}" style="color:#2E5A88">${forgotPath}</a> and we&rsquo;ll send a fresh one.</p><hr style="border:0;border-top:1px solid #D9CFB5;margin:28px 0"><p style="margin:0 0 14px 0;font-size:14px"><strong>Founding-user perk:</strong> the full 2026 recruiting cycle is free for you. We&rsquo;ll roll out paid tiers after launch — you&rsquo;re grandfathered.</p><p style="margin:0 0 14px 0;font-size:14px">Some rough edges are expected — we&rsquo;re shipping fixes daily. Hit the floating <strong>Feedback</strong> button inside the app once you&rsquo;re signed in. We read everything.</p><p style="margin:24px 0 0 0;font-size:13px;color:#5C6472">— Demetris, Evangelos, Christos, Theofanis<br>4 students at Rice, Brown, and MIT, in the IB cycle right now too.</p></div></body></html>`;
-  const textBody = `[TEST PREVIEW — not a real invite]\n\n${greeting} — you're in.\n\nYour access to Alma's closed beta is approved. Set a password here:\n${setupLink}\n\nGood for one hour. Once you're in, Alma walks you through resume upload and firm picks (~3 min).\n\nMissed the window? Head to ${forgotPath} and we'll send a fresh one.\n\nFounding-user perk: the full 2026 recruiting cycle is free for you. We'll roll out paid tiers after launch — you're grandfathered.\n\nSome rough edges are expected — we're shipping fixes daily. Use the Feedback button inside the app to flag anything.\n\n— Demetris, Evangelos, Christos, Theofanis\n4 students at Rice, Brown, and MIT, in the IB cycle right now too.`;
+  const html = `<!DOCTYPE html><html><body style="font-family:Georgia,serif;background:#EAE3D2;padding:48px 24px;color:#14182A;line-height:1.6"><div style="max-width:520px;margin:0 auto;background:white;border:1px solid #D9CFB5;border-radius:16px;padding:36px"><p style="font-size:24px;font-style:italic;color:#1B3B5F;margin:0 0 24px 0">alma</p><p style="font-size:18px;font-weight:500;margin:0 0 12px 0">${greeting} — you&rsquo;re in.</p><p style="margin:0 0 18px 0">Your access to Alma&rsquo;s closed beta is approved. Click below to set a password and finish onboarding right inside the app.</p><p style="margin:24px 0;text-align:center"><a href="${setupLink}" style="display:inline-block;background:#1B3B5F;color:white;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600">Set up my account →</a></p><p style="margin:0 0 8px 0;font-size:13px;color:#5C6472">The link is good for one hour. Once you&rsquo;re in, Alma walks you through resume upload and firm picks — about three minutes.</p><p style="margin:0 0 18px 0;font-size:13px;color:#5C6472">Missed the window? Head to <a href="${forgotPath}" style="color:#2E5A88">${forgotPath}</a> and we&rsquo;ll send a fresh one.</p><hr style="border:0;border-top:1px solid #D9CFB5;margin:28px 0"><p style="margin:0 0 14px 0;font-size:14px"><strong>Founding-user perk:</strong> the full 2026 recruiting cycle is free for you. We&rsquo;ll roll out paid tiers after launch — you&rsquo;re grandfathered.</p><p style="margin:0 0 14px 0;font-size:14px">Some rough edges are expected — we&rsquo;re shipping fixes daily. Hit the floating <strong>Feedback</strong> button inside the app once you&rsquo;re signed in. We read everything.</p><p style="margin:24px 0 0 0;font-size:13px;color:#5C6472">— Demetris, Evangelos, Christos, Theofanis<br>4 students at Rice, Brown, and MIT, in the IB cycle right now too.</p><p style="margin:18px 0 0 0;font-size:11px;color:#8A8674">Admin preview · setup link is a placeholder; clicking it lands on /forgot-password.</p></div></body></html>`;
+  const textBody = `${greeting} — you're in.\n\nYour access to Alma's closed beta is approved. Set a password here:\n${setupLink}\n\nGood for one hour. Once you're in, Alma walks you through resume upload and firm picks (~3 min).\n\nMissed the window? Head to ${forgotPath} and we'll send a fresh one.\n\nFounding-user perk: the full 2026 recruiting cycle is free for you. We'll roll out paid tiers after launch — you're grandfathered.\n\nSome rough edges are expected — we're shipping fixes daily. Use the Feedback button inside the app to flag anything.\n\n— Demetris, Evangelos, Christos, Theofanis\n4 students at Rice, Brown, and MIT, in the IB cycle right now too.\n\n--\nAdmin preview · setup link is a placeholder.`;
 
   try {
     const r = await fetch("https://api.resend.com/emails", {
@@ -45,9 +56,9 @@ export async function POST(request: Request) {
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "Alma <noreply@alma.careers>",
-        to: [adminEmail],
+        to: [targetEmail],
         reply_to: replyTo,
-        subject: "[Test preview] You're in — Alma is yours",
+        subject: "You're in — Alma is yours",
         text: textBody,
         html,
       }),
@@ -84,7 +95,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      sentTo: adminEmail,
+      sentTo: targetEmail,
       replyTo,
       emailId,
       deliveryStatus,

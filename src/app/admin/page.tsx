@@ -486,6 +486,7 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
 function TestWelcomeButton() {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [msg, setMsg] = useState<string | null>(null);
+  const [override, setOverride] = useState("");
 
   async function send() {
     setState("sending");
@@ -493,7 +494,11 @@ function TestWelcomeButton() {
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch("/api/admin/test-welcome", {
       method: "POST",
-      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+      headers: {
+        Authorization: `Bearer ${s?.access_token ?? ""}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(override.trim().includes("@") ? { to: override.trim() } : {}),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -509,7 +514,14 @@ function TestWelcomeButton() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      <input
+        type="email"
+        value={override}
+        onChange={(e) => setOverride(e.target.value)}
+        placeholder="optional override (e.g. dremixc10@gmail.com)"
+        className="rounded-lg border border-[#D9CFB5] px-2 py-1.5 text-xs bg-white min-w-[260px]"
+      />
       <button
         type="button"
         onClick={send}
