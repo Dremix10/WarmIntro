@@ -12,6 +12,27 @@
 
 ---
 
+## Status checkpoint (decisions D1–D5 resolved)
+
+Session worked through the decisions sequentially with security-first / no-cost / 1k-user-ready / don't-break-anything as the binding constraints. Detailed answers in the *Open decisions* section at the bottom; high-level summary here so anyone opening this doc sees current state first.
+
+| # | Item | Decision | Commit |
+|---|---|---|---|
+| **D1** | Auth header refactor | **Skip.** Double `getUser()` call is defense-in-depth, not a bug. Removing the second check trades immediate session-revocation detection for a JWT-TTL window of usable stolen tokens. The ~300ms tax is acceptable; perf wins from 0.2 + 0.3 + 0.4 cover most of the gap without touching the auth boundary. | — |
+| **D2** | Cache freshness | **Done.** `Cache-Control: private, max-age=0, stale-while-revalidate=300` on `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`. Always-fresh-on-next-nav, never-blocking paint, free at scale. | `efe1f33` |
+| **D3** | In-process caches | **Done (A′).** Deleted `claude.ts` Map (was misnamed FIFO-as-LRU, ~0% hit rate at scale) and three Maps in `linkedin-search.ts`. Stripped `skipCache` from 5 callers. Kept `proxy.ts:rateLimitMap` with explicit comment documenting per-instance limitation (S7) — deleting it would weaken security; upgrade path noted. | `904a1d3` |
+| **D4** | Cron fan-out | **Done (parallel-cron, no external queue).** Cron now fires every minute; each tick dispatches up to 50 gmail-connected users whose last Watcher run is older than ~20 min, oldest-first, parallel via `Promise.allSettled`. Self-balances: ≤1k users → ~21-min cycle with idle headroom; >1k users → cycle stretches naturally. Added `services/queue/dispatch.ts` abstraction so future QStash migration is a one-file change. $0 cost today, $0 at 1k users. | `78357d5` + `f1d7c4d` |
+| **D5** | Route groups + auth services | **Mostly skip; one targeted fix.** Hid `/design-lab/*` from production routing (404 in prod, accessible in `npm run dev`) — the only current bug. Backlogged `isAdmin` consolidation in `BACKEND_REQUESTS.md` (P2 tech debt) since the three copies are byte-identical today. Skipped route groups (~30 file moves, lost git blame, zero behavior gain) and gate extraction (cosmetic). | `55dbd12` |
+| D6 | Shared service helpers | open | — |
+| D7 | Test database | open | — |
+| D8 | (whatever's next) | open | — |
+
+**Branch:** `claude/explain-cache-freshness-5X676`. All commits pushed.
+
+**Tone of decisions so far:** prefer the smallest correct change. Skip cosmetics that don't fix current bugs. Document upgrade paths (Upstash Redis for D3, QStash for D4, isAdmin consolidation for D5) so future-us can pick them up the moment a real signal justifies the work.
+
+---
+
 ## Why now
 
 Two pressures forced a v2:
