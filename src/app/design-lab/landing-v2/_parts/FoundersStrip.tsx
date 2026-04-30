@@ -9,7 +9,7 @@ const TILES = [
 
 export function FoundersStrip() {
   return (
-    <section className="mx-auto max-w-5xl px-6 py-20 text-center">
+    <section id="about" className="mx-auto max-w-5xl px-6 py-20 text-center">
       <Reveal>
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
           Who built this

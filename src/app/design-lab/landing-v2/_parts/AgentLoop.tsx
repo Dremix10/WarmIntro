@@ -153,6 +153,7 @@ export function AgentLoop() {
 
   return (
     <section
+      id="how"
       ref={sectionRef}
       className="relative min-h-[140vh] md:min-h-[180vh]"
       aria-label="The agent loop, one banker through the pipeline"

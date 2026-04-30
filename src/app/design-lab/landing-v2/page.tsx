@@ -84,7 +84,6 @@ function TopBar() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <p className="text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">alma</p>
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
-          <a href="#how" className="hover:text-[#1B3B5F]">How it works</a>
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
           <AuthAwareLogin className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]" />
         </nav>
@@ -286,7 +285,7 @@ function Footer() {
           alma &middot; built at Brown &amp; Rice
         </p>
         <div className="flex flex-wrap items-center gap-5">
-          <a href="#how" className="hover:text-[#1B3B5F]">About</a>
+          <a href="#about" className="hover:text-[#1B3B5F]">About</a>
           <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>
           <a href="mailto:founders@alma.careers" className="hover:text-[#1B3B5F]">Contact</a>
           <span className="text-[#8A8674]">2026 cycle</span>
