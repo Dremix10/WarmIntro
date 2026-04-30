@@ -173,49 +173,7 @@ export default function AdminPage() {
                 .map((r) => {
                   const state = approveState[r.id];
                   return (
-                    <div key={r.id} className="rounded-xl bg-white p-4 border border-[#D9CFB5]">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">{r.name ?? "(no name)"}</p>
-                          <p className="text-xs text-[#14182A]/60 truncate">{r.email}</p>
-                          <p className="text-[10px] text-[#14182A]/45 mt-1">
-                            {r.university ?? "—"}
-                            {r.major ? ` · ${r.major}` : ""}
-                            {r.graduationYear ? ` · ${r.graduationYear}` : ""}
-                            {r.hasResume ? " · resume ✓" : ""}
-                            {" · "}
-                            {new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0">
-                          {!state?.link ? (
-                            <button
-                              type="button"
-                              onClick={() => approveRequest(r.id)}
-                              disabled={state?.busy}
-                              className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
-                            >
-                              {state?.busy ? "Approving…" : "Approve"}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => navigator.clipboard.writeText(state.link!)}
-                              className="rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors"
-                              title="Copy setup link to clipboard"
-                            >
-                              copy link ✓
-                            </button>
-                          )}
-                          {state?.link && (
-                            <span className="text-[10px] text-[#14182A]/55">link sent to Telegram</span>
-                          )}
-                          {state?.error && (
-                            <span className="text-[10px] text-[#C86B4F]">{state.error}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <WaitlistRow key={r.id} r={r} state={state} onApprove={() => approveRequest(r.id)} />
                   );
                 })}
             </div>
@@ -230,6 +188,92 @@ export default function AdminPage() {
           {users.map((u) => (
             <UserRow key={u.id} user={u} resetState={resetState[u.id]} onReset={() => resetPassword(u.id)} />
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WaitlistRow({
+  r,
+  state,
+  onApprove,
+}: {
+  r: AccessRequest;
+  state: { busy?: boolean; link?: string; error?: string } | undefined;
+  onApprove: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  // Google's OAuth testing-mode tester list — every approved user also needs
+  // to land here while Gmail OAuth is unverified. Direct link saves a tab.
+  const GOOGLE_AUDIENCE_URL = "https://console.cloud.google.com/auth/audience?project=warmintro";
+
+  async function copyEmail() {
+    await navigator.clipboard.writeText(r.email);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
+  }
+
+  return (
+    <div className="rounded-xl bg-white p-4 border border-[#D9CFB5]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{r.name ?? "(no name)"}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <code
+              onClick={copyEmail}
+              title="Click to copy"
+              className={`text-xs cursor-pointer rounded px-1.5 py-0.5 transition-colors ${
+                copied ? "bg-[#2E5A88] text-white" : "bg-[#EAE3D2] text-[#14182A]/70 hover:bg-[#D9CFB5]"
+              }`}
+            >
+              {copied ? "copied ✓" : r.email}
+            </code>
+            <a
+              href={GOOGLE_AUDIENCE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[10px] text-[#2E5A88] hover:text-[#1B3B5F] underline-offset-2 hover:underline"
+              title="Add this user to Google's OAuth testers list"
+            >
+              Add to Google testers ↗
+            </a>
+          </div>
+          <p className="text-[10px] text-[#14182A]/45 mt-1">
+            {r.university ?? "—"}
+            {r.major ? ` · ${r.major}` : ""}
+            {r.graduationYear ? ` · ${r.graduationYear}` : ""}
+            {r.hasResume ? " · resume ✓" : ""}
+            {" · "}
+            {new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {!state?.link ? (
+            <button
+              type="button"
+              onClick={onApprove}
+              disabled={state?.busy}
+              className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+            >
+              {state?.busy ? "Approving…" : "Approve"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(state.link!)}
+              className="rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors"
+              title="Copy setup link to clipboard"
+            >
+              copy link ✓
+            </button>
+          )}
+          {state?.link && (
+            <span className="text-[10px] text-[#14182A]/55">link sent to Telegram</span>
+          )}
+          {state?.error && (
+            <span className="text-[10px] text-[#C86B4F]">{state.error}</span>
+          )}
         </div>
       </div>
     </div>
