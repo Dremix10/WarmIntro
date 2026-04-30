@@ -28,15 +28,30 @@ interface AdminUser {
   } | null;
   drafts: { pending: number; sent: number };
   connections: number;
+  cost24hUsd: number;
+}
+
+interface AccessRequest {
+  id: string;
+  email: string;
+  name: string | null;
+  university: string | null;
+  major: string | null;
+  graduationYear: number | null;
+  hasResume: boolean;
+  createdAt: string;
+  approved: boolean;
 }
 
 export default function AdminPage() {
   const { session, authLoading } = useAppState();
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resetState, setResetState] = useState<Record<string, { busy?: boolean; link?: string; sent?: boolean; error?: string }>>({});
+  const [approveState, setApproveState] = useState<Record<string, { busy?: boolean; link?: string; error?: string }>>({});
 
   useEffect(() => {
     if (!authLoading && !session) { router.push("/login"); return; }
@@ -48,22 +63,46 @@ export default function AdminPage() {
     setLoading(true);
     setError(null);
     const { data: { session: s } } = await supabase.auth.getSession();
-    const res = await fetch("/api/admin/users", {
-      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-    });
-    if (res.status === 403) {
+    const headers = { Authorization: `Bearer ${s?.access_token ?? ""}` };
+    // Two reads in parallel — saves the round-trip.
+    const [usersRes, requestsRes] = await Promise.all([
+      fetch("/api/admin/users", { headers }),
+      fetch("/api/admin/access-requests", { headers }),
+    ]);
+    if (usersRes.status === 403) {
       setError("Not an admin email. Add yours to ADMIN_EMAILS env.");
       setLoading(false);
       return;
     }
-    if (!res.ok) {
-      setError(`Load failed: HTTP ${res.status}`);
+    if (!usersRes.ok) {
+      setError(`Load failed: HTTP ${usersRes.status}`);
       setLoading(false);
       return;
     }
-    const json = await res.json();
-    setUsers(json.users ?? []);
+    const usersJson = await usersRes.json();
+    setUsers(usersJson.users ?? []);
+    if (requestsRes.ok) {
+      const reqJson = await requestsRes.json();
+      setRequests(reqJson.requests ?? []);
+    }
     setLoading(false);
+  }
+
+  async function approveRequest(requestId: string) {
+    setApproveState((s) => ({ ...s, [requestId]: { busy: true } }));
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/admin/access-requests/${requestId}/approve`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setApproveState((s) => ({ ...s, [requestId]: { error: json.error ?? `HTTP ${res.status}` } }));
+      return;
+    }
+    setApproveState((s) => ({ ...s, [requestId]: { link: json.setupLink } }));
+    // Mark this request as approved locally so the UI flips immediately
+    setRequests((rs) => rs.map((r) => (r.id === requestId ? { ...r, approved: true } : r)));
   }
 
   async function resetPassword(userId: string) {
@@ -107,9 +146,9 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-1">Admin</p>
-        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Users</h1>
+        <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Alma control room</h1>
         <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] mb-8">
-          Every Alma user. Where they are in the funnel. Reset their password if they&apos;re stuck.
+          Approve waitlist. Reset passwords. See who&rsquo;s stuck.
         </p>
 
         <div className="mb-6 rounded-2xl bg-white p-5 border border-[#D9CFB5] grid grid-cols-2 sm:grid-cols-5 gap-4">
@@ -120,10 +159,132 @@ export default function AdminPage() {
           <Stat label="Have a thread" value={stats.hasReplies} />
         </div>
 
+        <div className="mb-6 rounded-2xl bg-white p-4 border border-[#D9CFB5] flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold mb-0.5">Admin tools</p>
+            <p className="text-xs text-[#14182A]/70">
+              Preview the welcome email by sending a sample to your own admin address.
+            </p>
+          </div>
+          <TestWelcomeButton />
+        </div>
+
+        {/* Waitlist queue — pilot_signups rows pending admin approval.
+            Shows up only if there's something to act on; click "Approve"
+            to mint a setup link + fire Telegram alert. */}
+        {requests.filter((r) => !r.approved).length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-baseline justify-between mb-3">
+              <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Waitlist</h2>
+              <p className="text-xs text-[#14182A]/55">{requests.filter((r) => !r.approved).length} pending</p>
+            </div>
+            <div className="space-y-2">
+              {requests
+                .filter((r) => !r.approved)
+                .map((r) => {
+                  const state = approveState[r.id];
+                  return (
+                    <WaitlistRow key={r.id} r={r} state={state} onApprove={() => approveRequest(r.id)} />
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Users</h2>
+          <p className="text-xs text-[#14182A]/55">{users.length}</p>
+        </div>
         <div className="space-y-3">
           {users.map((u) => (
             <UserRow key={u.id} user={u} resetState={resetState[u.id]} onReset={() => resetPassword(u.id)} />
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WaitlistRow({
+  r,
+  state,
+  onApprove,
+}: {
+  r: AccessRequest;
+  state: { busy?: boolean; link?: string; error?: string } | undefined;
+  onApprove: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  // Google's OAuth testing-mode tester list — every approved user also needs
+  // to land here while Gmail OAuth is unverified. Direct link saves a tab.
+  const GOOGLE_AUDIENCE_URL = "https://console.cloud.google.com/auth/audience?project=warmintro";
+
+  async function copyEmail() {
+    await navigator.clipboard.writeText(r.email);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1200);
+  }
+
+  return (
+    <div className="rounded-xl bg-white p-4 border border-[#D9CFB5]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{r.name ?? "(no name)"}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <code
+              onClick={copyEmail}
+              title="Click to copy"
+              className={`text-xs cursor-pointer rounded px-1.5 py-0.5 transition-colors ${
+                copied ? "bg-[#2E5A88] text-white" : "bg-[#EAE3D2] text-[#14182A]/70 hover:bg-[#D9CFB5]"
+              }`}
+            >
+              {copied ? "copied ✓" : r.email}
+            </code>
+            <a
+              href={GOOGLE_AUDIENCE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[10px] text-[#2E5A88] hover:text-[#1B3B5F] underline-offset-2 hover:underline"
+              title="Add this user to Google's OAuth testers list"
+            >
+              Add to Google testers ↗
+            </a>
+          </div>
+          <p className="text-[10px] text-[#14182A]/45 mt-1">
+            {r.university ?? "—"}
+            {r.major ? ` · ${r.major}` : ""}
+            {r.graduationYear ? ` · ${r.graduationYear}` : ""}
+            {r.hasResume ? " · resume ✓" : ""}
+            {" · "}
+            {new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {!state?.link ? (
+            <button
+              type="button"
+              onClick={onApprove}
+              disabled={state?.busy}
+              className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+            >
+              {state?.busy ? "Approving…" : "Approve"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(state.link!)}
+              className="rounded-lg bg-[#2E5A88] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] transition-colors"
+              title="Copy setup link to clipboard"
+            >
+              copy link ✓
+            </button>
+          )}
+          {state?.link && (
+            <span className="text-[10px] text-[#14182A]/55">link sent to Telegram</span>
+          )}
+          {state?.error && (
+            <span className="text-[10px] text-[#C86B4F]">{state.error}</span>
+          )}
         </div>
       </div>
     </div>
@@ -159,6 +320,7 @@ function UserRow({ user, resetState, onReset }: {
               <Badge ok={user.profile?.gmailConnected ?? false} label={user.profile?.gmailConnected ? `Gmail ${user.profile.gmailEmail ?? ""}` : "No Gmail"} />
               <Badge ok={user.drafts.sent > 0} label={`${user.drafts.sent} sent · ${user.drafts.pending} queued`} />
               <Badge ok={user.connections > 0} label={`${user.connections} connections`} />
+              <Badge ok={user.cost24hUsd < 5} label={`$${user.cost24hUsd.toFixed(2)} / 24h`} />
             </div>
           </div>
           <div className="text-right text-[10px] text-[#14182A]/50 shrink-0">
@@ -229,6 +391,84 @@ function UserRow({ user, resetState, onReset }: {
               <span className="text-[10px] text-[#C86B4F]">{resetState.error}</span>
             )}
           </div>
+
+          <EventsPanel userId={user.id} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface AdminEvent {
+  event: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+}
+
+function EventsPanel({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+  const [events, setEvents] = useState<AdminEvent[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function load() {
+    if (events !== null) return; // already loaded
+    setLoading(true);
+    setErr(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/admin/users/${userId}/events`, {
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr(json.error ?? `HTTP ${res.status}`);
+      setLoading(false);
+      return;
+    }
+    setEvents(json.events ?? []);
+    setLoading(false);
+  }
+
+  return (
+    <div className="pt-3 border-t border-[#EAE3D2]">
+      <button
+        type="button"
+        onClick={() => {
+          const next = !open;
+          setOpen(next);
+          if (next) void load();
+        }}
+        className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold hover:text-[#2E5A88]"
+      >
+        {open ? "▾" : "▸"} Recent events {events ? `(${events.length})` : ""}
+      </button>
+      {open && (
+        <div className="mt-2 max-h-72 overflow-y-auto rounded-lg bg-[#EAE3D2]/40 border border-[#D9CFB5] p-2">
+          {loading && <p className="text-[10px] text-[#14182A]/50 italic">Loading…</p>}
+          {err && <p className="text-[10px] text-[#C86B4F]">{err}</p>}
+          {events && events.length === 0 && (
+            <p className="text-[10px] text-[#14182A]/50 italic">No events yet — tracking is on, they just haven&apos;t done anything.</p>
+          )}
+          {events && events.length > 0 && (
+            <ul className="space-y-0.5 font-mono text-[10px]">
+              {events.map((e, i) => {
+                const path = (e.metadata?.path as string | undefined) ?? "";
+                const isError = e.event === "js_error" || e.event === "promise_rejection" || e.event === "error";
+                return (
+                  <li key={i} className={`flex items-baseline gap-2 ${isError ? "text-[#C86B4F]" : "text-[#14182A]/75"}`}>
+                    <span className="text-[#14182A]/40 shrink-0 w-20">
+                      {new Date(e.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+                    </span>
+                    <span className="font-semibold shrink-0">{e.event}</span>
+                    {path && <span className="text-[#14182A]/55 truncate">{path}</span>}
+                    {isError && (e.metadata?.message as string) && (
+                      <span className="text-[#C86B4F] truncate">— {String(e.metadata.message).slice(0, 100)}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
     </div>
@@ -240,5 +480,77 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
     <span className={`px-2 py-0.5 rounded-full ${ok ? "bg-[#2E5A88]/15 text-[#2E5A88]" : "bg-[#C86B4F]/15 text-[#C86B4F]"}`}>
       {label}
     </span>
+  );
+}
+
+function TestWelcomeButton() {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [override, setOverride] = useState("");
+  const [fromAlias, setFromAlias] = useState("");
+
+  async function send() {
+    setState("sending");
+    setMsg(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const reqBody: { to?: string; fromAlias?: string } = {};
+    if (override.trim().includes("@")) reqBody.to = override.trim();
+    if (fromAlias.trim()) reqBody.fromAlias = fromAlias.trim();
+    const res = await fetch("/api/admin/test-welcome", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${s?.access_token ?? ""}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(reqBody),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMsg(json.error ?? `HTTP ${res.status}`);
+      setState("error");
+      return;
+    }
+    const idShort = json.emailId ? String(json.emailId).slice(0, 8) : "no-id";
+    const status = json.lastEvent ?? json.deliveryStatus ?? "unknown";
+    const fromShort = json.sentFrom ? String(json.sentFrom).match(/<([^>]+)>/)?.[1] ?? "noreply@alma.careers" : "noreply@alma.careers";
+    setMsg(`${fromShort} → ${json.sentTo} · resend:${idShort} · status:${status}`);
+    setState("sent");
+    window.setTimeout(() => setState("idle"), 12000);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[10px] text-[#5C6472]">from:</span>
+      <div className="flex items-center rounded-lg border border-[#D9CFB5] bg-white">
+        <input
+          type="text"
+          value={fromAlias}
+          onChange={(e) => setFromAlias(e.target.value)}
+          placeholder="noreply"
+          className="px-2 py-1.5 text-xs bg-transparent outline-none w-[100px]"
+        />
+        <span className="pr-2 text-[10px] text-[#8A8674]">@alma.careers</span>
+      </div>
+      <input
+        type="email"
+        value={override}
+        onChange={(e) => setOverride(e.target.value)}
+        placeholder="to override (e.g. dremixc10@gmail.com)"
+        className="rounded-lg border border-[#D9CFB5] px-2 py-1.5 text-xs bg-white min-w-[240px]"
+      />
+      <button
+        type="button"
+        onClick={send}
+        disabled={state === "sending"}
+        className="shrink-0 rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
+      >
+        {state === "sending" ? "Sending…" : "Send test email →"}
+      </button>
+      {msg && (
+        <span className={`text-[10px] ${state === "error" ? "text-[#C86B4F]" : "text-[#14182A]/60"}`}>
+          {msg}
+        </span>
+      )}
+    </div>
   );
 }

@@ -143,3 +143,162 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+@keyframes alma-soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 134, 116, 0); }
+  50%      { box-shadow: 0 0 0 6px rgba(139, 134, 116, 0.06); }
+}
+
+.alma-flywheel-slot {
+  animation: alma-soft-pulse 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-flywheel-slot { animation: none; }
+}
+
+/* Premium card surface — subtle vertical gradient + soft layered shadow.
+   Used for hero/section cards to add depth without breaking the calm tone. */
+.alma-card {
+  background-image: linear-gradient(180deg, #ffffff 0%, #FCFAF5 100%);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px 0 rgba(20, 24, 42, 0.04),
+    0 12px 28px -12px rgba(20, 24, 42, 0.08);
+  transition:
+    transform 320ms cubic-bezier(.22,.75,.3,1),
+    box-shadow 320ms cubic-bezier(.22,.75,.3,1),
+    border-color 320ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 4px 0 rgba(20, 24, 42, 0.04),
+    0 24px 48px -12px rgba(20, 24, 42, 0.12);
+}
+
+/* Page atmosphere — slow ambient drift on scattered orbs.
+   Longer duration than orb-drift keeps it feeling alive but never busy. */
+@keyframes orb-drift-slow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(40px, -30px, 0) scale(1.04); }
+  66%      { transform: translate3d(-30px, 24px, 0) scale(0.98); }
+}
+.alma-orb-slow {
+  animation: orb-drift-slow 42s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-orb-slow { animation: none; }
+  .alma-card { transition: none; }
+  .alma-card:hover { transform: none; box-shadow: none; }
+}
+
+/* Agent-loop horizontal pipeline — chips unfold left-to-right as the section
+   pins and scroll progress advances. Three states: folded (not yet reached),
+   active (current step), done (already passed). */
+.agent-chip {
+  transition:
+    opacity 500ms cubic-bezier(.22,.75,.3,1),
+    transform 600ms cubic-bezier(.22,.75,.3,1),
+    border-color 400ms ease,
+    background-color 400ms ease,
+    box-shadow 400ms ease,
+    filter 500ms cubic-bezier(.22,.75,.3,1);
+  will-change: transform, opacity;
+}
+.agent-chip[data-state="folded"] {
+  opacity: 0.32;
+  transform: translateX(-8px) scale(0.95);
+  filter: blur(2px);
+}
+.agent-chip[data-state="done"] {
+  opacity: 0.85;
+  transform: translateX(0) scale(1);
+  filter: none;
+  background-image: linear-gradient(180deg, #ffffff 0%, #FCFAF5 100%);
+  border-color: rgba(27, 59, 95, 0.25);
+}
+.agent-chip[data-state="active"] {
+  opacity: 1;
+  transform: translateX(0) scale(1.04);
+  filter: none;
+  background-color: #1B3B5F;
+  border-color: #1B3B5F;
+  box-shadow: 0 12px 28px -10px rgba(27, 59, 95, 0.45);
+}
+.agent-chip[data-state="active"] * {
+  color: #fff !important;
+}
+
+/* Focus panel cross-fade when active step changes (key prop on the panel
+   forces a remount, this animation runs each time). */
+@keyframes agent-focus-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.agent-focus {
+  animation: agent-focus-in 380ms cubic-bezier(.22,.75,.3,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-chip {
+    transition: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .agent-focus { animation: none; }
+}
+
+/* Surfaces leaflet — three product cards unfold sequentially as the section
+   pins and scroll progress advances. Subtle 3D rotateY (left-edge hinge) +
+   translate up + clear blur. Works across devices; perspective only on the
+   parent. data-state on each card flips closed -> open. */
+.surface-leaflet {
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+}
+.surface-card {
+  transform-origin: 0% 50%;
+  backface-visibility: hidden;
+  transition:
+    transform 900ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms),
+    opacity 700ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms),
+    filter 700ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms);
+  will-change: transform, opacity;
+}
+.surface-card[data-state="closed"] {
+  opacity: 0;
+  transform: translateY(28px) rotateY(-22deg) scale(0.97);
+  filter: blur(2px);
+}
+.surface-card[data-state="open"] {
+  opacity: 1;
+  transform: translateY(0) rotateY(0deg) scale(1);
+  filter: blur(0);
+}
+
+/* Mobile keeps the same animation but with a flatter rotateY so it doesn't
+   look weird with cards stacked vertically. */
+@media (max-width: 767.98px) {
+  .surface-card[data-state="closed"] {
+    transform: translateY(28px) scale(0.98);
+    filter: none;
+  }
+  .surface-card[data-state="open"] {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface-leaflet { perspective: none; }
+  .surface-card {
+    transition: none;
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
+}

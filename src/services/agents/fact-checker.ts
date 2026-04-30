@@ -98,7 +98,7 @@ async function extractClaims(
 ): Promise<ExtractedClaim[]> {
   const res = await askClaudeJSON<{ claims: ExtractedClaim[] }>(
     `Email:\n${emailBody}\n\nBanker known facts (do NOT extract these as claims):\n- name: ${banker.name}\n- title: ${banker.title ?? "?"}\n- firm: ${banker.firmName ?? "?"}\n- university: ${banker.university ?? "?"}\n\nReturn only the JSON object.`,
-    { systemPrompt: EXTRACT_SYSTEM, maxTokens: 900, skipCache: true }
+    { systemPrompt: EXTRACT_SYSTEM, maxTokens: 900 }
   );
   if (!res || !Array.isArray(res.claims)) {
     throw new Error("fact_check_extract_invalid_shape");

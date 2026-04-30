@@ -539,6 +539,75 @@ export type Database = {
         }
         Relationships: []
       }
+      claude_usage: {
+        Row: {
+          id: string
+          user_id: string | null
+          agent: string | null
+          model: string
+          input_tokens: number
+          output_tokens: number
+          cost_usd: number
+          occurred_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          agent?: string | null
+          model: string
+          input_tokens?: number
+          output_tokens?: number
+          cost_usd?: number
+          occurred_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          agent?: string | null
+          model?: string
+          input_tokens?: number
+          output_tokens?: number
+          cost_usd?: number
+          occurred_at?: string
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          kind: string
+          body: string
+          page: string | null
+          user_agent: string | null
+          resolved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          kind: string
+          body: string
+          page?: string | null
+          user_agent?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          kind?: string
+          body?: string
+          page?: string | null
+          user_agent?: string | null
+          resolved_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string

@@ -2,6 +2,8 @@
 // Scopes: send + readonly + modify (for label assignment)
 // Testing mode for launch (≤100 users); public mode post-YC.
 
+import { createHash, createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+
 // Gmail scopes.
 // - gmail.compose: save drafts to user's Gmail Drafts folder AND send. This is
 //   a superset of gmail.send, so we use it instead of requesting both. It does
@@ -107,7 +109,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{ access
 function deriveKey(): Buffer | null {
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.ALMA_CRON_SECRET;
   if (!secret) return null;
-  const hasher = require("crypto").createHash("sha256");
+  const hasher = createHash("sha256");
   hasher.update(secret);
   return hasher.digest();
 }
@@ -115,9 +117,8 @@ function deriveKey(): Buffer | null {
 export function encryptToken(plaintext: string): string {
   const key = deriveKey();
   if (!key) return Buffer.from(plaintext, "utf8").toString("base64"); // fallback: unencrypted (dev)
-  const crypto = require("crypto");
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
   const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, encrypted]).toString("base64");
@@ -126,13 +127,12 @@ export function encryptToken(plaintext: string): string {
 export function decryptToken(ciphertext: string): string {
   const key = deriveKey();
   if (!key) return Buffer.from(ciphertext, "base64").toString("utf8"); // fallback matches encryptToken fallback
-  const crypto = require("crypto");
   const buf = Buffer.from(ciphertext, "base64");
   if (buf.length < 28) throw new Error("Ciphertext too short");
   const iv = buf.subarray(0, 12);
   const tag = buf.subarray(12, 28);
   const encrypted = buf.subarray(28);
-  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  const decipher = createDecipheriv("aes-256-gcm", key, iv);
   decipher.setAuthTag(tag);
   const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
   return decrypted.toString("utf8");

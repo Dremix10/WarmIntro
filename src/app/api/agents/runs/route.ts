@@ -23,5 +23,12 @@ export async function GET(request: Request) {
     .order("published_at", { ascending: false })
     .limit(5);
 
-  return NextResponse.json({ runs: runs ?? [], flywheel: flywheel ?? [] });
+  return NextResponse.json(
+    { runs: runs ?? [], flywheel: flywheel ?? [] },
+    {
+      headers: {
+        "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
+      },
+    },
+  );
 }

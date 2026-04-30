@@ -91,25 +91,24 @@ export function JourneyScene() {
     }
 
     const rect = el.getBoundingClientRect();
-    const vh = window.innerHeight;
 
+    // Already past it (page reload mid-scroll) — snap to final state.
     if (rect.bottom < 0) {
       setState("instant");
       return;
     }
-    if (rect.top < vh * 0.75) {
-      setState("on");
-      return;
-    }
 
+    // rootMargin shrinks the virtual viewport from the bottom by 40%, so the
+    // observer only fires once the scene crosses into the upper 60% of the
+    // viewport. The user has to actually scroll to the scene before it plays.
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.25) {
+        if (entry.isIntersecting) {
           setState("on");
           io.disconnect();
         }
       },
-      { threshold: 0.25 }
+      { threshold: 0, rootMargin: "0px 0px -40% 0px" }
     );
     io.observe(el);
     return () => io.disconnect();

@@ -109,6 +109,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // Skip Resend for synthetic E2E test addresses. The e2e-user-journey
+  // script signs up `e2e-<timestamp>-<rand>@brown.edu` and runs the reset
+  // flow — those addresses don't exist on Brown's mail server, so each
+  // run was generating a permanent bounce in Resend (every push). The
+  // test only asserts the endpoint returns 200, so logging + skipping
+  // the actual send keeps coverage and stops the bounces.
+  if (/^e2e-\d+(?:-\d+)?@/.test(normalized)) {
+    await logSignal({
+      userId: user.id,
+      agent: "planner",
+      signalType: "reset_password_sent",
+      metadata: { email: normalized, e2eSkipped: true },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   const subject = "Reset your Alma password";
   const text = [
     "Hey,",

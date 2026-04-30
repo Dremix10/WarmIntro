@@ -292,6 +292,8 @@ Return JSON: [{"id": "banker_id", "reason": "one sentence"}]`;
 
       const reasons = await askClaudeJSON<Array<{ id: string; reason: string }>>(prompt, {
         maxTokens: 1024,
+        userId: input.userId,
+        agent: "researcher",
       });
       const reasonMap = new Map(reasons.map((r) => [r.id, r.reason]));
 

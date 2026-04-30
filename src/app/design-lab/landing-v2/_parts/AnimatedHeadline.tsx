@@ -3,7 +3,6 @@ const WORDS_PREFIX = [
   "warm-intro",
   "engine",
   "for",
-  "students",
   "breaking",
   "into",
 ];
@@ -17,7 +16,7 @@ export function AnimatedHeadline() {
   const dotStart = italicStart + 180;
 
   return (
-    <h1 className="mt-5 max-w-3xl text-5xl leading-[1.02] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[68px]">
+    <h1 className="mt-6 max-w-4xl text-[44px] leading-[1.02] tracking-[-0.02em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[88px] lg:text-[104px]">
       {WORDS_PREFIX.map((w, i) => (
         <span
           key={i}
@@ -29,21 +28,23 @@ export function AnimatedHeadline() {
           {w}&nbsp;
         </span>
       ))}
-      <span
-        className="inline-block italic text-[#2E5A88] opacity-0"
-        style={{
-          animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${italicStart}ms forwards, glow-in 1400ms ease-out ${italicStart + 300}ms forwards`,
-        }}
-      >
-        investment banking
-      </span>
-      <span
-        className="inline-block opacity-0"
-        style={{
-          animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${dotStart}ms forwards`,
-        }}
-      >
-        .
+      <span className="inline-block whitespace-nowrap">
+        <span
+          className="inline italic text-[#2E5A88] opacity-0"
+          style={{
+            animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${italicStart}ms forwards, glow-in 1400ms ease-out ${italicStart + 300}ms forwards`,
+          }}
+        >
+          investment banking
+        </span>
+        <span
+          className="inline opacity-0"
+          style={{
+            animation: `fade-rise ${DURATION}ms cubic-bezier(.22,.75,.3,1) ${dotStart}ms forwards`,
+          }}
+        >
+          .
+        </span>
       </span>
     </h1>
   );

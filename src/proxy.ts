@@ -16,13 +16,20 @@ const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate
 // Auth routes — brute-force protection
 const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup", "/api/auth/reset-password"];
 
-// Rate limit tiers (requests per window)
+// Rate limit tiers (requests per window).
+// Default bumped to 60/min on 2026-04-30 — observed: an authed user
+// running 3× "Run Alma now" + Auto-send via Gmail + a couple page
+// refreshes inside 2 minutes was tripping the old 20/min ceiling.
+// Each Run Alma fires planner/run-now + a /api/today reload; users
+// clicking around legitimately exceed 1-every-3-seconds.
+// AI / guest_ai stay tight (cost control), auth stays tight
+// (brute-force protection).
 const RATE_LIMITS = {
   ai: { max: 5, windowMs: 60_000 },
   guest_ai: { max: 5, windowMs: 60_000 },
   auth: { max: 3, windowMs: 60_000 },
-  default: { max: 20, windowMs: 60_000 },
-  global: { max: 60, windowMs: 60_000 },
+  default: { max: 60, windowMs: 60_000 },
+  global: { max: 120, windowMs: 60_000 },
 };
 
 // User-Agent substrings that indicate automated tooling (case-insensitive match)
@@ -42,6 +49,16 @@ interface RateLimitEntry {
   resetTime: number;
 }
 
+// Known limitation (S7 in the codebase analysis, D3 in the refactor plan):
+// this Map is per-serverless-instance. Vercel can have multiple warm instances
+// of this middleware running concurrently; each maintains its own counter, so
+// the effective limit is `RATE_LIMITS[tier].max × instance_count`. A patient
+// attacker rotating across instances bypasses the documented limit.
+//
+// Acceptable for the private-beta phase (no real users, no abuse signal).
+// When traffic justifies, replace with a distributed store —
+// `@upstash/ratelimit` + Upstash Redis (free tier covers ~10k cmds/day) is the
+// shortest path; Vercel Firewall (dashboard-configured) is a no-code alternative.
 const rateLimitMap = new Map<string, RateLimitEntry>();
 
 function getClientIp(request: NextRequest): string {
@@ -112,10 +129,13 @@ function isAllowlisted(email: string): boolean {
   return TESTING_ALLOWED_DOMAINS.some((domain) => lower.endsWith(`@${domain}`));
 }
 
-// Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself)
+// Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself).
+// NOTE: "/" is handled separately via exact match — startsWith("/") would
+// match every path on the site and disable the gate entirely.
 const GATE_BYPASS_PREFIXES = [
   "/coming-soon",
   "/demo", // public-facing demo for lead capture
+  "/request-access", // closed-beta waitlist form
   "/login", // testers sign in here
   "/forgot-password",
   "/reset-password",
@@ -132,6 +152,11 @@ const GATE_BYPASS_PREFIXES = [
   "/api/analytics",
   "/auth/callback",
 ];
+
+// Paths matched by exact equality (not prefix). Used for the root landing
+// page — "/" can't go in GATE_BYPASS_PREFIXES because startsWith("/") would
+// short-circuit the gate for every URL.
+const GATE_BYPASS_EXACT = ["/"];
 
 // Gate passthrough API pattern — these run after Supabase auth check and emit a 403 if email isn't whitelisted
 function isGatedApiRoute(pathname: string): boolean {
@@ -186,7 +211,11 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
   const { pathname, origin } = request.nextUrl;
 
   // Always allow the gate page itself + bypass routes + Next internals
-  if (pathname === "/coming-soon" || GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p))) {
+  if (
+    pathname === "/coming-soon" ||
+    GATE_BYPASS_EXACT.includes(pathname) ||
+    GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p))
+  ) {
     return null;
   }
 
@@ -206,12 +235,25 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
     );
   }
 
-  // For pages: redirect to /demo so non-testers get value + lead capture
-  return NextResponse.redirect(new URL("/demo", origin));
+  // For pages: redirect to the public landing. The landing's CTAs route
+  // them to /demo (try it without an account), /request-access (ask for
+  // closed-beta access), or /login (existing testers). /demo as a hard
+  // redirect was correct when there was no public landing — now that
+  // / IS the public landing, dropping someone there is more honest and
+  // gives them every option instead of forcing the demo.
+  return NextResponse.redirect(new URL("/", origin));
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // /design-lab/* is dev-only — reference UIs for staged migration. Routable
+  // when NODE_ENV !== "production" (i.e. `npm run dev`); 404 in prod and on
+  // Vercel deploys. Files stay in src/app/design-lab/ for editor access; the
+  // router just refuses to serve them outside local dev.
+  if (pathname.startsWith("/design-lab") && process.env.NODE_ENV === "production") {
+    return new NextResponse(null, { status: 404 });
+  }
 
   // Private-beta gate runs FIRST — everything else is inside the gate
   const gate = await checkTestingGate(request);

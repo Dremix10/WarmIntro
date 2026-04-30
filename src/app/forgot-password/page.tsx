@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -30,7 +31,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6">
+    <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6">
+      <PublicTopBar />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Forgot password</p>

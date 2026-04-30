@@ -101,12 +101,19 @@ export async function GET(request: Request) {
   const needsSetup = !profile?.target_firms || profile.target_firms.length === 0;
   const needsGmail = !profile?.gmail_connected_at;
 
-  return NextResponse.json({
-    drafts: draftsWithReview,
-    trust: trust ?? null,
-    recent: recent ?? [],
-    stageCounts,
-    needsSetup,
-    needsGmail,
-  });
+  return NextResponse.json(
+    {
+      drafts: draftsWithReview,
+      trust: trust ?? null,
+      recent: recent ?? [],
+      stageCounts,
+      needsSetup,
+      needsGmail,
+    },
+    {
+      headers: {
+        "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
+      },
+    },
+  );
 }

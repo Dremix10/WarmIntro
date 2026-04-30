@@ -107,6 +107,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
+      // Invalidate the track() user-id cache on sign-in / sign-out so
+      // events get the right user_id from this point forward.
+      void import("@/lib/track").then((m) => m._resetTrackUserCache());
       if (s && !profile) {
         hydrateProfile();
       }

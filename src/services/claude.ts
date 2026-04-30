@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { getAdminClient } from "@/lib/supabase-admin";
 
 const client = new Anthropic();
 // Default model for cheap/parallel work (Researcher Serper synthesis,
@@ -12,17 +13,49 @@ const MODEL = "claude-sonnet-4-20250514";
 // revision history; Opus 4.7 reliably honors multi-step constraint prompts.
 export const OPUS_MODEL = "claude-opus-4-7";
 
-const MAX_CACHE_SIZE = 200;
-const cache = new Map<string, string>();
+// Anthropic list pricing as of 2026-04. $/Mtoken (input, output).
+// Update when models change. Keys are model IDs (or prefix matches).
+const PRICING_USD_PER_MTOKEN: Record<string, { input: number; output: number }> = {
+  "claude-opus-4-7": { input: 15, output: 75 },
+  "claude-opus-4-": { input: 15, output: 75 },           // any opus-4.x default
+  "claude-sonnet-4-": { input: 3, output: 15 },          // any sonnet-4.x default
+};
 
-function hashKey(prompt: string, systemPrompt?: string): string {
-  const input = `${systemPrompt ?? ""}::${prompt}`;
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
+function priceFor(model: string): { input: number; output: number } {
+  if (PRICING_USD_PER_MTOKEN[model]) return PRICING_USD_PER_MTOKEN[model];
+  for (const prefix of Object.keys(PRICING_USD_PER_MTOKEN)) {
+    if (model.startsWith(prefix)) return PRICING_USD_PER_MTOKEN[prefix];
   }
-  return hash.toString(36);
+  // Unknown model — bill at Sonnet rate, log so we notice.
+  console.warn(`[claude] unknown pricing for model ${model}, billing at Sonnet rate`);
+  return { input: 3, output: 15 };
+}
+
+interface UsageContext {
+  userId?: string;
+  agent?: string;
+}
+
+// Fire-and-forget write to claude_usage. Never throws — telemetry should
+// never break the actual API call.
+function logUsage(ctx: UsageContext | undefined, model: string, inputTokens: number, outputTokens: number) {
+  void (async () => {
+    try {
+      const p = priceFor(model);
+      const cost = (inputTokens / 1_000_000) * p.input + (outputTokens / 1_000_000) * p.output;
+      const admin = getAdminClient();
+      await admin.from("claude_usage").insert({
+        user_id: ctx?.userId ?? null,
+        agent: ctx?.agent ?? null,
+        model,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cost_usd: Number(cost.toFixed(6)),
+      });
+    } catch (err) {
+      console.warn("[claude/logUsage] failed", err);
+    }
+  })();
 }
 
 export async function askClaude(
@@ -30,19 +63,13 @@ export async function askClaude(
   options?: {
     systemPrompt?: string;
     maxTokens?: number;
-    skipCache?: boolean;
     model?: string;
+    userId?: string;
+    agent?: string;
   }
 ): Promise<string> {
   const maxTokens = options?.maxTokens ?? 1024;
   const model = options?.model ?? MODEL;
-  // Cache is keyed on (model + system + prompt) so two callers with
-  // different models don't collide.
-  const key = hashKey(prompt, `${model}::${options?.systemPrompt ?? ""}`);
-
-  if (!options?.skipCache && cache.has(key)) {
-    return cache.get(key)!;
-  }
 
   const response = await client.messages.create({
     model,
@@ -51,17 +78,20 @@ export async function askClaude(
     messages: [{ role: "user", content: prompt }],
   });
 
-  const text = response.content
+  // Capture usage. response.usage exists on every Anthropic API response.
+  if (response.usage) {
+    logUsage(
+      { userId: options?.userId, agent: options?.agent },
+      model,
+      response.usage.input_tokens,
+      response.usage.output_tokens
+    );
+  }
+
+  return response.content
     .filter((block): block is Anthropic.TextBlock => block.type === "text")
     .map((block) => block.text)
     .join("");
-
-  if (cache.size >= MAX_CACHE_SIZE) {
-    const oldest = cache.keys().next().value;
-    if (oldest !== undefined) cache.delete(oldest);
-  }
-  cache.set(key, text);
-  return text;
 }
 
 export async function askClaudeJSON<T>(
@@ -69,8 +99,9 @@ export async function askClaudeJSON<T>(
   options?: {
     systemPrompt?: string;
     maxTokens?: number;
-    skipCache?: boolean;
     model?: string;
+    userId?: string;
+    agent?: string;
   }
 ): Promise<T> {
   const systemPrompt = [
@@ -91,12 +122,4 @@ export async function askClaudeJSON<T>(
     .trim();
 
   return JSON.parse(cleaned) as T;
-}
-
-export function getCacheSize(): number {
-  return cache.size;
-}
-
-export function clearCache(): void {
-  cache.clear();
 }

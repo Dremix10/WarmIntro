@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, type ChangeEvent, type FormEvent } from "react";
 import { track, trackError } from "@/lib/track";
+import { PublicTopBar } from "@/components/PublicTopBar";
 
 interface ParsedProfile {
   name: string;
@@ -100,7 +101,9 @@ function personalize(template: string, p: ParsedProfile): string {
       : "student";
   return template
     .replaceAll("{{name}}", p.name || "Student")
-    .replaceAll("{{university}}", p.university || "Rice")
+    // Don't fall back to a specific school — the demo showing "Rice" to a
+    // Brown student (Krish bug) was the bigger sin than a generic phrase.
+    .replaceAll("{{university}}", p.university || "your school")
     .replaceAll("{{major}}", p.major || "Economics")
     .replaceAll("{{year}}", yearWord)
     .replaceAll("{{yy}}", yy);
@@ -174,7 +177,10 @@ export default function DemoPage() {
       const res = await fetch("/api/parse-resume", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resumeText, university: "Rice University" }),
+        // Don't pass a hardcoded university — Krish from a non-Rice school
+        // saw himself classified as a Rice student because of this. The
+        // parser detects the school from the resume text on its own.
+        body: JSON.stringify({ resumeText }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       const { profile: p } = (await res.json()) as { profile: ParsedProfile };
@@ -224,8 +230,9 @@ export default function DemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE3D2] text-[#14182A]">
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A]">
+      <PublicTopBar />
+      <div className="max-w-3xl mx-auto px-6 py-12 pt-20">
         <div className="text-center mb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-3">60-second preview</p>
           <h1 className="font-[family-name:var(--font-fraunces)] text-4xl sm:text-5xl mb-4">See what Alma would do for you</h1>
@@ -266,6 +273,32 @@ export default function DemoPage() {
             <button type="button" onClick={runDemo} disabled={!resumeText.trim() || extracting}
               className="w-full mt-5 rounded-xl bg-[#1B3B5F] text-white py-4 font-medium hover:bg-[#2E5A88] disabled:opacity-40 transition-colors">
               Show me what Alma would send
+            </button>
+
+            {/* Skip-upload path: prefills a realistic sample resume so visitors
+                who don't want to share their PDF can still see the agent
+                output. Massive conversion lift on the "give me your file"
+                friction. */}
+            <button
+              type="button"
+              onClick={() => {
+                track("demo_sample_used");
+                setProfile({
+                  name: "Sam Rivera",
+                  email: null,
+                  university: "Rice University",
+                  graduationYear: 2028,
+                  major: "Computer Science",
+                  clubs: ["Rice Investment Banking Club", "Rice Quant Society"],
+                  technicalSkills: ["Python", "SQL", "Excel"],
+                  storyOneLiner: "CS sophomore curious about how tech deals get done — drawn to TMT and software M&A specifically.",
+                });
+                track("demo_parsed", { name: "Sam Rivera", major: "Computer Science", university: "Rice University", source: "sample" });
+                setStep("results");
+              }}
+              className="w-full mt-3 rounded-xl border border-[#D9CFB5] bg-white text-[#5C6472] py-3 text-sm font-medium hover:border-[#2E5A88] hover:text-[#1B3B5F] transition-colors"
+            >
+              Don&rsquo;t want to upload? See a sample run →
             </button>
           </div>
         )}
@@ -340,7 +373,7 @@ export default function DemoPage() {
                 </button>
               </form>
               {signupError && <p className="text-xs text-[#E8B339] mt-3">{signupError}</p>}
-              <p className="text-[10px] text-white/40 mt-4">Private beta · Rice &amp; Brown undergrads · Spring 2026</p>
+              <p className="text-[10px] text-white/40 mt-4">Closed beta · Brown, Rice &amp; MIT undergrads · 2026 cycle</p>
             </div>
           </div>
         )}
