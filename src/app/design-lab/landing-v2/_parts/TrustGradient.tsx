@@ -91,8 +91,9 @@ export function TrustGradient() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             You stay in control
           </p>
-          <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            Three trust levels. You pick. You change anytime.
+          <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
+            <span className="block">Three trust levels.</span>
+            <span className="block italic text-[#2E5A88]">You pick. You change anytime.</span>
           </h2>
         </div>
 

@@ -109,8 +109,9 @@ export function SurfacesStack() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Your week in Alma
           </p>
-          <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            Three surfaces. Zero spreadsheet.
+          <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
+            <span className="block">Three surfaces.</span>
+            <span className="block italic text-[#2E5A88]">Zero spreadsheet.</span>
           </h2>
         </div>
 

@@ -25,8 +25,9 @@ export function NoAITells() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             No AI tells
           </p>
-          <h2 className="mx-auto mt-3 max-w-2xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            Bankers spot AI tells in three seconds. <span className="italic text-[#2E5A88]">Alma sounds like you.</span>
+          <h2 className="mx-auto mt-3 max-w-3xl text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[60px]">
+            <span className="block">Bankers spot AI tells in three seconds.</span>
+            <span className="block italic text-[#2E5A88]">Alma sounds like you.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
             Same student, same banker, same ask. The difference is whether the email reads like a template or like a real person.
