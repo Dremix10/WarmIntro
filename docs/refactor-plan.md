@@ -429,12 +429,12 @@ Ship one per week with a soak between. **2 hrs of code, weeks of soak.**
 **D1.** `[Batch 0.1]` Auth header refactor — *recommended: HMAC-signed `x-alma-user-id` header (simpler).*
 Alternative: verify the JWT in middleware and pass the parsed claims as plaintext headers (slightly safer if `ALMA_INTERNAL_SECRET` ever leaks).
 
-> Answer:
+> Answer: **Skip.** Security is the higher priority; the double `getUser()` call is defense-in-depth, not a bug. Removing the second check trades immediate session-revocation detection (logout / password reset / admin disable lock the user out within seconds) for up to a JWT-TTL-long window of usable stolen tokens. The ~300ms tax is acceptable; the perf wins in 0.2 (parallelize reads), 0.3 (HTTP caching), and 0.4 (optimistic UI) cover most of the gap without touching the auth boundary. Revisit only if those three together don't get clicks under 500ms.
 
 **D2.** `[Batch 0.3]` Cache freshness — *recommended: `Cache-Control: private, max-age=10, stale-while-revalidate=60` on `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`.*
 Trade-off: a "Send" click takes up to 10s to reflect in funnel counts on the Today page. If that's too long, we can drop to 5s or use `max-age=0, stale-while-revalidate=30` (always revalidates but serves stale instantly).
 
-> Answer:
+> Answer: **`Cache-Control: private, max-age=0, stale-while-revalidate=300`** on all four endpoints. Optimizes for minimum perceived delay at our current scale (~1k users target) while leaving an obvious upgrade path. `max-age=0` means every navigation triggers a background revalidation; `swr=300` means the user sees the cached paint instantly for up to 5 min of idle time. Combined with optimistic UI (0.4), users never see stale funnel counts. Server-load cost (~20k revalidations/day at 1k users) is trivial for Supabase Pro and the parallelized reads from 0.2. Upgrade levers when we cross ~10k users: (a) bump to `max-age=30, swr=600` (one-line change, ~30× fewer revalidations, accept 30s staleness), or (b) add Upstash Redis as a shared cache (D3) so origin reads stop mattering. Implemented in `src/app/api/{today,profile,connections,agents/runs}/route.ts`.
 
 **D3.** `[Batch 0.7]` In-process caches — *recommended: delete them.*
 They're per-instance only and don't help cold starts. Alternative: move to Upstash Redis ($0 free tier, $10/mo at scale) as a real shared cache. Worth doing if we're going to need cache for the agent system anyway; not worth it for the current footprint.

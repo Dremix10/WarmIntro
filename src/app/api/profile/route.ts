@@ -16,8 +16,15 @@ export async function GET(request: Request) {
       .eq("id", user.id)
       .single();
 
+    const cacheHeaders = {
+      "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
+    };
+
     if (!profile) {
-      return NextResponse.json({ profile: null, referralCode: null, companyUnlocks: 5 });
+      return NextResponse.json(
+        { profile: null, referralCode: null, companyUnlocks: 5 },
+        { headers: cacheHeaders },
+      );
     }
 
     const userProfile: UserProfile = {
@@ -33,11 +40,14 @@ export async function GET(request: Request) {
       resumeText: profile.resume_text,
     };
 
-    return NextResponse.json({
-      profile: userProfile,
-      referralCode: profile.referral_code,
-      companyUnlocks: profile.company_unlocks,
-    });
+    return NextResponse.json(
+      {
+        profile: userProfile,
+        referralCode: profile.referral_code,
+        companyUnlocks: profile.company_unlocks,
+      },
+      { headers: cacheHeaders },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load profile";
     return NextResponse.json({ error: message }, { status: 500 });
