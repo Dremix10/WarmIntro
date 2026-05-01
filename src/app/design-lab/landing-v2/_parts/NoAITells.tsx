@@ -25,8 +25,9 @@ export function NoAITells() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             No AI tells
           </p>
-          <h2 className="mx-auto mt-3 max-w-2xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            Bankers spot AI tells in three seconds. <span className="italic text-[#2E5A88]">Alma sounds like you.</span>
+          <h2 className="mx-auto mt-3 max-w-3xl text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[60px]">
+            <span className="block">Bankers spot AI tells in three seconds.</span>
+            <span className="block italic text-[#2E5A88]">Alma sounds like you.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
             Same student, same banker, same ask. The difference is whether the email reads like a template or like a real person.
@@ -34,7 +35,7 @@ export function NoAITells() {
         </div>
       </Reveal>
 
-      <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-10 grid grid-cols-1 items-center gap-4 md:grid-cols-[1fr_92px_1fr] md:gap-6">
         <Reveal>
           <div className="h-full rounded-2xl border border-dashed border-[#C9BFA5] bg-[#F9F5EB] p-5 text-[#8A8674]">
             <p className="text-[10px] font-bold uppercase tracking-[0.1em]">Typical AI cold email</p>
@@ -43,7 +44,50 @@ export function NoAITells() {
             </pre>
           </div>
         </Reveal>
-        <Reveal delay={200}>
+
+        {/* Leap arc — sits in its own column between the cards on desktop;
+            hidden on mobile (cards stack). */}
+        <Reveal delay={120}>
+          <div className="hidden flex-col items-center justify-center md:flex" aria-hidden>
+            <svg width="92" height="86" viewBox="0 0 92 86" fill="none">
+              <defs>
+                <marker
+                  id="leap-arrow"
+                  viewBox="0 0 10 10"
+                  refX="7"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M 0 0 L 10 5 L 0 10 Z" fill="#1B3B5F" />
+                </marker>
+              </defs>
+              <path
+                d="M 6 56 Q 46 -6 86 56"
+                stroke="#1B3B5F"
+                strokeWidth="2"
+                strokeDasharray="5 4"
+                fill="none"
+                strokeLinecap="round"
+                markerEnd="url(#leap-arrow)"
+              />
+              <text
+                x="46"
+                y="80"
+                textAnchor="middle"
+                fontSize="16"
+                fill="#1B3B5F"
+                fontFamily="var(--font-fraunces)"
+                fontStyle="italic"
+              >
+                alma
+              </text>
+            </svg>
+          </div>
+        </Reveal>
+
+        <Reveal delay={240}>
           <div className="h-full alma-card rounded-2xl border border-[#2E5A88] p-5 text-[#14182A] shadow-[0_0_0_4px_rgba(46,90,136,.08)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">What Alma sends</p>
             <pre className="mt-3 whitespace-pre-wrap font-[family-name:var(--font-fraunces)] text-sm leading-relaxed">

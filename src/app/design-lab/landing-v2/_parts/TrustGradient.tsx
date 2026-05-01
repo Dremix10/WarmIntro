@@ -70,40 +70,8 @@ export function TrustGradient() {
     return () => observer.disconnect();
   }, [reducedMotion]);
 
-  // Scroll-progress driven (default). User clicks override scroll-derived index.
-  useEffect(() => {
-    if (reducedMotion) return;
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      const sec = sectionRef.current;
-      if (!sec) return;
-      const rect = sec.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const pinTop = -rect.top;
-      const pinRange = rect.height - vh;
-      const raw = pinRange > 0 ? pinTop / pinRange : 0;
-      const progress = Math.max(0, Math.min(1, raw));
-      const idx = Math.min(MODES.length - 1, Math.max(0, Math.floor(progress * MODES.length)));
-      setActiveIdx((prev) => {
-        // If user explicitly clicked a mode, hold their choice while they're still in-section.
-        if (userOverride !== null) return userOverride;
-        return prev === idx ? prev : idx;
-      });
-    };
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (rafId) window.cancelAnimationFrame(rafId);
-    };
-  }, [reducedMotion, userOverride]);
+  // No scroll listeners. The auto-play sequence above handles the demo
+  // pass-through, then user clicks (handled in onClick below) take over.
 
   const current = MODES[activeIdx];
 
@@ -115,16 +83,17 @@ export function TrustGradient() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[120vh] md:min-h-[150vh]"
+      className="relative"
       aria-label="Trust gradient"
     >
-      <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-3xl flex-col justify-center px-6 py-10 md:py-14">
+      <div className="mx-auto max-w-3xl px-6 py-24 md:py-32">
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             You stay in control
           </p>
-          <h2 className="mt-3 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            Three trust levels. You pick. You change anytime.
+          <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
+            <span className="block">Three trust levels.</span>
+            <span className="block italic text-[#2E5A88]">You pick. You change anytime.</span>
           </h2>
         </div>
 

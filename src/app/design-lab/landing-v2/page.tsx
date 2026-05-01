@@ -173,9 +173,9 @@ function FunnelSection() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             The IB funnel, honestly
           </p>
-          <h2 className="mx-auto mt-4 max-w-2xl text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            It takes ~120 networking calls to land one offer.{" "}
-            <span className="italic text-[#2E5A88]">Consistency wins.</span>
+          <h2 className="mx-auto mt-4 max-w-3xl text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[60px]">
+            <span className="block">It takes ~120 networking calls to land one offer.</span>
+            <span className="block italic text-[#2E5A88]">Consistency wins.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260] md:text-base">
             Banking recruiting is a filter, not a lottery. Referrals convert 10× better than the

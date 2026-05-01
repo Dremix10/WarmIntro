@@ -45,6 +45,9 @@ const STEPS: Step[] = [
   },
 ];
 
+// ms each step holds before auto-advancing to the next.
+const STEP_HOLD_MS = [1800, 2400, 1900, 2200];
+
 function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
@@ -67,72 +70,71 @@ function useReducedMotion() {
 export function AgentLoop() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [started, setStarted] = useState(false);
+  const [userOverride, setUserOverride] = useState(false);
   const reducedMotion = useReducedMotion();
 
-  // Reduced-motion fallback: auto-advance once when section enters viewport.
+  // Trigger the loop only when the user has actually scrolled the section
+  // into the upper part of the viewport. rootMargin shrinks the virtual
+  // viewport from the bottom by 30%, so the section's top must cross above
+  // the lower 30% before the observer fires. Once started, the timer drives
+  // step changes — scroll speed has no effect.
   useEffect(() => {
-    if (!reducedMotion) return;
     const sec = sectionRef.current;
-    if (!sec) return;
+    if (!sec || started) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          STEPS.forEach((_, i) => {
-            window.setTimeout(() => setActiveIndex(i), i * 350);
-          });
+          setStarted(true);
           observer.disconnect();
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0, rootMargin: "0px 0px -30% 0px" }
     );
     observer.observe(sec);
     return () => observer.disconnect();
-  }, [reducedMotion]);
+  }, [started]);
 
-  // Scroll-progress driven (default).
+  // Auto-advance through the steps on a per-step timer. Stops if the user
+  // clicks a chip (override) or after the last step.
   useEffect(() => {
-    if (reducedMotion) return;
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      const sec = sectionRef.current;
-      if (!sec) return;
-      const rect = sec.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const pinTop = -rect.top;
-      const pinRange = rect.height - vh;
-      const raw = pinRange > 0 ? pinTop / pinRange : 0;
-      const progress = Math.max(0, Math.min(1, raw));
-      const idx = Math.min(
-        STEPS.length - 1,
-        Math.max(0, Math.floor(progress * STEPS.length))
-      );
-      setActiveIndex((prev) => (prev === idx ? prev : idx));
-    };
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (rafId) window.cancelAnimationFrame(rafId);
-    };
-  }, [reducedMotion]);
+    if (!started || userOverride || reducedMotion) return;
+    if (activeIndex >= STEPS.length - 1) return;
+    const hold = STEP_HOLD_MS[activeIndex] ?? 2000;
+    const id = window.setTimeout(() => {
+      setActiveIndex((prev) => (prev === activeIndex ? prev + 1 : prev));
+    }, hold);
+    return () => window.clearTimeout(id);
+  }, [activeIndex, started, userOverride, reducedMotion]);
+
+  // Reduced-motion: snap to final step on viewport entry.
+  useEffect(() => {
+    if (started && reducedMotion) {
+      setActiveIndex(STEPS.length - 1);
+    }
+  }, [started, reducedMotion]);
+
+  const handleSelect = (i: number) => {
+    setUserOverride(true);
+    setActiveIndex(i);
+  };
+
+  const handleReplay = () => {
+    setUserOverride(false);
+    setActiveIndex(0);
+  };
 
   const step = STEPS[activeIndex];
+  const atEnd = activeIndex === STEPS.length - 1;
 
   return (
     <section
       id="how"
       ref={sectionRef}
-      className="relative min-h-[140vh] md:min-h-[180vh]"
+      className="relative"
       aria-label="One banker, end to end"
     >
-      <div className="sticky top-16 mx-auto flex min-h-[80vh] max-w-6xl flex-col justify-center px-6 py-10 md:py-14">
+      <div className="mx-auto flex max-w-6xl flex-col px-6 py-24 md:py-32">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             One banker, end to end
@@ -142,16 +144,19 @@ export function AgentLoop() {
           </h2>
         </div>
 
-        {/* Horizontal pipeline of step chips */}
-        <div className="agent-pipeline mx-auto mt-10 hidden w-full max-w-5xl items-stretch gap-2 md:mt-12 md:flex md:gap-3">
+        {/* Horizontal pipeline — click any chip to jump */}
+        <div className="agent-pipeline mx-auto mt-12 hidden w-full max-w-5xl items-stretch gap-3 md:flex">
           {STEPS.map((s, i) => {
             const state =
               i < activeIndex ? "done" : i === activeIndex ? "active" : "folded";
             return (
-              <div
+              <button
                 key={i}
+                type="button"
                 data-state={state}
-                className="agent-chip relative flex flex-1 flex-col rounded-xl border border-[#D9CFB5] bg-white p-3"
+                onClick={() => handleSelect(i)}
+                className="agent-chip relative flex flex-1 cursor-pointer flex-col rounded-xl border border-[#D9CFB5] bg-white p-3 text-left"
+                aria-label={`Jump to step ${i + 1}: ${s.shortLabel}`}
               >
                 <div className="flex items-center justify-between gap-1">
                   <span className="font-mono text-[10px] tracking-[0.08em] text-[#8A8674]">
@@ -164,12 +169,12 @@ export function AgentLoop() {
                 <p className="mt-3 text-base font-[family-name:var(--font-fraunces)] leading-tight text-[#14182A]">
                   {s.shortLabel}
                 </p>
-              </div>
+              </button>
             );
           })}
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar + replay */}
         <div className="mx-auto mt-3 flex w-full max-w-5xl items-center gap-3">
           <span className="font-mono text-xs tabular-nums text-[#8A8674]">
             {pad(activeIndex + 1)} / {pad(STEPS.length)}
@@ -180,6 +185,15 @@ export function AgentLoop() {
               style={{ width: `${((activeIndex + 1) / STEPS.length) * 100}%` }}
             />
           </div>
+          {atEnd && (
+            <button
+              type="button"
+              onClick={handleReplay}
+              className="text-xs font-semibold text-[#1B3B5F] hover:underline"
+            >
+              ↺ Replay
+            </button>
+          )}
         </div>
 
         {/* Focus panel — full content for the active step */}
@@ -206,7 +220,7 @@ export function AgentLoop() {
         </div>
 
         <p className="mx-auto mt-6 max-w-md text-center text-xs text-[#8A8674]">
-          One banker takes about 90 seconds end to end. Multiply by your batch size — Alma runs while you sleep.
+          One banker takes about 90 seconds end to end. Multiply by your batch size, Alma runs while you sleep.
         </p>
       </div>
     </section>
