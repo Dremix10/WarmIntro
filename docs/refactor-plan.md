@@ -33,6 +33,129 @@ Session worked through the decisions sequentially with security-first / no-cost 
 
 ---
 
+## 🚨 ADMIN TODO — to ship D6 + D7 (committed in `e3ccaa0` on branch `claude/happy-dewdney-636b5c`)
+
+The code is committed and pushed. Theo has stepped away. The admin (Dremix) needs to complete these steps in order. Each step is independent of the others *except* where noted.
+
+### Step 1 — Apply migration `018_drafts_sending_status.sql` (REQUIRED FIRST)
+
+**Why first:** the new code calls `drafts.status = 'sending'`. Without the migration, every send (button, send-all, mark-sent, planner autopilot) throws a `drafts_status_check` constraint violation. Vercel preview AND production both share the same Supabase, so this affects live users immediately on deploy.
+
+**How:**
+1. Open [Supabase Dashboard](https://supabase.com/dashboard) → your project → SQL Editor → New query.
+2. **Verify the CHECK constraint name first.** Paste and run this:
+   ```sql
+   SELECT conname FROM pg_constraint
+   WHERE conrelid = 'drafts'::regclass AND contype = 'c';
+   ```
+   Expected: list includes `drafts_status_check`. If it's named differently (e.g., `drafts_status_check1`), open `supabase/migrations/018_drafts_sending_status.sql` and replace `drafts_status_check` with the actual name before running.
+3. Open `supabase/migrations/018_drafts_sending_status.sql`, copy the contents, paste into a new SQL Editor query, click Run.
+4. **Verify the migration applied:**
+   ```sql
+   -- Should return 1 row
+   SELECT column_name FROM information_schema.columns
+   WHERE table_name = 'drafts' AND column_name = 'send_started_at';
+
+   -- Should include 'sending' in the constraint definition
+   SELECT pg_get_constraintdef(oid) FROM pg_constraint
+   WHERE conname = 'drafts_status_check';
+
+   -- Should list both indexes
+   SELECT indexname FROM pg_indexes
+   WHERE tablename = 'drafts'
+     AND indexname IN ('uq_drafts_active_user_banker_type', 'idx_drafts_sending_started');
+   ```
+
+The migration is forward-only and additive — old code that ignores `'sending'` keeps working, so it's safe to apply BEFORE merging the PR.
+
+### Step 2 — Pull and install deps
+
+```bash
+git fetch origin
+git checkout claude/happy-dewdney-636b5c
+npm install     # picks up vitest@^3 (new devDep)
+```
+
+### Step 3 — Type-check + build (catches any TypeScript errors)
+
+```bash
+npm run build
+```
+
+This runs `tsc --noEmit` + Next build. **Most likely places to break** (Theo could not run tsc locally and may have type errors):
+- The `BankerJoin` cast in `outreach/sendDraft.ts` — supabase-js may type nested joins differently than expected.
+- The discriminated-union narrowing in `toHttpResponse` — *should* compile cleanly because of `assertNever`, but watch for "property does not exist on type" errors.
+- The `claim1.data?.length` checks — TypeScript may type `data` as something other than an array.
+
+If anything fails, **start a new Claude session** with the error output pasted in. Reference this branch and the spec in this doc.
+
+### Step 4 — Run unit tests
+
+```bash
+npm run test:unit
+```
+
+Should pass 5 assertions in `tests/unit/pipeline/stage-validation.test.ts`. If this fails, the vitest config or `@/` alias is broken. Fix that first.
+
+### Step 5 — Open the PR and watch CI
+
+```bash
+gh pr create --fill   # or open https://github.com/Dremix10/WarmIntro/pull/new/claude/happy-dewdney-636b5c
+```
+
+CI runs:
+- `test-unit` (new, gating)
+- `typecheck-build-lint` (existing)
+
+If both green → proceed to smoke test.
+
+### Step 6 — Smoke test on Vercel preview
+
+GitHub will comment on the PR with a Vercel preview URL. Test these 6 paths against it:
+
+| Path | How | Verify |
+|---|---|---|
+| Button send | `/today` → click Send on an approved draft | Email arrives, draft → `sent`, signal `draft_sent` with `via: send_button` |
+| Send-all | `/today` → "Send all" with 2+ approved drafts | All sent, response includes `skipped` count if any were already sending |
+| Mark sent | Trust C user → click "I sent it" | No Gmail call, signal `via: user_marked_sent` |
+| Planner autopilot | Set Trust A on a capability, hit `/api/planner/run-now` (or wait for cron) | Drafts sent, signal `via: planner_autopilot_A` |
+| Manual stage | `/crm` → drag a banker to "replied" | `connections.stage` updates, signal `stage_replied` with `via: manual` |
+| Watcher reply | Reply to a previously-sent test email, wait ~20 min for cron | Signal `stage_replied` with `via: watcher` plus existing `reply_received` |
+
+**The CAS guard test (the most important new behavior):** open `/today`, find an approved draft, click Send and immediately click Send again. First click sends. Second returns `{ ok: true, alreadySending: true }`. No double email. If you get TWO emails to the banker, the CAS guard is broken.
+
+### Step 7 — Merge and watch Telegram
+
+After smoke tests pass, merge the PR. Vercel auto-deploys to prod. For the first 24-48 hours, watch Telegram for:
+
+- 🟠 **Drafts wedged in 'sending' > 10 min** (Sentinel Check 5) — if this fires, the dual-write hazard is biting. Time to ship Choice 2 (the reconciler cron). ~half a day of work; spec in this doc's D6 answer body.
+- 🔶 **Gmail send failures · last 1h** (Sentinel Check 6) — if this fires for a real user, their OAuth token is broken. Ping them to reconnect Gmail at /account.
+
+Both are NEW alerts that didn't exist before this PR — non-zero counts on day one are normal. Sustained high counts mean follow-up work needed.
+
+### What this PR does NOT include (deferred follow-ups)
+
+- **Choice 2 reconciler cron** (D6) — only if Sentinel Check 5 starts firing weekly. ~half day of work.
+- **Option B integration test suite** (D7) — needs Docker installed locally. ~1 hour of work; upgrade path documented in D7 answer body below.
+- **D8** — DraftCard split into 8 components. Decided 2026-04-30, deferred. ~2-3 hrs.
+
+### What was removed in the redo (vs the original D6+D7 commit Theo reverted)
+
+The original was reverted because the audit surfaced 17 worry-points. This redo bakes them in:
+- `gmail_succeeded_db_failed` variant (clearer UX than "send failed")
+- JSON-parse for Gmail error messages (replaces fragile regex)
+- `revertToApproved` logs failures to Sentinel
+- `connection_id` writeback after fresh insert
+- `toHttpResponse` + `assertNever` (single source of truth for response narrowing)
+- Orphan-connection guard in `advanceStage`
+- Sentinel Check 6 for gmail-failure rate (was missing)
+- `.gitattributes` for LF line endings
+- `vitest@^3` (was 2.1)
+- No `supabase` CLI as npm devDep (use brew/scoop locally + GH Action in CI)
+- Removed integration suite scaffolding I had originally written for Docker — now deferred to F upgrade
+
+---
+
 ## Why now
 
 Two pressures forced a v2:
