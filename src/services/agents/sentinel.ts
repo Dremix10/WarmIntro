@@ -8,6 +8,7 @@
 import { startAgentRun, endAgentRun, logSignal } from "./shared";
 import { restSelect, gte, lt, eq } from "@/lib/supabase-rest";
 import { sendTelegram } from "@/lib/telegram";
+import { isSyntheticEmail } from "@/lib/synthetic-email";
 
 export interface SentinelOutput {
   alertsSent: number;
@@ -31,6 +32,14 @@ const STUCK_SENDING_THRESHOLD_MIN = 10;
 // invisible (the helper auto-reverts the row to 'approved' so neither
 // stuck-sending nor agent-errors checks notice them).
 const GMAIL_FAILURE_PER_USER_HOUR = 5;
+// Time after a welcome_email_sent before we expect the user to have
+// completed password_set. Picked 30 min because (a) most testers are
+// admin-approved actively waiting, (b) the @rice.edu Defender filter
+// quarantines silently — we want to know fast enough to manually
+// resend / try a different inbox before the user's attention drifts.
+// False-positive case: tester legitimately busy. Acceptable — admin
+// can squelch via the bucket cooldown if it gets noisy.
+const WELCOME_LANDING_LATENCY_MIN = 30;
 const ALERT_COOLDOWN_HOURS = {
   hunter_credit: 24,    // once a day max for credit warnings
   agent_errors: 1,      // once an hour for error bursts
@@ -38,6 +47,8 @@ const ALERT_COOLDOWN_HOURS = {
   user_spend: 6,        // re-fire every 6h if a user keeps burning
   stuck_sending: 1,     // once an hour for wedged sends
   gmail_failures: 2,    // every 2h per affected-user bucket
+  welcome_landing: 6,   // every 6h per user — we don't want to spam if a
+                        // user genuinely is just slow to click the link
 } as const;
 
 type AlertKey = keyof typeof ALERT_COOLDOWN_HOURS;
@@ -286,6 +297,87 @@ export async function runSentinel(): Promise<SentinelOutput> {
         if (sent) {
           out.alertsSent++;
           await recordAlert("gmail_failures", failBucket, { count: affectedUsers.length });
+        }
+      }
+    }
+
+    // Check 7: welcome-email landing latency. A welcome_email_sent that
+    // doesn't get a corresponding password_set within WELCOME_LANDING_LATENCY_MIN
+    // is the @rice.edu Defender-quarantine signature we hit on the David Weng
+    // approve. Telegram alert means admin can manually resend or try a
+    // gmail.com alias before the tester's attention drifts. Skip synthetic
+    // CI emails so the channel stays signal-only.
+    // PostgREST filters are a flat Record<string, string> keyed by column,
+    // so we can't put two conditions on `occurred_at`. Pull a 24h window
+    // with the lower bound, then drop "too fresh" rows in JS — at our scale
+    // (1k user backfill in ages) this fetch stays trivial.
+    const welcomeWindowStart = new Date(
+      Date.now() - 24 * 60 * 60 * 1000
+    ).toISOString();
+    const welcomeWindowEnd = Date.now() - WELCOME_LANDING_LATENCY_MIN * 60 * 1000;
+    const allRecentWelcomes = await restSelect("signals", {
+      select: "user_id, occurred_at, metadata",
+      filters: {
+        signal_type: eq("welcome_email_sent"),
+        occurred_at: gte(welcomeWindowStart),
+        user_id: "not.is.null",
+      },
+      limit: 50,
+    });
+    const recentWelcomes = allRecentWelcomes.filter(
+      (w) => new Date(w.occurred_at as string).getTime() <= welcomeWindowEnd
+    );
+    if (recentWelcomes.length > 0) {
+      // For each welcome, check if its user has a password_set after the
+      // welcome timestamp. If not, the welcome is "in flight" past the
+      // expected landing window.
+      const userIds = Array.from(
+        new Set(recentWelcomes.map((w) => w.user_id as string).filter(Boolean))
+      );
+      const sets = userIds.length > 0
+        ? await restSelect("signals", {
+            select: "user_id, occurred_at",
+            filters: {
+              signal_type: eq("password_set"),
+              user_id: `in.(${userIds.join(",")})`,
+            },
+            limit: 100,
+          })
+        : [];
+      const setByUser = new Map<string, number>();
+      for (const s of sets) {
+        const u = s.user_id as string;
+        const ts = new Date(s.occurred_at as string).getTime();
+        const prev = setByUser.get(u);
+        if (!prev || ts > prev) setByUser.set(u, ts);
+      }
+      const stuck = recentWelcomes.filter((w) => {
+        const meta = (w.metadata as { to?: string } | null) ?? {};
+        if (meta.to && isSyntheticEmail(meta.to)) return false;
+        const sentAt = new Date(w.occurred_at as string).getTime();
+        const setAt = setByUser.get(w.user_id as string);
+        return !setAt || setAt < sentAt;
+      });
+      if (stuck.length > 0) {
+        // Bucket by recipient count so a single quiet tester doesn't
+        // re-fire the alert every cron cycle in the 6h cooldown window.
+        const stuckBucket = stuck.length > 5 ? "lt5" : stuck.length > 2 ? "lt10" : "lt20";
+        if (await shouldAlert("welcome_landing", stuckBucket)) {
+          const list = stuck
+            .slice(0, 10)
+            .map((w) => {
+              const meta = (w.metadata as { to?: string } | null) ?? {};
+              const ageMin = Math.round((Date.now() - new Date(w.occurred_at as string).getTime()) / 60000);
+              return `  - ${meta.to ?? "(no to)"} (${ageMin}m old)`;
+            })
+            .join("\n");
+          const sent = (await sendTelegram(
+            `📭 Welcome email not landing\n\n${stuck.length} user(s) approved >${WELCOME_LANDING_LATENCY_MIN}m ago haven't completed setup:\n${list}\n\nLikely Defender quarantine. Resend via /admin or DM the link.`
+          )).sent;
+          if (sent) {
+            out.alertsSent++;
+            await recordAlert("welcome_landing", stuckBucket, { count: stuck.length });
+          }
         }
       }
     }
