@@ -2,7 +2,7 @@
 // Tools: queryBankerDB, scoreBankerFit (Claude), scrapeSerper, enrichHunter, logSignal
 // Outputs candidates to drive Correspondent's drafting queue
 
-import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
+import { startAgentRun, endAgentRun, logSignal } from "./shared";
 import { findRealAlumni } from "@/services/linkedin-search";
 import { enrichEmailBatch, verifyEmailViaHunter } from "@/services/hunter/enrich";
 import { getAdminClient } from "@/lib/supabase-admin";
@@ -348,72 +348,32 @@ export async function runResearcher(input: ResearcherInput): Promise<ResearcherO
 
     const top = scored.slice(0, input.needed);
 
-    // Build reason-to-contact strings via Claude (one call for all)
     const candidates: ResearcherCandidate[] = [];
     if (top.length === 0) {
       await endAgentRun(ctx, { sourced: 0, reason: "no_matching_bankers" });
       return { candidates: [], sourced: 0 };
     }
 
-    try {
-      const prompt = `You are a recruiting researcher. For each banker below, write ONE sentence on why this banker is worth contacting for a ${user.university} ${user.major} student (class of ${user.graduation_year}) targeting IB.
-
-Bankers:
-${JSON.stringify(
-  top.map((t) => ({
-    id: t.banker.id,
-    name: t.banker.name,
-    title: t.banker.title,
-    firm: t.banker.firmId,
-    group: t.banker.groupId,
-    sameSchool: t.banker.university?.toLowerCase() === user.university.toLowerCase(),
-  })),
-  null,
-  2
-)}
-
-Return JSON: [{"id": "banker_id", "reason": "one sentence"}]`;
-
-      const reasons = await askClaudeJSON<Array<{ id: string; reason: string }>>(prompt, {
-        maxTokens: 1024,
-        userId: input.userId,
-        agent: "researcher",
-      });
-      const reasonMap = new Map(reasons.map((r) => [r.id, r.reason]));
-
-      for (let i = 0; i < top.length; i++) {
-        const t = top[i];
-        candidates.push({
-          bankerId: t.banker.id,
-          firmId: t.banker.firmId,
-          groupId: t.banker.groupId,
-          name: t.banker.name,
-          title: t.banker.title,
-          warmth: t.warmth,
-          reasonToContact: reasonMap.get(t.banker.id) ?? `${t.banker.title} at ${t.banker.firmId}.`,
-          priority: top.length - i,
-        });
-      }
-    } catch (err) {
-      // Reason generation failed; fall back to bland reason
-      for (let i = 0; i < top.length; i++) {
-        const t = top[i];
-        candidates.push({
-          bankerId: t.banker.id,
-          firmId: t.banker.firmId,
-          groupId: t.banker.groupId,
-          name: t.banker.name,
-          title: t.banker.title,
-          warmth: t.warmth,
-          reasonToContact: `${t.banker.title} at ${t.banker.firmId ?? "target firm"}.`,
-          priority: top.length - i,
-        });
-      }
-      await logSignal({
-        userId: input.userId,
-        agent: "researcher",
-        signalType: "claude_reason_fallback",
-        metadata: { err: String(err) },
+    // reasonToContact is logged as signal metadata for /admin display but is
+    // NOT consumed by Correspondent / Critic / Planner — verified via grep
+    // 2026-05-01. The Claude call here cost ~3-5s on every Run Alma click
+    // for cosmetic admin copy. Replaced with a templated reason matching
+    // the existing fallback shape, preserving the signal metadata schema.
+    for (let i = 0; i < top.length; i++) {
+      const t = top[i];
+      const sameSchool = t.banker.university?.toLowerCase() === user.university.toLowerCase();
+      const reason = sameSchool
+        ? `${t.banker.title} at ${t.banker.firmId ?? "target firm"} — fellow ${user.university} alum.`
+        : `${t.banker.title} at ${t.banker.firmId ?? "target firm"}.`;
+      candidates.push({
+        bankerId: t.banker.id,
+        firmId: t.banker.firmId,
+        groupId: t.banker.groupId,
+        name: t.banker.name,
+        title: t.banker.title,
+        warmth: t.warmth,
+        reasonToContact: reason,
+        priority: top.length - i,
       });
     }
 
