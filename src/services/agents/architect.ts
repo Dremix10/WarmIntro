@@ -39,11 +39,27 @@ interface DraftFailure {
   criticFeedback: string | null;
   skipReason: string | null;
   factCheckClaims: string[];
+  // Upstream root-cause signals — populated by enrichWithUpstreamSignals
+  // so the Architect can diagnose whether a failure is downstream
+  // (Correspondent prompt issue) or upstream (Scout starvation, banker
+  // data thinness, Researcher selection issue, etc.).
+  upstream: {
+    bankerFindingCount: number;       // Scout output for this banker
+    bankerHasProfile: boolean;        // banker_profiles row exists
+    bankerHasRecentDeals: boolean;    // banker_deals rows exist
+    bankerEmailVerified: boolean;
+    iterationRegression: boolean;      // iter N re-introduced a phrase that
+                                       // was rejected on an earlier iter
+    cumulativeStackedConstraints: boolean; // iter has >=2 distinct prior
+                                       // rejection axes — model regression
+                                       // on these is empirically observed
+  };
 }
 
 interface RecurringPattern {
   name: string;
   frequencyEstimate: string;
+  layer: "prompt" | "upstream_data" | "iteration_regression" | "other";
   whyItHappens: string;
   positiveFix: string;
   exampleBefore: string;
@@ -55,24 +71,34 @@ interface ArchitectReport {
   oneSentenceTakeaway: string;
 }
 
-const ARCHITECT_SYSTEM_PROMPT = `You are a senior prompt engineer reviewing recent output failures from an AI that drafts cold-outreach emails for college students reaching out to investment bankers.
+const ARCHITECT_SYSTEM_PROMPT = `You are a senior prompt engineer + systems analyst reviewing recent failures from an AI pipeline that drafts cold-outreach emails for students reaching out to investment bankers.
 
-Your job: read the failed drafts + their Critic feedback + any user skip reasons. Find the 2-3 recurring failure patterns. For each, propose a POSITIVE, example-driven prompt addition that would prevent it.
+Your job: find the 2-3 recurring failure patterns AND diagnose each at the correct layer. A failure can come from:
 
-Good suggestions look like this — note the structure: name the pattern, explain why the model falls for it, then write a concrete instruction WITH a before/after example so the model sees what success looks like.
+  (a) the Correspondent's PROMPT — the model is told the right thing but reaches for an AI-tell anyway. Fix: positive, example-driven prompt addition.
+  (b) UPSTREAM DATA STARVATION — Scout returned 0 findings, banker_profile is missing, banker_deals is empty. The model has nothing real to anchor on, so it fabricates. Fix: surface this as a Researcher / Scout / Curator issue, not a Correspondent prompt fix.
+  (c) ITERATION REGRESSION — the model dropped iter 0's correction when addressing iter 1's complaint. Empirically observed: Opus 4.7 trades old constraints for new ones when feedback stacks. Fix: tighten the revise loop (lower MAX_ITERATIONS, dedupe constraints, pin literal banned strings at top of prompt instead of in cumulative prose).
 
-Example of a great suggestion:
+Each input row carries an 'upstream' object with bankerFindingCount, bankerHasProfile, bankerHasRecentDeals, iterationRegression, cumulativeStackedConstraints. USE THESE to decide which layer each pattern lives at. A pattern where every example has bankerFindingCount=0 is upstream starvation, not prompt failure. A pattern where iterationRegression=true on iter 2 is iteration-regression, not prompt failure.
 
-  Pattern: "School name-drop opener" — happens when banker data is thin and the model falls back to 'saw you went to Brown.'
-  Why: shows the model ran a query, not that it noticed anything specific. Critic flags as 'could go to any Brown alum.'
-  Positive fix: "When the only shared anchor is school, lead with one specific thing about YOU instead — a class, a club, a real reason for IB. The school overlap is context, not the opener."
-  Example before: "Saw you went to Brown. I'm interested in IB."
-  Example after: "I'm a Brown CS sophomore taking APMA 1650 — trying to figure out if probability rigor maps onto deal work."
+POSITIVE-INSTRUCTION DIRECTIVE — your suggestions follow the same rule as the prompts you're improving:
+- Tell the system what TO do, with a concrete example. Not a list of "don't"s.
+- A great suggestion: name the pattern, explain why the model/system falls for it, propose a concrete fix at the right layer with a before/after example.
+- Bad suggestions: "ban X phrase," "delete Y section." The model regresses on stacked bans, and we already have a deterministic guardrail for literal banned phrases.
+
+EXAMPLE of a great pattern + fix:
+
+  Pattern: "Prestige-credential fabrication" (e.g. 'Harvard Corporate Governance Roundtable')
+  Layer: upstream data starvation
+  Why: the model invents prestige-sounding credentials when banker data is thin (no Scout findings, no profile, no deals). All 6 fabrications in last 5 days had bankerFindingCount <= 1 AND bankerHasProfile = false.
+  Fix at the right layer: the Correspondent prompt is fine — the upstream Scout/Curator path is starving the model. Either (a) gate drafting on having >= 1 verified anchor in the data, OR (b) when no anchors exist, force the Correspondent into a 'thin-data mode' that explicitly anchors on student-side specifics + a clear ask, with no banker-specific claims at all.
+  Example before (bad opener under thin data): "Saw you were on the Harvard Corporate Governance Roundtable…"
+  Example after (thin-data mode): "I'm a Brown CS sophomore taking APMA 1650 — keep coming back to Goldman's TMT group when reading about deal structuring. 15 min next week?"
 
 What NOT to do:
-- Don't write rules in negative form ("Don't do X"). Write what TO do instead.
-- Don't pile on more bans to a long DO-NOT list. The model regresses on those.
-- Don't suggest deleting working sections of the prompt.
+- Don't propose adding more bans to the prompt — the BANNED_PHRASES guardrail in guardrails.ts already enforces deterministic phrase blocks; the model regresses on long DO-NOT lists.
+- Don't propose deleting working sections of the prompt.
+- Don't put every failure on the prompt layer. If the data shows upstream starvation, say that out loud.
 
 Output strictly as JSON matching the requested shape.`;
 
@@ -91,7 +117,7 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
     new Set((rejects as Array<{ draft_id: string }>).map((r) => r.draft_id))
   );
   const skipped = await restSelect("drafts", {
-    select: "id, type, status, body, iteration_count, skip_reason, fact_check, created_at",
+    select: "id, type, status, body, banker_id, iteration_count, skip_reason, fact_check, created_at",
     filters: { skip_reason: "not.is.null", created_at: gte(sinceIso) },
     order: "created_at.desc",
     limit: 30,
@@ -101,7 +127,7 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
   // Hydrate draft rows for the rejected critic_reviews.
   if (draftIds.length > 0) {
     const drafts = await restSelect("drafts", {
-      select: "id, type, status, body, iteration_count, skip_reason, fact_check",
+      select: "id, type, status, body, banker_id, iteration_count, skip_reason, fact_check",
       filters: { id: `in.(${draftIds.join(",")})` },
       limit: 100,
     });
@@ -110,6 +136,113 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
   for (const d of skipped) {
     if (!draftMap.has(d.id as string)) draftMap.set(d.id as string, d);
   }
+
+  // Build the upstream-signal lookup tables in batch — one query per
+  // table, indexed by banker_id.
+  const bankerIds = Array.from(
+    new Set(
+      Array.from(draftMap.values())
+        .map((d) => d.banker_id as string | null)
+        .filter((b): b is string => typeof b === "string")
+    )
+  );
+  const findingsByBanker = new Map<string, number>();
+  const profileByBanker = new Set<string>();
+  const dealsByBanker = new Set<string>();
+  const verifiedByBanker = new Set<string>();
+
+  if (bankerIds.length > 0) {
+    const findings = await restSelect("banker_findings", {
+      select: "banker_id",
+      filters: { banker_id: `in.(${bankerIds.join(",")})` },
+      limit: 1000,
+    });
+    for (const f of findings) {
+      const k = f.banker_id as string;
+      findingsByBanker.set(k, (findingsByBanker.get(k) ?? 0) + 1);
+    }
+    const profiles = await restSelect("banker_profiles", {
+      select: "banker_id",
+      filters: { banker_id: `in.(${bankerIds.join(",")})` },
+      limit: 500,
+    });
+    for (const p of profiles) profileByBanker.add(p.banker_id as string);
+    const deals = await restSelect("banker_deals", {
+      select: "banker_id",
+      filters: { banker_id: `in.(${bankerIds.join(",")})` },
+      limit: 500,
+    });
+    for (const dd of deals) dealsByBanker.add(dd.banker_id as string);
+    const bankers = await restSelect("bankers", {
+      select: "id, email_verified",
+      filters: { id: `in.(${bankerIds.join(",")})` },
+      limit: 500,
+    });
+    for (const b of bankers) if (b.email_verified) verifiedByBanker.add(b.id as string);
+  }
+
+  // Iteration-regression detection: for each draft with iter >= 2, look
+  // at draft_iterations.critic_feedback strings for a banned-phrase
+  // mention in iter 0; check if iter N's body contains the same phrase.
+  const multiIterDraftIds = Array.from(draftMap.entries())
+    .filter(([, d]) => ((d.iteration_count as number) ?? 0) >= 2)
+    .map(([id]) => id);
+  const iterationRegressionByDraft = new Set<string>();
+  const stackedConstraintsByDraft = new Set<string>();
+  if (multiIterDraftIds.length > 0) {
+    const iterations = await restSelect("draft_iterations", {
+      select: "draft_id, iteration, body, critic_feedback",
+      filters: { draft_id: `in.(${multiIterDraftIds.join(",")})` },
+      order: "iteration.asc",
+      limit: 500,
+    });
+    const byDraft = new Map<string, Array<{ iteration: number; body: string; feedback: string | null }>>();
+    for (const r of iterations) {
+      const did = r.draft_id as string;
+      const arr = byDraft.get(did) ?? [];
+      arr.push({
+        iteration: r.iteration as number,
+        body: (r.body as string) ?? "",
+        feedback: (r.critic_feedback as string | null) ?? null,
+      });
+      byDraft.set(did, arr);
+    }
+    for (const [did, iters] of byDraft) {
+      // Stacked-constraints heuristic: any draft with two or more rejected
+      // iterations was hit on at least two distinct rejection paths.
+      const rejectedIters = iters.filter((i) => i.feedback);
+      if (rejectedIters.length >= 2) stackedConstraintsByDraft.add(did);
+
+      // Regression heuristic: if iter 0's feedback mentions banned phrases
+      // by name AND a later iter's body contains one of those phrases,
+      // that's a regression.
+      const iter0 = iters.find((i) => i.iteration === 0);
+      const phraseMatch = iter0?.feedback?.match(/Banned phrases? (?:detected|found)\s*:\s*(.+?)(?:\n|$)/i);
+      if (phraseMatch) {
+        const phrases = phraseMatch[1].split(",").map((p) => p.trim().toLowerCase()).filter(Boolean);
+        for (const it of iters) {
+          if (it.iteration === 0) continue;
+          const bodyLower = it.body.toLowerCase();
+          if (phrases.some((p) => bodyLower.includes(p))) {
+            iterationRegressionByDraft.add(did);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  const buildUpstream = (bankerId: string | null | undefined, draftId: string): DraftFailure["upstream"] => {
+    const bid = bankerId ?? "";
+    return {
+      bankerFindingCount: findingsByBanker.get(bid) ?? 0,
+      bankerHasProfile: profileByBanker.has(bid),
+      bankerHasRecentDeals: dealsByBanker.has(bid),
+      bankerEmailVerified: verifiedByBanker.has(bid),
+      iterationRegression: iterationRegressionByDraft.has(draftId),
+      cumulativeStackedConstraints: stackedConstraintsByDraft.has(draftId),
+    };
+  };
 
   const out: DraftFailure[] = [];
   // For each rejected critic_review, emit one DraftFailure row.
@@ -129,6 +262,7 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
       criticFeedback: r.feedback ?? null,
       skipReason: (d.skip_reason as string | null) ?? null,
       factCheckClaims: claims,
+      upstream: buildUpstream(d.banker_id as string | null, r.draft_id),
     });
   }
   // Add skipped drafts that didn't have a Critic reject (skipped post-approve).
@@ -147,6 +281,7 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
       criticFeedback: null,
       skipReason: (d.skip_reason as string | null) ?? null,
       factCheckClaims: claims,
+      upstream: buildUpstream(d.banker_id as string | null, d.id as string),
     });
   }
   return out;
@@ -159,7 +294,7 @@ function formatTelegramDigest(report: ArchitectReport, draftsReviewed: number): 
   lines.push(`*${report.oneSentenceTakeaway}*`);
   lines.push("");
   for (const p of report.recurringPatterns.slice(0, 3)) {
-    lines.push(`▸ *${p.name}* (${p.frequencyEstimate})`);
+    lines.push(`▸ *${p.name}*  ·  ${p.frequencyEstimate}  ·  layer: ${p.layer}`);
     lines.push(`  Why: ${p.whyItHappens}`);
     lines.push(`  Fix: ${p.positiveFix}`);
     if (p.exampleBefore) lines.push(`  Before: "${p.exampleBefore}"`);
@@ -189,7 +324,12 @@ export async function runArchitect(opts: { lookbackHours?: number } = {}): Promi
       return out;
     }
 
-    const userPrompt = `Review the following ${failures.length} failed drafts. Find 2-3 recurring patterns. For each, write a positive, example-driven prompt addition.
+    const userPrompt = `Review the following ${failures.length} failed drafts. Find 2-3 recurring patterns. For each, diagnose at the correct layer (prompt / upstream_data / iteration_regression / other) using the 'upstream' fields on each row.
+
+Aggregates worth computing as you go:
+- How many failures had bankerFindingCount = 0 AND bankerHasProfile = false?  (signal of upstream data starvation)
+- How many had iterationRegression = true?  (signal of iteration-regression)
+- How many had cumulativeStackedConstraints = true?  (signal that the revise loop is overloaded)
 
 FAILURES:
 ${JSON.stringify(failures, null, 2)}
@@ -200,13 +340,14 @@ Return JSON of shape:
     {
       "name": "short label",
       "frequencyEstimate": "e.g. '6 of 12 drafts'",
-      "whyItHappens": "1 sentence on the root cause",
-      "positiveFix": "the instruction to add to the prompt — positive form, no 'don't'",
-      "exampleBefore": "concrete bad opener line",
-      "exampleAfter": "concrete fixed opener line"
+      "layer": "prompt | upstream_data | iteration_regression | other",
+      "whyItHappens": "1-2 sentences on the root cause, grounded in the upstream fields",
+      "positiveFix": "the change to make at the right layer, written as positive instruction with no 'don't'",
+      "exampleBefore": "concrete bad opener / failure example",
+      "exampleAfter": "concrete fixed opener / behavior example"
     }
   ],
-  "oneSentenceTakeaway": "the single most impactful change to make this week"
+  "oneSentenceTakeaway": "the single most impactful change to make this week, name the layer it lives at"
 }`;
 
     const report = await askClaudeJSON<ArchitectReport>(userPrompt, {
