@@ -208,18 +208,30 @@ async function dedupBankers(): Promise<number> {
   const duplicates: Array<{ keep_id: string; remove_id: string }> = [];
   const byLinkedin = new Map<string, string>();
   const byNameFirm = new Map<string, string>();
+  // Track every id already in a duplicate pair (either as keep or remove)
+  // so the name+firm pass can skip in O(1) instead of `duplicates.some(...)`.
+  // Old code degraded to O(N²) once the dup count grew, which got noticeable
+  // around 1k bankers in the weekly cron — refactor-plan.md Batch 6.3.
+  const involved = new Set<string>();
 
   for (const b of allBankers) {
     if (b.linkedin_url) {
       const seen = byLinkedin.get(b.linkedin_url);
-      if (seen) duplicates.push({ keep_id: seen, remove_id: b.id });
-      else byLinkedin.set(b.linkedin_url, b.id);
+      if (seen) {
+        duplicates.push({ keep_id: seen, remove_id: b.id });
+        involved.add(seen);
+        involved.add(b.id);
+      } else {
+        byLinkedin.set(b.linkedin_url, b.id);
+      }
     }
     if (b.name && b.firm_id) {
       const key = `${b.name.toLowerCase()}::${b.firm_id}`;
       const seen = byNameFirm.get(key);
-      if (seen && seen !== b.id && !duplicates.some((d) => d.remove_id === b.id || d.keep_id === b.id)) {
+      if (seen && seen !== b.id && !involved.has(b.id) && !involved.has(seen)) {
         duplicates.push({ keep_id: seen, remove_id: b.id });
+        involved.add(seen);
+        involved.add(b.id);
       } else {
         byNameFirm.set(key, b.id);
       }

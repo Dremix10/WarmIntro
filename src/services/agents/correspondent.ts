@@ -3,7 +3,7 @@
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { OPUS_MODEL } from "@/services/claude";
-import { restSelectOne, restSelect, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
+import { restSelectOne, restSelect, restInsert, restUpdate, eq, isNull } from "@/lib/supabase-rest";
 import { applyGuardrails } from "@/services/guardrails";
 import { scoutBankerFindings, type ScoutedFinding } from "./scout";
 import type { CommonGroundAnchor, DraftType } from "@/shared/ib-types";
@@ -168,6 +168,54 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
   });
 
   try {
+    // TOCTOU pre-check: when two Run-Alma clicks fire in quick succession
+    // (or two cron ticks straddle a boundary), the planner can dispatch
+    // the same (user, banker, type='cold') to two parallel Correspondents.
+    // The uq_drafts_active_user_banker_type unique index catches the race
+    // at INSERT time, but only AFTER findCommonGround + scoutBankerFindings
+    // + the draft Claude call have all already burned tokens.
+    //
+    // Bail before any Claude work if an active draft already exists for
+    // this (user, banker, type) — refactor-plan.md Batch 6.2. Race window
+    // is now ~50ms of DB lookup instead of ~5s of Claude calls. The doc
+    // suggested an advisory lock in Researcher, but advisory locks are
+    // session-bound and don't span the Researcher → Planner → Correspondent
+    // hop across requests; pre-check at the Claude-call boundary is the
+    // shape that fits our serverless model.
+    if (!input.existingDraftId) {
+      const active = await restSelectOne("drafts", {
+        select: "id, status",
+        filters: {
+          user_id: eq(input.userId),
+          banker_id: eq(input.bankerId),
+          type: eq(input.type),
+          status: "in.(pending_critic,needs_revision,approved,sending,rejected_unresolvable)",
+          sent_at: isNull,
+        },
+      });
+      if (active) {
+        await logSignal({
+          userId: input.userId,
+          bankerId: input.bankerId,
+          agent: "correspondent",
+          signalType: "draft_skipped_duplicate",
+          metadata: { existingDraftId: active.id, existingStatus: active.status, type: input.type },
+        });
+        await endAgentRun(ctx, { skipped: "duplicate_active_draft", existingDraftId: active.id });
+        // Return without draftId so planner short-circuits to "rejected"
+        // and skips the Critic re-run. The existing draft is still in /today
+        // and unaffected — duplicate isn't a failure for the user, just for
+        // the parallel runner that lost the race.
+        return {
+          subject: "",
+          body: "",
+          anchors: [],
+          rejectedForNoAnchor: false,
+          guardrailFlags: { emDashesReplaced: 0, bannedWordsFound: [], bannedPhrasesFound: [], tooLong: false, tooShort: false },
+        };
+      }
+    }
+
     const [user, banker] = await Promise.all([getUserContext(input.userId), getBankerContext(input.bankerId)]);
     if (!user || !banker) {
       await endAgentRun(ctx, { error: "missing context" }, "missing_context");
