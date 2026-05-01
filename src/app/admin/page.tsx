@@ -241,6 +241,18 @@ export default function AdminPage() {
           </div>
         </div>
 
+        <div className="mb-6 rounded-2xl bg-white p-4 border border-[#D9CFB5]">
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold mb-0.5">Sentinel</p>
+              <p className="text-xs text-[#14182A]/70">
+                Re-run the monitoring sweep on demand (errors, credit balance, stuck sends, gmail-fail bursts, welcome-email landing). Telegrams the same alerts the daily cron would.
+              </p>
+            </div>
+            <SentinelRunButton />
+          </div>
+        </div>
+
         {/* Waitlist queue — pilot_signups rows pending admin approval.
             Shows up only if there's something to act on. */}
         {requests.filter((r) => !r.approved).length > 0 && (
@@ -791,6 +803,49 @@ function ArchitectRunButton() {
             ))}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function SentinelRunButton() {
+  const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{ alertsSent?: number; errors?: number; stuckSending?: number; gmailFailureUsers?: number } | null>(null);
+
+  async function run() {
+    setState("running");
+    setErrorMsg(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/sentinel/run", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErrorMsg(json.error ?? `HTTP ${res.status}`);
+      setState("error");
+      return;
+    }
+    setSummary(json.result ?? null);
+    setState("done");
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-2 min-w-[140px]">
+      <button
+        type="button"
+        onClick={run}
+        disabled={state === "running"}
+        className="shrink-0 rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
+      >
+        {state === "running" ? "Running…" : "Run Sentinel"}
+      </button>
+      {errorMsg && <span className="text-[10px] text-[#C86B4F]">{errorMsg}</span>}
+      {state === "done" && summary && (
+        <span className="text-[10px] text-[#14182A]/60 text-right">
+          {summary.alertsSent ?? 0} alerts sent · {summary.errors ?? 0} agent errors · {summary.stuckSending ?? 0} stuck · {summary.gmailFailureUsers ?? 0} gmail-fail
+        </span>
       )}
     </div>
   );
