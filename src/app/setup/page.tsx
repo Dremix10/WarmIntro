@@ -519,12 +519,55 @@ function SetupInner() {
   const firmsByTier: Record<Firm["tier"], Firm[]> = { bulge_bracket: [], elite_boutique: [], middle_market: [] };
   for (const f of firms) firmsByTier[f.tier].push(f);
 
+  // Map current step to a 1-based index for the indicator strip.
+  const stepIndex = step === "upload" ? 1 : step === "confirm" ? 2 : step === "story" ? 3 : 4;
+
   return (
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A]">
-      <div className="max-w-2xl mx-auto px-6 py-10">
+      <div className="max-w-5xl mx-auto px-6 py-10">
         <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Setup</p>
         <h1 className="text-4xl font-[family-name:var(--font-fraunces)] font-medium mb-2">Let&apos;s get Alma running</h1>
-        <p className="text-sm text-[#14182A]/70 mb-4 italic font-[family-name:var(--font-fraunces)]">Three quick steps. You&apos;ll be live tonight.</p>
+        <p className="text-sm text-[#14182A]/70 mb-6 italic font-[family-name:var(--font-fraunces)]">Three quick steps. You&apos;ll be live tonight.</p>
+
+        {/* Step indicator strip — equal-width pills + equal bars for symmetry */}
+        {step !== "done" && (
+          <div className="mb-7 grid items-center gap-0" style={{ gridTemplateColumns: "1fr 28px 1fr 28px 1fr" }}>
+            {[
+              { num: 1, label: "Resume" },
+              { num: 2, label: "Confirm" },
+              { num: 3, label: "Voice" },
+            ].map((s, i) => {
+              const state = s.num < stepIndex ? "done" : s.num === stepIndex ? "active" : "todo";
+              return (
+                <div key={s.num} className="contents">
+                  <div
+                    className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-all ${
+                      state === "active"
+                        ? "bg-[#1B3B5F] text-white border-[#1B3B5F] shadow-[0_8px_20px_-8px_rgba(27,59,95,0.45)]"
+                        : state === "done"
+                          ? "bg-[#2E5A88]/10 text-[#1B3B5F] border-[#2E5A88]/25"
+                          : "bg-white text-[#5C6472] border-[#D9CFB5]"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[11px] font-semibold font-[family-name:var(--font-fraunces)] ${
+                        state === "active"
+                          ? "bg-white text-[#1B3B5F]"
+                          : state === "done"
+                            ? "bg-[#1B3B5F] text-white"
+                            : "bg-[#EAE3D2] text-[#5C6472]"
+                      }`}
+                    >
+                      {state === "done" ? "✓" : s.num}
+                    </span>
+                    {s.label}
+                  </div>
+                  {i < 2 && <span className="h-px bg-[#D9CFB5]" aria-hidden />}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Persistent Gmail status — visible on every step so users can connect
             Gmail any time, not just from step 1. */}
@@ -565,6 +608,7 @@ function SetupInner() {
 
         {/* Step 1 — Upload + Gmail */}
         {step === "upload" && (
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_0.85fr] md:items-start gap-5 md:gap-6">
           <div className="space-y-4">
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-2">Step 1 of 3</p>
@@ -630,10 +674,13 @@ function SetupInner() {
               {parsed ? "Continue →" : "Drop your resume to continue"}
             </button>
           </div>
+          <MentorCompanion step="upload" />
+          </div>
         )}
 
         {/* Step 2 — Confirm + target firms */}
         {step === "confirm" && parsed && (
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_0.85fr] md:items-start gap-5 md:gap-6">
           <div className="space-y-4">
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <div className="flex items-baseline justify-between mb-4">
@@ -742,10 +789,13 @@ function SetupInner() {
               Next
             </button>
           </div>
+          <MentorCompanion step="confirm" />
+          </div>
         )}
 
         {/* Step 3 — Story + trust */}
         {step === "story" && parsed && (
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_0.85fr] md:items-start gap-5 md:gap-6">
           <div className="space-y-4">
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-2">Step 3 of 3</p>
@@ -774,20 +824,37 @@ function SetupInner() {
               <p className="text-sm text-[#14182A]/70 mb-4 italic">Start conservative. You can turn it up anytime.</p>
 
               <div className="space-y-2">
-                {(["C", "B", "A"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTrust(t)}
-                    className={`w-full text-left rounded-lg border px-4 py-3 transition-colors ${
-                      trust === t
-                        ? "bg-[#2E5A88] text-white border-[#2E5A88]"
-                        : "bg-white text-[#14182A] border-[#D9CFB5] hover:border-[#2E5A88]"
-                    }`}
-                  >
-                    <p className="text-sm font-medium">{t === "C" ? "Copilot — I draft, you send" : t === "B" ? "Preview-veto — I queue and send unless you stop me" : "Autopilot — I send, you see the digest"}</p>
-                  </button>
-                ))}
+                {([
+                  { key: "C", num: 1, name: "Copilot", desc: "I draft. You review and send from Gmail." },
+                  { key: "B", num: 2, name: "Preview-veto", desc: "Drafts queue for 15 min. Stop them, or let them send." },
+                  { key: "A", num: 3, name: "Autopilot", desc: "I send. You read a Sunday digest." },
+                ] as const).map((opt) => {
+                  const selected = trust === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setTrust(opt.key)}
+                      className={`w-full text-left rounded-lg border px-4 py-3 transition-colors flex items-center gap-3 ${
+                        selected
+                          ? "bg-[#2E5A88] text-white border-[#2E5A88]"
+                          : "bg-white text-[#14182A] border-[#D9CFB5] hover:border-[#2E5A88]"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold font-[family-name:var(--font-fraunces)] ${
+                          selected ? "bg-white text-[#2E5A88]" : "bg-[#EAE3D2] text-[#14182A]"
+                        }`}
+                      >
+                        {opt.num}
+                      </span>
+                      <span className="flex-1">
+                        <span className="block text-sm font-semibold">{opt.name}</span>
+                        <span className={`block text-xs mt-0.5 ${selected ? "text-white/85" : "text-[#14182A]/60"}`}>{opt.desc}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -816,6 +883,8 @@ function SetupInner() {
             >
               {saving ? "Setting up..." : "Start Alma"}
             </button>
+          </div>
+          <MentorCompanion step="story" />
           </div>
         )}
 
@@ -850,6 +919,162 @@ function SetupInner() {
 
       {bankInfo && <BankInfoModal firm={bankInfo} onClose={() => setBankInfo(null)} />}
     </div>
+  );
+}
+
+/**
+ * Mentor companion — sticky sidecar that explains each onboarding step in
+ * Alma's calm mentor voice. Renders different content per step. Below the
+ * md breakpoint it stacks above the form on mobile (handled by the parent
+ * grid).
+ */
+function MentorCompanion({ step }: { step: "upload" | "confirm" | "story" }) {
+  return (
+    <aside
+      className="rounded-2xl border border-[#D9CFB5] p-6 md:sticky md:top-8"
+      style={{
+        background:
+          "radial-gradient(ellipse at 0% 0%, rgba(46,90,136,0.06) 0%, rgba(232,179,57,0.03) 50%, transparent 80%), linear-gradient(180deg, #FCFAF5 0%, #F4EDDB 100%)",
+      }}
+    >
+      <header className="flex items-center gap-2.5 mb-4">
+        <span
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1B3B5F] text-white italic font-medium font-[family-name:var(--font-fraunces)]"
+          aria-hidden
+        >
+          a
+        </span>
+        <span className="text-xs leading-tight">
+          <span className="block italic font-medium font-[family-name:var(--font-fraunces)] text-[#1B3B5F] text-[13px]">
+            From Alma
+          </span>
+          <span className="text-[#5C6472]">guiding you through setup</span>
+        </span>
+      </header>
+
+      {step === "upload" && (
+        <>
+          <MentorSection title="Why I need your resume.">
+            I pull your school, major, clubs, and any deals you&rsquo;ve already noticed. That&rsquo;s how I find alumni who&rsquo;ll take your call and write emails that sound like you.
+          </MentorSection>
+          <MentorSection title="Where it lives.">
+            Stored privately in your account. Nobody else sees it. You can delete it any time from <strong>/account → data</strong>.
+          </MentorSection>
+          <MentorSection title="Why Gmail, not just a form.">
+            Bankers reply to whoever the email came from. Sending from your own Gmail keeps the relationship yours, not Alma&rsquo;s.
+          </MentorSection>
+          <MentorReassure>You can change all of this later.</MentorReassure>
+        </>
+      )}
+
+      {step === "confirm" && (
+        <>
+          <MentorSection title="Why double-check.">
+            I might&rsquo;ve gotten a club or major wrong. Thirty seconds now means every email I write later starts from the right place.
+          </MentorSection>
+          <MentorSection title="How to pick firms.">
+            Pick more if you&rsquo;re casting a wide net (8–10). Fewer if you want depth (3–5). You can adjust any time.
+          </MentorSection>
+          <div className="mt-3 mb-4 space-y-2 text-[12px]">
+            <MentorGloss k="BB">
+              <strong>Bulge Bracket</strong> — the big banks (GS, MS, JPM, BAML, Citi, Barclays).
+            </MentorGloss>
+            <MentorGloss k="EB">
+              <strong>Elite Boutique</strong> — M&amp;A specialists (Evercore, Centerview, Lazard).
+            </MentorGloss>
+            <MentorGloss k="MM">
+              <strong>Middle Market</strong> — deal-friendly (Houlihan, Jefferies, Baird).
+            </MentorGloss>
+          </div>
+          <MentorSection title="Coverage vs product.">
+            Coverage = industry (TMT, Healthcare, FIG…). Product = deal type (M&amp;A, LevFin, Restructuring). Pick what your story aligns to.
+          </MentorSection>
+          <MentorReassure>Adjust your firms anytime.</MentorReassure>
+        </>
+      )}
+
+      {step === "story" && (
+        <>
+          <MentorSection title="Why your story matters.">
+            Bankers spot generic templates in three seconds. Your one-liner is what makes every email I write feel like you. Specific is better than impressive.
+          </MentorSection>
+          <div className="mt-3 mb-4 space-y-2">
+            <MentorExample tone="bad" label="Generic">
+              I&rsquo;m passionate about finance and the intersection of technology and capital markets.
+            </MentorExample>
+            <MentorExample tone="good" label="Specific">
+              I&rsquo;m a Brown CS sophomore looking at TMT after watching Figma&rsquo;s IPO arc — I want to learn how the structure of those late-stage rounds gets pitched.
+            </MentorExample>
+          </div>
+          <MentorSection title="Pick a trust level you&rsquo;re comfortable with.">
+            Most students start in <strong>Copilot</strong> for the first two weeks — you see every draft before it goes out. Once you trust my voice, dial up to Preview-veto, then Autopilot.
+          </MentorSection>
+          <MentorSection title="Why a fixed time.">
+            I draft once a day at this hour. 7–8am is popular because emails land before bankers&rsquo; first coffee, when inbox attention is highest.
+          </MentorSection>
+          <MentorReassure>Trust dial and run time can change anytime.</MentorReassure>
+        </>
+      )}
+    </aside>
+  );
+}
+
+function MentorSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-4">
+      <p className="italic text-[#1B3B5F] text-sm font-medium font-[family-name:var(--font-fraunces)] mb-1">
+        {title}
+      </p>
+      <p className="text-[13px] text-[#4A5260] leading-relaxed">{children}</p>
+    </div>
+  );
+}
+
+function MentorExample({
+  tone,
+  label,
+  children,
+}: {
+  tone: "good" | "bad";
+  label: string;
+  children: React.ReactNode;
+}) {
+  const isGood = tone === "good";
+  return (
+    <div
+      className={`rounded-md px-3 py-2.5 text-[12px] leading-relaxed italic font-[family-name:var(--font-fraunces)] ${
+        isGood ? "bg-[#EAE3D2]/50 border-l-2 border-[#2E5A88] text-[#14182A]" : "bg-[#EAE3D2]/30 border-l-2 border-[#C86B4F] text-[#5C6472]"
+      }`}
+    >
+      <span
+        className={`block text-[10px] font-bold uppercase tracking-[0.08em] not-italic font-[ui-sans-serif] mb-1 ${
+          isGood ? "text-[#2E5A88]" : "text-[#C86B4F]"
+        }`}
+      >
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function MentorGloss({ k, children }: { k: string; children: React.ReactNode }) {
+  return (
+    <div className="flex gap-2 items-baseline leading-snug">
+      <span className="font-mono text-[10px] font-semibold text-[#1B3B5F] bg-[#2E5A88]/10 px-1.5 py-0.5 rounded shrink-0">
+        {k}
+      </span>
+      <span className="text-[#4A5260]">{children}</span>
+    </div>
+  );
+}
+
+function MentorReassure({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-5 pt-3 border-t border-[#ECE7DE] text-[12px] italic text-center text-[#5C6472] font-[family-name:var(--font-fraunces)]">
+      <span className="not-italic font-bold text-[#2E5A88] font-[ui-sans-serif]">✓ </span>
+      {children}
+    </p>
   );
 }
 
