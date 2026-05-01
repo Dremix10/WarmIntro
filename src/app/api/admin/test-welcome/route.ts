@@ -7,19 +7,11 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { getUser } from "@/lib/auth";
+import { isAdmin } from "@/services/auth/admin";
 
 export const runtime = "nodejs";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
-
-function isAdmin(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const allow = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
 
 export async function POST(request: Request) {
   const ctx = await getUser(request);

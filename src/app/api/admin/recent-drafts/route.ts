@@ -9,17 +9,9 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import type { Json } from "@/lib/database.types";
+import { isAdmin } from "@/services/auth/admin";
 
 export const runtime = "nodejs";
-
-function isAdmin(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const allow = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
 
 interface Row {
   id: string;

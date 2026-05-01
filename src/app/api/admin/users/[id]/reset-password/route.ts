@@ -9,17 +9,9 @@ import { getUser } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { getFromAddress } from "@/lib/email-from";
+import { isAdmin } from "@/services/auth/admin";
 
 export const runtime = "nodejs";
-
-function isAdmin(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const allow = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
 const TOKEN_TTL_MIN = 60;

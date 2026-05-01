@@ -11,18 +11,10 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { runArchitect } from "@/services/agents/architect";
 import { restSelect, eq } from "@/lib/supabase-rest";
+import { isAdmin } from "@/services/auth/admin";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
-function isAdmin(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const allow = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
 
 export async function POST(request: Request) {
   const ctx = await getUser(request);

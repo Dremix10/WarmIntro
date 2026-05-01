@@ -14,20 +14,12 @@ import { sendTelegram } from "@/lib/telegram";
 import { getFromAddress } from "@/lib/email-from";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { logSignal } from "@/services/signals/log";
+import { isAdmin } from "@/services/auth/admin";
 
 export const runtime = "nodejs";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
 const TOKEN_TTL_MIN = 60;
-
-function isAdmin(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const allow = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return allow.includes(email.toLowerCase());
-}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
