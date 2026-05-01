@@ -15,6 +15,13 @@ export const maxDuration = 60;
 // runs are a UX bomb (user sees a spinner for 50+ seconds and abandons).
 const SLOW_THRESHOLD_MS = 45_000;
 
+// E2E synthetic-user pattern. CI's e2e-user-journey.sh signs up
+// e2e-<timestamp>-<rand>@brown.edu and triggers a real run. The run is
+// legitimately slow (~50s) because the agent pipeline isn't mocked, but
+// these aren't real users — they don't see a spinner, they're a script.
+// Same skip pattern as /api/auth/reset-password.
+const E2E_USER_PATTERN = /^e2e-\d+(?:-\d+)?@/i;
+
 export async function POST(request: Request) {
   const ctx = await getUser(request);
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -41,9 +48,15 @@ export async function POST(request: Request) {
     // the signal — fire-and-forget swallowed the only signal we'd have that
     // the alert never reached us. Latency cost is ~200-500ms, fine.
     if (durationMs > SLOW_THRESHOLD_MS) {
-      const tgResult = await sendTelegram(
-        `🐢 Run Alma slow\n\nUser: ${userEmail}\nDuration: ${(durationMs / 1000).toFixed(1)}s (threshold ${SLOW_THRESHOLD_MS / 1000}s)\nResult: ${JSON.stringify(result).slice(0, 250)}`
-      );
+      const isE2E = E2E_USER_PATTERN.test(userEmail);
+      // Always log the signal — even synthetic e2e runs are useful data
+      // for slow-run trends — but suppress the Telegram for synthetic
+      // users so the channel stays signal-only.
+      const tgResult = isE2E
+        ? { sent: false, reason: "e2e_synthetic_skipped" as const }
+        : await sendTelegram(
+            `🐢 Run Alma slow\n\nUser: ${userEmail}\nDuration: ${(durationMs / 1000).toFixed(1)}s (threshold ${SLOW_THRESHOLD_MS / 1000}s)\nResult: ${JSON.stringify(result).slice(0, 250)}`
+          );
       await logSignal({
         userId,
         agent: "planner",
@@ -54,6 +67,7 @@ export async function POST(request: Request) {
           result: result as unknown as Record<string, unknown>,
           telegramSent: tgResult.sent,
           telegramReason: tgResult.reason ?? null,
+          synthetic: isE2E,
         },
       });
     }
