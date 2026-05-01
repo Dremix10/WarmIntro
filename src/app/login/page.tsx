@@ -12,19 +12,37 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && session) {
-      // Decide where to land based on profile completeness
+      // Decide where to land based on profile completeness — but FIRST verify
+      // the session is server-valid. Browser supabase can think a session is
+      // alive while the cookies have been revoked server-side (this happens
+      // after a password reset: Supabase invalidates existing sessions, and
+      // earlier middleware bug ate the rotated refresh token before the
+      // browser could persist it). If we redirect to /today with a dead
+      // session, middleware bounces us back here and we infinite-loop.
+      //
+      // Recovery: refreshSession() hits the auth server and either succeeds
+      // (returning fresh tokens we keep) or fails (we sign out + show the
+      // login form so the user mints a clean session).
       (async () => {
         try {
           const { supabase: sb } = await import("@/lib/supabase-browser");
+          const { data: refreshed, error: refreshErr } = await sb.auth.refreshSession();
+          if (refreshErr || !refreshed.session) {
+            await sb.auth.signOut().catch(() => {});
+            // Stay on /login — useAppState will pick up the cleared session
+            // and the form will be visible so the user can type creds.
+            return;
+          }
           const { data: profile } = await sb
             .from("profiles")
             .select("target_firms")
-            .eq("id", session.user.id)
+            .eq("id", refreshed.session.user.id)
             .maybeSingle();
           const needsSetup = !profile?.target_firms || profile.target_firms.length === 0;
           router.replace(needsSetup ? "/setup" : "/today");
         } catch {
-          router.replace("/today");
+          // Network blip or other transient — don't sign out, just stay
+          // on /login so the user can retry manually.
         }
       })();
     }
