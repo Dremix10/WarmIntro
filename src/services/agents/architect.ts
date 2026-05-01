@@ -287,21 +287,35 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
   return out;
 }
 
+// Telegram caps single messages at 4096 chars. The Architect's full
+// report routinely exceeds that (the verbatim positiveFix + before +
+// after fields are 200-500 chars each × 3 patterns). Truncate each
+// field aggressively in the digest; the full report is always in the
+// architect_review_completed signal for /admin events.
+const TG_MAX_PATTERNS = 3;
+const TG_MAX_LEN = 3800; // headroom under the 4096 hard cap
+function clip(s: string, n: number): string {
+  if (s.length <= n) return s;
+  return s.slice(0, n - 1).trimEnd() + "…";
+}
+
 function formatTelegramDigest(report: ArchitectReport, draftsReviewed: number): string {
   const lines: string[] = [];
   lines.push(`🏗 Architect digest — ${draftsReviewed} failed drafts in last 24h`);
   lines.push("");
-  lines.push(`*${report.oneSentenceTakeaway}*`);
+  lines.push(clip(report.oneSentenceTakeaway, 400));
   lines.push("");
-  for (const p of report.recurringPatterns.slice(0, 3)) {
-    lines.push(`▸ *${p.name}*  ·  ${p.frequencyEstimate}  ·  layer: ${p.layer}`);
-    lines.push(`  Why: ${p.whyItHappens}`);
-    lines.push(`  Fix: ${p.positiveFix}`);
-    if (p.exampleBefore) lines.push(`  Before: "${p.exampleBefore}"`);
-    if (p.exampleAfter) lines.push(`  After: "${p.exampleAfter}"`);
+  for (const p of report.recurringPatterns.slice(0, TG_MAX_PATTERNS)) {
+    lines.push(`▸ ${clip(p.name, 90)}  ·  ${p.frequencyEstimate}  ·  ${p.layer}`);
+    lines.push(`  Why: ${clip(p.whyItHappens, 280)}`);
+    lines.push(`  Fix: ${clip(p.positiveFix, 320)}`);
+    if (p.exampleAfter) lines.push(`  After: "${clip(p.exampleAfter, 220)}"`);
     lines.push("");
   }
-  return lines.join("\n");
+  lines.push(`(full report in /admin → architect_review_completed signal)`);
+  let out = lines.join("\n");
+  if (out.length > TG_MAX_LEN) out = out.slice(0, TG_MAX_LEN - 1) + "…";
+  return out;
 }
 
 export async function runArchitect(opts: { lookbackHours?: number } = {}): Promise<ArchitectOutput> {

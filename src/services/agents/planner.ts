@@ -13,13 +13,25 @@ import type { TrustLevel, TrustCapability } from "@/shared/ib-types";
 import { TRUST_GRADUATION } from "@/shared/ib-constants";
 import type { Json } from "@/lib/database.types";
 
-// Lowered from 3 to 2 on 2026-05-01 — empirical: iter-2 frequently
-// regresses on iter-0 corrections (e.g. draft 5477899f re-introduced
-// "made it from our campus to" after fixing it on iter 1). With Opus 4.7
-// trading old constraints for new when feedback stacks, iter 2 wastes
-// an Opus call ~half the time. Better to escalate to the user with
-// "Send anyway / Edit / Skip" controls after iter 1.
-const MAX_ITERATIONS_CORRESPONDENT_CRITIC = 2;
+// Lowered from 3 → 2 on 2026-05-01, then 2 → 1 same day after the
+// first Architect digest:
+//
+//   "Iteration regression on the Christian/MS draft (3 of 10 rows
+//    same draftId at iter 2 with iterationRegression=true and
+//    cumulativeStackedConstraints=true). By iter 2 the body is
+//    essentially unchanged even though earlier iterations flagged
+//    both. With cumulativeStackedConstraints=true, the revise prompt
+//    is now a long stack of feedback the model partially honors and
+//    partially drops — exactly the Opus 4.7 trade-off pattern."
+//   — Architect, 2026-05-01 18:46 UTC
+//
+// On thin-data drafts the iter 1 retry rarely produces a substantively
+// better email; it just shuffles which constraint gets dropped. Better
+// to hand a single iter-0 attempt to the user (with Send Anyway / Edit
+// / Skip-with-reason) and let them either approve, edit, or trigger a
+// regenerate via skip-with-reason — that path now passes a single
+// targeted critic-style note, not a stacked transcript.
+const MAX_ITERATIONS_CORRESPONDENT_CRITIC = 1;
 const MAX_PENDING_DRAFTS_PER_USER = 5;
 
 export interface PlannerInput {

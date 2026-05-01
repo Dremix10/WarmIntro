@@ -342,6 +342,34 @@ Fix: contractions, short sentences, "Thanks," not "Sincerely." If a phrase sound
 3. **Same firm + your specific reason for that firm** → third-strongest. "I keep coming back to PJT for restructuring after reading about [real story]."
 4. **Firm + group + title only** → last resort, when data is thin. Lead with what's real about YOU and ask one clear question. A short honest email beats a manufactured-specific one.
 
+# THIN-DATA MODE
+
+When the data block tells you bankerHasProfile=false, bankerHasRecentDeals=false, and there's no specific recent-post or deal anchor in SCOUTED FINDINGS — you are in **thin-data mode**.
+
+In thin-data mode, the anchor hierarchy collapses: tiers 1-3 require something we don't have. Trying to write a "specific to this banker" opener anyway is the failure mode that produces "Saw you went to Brown" name-drops AND fabricated credentials like "Harvard Corporate Governance Roundtable." Both are the model trying to satisfy "be specific" with no real material.
+
+The right move under thin-data:
+
+- **Open with a real student-side specific.** A class number, a project, a concrete IB curiosity from the student's profile or storyOneLiner. The opener is about the STUDENT, not a manufactured banker observation.
+- **Treat school/firm overlap as context, never the opener.** "I'm a Brown APMA-CS sophomore reaching out to a few Brown alums in IB" — the Brown match is mentioned, but it's not the hook.
+- **Keep it short and honest.** 60-100 words. One concrete ask.
+
+THIN-DATA EXAMPLE — real student-side opener, school as context:
+
+  Hi Asha,
+
+  I'm a Brown APMA-CS sophomore — APMA 1650 was the first class where probabilistic modeling actually clicked for me, and it's making me wonder how much of that rigor shows up in MS M&A analyst work vs. how much is learned on the desk.
+
+  Reaching out to a few Brown alums in IB this week.
+
+  15 min next week, by phone, would mean a lot.
+
+  Thanks,
+  Demetris
+  Brown '28 | AMath-CS
+
+Why this works under thin-data: every claim traces to the student's profile. The Brown overlap is a context line ("a few Brown alums"), not the anchor. No invented banker specifics. Asha can reply with "yeah here's how that translates" — there's a real question on the table.
+
 # VOICE — what a real sophomore sounds like
 
 - Plain, direct, slightly under-polished. Not consultant-speak.
@@ -381,6 +409,29 @@ function buildDraftPrompt(
   const parts: string[] = [];
   parts.push(`STUDENT:\n${JSON.stringify(user, null, 2)}\n`);
   parts.push(`BANKER:\n${JSON.stringify(banker, null, 2)}\n`);
+
+  // Thin-data signal — explicit boolean state so the model sees it as
+  // a switch, not just an absence of fields. Architect's first digest
+  // (2026-05-01) found 8 of 10 failures had this state and the
+  // recurring failure was the model trying to be specific anyway,
+  // producing name-drops or fabrications. The thin-data switch routes
+  // it to student-side anchors instead. See BASE_VOICE > THIN-DATA MODE.
+  const richFindings = scoutedFindings.filter(
+    (f) => f.sourceType !== "linkedin_profile" && f.sourceType !== "other"
+  );
+  const dataState = {
+    hasRichFindings: richFindings.length > 0, // a deal, post, alumni mention, podcast, etc.
+    hasOnlyProfileLevelFindings: scoutedFindings.length > 0 && richFindings.length === 0,
+    hasAnchors: anchors.length > 0,
+    thinData: !richFindings.length && !anchors.length,
+  };
+  parts.push(`DATA STATE (use this to decide whether to invoke THIN-DATA MODE from the system prompt):\n${JSON.stringify(dataState, null, 2)}\n`);
+  if (dataState.thinData) {
+    parts.push(
+      `→ Thin-data mode is active. Anchor on a STUDENT-SIDE specific (a class, a real curiosity, a project) per the THIN-DATA EXAMPLE in the system prompt. Treat school/firm overlap as context, not the opener. Do NOT invent banker-specific claims.\n`
+    );
+  }
+
   if (anchors.length > 0) {
     parts.push(`COMMON-GROUND ANCHORS (use the highest-confidence one for the opener):\n${JSON.stringify(anchors, null, 2)}\n`);
   }
