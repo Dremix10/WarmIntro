@@ -12,37 +12,31 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && session) {
-      // Decide where to land based on profile completeness — but FIRST verify
-      // the session is server-valid. Browser supabase can think a session is
-      // alive while the cookies have been revoked server-side (this happens
-      // after a password reset: Supabase invalidates existing sessions, and
-      // earlier middleware bug ate the rotated refresh token before the
-      // browser could persist it). If we redirect to /today with a dead
-      // session, middleware bounces us back here and we infinite-loop.
+      // Decide where to land based on profile completeness. The original
+      // path (no refreshSession). The previous version called refreshSession
+      // here as a defense against stale sessions from before-password-reset
+      // — but that defense raced fresh sign-ins: when AuthForm's
+      // signInWithPassword succeeds, onAuthStateChange flips session to
+      // truthy in AppProvider, this effect fires, and refreshSession on a
+      // freshly-issued token can fail transiently (rate-limit / cookie-write
+      // ordering), causing signOut() to wipe the brand-new session
+      // immediately after the user signed in. The bounce-loop is then back.
       //
-      // Recovery: refreshSession() hits the auth server and either succeeds
-      // (returning fresh tokens we keep) or fails (we sign out + show the
-      // login form so the user mints a clean session).
+      // The stale-session-from-password-reset case is now killed at the
+      // source by /reset-password calling signOut() before redirecting
+      // here (commit 2da3073), so this defensive refresh is redundant.
       (async () => {
         try {
           const { supabase: sb } = await import("@/lib/supabase-browser");
-          const { data: refreshed, error: refreshErr } = await sb.auth.refreshSession();
-          if (refreshErr || !refreshed.session) {
-            await sb.auth.signOut().catch(() => {});
-            // Stay on /login — useAppState will pick up the cleared session
-            // and the form will be visible so the user can type creds.
-            return;
-          }
           const { data: profile } = await sb
             .from("profiles")
             .select("target_firms")
-            .eq("id", refreshed.session.user.id)
+            .eq("id", session.user.id)
             .maybeSingle();
           const needsSetup = !profile?.target_firms || profile.target_firms.length === 0;
           router.replace(needsSetup ? "/setup" : "/today");
         } catch {
-          // Network blip or other transient — don't sign out, just stay
-          // on /login so the user can retry manually.
+          router.replace("/today");
         }
       })();
     }
