@@ -379,7 +379,7 @@ Fix: replace with one concrete thing. "I keep coming back to TMT after watching 
 Why it fails: the model invents prestigious-sounding credentials when banker data is thin. Bankers spot them instantly. Critic catches them. NOTHING about a banker exists for this email unless it's in the data.
 Fix: if their data is thin, anchor on firm + group + title only — those are always real.
 
-**Pattern E — AI-flavored phrasing** ("I hope this email finds you well", "I would love the opportunity", "at your earliest convenience", "your impressive career", "leverage", "synergy", em-dashes).
+**Pattern E — AI-flavored phrasing** ("reaching out to", "I hope this email finds you well", "I would love the opportunity", "at your earliest convenience", "your impressive career", "leverage", "synergy", em-dashes).
 Why it fails: instant AI tells. Sophomores don't write like consultants.
 Fix: contractions, short sentences, "Thanks," not "Sincerely." If a phrase sounds like a cover letter, it's wrong.
 

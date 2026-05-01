@@ -337,32 +337,64 @@ export async function factCheckDraft(emailBody: string, banker: BankerForFactChe
     return { ok: true, checks: [] };
   }
 
-  // Short-circuit pre-check: if the claim's content tokens largely overlap
-  // with the banker's curator-synthesized about_section, the claim is
-  // grounded in our own verified data — skip the Serper round-trip.
-  // Threshold of 0.6 picked empirically: "Saw you were at the Harvard
-  // Corporate Governance Roundtable" against "Harvard Law School's 2022
-  // Corporate Governance Roundtable" tokens to ~0.71 match.
-  const aboutTokens = banker.aboutSection ? new Set(tokensForOverlap(banker.aboutSection)) : new Set<string>();
+  // Short-circuit pre-check: if the claim is grounded in the banker's
+  // curator-synthesized about_section, skip the Serper round-trip.
+  //
+  // Two ways to verify:
+  //   (1) Token overlap >= 50%. Catches paraphrases that share most words.
+  //   (2) Phrase substring match — any 3+ consecutive distinctive tokens
+  //       from the claim appear consecutively in about_section. Catches
+  //       cases like "HLS's 2022 Corporate Governance Roundtable" matching
+  //       about_section's "Harvard Law School's 2022 Corporate Governance
+  //       Roundtable" — token overlap drops to 44% because "HLS" doesn't
+  //       match "Harvard Law School", but the 3-gram "corporate governance
+  //       roundtable" matches verbatim. (1) alone was rejecting real
+  //       grounded claims; (2) catches them.
+  const aboutSection = banker.aboutSection ?? "";
+  const aboutTokens = aboutSection ? new Set(tokensForOverlap(aboutSection)) : new Set<string>();
+  const aboutLower = aboutSection.toLowerCase();
 
   const checks: ClaimCheck[] = [];
   for (const c of claims) {
+    let verifiedFromAbout: string | null = null;
     if (aboutTokens.size > 0) {
       const claimTokens = tokensForOverlap(c.text);
       if (claimTokens.length > 0) {
+        // (1) Token-overlap check
         const matched = claimTokens.filter((t) => aboutTokens.has(t)).length;
         const overlap = matched / claimTokens.length;
-        if (overlap >= 0.6) {
-          checks.push({
-            claim: c.text,
-            type: c.type,
-            verdict: "verified",
-            evidenceUrls: [],
-            notes: `Verified against curator about_section (${matched}/${claimTokens.length} tokens, ${Math.round(overlap * 100)}%)`,
-          });
-          continue;
+        if (overlap >= 0.5) {
+          verifiedFromAbout = `${matched}/${claimTokens.length} tokens (${Math.round(overlap * 100)}%)`;
+        }
+        // (2) Phrase-substring check — sliding 3-token window over the
+        // ORIGINAL claim text (not the deduped Set). If any 3 consecutive
+        // distinctive tokens appear consecutively in about_section, the
+        // claim is grounded.
+        if (!verifiedFromAbout) {
+          const sequenceTokens = c.text
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, " ")
+            .split(/\s+/)
+            .filter((t) => t.length >= 3 && !FACT_CHECK_STOPWORDS.has(t));
+          for (let i = 0; i + 3 <= sequenceTokens.length; i++) {
+            const phrase = sequenceTokens.slice(i, i + 3).join(" ");
+            if (aboutLower.includes(phrase)) {
+              verifiedFromAbout = `phrase match: "${phrase}"`;
+              break;
+            }
+          }
         }
       }
+    }
+    if (verifiedFromAbout) {
+      checks.push({
+        claim: c.text,
+        type: c.type,
+        verdict: "verified",
+        evidenceUrls: [],
+        notes: `Verified against curator about_section — ${verifiedFromAbout}`,
+      });
+      continue;
     }
     const verdict = await verifyClaim(c.text, banker, c.verificationQuery);
     checks.push({ ...verdict, type: c.type });
