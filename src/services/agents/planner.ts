@@ -12,7 +12,13 @@ import type { TrustLevel, TrustCapability } from "@/shared/ib-types";
 import { TRUST_GRADUATION } from "@/shared/ib-constants";
 import type { Json } from "@/lib/database.types";
 
-const MAX_ITERATIONS_CORRESPONDENT_CRITIC = 3;
+// Lowered from 3 to 2 on 2026-05-01 — empirical: iter-2 frequently
+// regresses on iter-0 corrections (e.g. draft 5477899f re-introduced
+// "made it from our campus to" after fixing it on iter 1). With Opus 4.7
+// trading old constraints for new when feedback stacks, iter 2 wastes
+// an Opus call ~half the time. Better to escalate to the user with
+// "Send anyway / Edit / Skip" controls after iter 1.
+const MAX_ITERATIONS_CORRESPONDENT_CRITIC = 2;
 const MAX_PENDING_DRAFTS_PER_USER = 5;
 
 export interface PlannerInput {
