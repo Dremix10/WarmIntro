@@ -54,6 +54,7 @@ export default function AdminPage() {
   const [approveState, setApproveState] = useState<Record<string, { busy?: boolean; link?: string; error?: string }>>({});
   const [rejectState, setRejectState] = useState<Record<string, { busy?: boolean; error?: string }>>({});
   const [cleanupState, setCleanupState] = useState<{ busy?: boolean; deleted?: number; error?: string }>({});
+  const [welcomeState, setWelcomeState] = useState<Record<string, { busy?: boolean; sent?: boolean; emailId?: string; error?: string }>>({});
 
   useEffect(() => {
     if (!authLoading && !session) { router.push("/login"); return; }
@@ -139,6 +140,23 @@ export default function AdminPage() {
     setCleanupState({ deleted: json.deleted ?? 0 });
     // Drop the matching rows locally so the count updates without a reload.
     setRequests((rs) => rs.filter((r) => !/^e2e-\d+(?:-\d+)?@/i.test(r.email)));
+  }
+
+  async function sendWelcome(userId: string) {
+    if (!window.confirm("Send the welcome email to this user? Mints a fresh setup link (1h TTL).")) return;
+    setWelcomeState((s) => ({ ...s, [userId]: { busy: true } }));
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch(`/api/admin/users/${userId}/send-welcome`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setWelcomeState((s) => ({ ...s, [userId]: { error: json.error ?? `HTTP ${res.status}` } }));
+      return;
+    }
+    setWelcomeState((s) => ({ ...s, [userId]: { sent: true, emailId: json.emailId } }));
+    window.setTimeout(() => setWelcomeState((s) => ({ ...s, [userId]: { ...(s[userId] ?? {}), sent: false } })), 8000);
   }
 
   async function resetPassword(userId: string) {
@@ -265,7 +283,14 @@ export default function AdminPage() {
         </div>
         <div className="space-y-3">
           {users.map((u) => (
-            <UserRow key={u.id} user={u} resetState={resetState[u.id]} onReset={() => resetPassword(u.id)} />
+            <UserRow
+              key={u.id}
+              user={u}
+              resetState={resetState[u.id]}
+              welcomeState={welcomeState[u.id]}
+              onReset={() => resetPassword(u.id)}
+              onSendWelcome={() => sendWelcome(u.id)}
+            />
           ))}
         </div>
       </div>
@@ -388,10 +413,12 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function UserRow({ user, resetState, onReset }: {
+function UserRow({ user, resetState, welcomeState, onReset, onSendWelcome }: {
   user: AdminUser;
   resetState: { busy?: boolean; link?: string; sent?: boolean; error?: string } | undefined;
+  welcomeState: { busy?: boolean; sent?: boolean; emailId?: string; error?: string } | undefined;
   onReset: () => void;
+  onSendWelcome: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const setupComplete = Boolean(user.profile && user.profile.targetFirmCount > 0);
@@ -460,7 +487,7 @@ function UserRow({ user, resetState, onReset }: {
             </p>
           )}
 
-          <div className="pt-3 border-t border-[#EAE3D2] flex items-center gap-2">
+          <div className="pt-3 border-t border-[#EAE3D2] flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={onReset}
@@ -468,6 +495,15 @@ function UserRow({ user, resetState, onReset }: {
               className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
             >
               {resetState?.busy ? "Generating…" : "Reset password"}
+            </button>
+            <button
+              type="button"
+              onClick={onSendWelcome}
+              disabled={welcomeState?.busy}
+              className="rounded-lg border border-[#1B3B5F] text-[#1B3B5F] px-3 py-1.5 text-xs font-medium hover:bg-[#1B3B5F] hover:text-white transition-colors disabled:opacity-50"
+              title="Mints a fresh setup token (1h) and emails the welcome body. Use for users who never got the welcome (e.g. created outside the approve flow)."
+            >
+              {welcomeState?.busy ? "Sending…" : "Send welcome"}
             </button>
             {resetState?.link && (
               <span className="text-[10px] text-[#14182A]/60">
@@ -477,6 +513,12 @@ function UserRow({ user, resetState, onReset }: {
             )}
             {resetState?.error && (
               <span className="text-[10px] text-[#C86B4F]">{resetState.error}</span>
+            )}
+            {welcomeState?.sent && (
+              <span className="text-[10px] text-emerald-700">Welcome sent ✓ {welcomeState.emailId ? `(${welcomeState.emailId.slice(0, 8)})` : ""}</span>
+            )}
+            {welcomeState?.error && (
+              <span className="text-[10px] text-[#C86B4F]">{welcomeState.error}</span>
             )}
           </div>
 
