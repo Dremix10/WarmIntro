@@ -228,6 +228,18 @@ export default function AdminPage() {
           <TestWelcomeButton />
         </div>
 
+        <div className="mb-6 rounded-2xl bg-white p-4 border border-[#D9CFB5]">
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold mb-0.5">Architect</p>
+              <p className="text-xs text-[#14182A]/70">
+                Run the meta-prompting agent now. Reads the last 24h of failed drafts and proposes positive prompt fixes diagnosed at the right layer (prompt / upstream_data / iteration_regression).
+              </p>
+            </div>
+            <ArchitectRunButton />
+          </div>
+        </div>
+
         {/* Waitlist queue — pilot_signups rows pending admin approval.
             Shows up only if there's something to act on. */}
         {requests.filter((r) => !r.approved).length > 0 && (
@@ -680,6 +692,91 @@ function TestWelcomeButton() {
         <span className={`text-[10px] ${state === "error" ? "text-[#C86B4F]" : "text-[#14182A]/60"}`}>
           {msg}
         </span>
+      )}
+    </div>
+  );
+}
+
+interface ArchitectPattern {
+  name: string;
+  layer: string;
+  frequencyEstimate: string;
+  whyItHappens: string;
+  positiveFix: string;
+  exampleBefore?: string;
+  exampleAfter?: string;
+}
+interface ArchitectReportShape {
+  recurringPatterns: ArchitectPattern[];
+  oneSentenceTakeaway: string;
+}
+
+function ArchitectRunButton() {
+  const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [report, setReport] = useState<ArchitectReportShape | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [draftsReviewed, setDraftsReviewed] = useState<number | null>(null);
+
+  async function run() {
+    setState("running");
+    setErrorMsg(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/architect/run", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ lookbackHours: 24 }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErrorMsg(json.error ?? `HTTP ${res.status}`);
+      setState("error");
+      return;
+    }
+    setReport((json.report as ArchitectReportShape | null) ?? null);
+    setDraftsReviewed(json.summary?.draftsReviewed ?? null);
+    setState("done");
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-2 min-w-[140px]">
+      <button
+        type="button"
+        onClick={run}
+        disabled={state === "running"}
+        className="shrink-0 rounded-lg bg-[#1B3B5F] text-white px-4 py-2 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
+      >
+        {state === "running" ? "Running…" : "Run Architect ($0.05)"}
+      </button>
+      {errorMsg && <span className="text-[10px] text-[#C86B4F]">{errorMsg}</span>}
+      {state === "done" && draftsReviewed !== null && (
+        <span className="text-[10px] text-[#14182A]/60">
+          reviewed {draftsReviewed} drafts · {report?.recurringPatterns?.length ?? 0} patterns
+        </span>
+      )}
+      {report && (
+        <div className="w-full max-w-3xl mt-2 rounded-xl bg-[#EAE3D2]/40 p-4 border border-[#D9CFB5] text-left">
+          <p className="text-xs italic font-[family-name:var(--font-fraunces)] text-[#1B3B5F] mb-3">
+            {report.oneSentenceTakeaway}
+          </p>
+          <div className="space-y-3">
+            {report.recurringPatterns.map((p, i) => (
+              <div key={i} className="rounded-lg bg-white p-3 border border-[#D9CFB5]">
+                <p className="text-sm font-semibold text-[#14182A]">
+                  {p.name}{" "}
+                  <span className="text-[10px] uppercase tracking-wider text-[#C86B4F] ml-1">{p.layer}</span>{" "}
+                  <span className="text-[10px] text-[#14182A]/55 ml-1">{p.frequencyEstimate}</span>
+                </p>
+                <p className="text-xs text-[#14182A]/75 mt-1.5"><strong>Why:</strong> {p.whyItHappens}</p>
+                <p className="text-xs text-[#14182A]/75 mt-1.5"><strong>Fix:</strong> {p.positiveFix}</p>
+                {p.exampleAfter && (
+                  <p className="text-[11px] text-[#14182A]/60 italic mt-1.5">
+                    <strong className="not-italic">After:</strong> &ldquo;{p.exampleAfter}&rdquo;
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
