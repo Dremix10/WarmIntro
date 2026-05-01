@@ -729,7 +729,24 @@ function DraftCard({
   }
 
   return (
-    <div className={cardClass}>
+    <div className={`${cardClass} relative`}>
+      {fading && (
+        <div
+          className="alma-sent-badge pointer-events-none absolute left-1/2 top-1/2 z-10 flex items-center gap-2 rounded-full border border-[#2E5A88]/35 bg-white px-4 py-2 shadow-[0_8px_24px_-8px_rgba(27,59,95,.35)]"
+          aria-hidden
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M14.5 1.5 L7 9" stroke="#1B3B5F" strokeWidth="1.4" strokeLinecap="round" />
+            <path d="M14.5 1.5 L10 14.5 L7 9 L1.5 6 Z" fill="#1B3B5F" stroke="#1B3B5F" strokeWidth="1.4" strokeLinejoin="round" />
+          </svg>
+          <span
+            className="text-sm font-semibold italic text-[#1B3B5F]"
+            style={{ fontFamily: "var(--font-fraunces)" }}
+          >
+            Sent{banker?.name ? ` to ${banker.name.split(" ")[0]}` : ""}
+          </span>
+        </div>
+      )}
       <button type="button" onClick={() => setExpanded(!expanded)} className="w-full text-left p-4 hover:bg-[#EAE3D2]/30 transition-colors">
         <div className="flex items-start justify-between gap-3 mb-1">
           <div className="flex-1 min-w-0">

@@ -38,15 +38,67 @@
 }
 
 /* Sent-card fade-out: triggered after a successful Auto-send via Gmail.
-   Card lingers briefly, fades, then the silent data refresh removes it
-   from the queue. */
+   Three beats: lift + glow ring (Alma blue), fade body, collapse height +
+   margin so the section closes cleanly instead of leaving a tall empty card
+   between fade-end and the silent reload. */
 @keyframes card-sent-fade {
-  0%   { opacity: 1; transform: translateY(0) scale(1); }
-  20%  { opacity: 1; transform: translateY(-2px) scale(1.005); box-shadow: 0 0 0 3px rgba(46, 90, 136, 0.18); }
-  100% { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  0%   {
+    opacity: 1;
+    max-height: 1200px;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 90, 136, 0);
+  }
+  15%  {
+    opacity: 1;
+    max-height: 1200px;
+    transform: translateY(-3px) scale(1.005);
+    box-shadow: 0 0 0 4px rgba(46, 90, 136, 0.22);
+  }
+  55%  {
+    opacity: 0;
+    max-height: 1200px;
+    transform: translateY(-10px) scale(0.985);
+    box-shadow: 0 0 0 0 rgba(46, 90, 136, 0);
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    transform: translateY(-12px) scale(0.985);
+    border-width: 0;
+  }
 }
 .draft-card-sent-fade {
-  animation: card-sent-fade 900ms ease-out forwards !important;
+  animation: card-sent-fade 900ms cubic-bezier(.4, 0, .2, 1) forwards !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* Branded "sent" badge that floats up briefly during the fade. Italic
+   Fraunces, Alma blue, paper-plane glyph. Sits absolutely centered over
+   the card while it's collapsing. */
+@keyframes alma-sent-rise {
+  0%   { opacity: 0; transform: translate(-50%, 8px); }
+  20%  { opacity: 1; transform: translate(-50%, 0); }
+  75%  { opacity: 1; transform: translate(-50%, -10px); }
+  100% { opacity: 0; transform: translate(-50%, -22px); }
+}
+.alma-sent-badge {
+  animation: alma-sent-rise 850ms cubic-bezier(.22, .8, .3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draft-card-sent-fade {
+    animation: none !important;
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    border-width: 0;
+    overflow: hidden;
+  }
+  .alma-sent-badge { animation: none; opacity: 0; }
 }
 
 /* Success toast bloom-in: appears from the bottom with a soft bounce. */
