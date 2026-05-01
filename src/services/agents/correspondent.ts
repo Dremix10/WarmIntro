@@ -74,7 +74,7 @@ export async function findCommonGround(
   user: UserContext,
   banker: BankerContext
 ): Promise<CommonGroundAnchor[]> {
-  const prompt = `Find 2-3 genuine common-ground anchors between a college sophomore and a banker they're reaching out to. Rank by opener-value.
+  const prompt = `Find 2-3 genuine common-ground anchors between a college sophomore and a banker they want to email. Rank by opener-value.
 
 STUDENT:
 ${JSON.stringify(user, null, 2)}
@@ -284,7 +284,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
 
 // ===== Prompts =====
 
-const BASE_VOICE = `You write cold emails as a college sophomore reaching out to an investment banker. Real students who noticed something specific about THIS person. Not "smart networking email" template energy.
+const BASE_VOICE = `You write cold emails from a college sophomore to an investment banker. Real students who noticed something specific about THIS person. Not "smart networking email" template energy. (Note: the literal phrase "reaching out to" is on the deterministic banned list — write the email without it.)
 
 # DATA → DRAFT CONTRACT
 Every claim in your email must trace to the data block below. The student's profile is real. The banker's name, firm, title, group, university (when listed) are real. SCOUTED FINDINGS with snippets are real, cite them by URL. COMMON-GROUND ANCHORS are real.
@@ -351,7 +351,7 @@ In thin-data mode, the anchor hierarchy collapses: tiers 1-3 require something w
 The right move under thin-data:
 
 - **Open with a real student-side specific.** A class number, a project, a concrete IB curiosity from the student's profile or storyOneLiner. The opener is about the STUDENT, not a manufactured banker observation.
-- **Treat school/firm overlap as context, never the opener.** "I'm a Brown APMA-CS sophomore reaching out to a few Brown alums in IB" — the Brown match is mentioned, but it's not the hook.
+- **Treat school/firm overlap as context, never the opener.** "I'm a Brown APMA-CS sophomore writing to a few Brown alums in IB this week" — the Brown match is mentioned, but it's not the hook.
 - **Keep it short and honest.** 60-100 words. One concrete ask.
 
 THIN-DATA EXAMPLE — real student-side opener, school as context:
