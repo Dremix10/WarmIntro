@@ -183,9 +183,14 @@ export default function AdminPage() {
       <div className="mx-auto max-w-5xl px-6 py-10">
         <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-1">Admin</p>
         <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-2">Alma control room</h1>
-        <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] mb-8">
+        <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] mb-3">
           Approve waitlist. Reset passwords. See who&rsquo;s stuck.
         </p>
+        <div className="mb-8 flex flex-wrap gap-2 text-xs">
+          <a href="/admin/drafts" className="rounded-full bg-white border border-[#D9CFB5] px-3 py-1.5 font-medium text-[#1B3B5F] hover:bg-[#EAE3D2] transition-colors">
+            Recent drafts ↗ <span className="text-[#14182A]/50">prompt tuning</span>
+          </a>
+        </div>
 
         <div className="mb-6 rounded-2xl bg-white p-5 border border-[#D9CFB5] grid grid-cols-2 sm:grid-cols-5 gap-4">
           <Stat label="Total users" value={stats.total} />
