@@ -129,6 +129,13 @@ export default function TodayPage() {
   const [actionToasts, setActionToasts] = useState<ActionToast[]>([]);
   const [skipModalDraftId, setSkipModalDraftId] = useState<string | null>(null);
   const [skipBusy, setSkipBusy] = useState<"idle" | "skipping" | "regenerating">("idle");
+  // Mirrored from RunAlmaNowButton via onStatusChange so the page-level
+  // RunAlmaProgressBanner can render large + centered below the header.
+  const [runStatus, setRunStatus] = useState<RunAlmaStatus>({
+    state: "idle",
+    stageIdx: 0,
+    progress: { done: 0, total: 1 },
+  });
 
   function pushActionToast(message: string) {
     const id = Date.now() + Math.random();
@@ -356,12 +363,21 @@ export default function TodayPage() {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <RunAlmaNowButton onDone={() => load({ silent: true })} />
+            <RunAlmaNowButton
+              onDone={() => load({ silent: true })}
+              onStatusChange={setRunStatus}
+            />
             {!data.needsGmail && approved.length > 1 && (
               <SendAllButton count={approved.length} onDone={() => load({ silent: true })} />
             )}
           </div>
         </div>
+
+        {/* Run-Alma progress banner. Shows a calm, centered status during the
+            15-25s spinner so testers know Alma is actually working. Lives at
+            the page level (not under the button) so it's the focal point of
+            the page during the run. */}
+        <RunAlmaProgressBanner status={runStatus} />
 
         {/* Gmail-required banner — drafts can't send without Gmail. Show this
             prominently so the user doesn't waste time approving drafts that
@@ -1416,6 +1432,91 @@ function GmailRequiredBanner() {
   );
 }
 
+// Page-level banner that takes over the focal area during a run. Big
+// italic Fraunces stage line, soft pulsing dot indicator, gentle glow on
+// the surrounding card. Each stage line cross-fades via a `key`-driven
+// remount + the alma-stage-enter keyframe in globals.css.
+//
+// We render the banner whenever runStatus.state is non-idle (running,
+// done, queue_full, error) so the user gets a beat of confirmation
+// before it disappears, not just an instant blink-out on success.
+function RunAlmaProgressBanner({ status }: { status: RunAlmaStatus }) {
+  if (status.state === "idle") return null;
+  const stage = RUN_STAGES[status.stageIdx] ?? RUN_STAGES[0];
+
+  const isRunning = status.state === "running";
+  const headline = isRunning
+    ? stage.text
+    : status.state === "done"
+      ? "Done — your draft is below."
+      : status.state === "queue_full"
+        ? "Queue is full — approve or skip a draft to make room."
+        : "Something went wrong — try again.";
+  const sub = isRunning
+    ? stage.sub
+    : status.state === "done"
+      ? `${status.progress.done} of ${status.progress.total} drafted.`
+      : status.state === "queue_full"
+        ? "Cap is there to keep your queue manageable."
+        : "Network or auth blip. Click Retry up top.";
+
+  const tone =
+    status.state === "error"
+      ? "border-[#C86B4F]/40 bg-[#C86B4F]/5"
+      : status.state === "queue_full"
+        ? "border-[#9A7110]/40 bg-[#9A7110]/5"
+        : status.state === "done"
+          ? "border-emerald-300 bg-emerald-50/40"
+          : "border-[#D9CFB5] bg-gradient-to-br from-white to-[#EAE3D2]/30 alma-banner-glow";
+
+  const dotTone =
+    status.state === "error"
+      ? "bg-[#C86B4F]"
+      : status.state === "queue_full"
+        ? "bg-[#9A7110]"
+        : status.state === "done"
+          ? "bg-emerald-500"
+          : "bg-[#2E5A88]";
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`mb-8 mx-auto max-w-2xl rounded-3xl border px-8 py-7 text-center shadow-sm ${tone}`}
+    >
+      <div className="flex items-center justify-center gap-3 mb-3">
+        <span
+          aria-hidden
+          className={`block h-2.5 w-2.5 rounded-full ${dotTone} ${isRunning ? "alma-dot-pulse" : ""}`}
+        />
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#14182A]/55 font-semibold">
+          {isRunning
+            ? `Alma · running ${status.progress.done}/${status.progress.total}`
+            : status.state === "done"
+              ? "Alma · ready"
+              : status.state === "queue_full"
+                ? "Alma · paused"
+                : "Alma · error"}
+        </span>
+      </div>
+      {/* key={stageIdx + state} forces remount on every stage change OR
+          state transition, so each line gets its own fade-in animation. */}
+      <p
+        key={`headline-${status.stageIdx}-${status.state}`}
+        className="text-2xl md:text-3xl font-[family-name:var(--font-fraunces)] italic text-[#1B3B5F] leading-tight alma-stage-enter"
+      >
+        {headline}
+      </p>
+      <p
+        key={`sub-${status.stageIdx}-${status.state}`}
+        className="mt-2 text-sm md:text-base text-[#14182A]/65 alma-stage-enter"
+      >
+        {sub}
+      </p>
+    </div>
+  );
+}
+
 // User-facing copy for run-now stages. Avoid exposing the internal agent
 // architecture (Researcher / Correspondent / Critic) — that's IP. Just say
 // what the user gets at each beat.
@@ -1428,12 +1529,33 @@ const RUN_STAGES: Array<{ text: string; sub: string; afterMs: number }> = [
 
 const MAX_BATCH_DRAFTS = 5;
 
-function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
-  const [state, setState] = useState<"idle" | "running" | "done" | "error" | "queue_full">("idle");
+// Run-Alma run state — exposed so the page can render a prominent
+// progress banner separately from the header button. Centralised here
+// so the button + banner stay in sync without prop-drilling N pieces.
+export interface RunAlmaStatus {
+  state: "idle" | "running" | "done" | "error" | "queue_full";
+  stageIdx: number;
+  progress: { done: number; total: number };
+}
+
+function RunAlmaNowButton({
+  onDone,
+  onStatusChange,
+}: {
+  onDone: () => Promise<void> | void;
+  onStatusChange?: (s: RunAlmaStatus) => void;
+}) {
+  const [state, setState] = useState<RunAlmaStatus["state"]>("idle");
   const [stageIdx, setStageIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [batchSize, setBatchSize] = useState(1);
   const [progress, setProgress] = useState({ done: 0, total: 1 });
+
+  // Mirror state to the parent so the page-level banner can render.
+  // Effect keeps both in sync on every change without coupling internals.
+  useEffect(() => {
+    onStatusChange?.({ state, stageIdx, progress });
+  }, [state, stageIdx, progress, onStatusChange]);
 
   return (
     <div
@@ -1544,12 +1666,14 @@ function RunAlmaNowButton({ onDone }: { onDone: () => Promise<void> | void }) {
         </div>
       )}
 
-      {/* Running: progressive status */}
+      {/* Running state: status now renders in the page-level
+          RunAlmaProgressBanner below the header. Keep an aria-live
+          announcement here for screen readers since the banner is
+          visually elsewhere in the DOM. */}
       {state === "running" && (
-        <div className="mt-1 max-w-[200px] text-right">
-          <p className="text-[11px] text-[#2E5A88] font-medium leading-tight">{RUN_STAGES[stageIdx].text}</p>
-          <p className="text-[10px] text-[#14182A]/50 italic leading-snug mt-0.5">{RUN_STAGES[stageIdx].sub}</p>
-        </div>
+        <p className="sr-only" aria-live="polite">
+          {RUN_STAGES[stageIdx].text} {RUN_STAGES[stageIdx].sub}
+        </p>
       )}
     </div>
   );
