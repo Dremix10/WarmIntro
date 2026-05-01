@@ -15,98 +15,48 @@ interface ParsedProfile {
   storyOneLiner?: string | null;
 }
 
-interface DemoBanker {
-  id: string;
-  name: string;
-  title: string;
-  firm: string;
-  tier: "Bulge Bracket" | "Elite Boutique" | "Middle Market";
-  group: string;
-  hook: string;
-  subject: string;
-  body: (p: ParsedProfile) => string;
-}
+// (Old hardcoded DEMO_BANKERS were removed 2026-05-01 — they were
+//  invented people with no LinkedIn URLs and fabricated hooks. Real
+//  testers spotted the fakeness immediately and bounced. Demo now
+//  fetches real bankers from /api/demo/bankers, matched by parsed
+//  profile's university.)
 
-const DEMO_BANKERS: DemoBanker[] = [
-  {
-    id: "ms-tmt",
-    name: "Alex Chen",
-    title: "Vice President",
-    firm: "Morgan Stanley",
-    tier: "Bulge Bracket",
-    group: "TMT",
-    hook: "Alex was a TMT analyst at MS before VP — classic pipeline your resume fits.",
-    subject: "Quick question — TMT path from a {{university}} {{major}}",
-    body: (p) => `Hi Alex,
-
-I'm {{name}}, a {{university}} {{major}} ({{year}}). I saw your recent LinkedIn post on the TMT team's Q1 activity and it stuck with me, especially how you framed AI-era software deals.
-
-${p.clubs && p.clubs.some((c) => /Rice|Brown/.test(c)) ? "I'm active in " + (p.clubs.find((c) => /Rice|Brown/.test(c)) ?? "our campus finance community") + " and " : ""}I'd love 15 minutes to hear how you think about breaking into TMT right now. Any morning next week works on my end.
-
-Thanks,
-{{name}}
-{{university}} '{{yy}} | {{major}}`,
-  },
-  {
-    id: "evr-mna",
-    name: "Maya Patel",
-    title: "Associate",
-    firm: "Evercore",
-    tier: "Elite Boutique",
-    group: "M&A",
-    hook: "Maya moved from Brown → Evercore M&A — her path is the most realistic for a non-finance sophomore.",
-    subject: "Evercore M&A — 15 min from a fellow {{university}} kid",
-    body: (p) => `Hi Maya,
-
-I'm {{name}}, {{university}} '{{yy}} studying {{major}}. I've been reading the Evercore M&A coverage of mid-market healthcare deals all semester and your path (non-finance undergrad → Evercore) is the one I find most encouraging.
-
-${p.storyOneLiner ? `A line on me: ${p.storyOneLiner}` : "I'm targeting SA2028 and trying to talk to bankers whose path looks like mine."}
-
-Would a 15-minute call work sometime next week? Happy to send two or three times that fit your calendar.
-
-Thanks,
-{{name}}
-{{university}} '{{yy}} | {{major}}`,
-  },
-  {
-    id: "cvp-hc",
-    name: "Jordan Kim",
-    title: "Analyst",
-    firm: "Centerview Partners",
-    tier: "Elite Boutique",
-    group: "Healthcare",
-    hook: "Jordan is a first-year analyst — closest to your level, most likely to reply.",
-    subject: "Centerview Healthcare — first-year perspective",
-    body: (p) => `Hi Jordan,
-
-I'm {{name}}, {{university}} {{major}} ({{year}}). You were the analyst I kept seeing show up on the Centerview Healthcare tombstones this year — the Arcus and Ultragenyx advisories stood out.
-
-${p.technicalSkills && p.technicalSkills.length > 0 ? `I come from a more technical background (${p.technicalSkills.slice(0, 3).join(", ")}) and ` : "I'm "}exploring how that maps to a healthcare banking path. Would love 15 minutes if you're open to it — any weekday after 4pm works.
-
-Thanks,
-{{name}}
-{{university}} '{{yy}} | {{major}}`,
-  },
-];
-
-function personalize(template: string, p: ParsedProfile): string {
+// Build a demo email targeting a REAL banker. Uses the same anchor
+// hierarchy the Correspondent uses: same-school first, then firm/group
+// + a clean ask. Anchor line (when present) comes from banker_findings —
+// that's the verifiable hook (e.g. "Brown CS · Investment Banking
+// Analyst at Stifel"). Without an anchor line we fall back to the
+// school-overlap pattern, plain and honest.
+function buildDemoEmail(p: ParsedProfile, b: DemoBankerReal): { subject: string; body: string } {
   const yy = String(p.graduationYear).slice(2);
-  const yearWord =
-    p.graduationYear === new Date().getFullYear() + 1
-      ? "rising senior"
-      : p.graduationYear === new Date().getFullYear() + 2
-      ? "junior"
-      : p.graduationYear === new Date().getFullYear() + 3
-      ? "sophomore"
-      : "student";
-  return template
-    .replaceAll("{{name}}", p.name || "Student")
-    // Don't fall back to a specific school — the demo showing "Rice" to a
-    // Brown student (Krish bug) was the bigger sin than a generic phrase.
-    .replaceAll("{{university}}", p.university || "your school")
-    .replaceAll("{{major}}", p.major || "Economics")
-    .replaceAll("{{year}}", yearWord)
-    .replaceAll("{{yy}}", yy);
+  const userUni = (p.university || "your school").trim();
+  const userMajor = (p.major || "Economics").trim();
+  const sameSchool = !!(
+    b.university &&
+    p.university &&
+    b.university.toLowerCase().includes(p.university.toLowerCase().split(" ")[0])
+  );
+  const firmShort = b.firm.split(/\s+/)[0];
+  const groupBit = b.group ? ` ${b.group}` : "";
+  const subject = sameSchool
+    ? `${userUni.split(" ")[0]} ${userMajor} — quick question on ${firmShort}${groupBit}`
+    : `${userUni.split(" ")[0]} sophomore — 15 min on ${firmShort}?`;
+
+  const opener = sameSchool
+    ? `Saw you went to ${b.university} too — I'm a ${userUni} ${userMajor} (sophomore) starting to look seriously at ${firmShort}${groupBit}.`
+    : `Saw you're at ${b.firm}${groupBit ? `'s${groupBit} group` : ""} — I'm a ${userUni} ${userMajor} (sophomore) trying to figure out the path into ${firmShort}-style work.`;
+
+  const middle = p.storyOneLiner
+    ? `\n\nA line on me: ${p.storyOneLiner}`
+    : `\n\nMostly trying to talk to bankers whose path I could realistically follow.`;
+
+  const ask = `\n\n15 min next week, by phone, would mean a lot.`;
+  const sig = `\n\nThanks,\n${p.name || "[your name]"}\n${userUni} '${yy} | ${userMajor}`;
+
+  return {
+    subject,
+    body: `Hi ${b.firstName},\n\n${opener}${middle}${ask}${sig}`,
+  };
 }
 
 function copyToClipboard(text: string) {
@@ -126,12 +76,26 @@ function copyToClipboard(text: string) {
 
 type Step = "upload" | "working" | "results" | "signed_up";
 
+interface DemoBankerReal {
+  id: string;
+  name: string;
+  firstName: string;
+  title: string;
+  firm: string;
+  firmTier: "BB" | "EB" | "MM" | "Other";
+  university: string | null;
+  linkedinUrl: string | null;
+  group: string | null;
+  anchorLine: string | null;
+}
+
 export default function DemoPage() {
   const [step, setStep] = useState<Step>("upload");
   const [fileName, setFileName] = useState<string | null>(null);
   const [resumeText, setResumeText] = useState("");
   const [extracting, setExtracting] = useState(false);
   const [profile, setProfile] = useState<ParsedProfile | null>(null);
+  const [bankers, setBankers] = useState<DemoBankerReal[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [signupError, setSignupError] = useState<string | null>(null);
@@ -168,6 +132,22 @@ export default function DemoPage() {
     }
   }
 
+  async function fetchRealBankers(p: ParsedProfile): Promise<DemoBankerReal[]> {
+    try {
+      const res = await fetch("/api/demo/bankers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ university: p.university, name: p.name, major: p.major }),
+      });
+      if (!res.ok) return [];
+      const json = (await res.json()) as { bankers?: DemoBankerReal[] };
+      return json.bankers ?? [];
+    } catch (err) {
+      trackError("demo_bankers_fetch", err);
+      return [];
+    }
+  }
+
   async function runDemo() {
     if (!resumeText.trim()) { setError("Upload your resume first."); return; }
     setError(null);
@@ -186,6 +166,13 @@ export default function DemoPage() {
       const { profile: p } = (await res.json()) as { profile: ParsedProfile };
       setProfile(p);
       track("demo_parsed", { name: p.name, major: p.major, university: p.university });
+      // Fetch real bankers in parallel with the step transition. Demo
+      // shows real people from our DB matched against the parsed
+      // university — replaces the hardcoded fake bankers that earlier
+      // testers spotted as obviously invented and bounced on.
+      const real = await fetchRealBankers(p);
+      setBankers(real);
+      track("demo_bankers_loaded", { count: real.length, university: p.university });
       setStep("results");
     } catch (err) {
       trackError("demo_parse", err);
@@ -281,9 +268,9 @@ export default function DemoPage() {
                 friction. */}
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 track("demo_sample_used");
-                setProfile({
+                const sampleProfile: ParsedProfile = {
                   name: "Sam Rivera",
                   email: null,
                   university: "Rice University",
@@ -292,13 +279,18 @@ export default function DemoPage() {
                   clubs: ["Rice Investment Banking Club", "Rice Quant Society"],
                   technicalSkills: ["Python", "SQL", "Excel"],
                   storyOneLiner: "CS sophomore curious about how tech deals get done — drawn to TMT and software M&A specifically.",
-                });
+                };
+                setProfile(sampleProfile);
                 track("demo_parsed", { name: "Sam Rivera", major: "Computer Science", university: "Rice University", source: "sample" });
+                setStep("working");
+                const real = await fetchRealBankers(sampleProfile);
+                setBankers(real);
+                track("demo_bankers_loaded", { count: real.length, source: "sample" });
                 setStep("results");
               }}
               className="w-full mt-3 rounded-xl border border-[#D9CFB5] bg-white text-[#5C6472] py-3 text-sm font-medium hover:border-[#2E5A88] hover:text-[#1B3B5F] transition-colors"
             >
-              Don&rsquo;t want to upload? See a sample run →
+              Don&rsquo;t want to upload? See a sample run (Rice CS sophomore) →
             </button>
           </div>
         )}
@@ -328,19 +320,42 @@ export default function DemoPage() {
                 Every Monday, Alma queues ~5 of these. You approve. Alma sends from your Gmail. Replies come back to you — Alma tracks the thread.
               </p>
               <div className="space-y-4">
-                {DEMO_BANKERS.map((b) => {
-                  const subject = personalize(b.subject, profile);
-                  const body = personalize(b.body(profile), profile);
+                {bankers.length === 0 && (
+                  <div className="rounded-2xl border border-[#D9CFB5] bg-white p-6 text-center text-sm text-[#14182A]/65">
+                    Couldn&rsquo;t pull a fresh banker batch right now. Try again in a sec, or drop your email below — we&rsquo;ll loop you in when we open access.
+                  </div>
+                )}
+                {bankers.map((b) => {
+                  const { subject, body } = buildDemoEmail(profile, b);
+                  const tierLabel = b.firmTier === "BB" ? "Bulge Bracket" : b.firmTier === "EB" ? "Elite Boutique" : b.firmTier === "MM" ? "Middle Market" : "";
                   return (
                     <div key={b.id} className="rounded-2xl bg-white border border-[#D9CFB5] overflow-hidden">
                       <div className="px-5 py-4 border-b border-[#D9CFB5] flex justify-between items-start gap-3">
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <p className="font-[family-name:var(--font-fraunces)] text-lg">{b.name}</p>
-                          <p className="text-xs text-[#14182A]/70">{b.title} · {b.firm} · {b.group}</p>
+                          <p className="text-xs text-[#14182A]/70 mt-0.5">
+                            {b.title} · {b.firm}{b.group ? ` · ${b.group}` : ""}
+                          </p>
+                          {b.linkedinUrl && (
+                            <a
+                              href={b.linkedinUrl}
+                              target="_blank"
+                              rel="noreferrer noopener"
+                              className="inline-block mt-1.5 text-[10px] text-[#2E5A88] hover:underline"
+                            >
+                              {b.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "")} ↗
+                            </a>
+                          )}
                         </div>
-                        <span className="text-[10px] uppercase tracking-wider text-[#C86B4F] font-semibold shrink-0">{b.tier}</span>
+                        {tierLabel && (
+                          <span className="text-[10px] uppercase tracking-wider text-[#C86B4F] font-semibold shrink-0">{tierLabel}</span>
+                        )}
                       </div>
-                      <p className="px-5 pt-3 text-xs text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)]">{b.hook}</p>
+                      {b.anchorLine && (
+                        <p className="px-5 pt-3 text-xs text-[#14182A]/65 italic font-[family-name:var(--font-fraunces)]">
+                          From their profile: &ldquo;{b.anchorLine}&rdquo;
+                        </p>
+                      )}
                       <div className="px-5 py-4">
                         <p className="text-xs text-[#14182A]/50 mb-1">Subject</p>
                         <p className="text-sm font-medium mb-3">{subject}</p>

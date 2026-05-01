@@ -146,6 +146,7 @@ const GATE_BYPASS_PREFIXES = [
   "/api/parse-resume", // guest-safe parse
   "/api/find-people", // guest-safe demo people finder
   "/api/find-companies", // legacy, safe
+  "/api/demo", // /api/demo/bankers — public demo, no auth required
   "/api/setup/firms", // public reference data — seeded firms+groups
   "/api/cron",
   "/api/auth", // includes /api/auth/reset-password — needs to work for non-signed-in users
