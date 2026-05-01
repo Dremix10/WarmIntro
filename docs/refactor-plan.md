@@ -23,13 +23,136 @@ Session worked through the decisions sequentially with security-first / no-cost 
 | **D3** | In-process caches | **Done (A′).** Deleted `claude.ts` Map (was misnamed FIFO-as-LRU, ~0% hit rate at scale) and three Maps in `linkedin-search.ts`. Stripped `skipCache` from 5 callers. Kept `proxy.ts:rateLimitMap` with explicit comment documenting per-instance limitation (S7) — deleting it would weaken security; upgrade path noted. | `904a1d3` |
 | **D4** | Cron fan-out | **Done (parallel-cron, no external queue).** Cron now fires every minute; each tick dispatches up to 50 gmail-connected users whose last Watcher run is older than ~20 min, oldest-first, parallel via `Promise.allSettled`. Self-balances: ≤1k users → ~21-min cycle with idle headroom; >1k users → cycle stretches naturally. Added `services/queue/dispatch.ts` abstraction so future QStash migration is a one-file change. $0 cost today, $0 at 1k users. | `78357d5` + `f1d7c4d` |
 | **D5** | Route groups + auth services | **Mostly skip; one targeted fix.** Hid `/design-lab/*` from production routing (404 in prod, accessible in `npm run dev`) — the only current bug. Backlogged `isAdmin` consolidation in `BACKEND_REQUESTS.md` (P2 tech debt) since the three copies are byte-identical today. Skipped route groups (~30 file moves, lost git blame, zero behavior gain) and gate extraction (cosmetic). | `55dbd12` |
-| D6 | Shared service helpers | open | — |
-| D7 | Test database | open | — |
-| D8 | (whatever's next) | open | — |
+| **D6** | Shared service helpers | **In progress (code committed; migration 018 + smoke test pending).** Option C+ refactor: every send path + stage move flows through `outreach/sendDraft` → `pipeline/upsertConnectionAtStage`. CAS guard with 5-min stale recovery, JSON-parsed Gmail error messages, `revertToApproved` logs failures, distinct `gmail_succeeded_db_failed` variant for the dual-write hazard, `connection_id` writeback after fresh insert, `toHttpResponse` + `assertNever` so routes don't reason about variants directly, orphan-connection guard in `advanceStage`. Sentinel adds Check 5 (stuck `'sending'` > 10 min) + Check 6 (gmail-failure rate per user). Migration `018_drafts_sending_status.sql` waiting to be applied via Supabase Dashboard. | (this PR) |
+| **D7** | Test database | **In progress — Option A only (code committed; npm install pending).** Vitest@^3 + 1 sample unit test (`tests/unit/pipeline/stage-validation.test.ts`) + `tests/integration/` scaffolding folder for future Docker work. CI gates PRs on `npm run test:unit`. Skipped Supabase Branching ($10/mo) and Docker integration (no Docker locally). Upgrade path to Option F is additive: add a `projects` array in `vitest.config.ts` + a global-setup that boots `supabase start`. | (this PR) |
+| D8 | DraftCard sub-components | open (decided 2026-04-30 — Option A 8-way split, deferred) | — |
 
 **Branch:** `claude/explain-cache-freshness-5X676`. All commits pushed.
 
 **Tone of decisions so far:** prefer the smallest correct change. Skip cosmetics that don't fix current bugs. Document upgrade paths (Upstash Redis for D3, QStash for D4, isAdmin consolidation for D5) so future-us can pick them up the moment a real signal justifies the work.
+
+---
+
+## 🚨 ADMIN TODO — to ship D6 + D7 (committed in `e3ccaa0` on branch `claude/happy-dewdney-636b5c`)
+
+The code is committed and pushed. Theo has stepped away. The admin (Dremix) needs to complete these steps in order. Each step is independent of the others *except* where noted.
+
+### Step 1 — Apply migration `018_drafts_sending_status.sql` (REQUIRED FIRST)
+
+**Why first:** the new code calls `drafts.status = 'sending'`. Without the migration, every send (button, send-all, mark-sent, planner autopilot) throws a `drafts_status_check` constraint violation. Vercel preview AND production both share the same Supabase, so this affects live users immediately on deploy.
+
+**How:**
+1. Open [Supabase Dashboard](https://supabase.com/dashboard) → your project → SQL Editor → New query.
+2. **Verify the CHECK constraint name first.** Paste and run this:
+   ```sql
+   SELECT conname FROM pg_constraint
+   WHERE conrelid = 'drafts'::regclass AND contype = 'c';
+   ```
+   Expected: list includes `drafts_status_check`. If it's named differently (e.g., `drafts_status_check1`), open `supabase/migrations/018_drafts_sending_status.sql` and replace `drafts_status_check` with the actual name before running.
+3. Open `supabase/migrations/018_drafts_sending_status.sql`, copy the contents, paste into a new SQL Editor query, click Run.
+4. **Verify the migration applied:**
+   ```sql
+   -- Should return 1 row
+   SELECT column_name FROM information_schema.columns
+   WHERE table_name = 'drafts' AND column_name = 'send_started_at';
+
+   -- Should include 'sending' in the constraint definition
+   SELECT pg_get_constraintdef(oid) FROM pg_constraint
+   WHERE conname = 'drafts_status_check';
+
+   -- Should list both indexes
+   SELECT indexname FROM pg_indexes
+   WHERE tablename = 'drafts'
+     AND indexname IN ('uq_drafts_active_user_banker_type', 'idx_drafts_sending_started');
+   ```
+
+The migration is forward-only and additive — old code that ignores `'sending'` keeps working, so it's safe to apply BEFORE merging the PR.
+
+### Step 2 — Pull and install deps
+
+```bash
+git fetch origin
+git checkout claude/happy-dewdney-636b5c
+npm install     # picks up vitest@^3 (new devDep)
+```
+
+### Step 3 — Type-check + build (catches any TypeScript errors)
+
+```bash
+npm run build
+```
+
+This runs `tsc --noEmit` + Next build. **Most likely places to break** (Theo could not run tsc locally and may have type errors):
+- The `BankerJoin` cast in `outreach/sendDraft.ts` — supabase-js may type nested joins differently than expected.
+- The discriminated-union narrowing in `toHttpResponse` — *should* compile cleanly because of `assertNever`, but watch for "property does not exist on type" errors.
+- The `claim1.data?.length` checks — TypeScript may type `data` as something other than an array.
+
+If anything fails, **start a new Claude session** with the error output pasted in. Reference this branch and the spec in this doc.
+
+### Step 4 — Run unit tests
+
+```bash
+npm run test:unit
+```
+
+Should pass 5 assertions in `tests/unit/pipeline/stage-validation.test.ts`. If this fails, the vitest config or `@/` alias is broken. Fix that first.
+
+### Step 5 — Open the PR and watch CI
+
+```bash
+gh pr create --fill   # or open https://github.com/Dremix10/WarmIntro/pull/new/claude/happy-dewdney-636b5c
+```
+
+CI runs:
+- `test-unit` (new, gating)
+- `typecheck-build-lint` (existing)
+
+If both green → proceed to smoke test.
+
+### Step 6 — Smoke test on Vercel preview
+
+GitHub will comment on the PR with a Vercel preview URL. Test these 6 paths against it:
+
+| Path | How | Verify |
+|---|---|---|
+| Button send | `/today` → click Send on an approved draft | Email arrives, draft → `sent`, signal `draft_sent` with `via: send_button` |
+| Send-all | `/today` → "Send all" with 2+ approved drafts | All sent, response includes `skipped` count if any were already sending |
+| Mark sent | Trust C user → click "I sent it" | No Gmail call, signal `via: user_marked_sent` |
+| Planner autopilot | Set Trust A on a capability, hit `/api/planner/run-now` (or wait for cron) | Drafts sent, signal `via: planner_autopilot_A` |
+| Manual stage | `/crm` → drag a banker to "replied" | `connections.stage` updates, signal `stage_replied` with `via: manual` |
+| Watcher reply | Reply to a previously-sent test email, wait ~20 min for cron | Signal `stage_replied` with `via: watcher` plus existing `reply_received` |
+
+**The CAS guard test (the most important new behavior):** open `/today`, find an approved draft, click Send and immediately click Send again. First click sends. Second returns `{ ok: true, alreadySending: true }`. No double email. If you get TWO emails to the banker, the CAS guard is broken.
+
+### Step 7 — Merge and watch Telegram
+
+After smoke tests pass, merge the PR. Vercel auto-deploys to prod. For the first 24-48 hours, watch Telegram for:
+
+- 🟠 **Drafts wedged in 'sending' > 10 min** (Sentinel Check 5) — if this fires, the dual-write hazard is biting. Time to ship Choice 2 (the reconciler cron). ~half a day of work; spec in this doc's D6 answer body.
+- 🔶 **Gmail send failures · last 1h** (Sentinel Check 6) — if this fires for a real user, their OAuth token is broken. Ping them to reconnect Gmail at /account.
+
+Both are NEW alerts that didn't exist before this PR — non-zero counts on day one are normal. Sustained high counts mean follow-up work needed.
+
+### What this PR does NOT include (deferred follow-ups)
+
+- **Choice 2 reconciler cron** (D6) — only if Sentinel Check 5 starts firing weekly. ~half day of work.
+- **Option B integration test suite** (D7) — needs Docker installed locally. ~1 hour of work; upgrade path documented in D7 answer body below.
+- **D8** — DraftCard split into 8 components. Decided 2026-04-30, deferred. ~2-3 hrs.
+
+### What was removed in the redo (vs the original D6+D7 commit Theo reverted)
+
+The original was reverted because the audit surfaced 17 worry-points. This redo bakes them in:
+- `gmail_succeeded_db_failed` variant (clearer UX than "send failed")
+- JSON-parse for Gmail error messages (replaces fragile regex)
+- `revertToApproved` logs failures to Sentinel
+- `connection_id` writeback after fresh insert
+- `toHttpResponse` + `assertNever` (single source of truth for response narrowing)
+- Orphan-connection guard in `advanceStage`
+- Sentinel Check 6 for gmail-failure rate (was missing)
+- `.gitattributes` for LF line endings
+- `vitest@^3` (was 2.1)
+- No `supabase` CLI as npm devDep (use brew/scoop locally + GH Action in CI)
+- Removed integration suite scaffolding I had originally written for Docker — now deferred to F upgrade
 
 ---
 
@@ -482,12 +605,48 @@ Alternative: keep flat layout. Groups give a clearer mental model but mean every
 **D6.** `[Batch 1]` Shared service helpers — *recommended: keep `services/outreach/` and `services/pipeline/` independent for now.*
 Alternative: introduce `services/core/` upfront for cross-cutting helpers. Premature unless real overlap shows up.
 
-> Answer:
+> Answer: **Option C+ (code committed in this PR; awaiting smoke test + migration apply).** Neither A (independent) nor B (upfront `core/`). The connection-upsert block was already duplicated 3x in the tree — not hypothetical. The right home is `pipeline/`, since it already owns connection lifecycle, with `outreach/` importing down. Directional rule: `outreach → pipeline → signals`, never reverse.
+>
+> **What shipped:**
+> - `services/pipeline/upsertConnectionAtStage.ts` — single connection writer (legacy `alumni_*` dual-write + stage-specific resets). Race-loser retry on insert error so parallel sends settle deterministically.
+> - `services/pipeline/advanceStage.ts` — manual + watcher stage moves with **orphan-connection guard** for legacy rows where `banker_id IS NULL`.
+> - `services/outreach/sendDraft.ts` — orchestrator with the **CAS guard** (5-min stale-claim recovery), **JSON-parsed Gmail error messages** (replaces fragile regex), **`revertToApproved` that logs on its own error** for Sentinel visibility, **`gmail_succeeded_db_failed`** variant for the rare Gmail-OK / DB-fail dual-write hazard (UI shows "email may have been sent — refresh in a few min" instead of generic "send failed"), **`connection_id` writeback** after fresh connection insert, **`toHttpResponse`** + **`assertNever`** so routes don't reason about discriminated-union narrowing themselves and TypeScript errors at compile time if a new variant is added without a handler.
+> - 4 routes shrink to ~10 LOC each (auth check + helper call + `toHttpResponse` + return).
+> - `agents/planner.ts:sendApprovedDrafts` — Trust C inline path unchanged; Trust B post-window + Trust A both route through `sendDraft`. Removed `createOrUpdateConnection` (~60 LOC dead code).
+> - `agents/watcher.ts` — stage advancement via `advanceStage` (single source of truth for connection writes + stage_X signal).
+> - `agents/sentinel.ts` — **Check 5** (drafts wedged in `'sending'` > 10 min) + **Check 6** (per-user `draft_send_failed` rate > 5/hour, catches OAuth-token-expired loops that other checks miss).
+> - Migration `018_drafts_sending_status.sql` — adds `'sending'` to status CHECK, `send_started_at` column, updates active-draft index to cover `'sending'`, adds partial index for the Sentinel stuck-sending query. Includes verify-name SQL block at top so the admin can confirm the existing CHECK constraint name before running.
+>
+> **Pending:**
+> 1. Apply migration `018_drafts_sending_status.sql` via Supabase Dashboard (admin runs at session end)
+> 2. `npm install` to pick up new vitest devDep
+> 3. Push, watch CI, fix any type-check errors
+> 4. Smoke test 6 paths (button send, send-all, mark sent, planner autopilot, manual stage, watcher reply) against Vercel preview
+> 5. Confirm CAS guard works — double-click Send rapidly should return `alreadySending: true` on the second click
+>
+> **Why not Choice 2 reconciler now:** at 100-1k users, the dual-write window is rare. Sentinel Check 5 will tell us if it actually bites. Choice 2 stays as a parked half-day-of-work follow-up.
 
 **D7.** `[Batch 5]` Test database — *recommended: vitest + dedicated Supabase test branch (paid feature, $10/mo).*
 Alternative: a separate test DB on the existing instance with cleanup hooks. Cheaper but riskier (cleanup bugs leave junk in prod-ish data).
 
-> Answer:
+> Answer: **Option A only (code committed in this PR).** Lighter than the original Option F decision — we picked the unit-tests-only slice because (a) Docker isn't installed locally so the integration suite couldn't actually run, (b) at 1k users the bugs only Option B catches (CAS races, RLS edge cases) happen rarely enough that A's 90% coverage is sufficient, and (c) starting with A leaves a clean upgrade path to F whenever Docker arrives.
+>
+> **What shipped:**
+> - `vitest@^3.0.0` as devDep (no `supabase` CLI devDep — that's a binary, not an npm package; install via brew/scoop locally + `supabase/setup-cli@v1` in CI).
+> - `vitest.config.ts` with single project pointed at `tests/unit/**`, `@/` alias matching tsconfig, integration folder explicitly excluded.
+> - `tests/unit/pipeline/stage-validation.test.ts` — 5 assertions on `isValidStage`. Foundational test: if it doesn't run, the rig is broken.
+> - `tests/integration/.gitkeep` — scaffolding folder for future Option B work. No tests yet.
+> - `.gitattributes` — normalizes line endings to LF on commit. Stops CRLF noise on Windows-edited files. Pre-existing repo issue, fixed alongside.
+> - npm scripts: `test`, `test:unit`, `test:watch`. CI gets a `test-unit` job that gates every PR.
+>
+> **What's NOT in this PR (deferred to F upgrade):**
+> - `tests/integration/_setup/` (boots local Supabase via `supabase start`)
+> - GH Actions integration job
+> - Docker setup
+>
+> **Upgrade path to F when ready:** ~1 hour of work — install Docker, write `tests/integration/_setup/global-setup.ts` that calls `supabase start`, change `vitest.config.ts` to use a `projects` array (existing unit project + new integration project with global-setup), add a `test-integration` GH Actions job marked `continue-on-error: true` initially. Existing unit tests keep working unchanged.
+>
+> **Triggers to upgrade:** Sentinel pings stuck-sending alert weekly | a third collaborator joins | scaling past 5k users.
 
 **D8.** `[Batch 2]` DraftCard sub-components — *recommended: extract `DraftCard`, `FactCheckPanel`, `SentToConfirmModal`, `RunAlmaNowButton`, `SendAllButton`, `GmailRequiredBanner`, `BatchStepper`, `SendTimePicker`.*
 Reviewer: any sub-component you'd specifically want kept separate or merged differently? FactCheckPanel feels like the most extractable.

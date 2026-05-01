@@ -5,6 +5,7 @@ import { startAgentRun, endAgentRun, askClaudeJSON, logSignal, nudgePlanner } fr
 import { pollInbox, type InboxMessage } from "@/services/gmail/poll";
 import { matchInboundToSentDraft } from "@/services/gmail/thread-match";
 import { restSelect, restUpdate, restInsert, eq, lt } from "@/lib/supabase-rest";
+import { advanceStage } from "@/services/pipeline/advanceStage";
 import type { Json } from "@/lib/database.types";
 
 export interface WatcherInput {
@@ -81,17 +82,17 @@ export async function runWatcher(input: WatcherInput): Promise<WatcherOutput> {
       const classification = await classifyReply(msg);
 
       if (classification.nextStage && match.connectionId) {
-        await restUpdate(
-          "connections",
-          {
-            stage: classification.nextStage,
-            updated_at: new Date().toISOString(),
-            silence_days: 0,
-            needs_followup: false,
-          },
-          { id: eq(match.connectionId) }
-        );
-        stagesAdvanced++;
+        // Route through pipeline.advanceStage so the watcher uses the
+        // same code path as manual stage moves on /crm — single source
+        // of truth for the connection write + stage_X signal log.
+        const adv = await advanceStage({
+          userId: input.userId,
+          connectionId: match.connectionId,
+          toStage: classification.nextStage,
+          via: "watcher",
+          classificationMetadata: { intent: classification.intent },
+        });
+        if (adv.ok) stagesAdvanced++;
       }
 
       await logSignal({

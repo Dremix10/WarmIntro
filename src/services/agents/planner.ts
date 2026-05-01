@@ -5,8 +5,9 @@ import { startAgentRun, endAgentRun, logSignal } from "./shared";
 import { runResearcher, enrichBanker } from "./researcher";
 import { runCorrespondent } from "./correspondent";
 import { runCritic } from "./critic";
-import { sendEmailAsUser, saveToDrafts, isGmailSendSuccess } from "@/services/gmail/send";
+import { saveToDrafts } from "@/services/gmail/send";
 import { ensureGmailDraft } from "@/services/gmail/sync-draft";
+import { sendDraft } from "@/services/outreach/sendDraft";
 import { restSelect, restSelectOne, restInsert, restUpdate, restCount, eq, isNull, gte } from "@/lib/supabase-rest";
 import type { TrustLevel, TrustCapability } from "@/shared/ib-types";
 import { TRUST_GRADUATION } from "@/shared/ib-constants";
@@ -326,12 +327,16 @@ async function sendApprovedDrafts(
     const cap: TrustCapability = d.type === "cold" ? "send_new_email" : d.type === "followup" ? "send_followup" : "send_reply";
     const level = effectiveLevelFor(cap);
 
-    const banker = d.banker_id
-      ? await restSelectOne("bankers", { select: "email", filters: { id: eq(d.banker_id) } })
-      : null;
-    if (!banker?.email) continue;
-
     if (level === "C") {
+      // Trust C / Copilot: don't send. Mirror to user's Gmail Drafts
+      // and mark our row as 'skipped' so /today shows nothing pending.
+      // saveToDrafts needs the banker's email; the helper-routed B/A
+      // paths get this check inside sendDraft, but C still does it
+      // inline since it bypasses the helper entirely.
+      const banker = d.banker_id
+        ? await restSelectOne("bankers", { select: "email", filters: { id: eq(d.banker_id) } })
+        : null;
+      if (!banker?.email) continue;
       const res = await saveToDrafts({
         userId,
         fromEmail: profile.gmail_email ?? "",
@@ -344,89 +349,31 @@ async function sendApprovedDrafts(
         out.savedToDrafts++;
       }
     } else if (level === "B") {
+      // Trust B / Preview-veto: schedule on first encounter, actually
+      // send once the preview window has passed.
       if (!d.scheduled_send_at) {
         const sendAt = new Date(now.getTime() + TRUST_GRADUATION.previewWindowMin * 60_000);
         await restUpdate("drafts", { scheduled_send_at: sendAt.toISOString() }, { id: eq(d.id) });
       } else if (new Date(d.scheduled_send_at) <= now) {
-        const sendRes = await sendEmailAsUser({
+        const sendResult = await sendDraft({
           userId,
-          fromEmail: profile.gmail_email ?? "",
-          toEmail: banker.email,
-          subject: d.subject ?? "",
-          body: d.body,
+          draftId: d.id,
+          via: "planner_preview_veto_B",
         });
-        if (isGmailSendSuccess(sendRes)) {
-          const res = sendRes;
-          await restUpdate(
-            "drafts",
-            {
-              status: "sent",
-              sent_at: new Date().toISOString(),
-              sent_message_id: res.sentMessageId,
-              updated_at: new Date().toISOString(),
-            },
-            { id: eq(d.id) }
-          );
-          if (d.banker_id) {
-            await createOrUpdateConnection(userId, d.banker_id, d.id, res.sentMessageId, res.gmailThreadId);
-          }
+        if (sendResult.ok && sendResult.status === "sent") {
           await incrementApprovalCount(userId, cap);
-          await logSignal({
-            userId,
-            bankerId: d.banker_id ?? undefined,
-            draftId: d.id,
-            agent: "planner",
-            signalType: "draft_sent",
-            metadata: {
-              type: d.type,
-              via: "preview_veto",
-              userEdited: Boolean(d.user_edited_body),
-              criticOverride: Boolean(d.critic_override),
-              bodyLength: d.body.length,
-            },
-          });
           out.sent++;
         }
       }
     } else {
-      const sendRes = await sendEmailAsUser({
+      // Trust A / Autopilot: immediate send through the helper.
+      const sendResult = await sendDraft({
         userId,
-        fromEmail: profile.gmail_email ?? "",
-        toEmail: banker.email,
-        subject: d.subject ?? "",
-        body: d.body,
+        draftId: d.id,
+        via: "planner_autopilot_A",
       });
-      if (isGmailSendSuccess(sendRes)) {
-        const res = sendRes;
-        await restUpdate(
-          "drafts",
-          {
-            status: "sent",
-            sent_at: new Date().toISOString(),
-            sent_message_id: res.sentMessageId,
-            updated_at: new Date().toISOString(),
-          },
-          { id: eq(d.id) }
-        );
-        if (d.banker_id) {
-          await createOrUpdateConnection(userId, d.banker_id, d.id, res.sentMessageId, res.gmailThreadId);
-        }
+      if (sendResult.ok && sendResult.status === "sent") {
         await incrementApprovalCount(userId, cap);
-        await logSignal({
-          userId,
-          bankerId: d.banker_id ?? undefined,
-          draftId: d.id,
-          agent: "planner",
-          signalType: "draft_sent",
-          metadata: {
-            type: d.type,
-            autopilot: true,
-            via: "autopilot",
-            userEdited: Boolean(d.user_edited_body),
-            criticOverride: Boolean(d.critic_override),
-            bodyLength: d.body.length,
-          },
-        });
         out.sent++;
       }
     }
@@ -443,68 +390,9 @@ async function sendApprovedDrafts(
   return out;
 }
 
-async function createOrUpdateConnection(
-  userId: string,
-  bankerId: string,
-  draftId: string,
-  sentMessageId: string,
-  threadId: string
-): Promise<void> {
-  const banker = await restSelectOne("bankers", {
-    select: "name, title, linkedin_url, firm_id",
-    filters: { id: eq(bankerId) },
-  });
-  if (!banker) return;
-
-  const firm = banker.firm_id
-    ? await restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } })
-    : null;
-  const firmName = firm?.name ?? banker.firm_id ?? "";
-
-  const draft = await restSelectOne("drafts", {
-    select: "connection_id",
-    filters: { id: eq(draftId) },
-  });
-
-  if (draft?.connection_id) {
-    await restUpdate(
-      "connections",
-      {
-        stage: "sent",
-        last_send_message_id: sentMessageId,
-        thread_id: threadId,
-        silence_days: 0,
-        needs_followup: false,
-        updated_at: new Date().toISOString(),
-      },
-      { id: eq(draft.connection_id) }
-    );
-  } else {
-    // alumni_role is NOT NULL — coerce empty string when banker.title is
-    // null (which happens for Serper-discovered rows that never get
-    // enriched). Race-safe via the (user_id, banker_id) unique constraint;
-    // a duplicate insert would surface as a Postgres error here, but the
-    // earlier alreadyContactedBankerIds check + the fact that planner
-    // autopilot runs serially per user makes that unreachable in practice.
-    const inserted = await restInsert("connections", {
-      user_id: userId,
-      alumni_id: bankerId, // legacy column name
-      alumni_name: banker.name,
-      alumni_role: banker.title ?? "",
-      alumni_linkedin_url: banker.linkedin_url ?? "",
-      company_id: banker.firm_id ?? "",
-      company_name: firmName,
-      stage: "sent",
-      banker_id: bankerId,
-      last_send_message_id: sentMessageId,
-      thread_id: threadId,
-    });
-    const newConnectionId = inserted[0]?.id;
-    if (newConnectionId) {
-      await restUpdate("drafts", { connection_id: newConnectionId }, { id: eq(draftId) });
-    }
-  }
-}
+// Connection writes moved to services/pipeline/upsertConnectionAtStage.ts.
+// All four send paths (button, send-all, mark_sent, planner autopilot)
+// route through there now via outreach/sendDraft. See docs/refactor-plan.md (D6).
 
 async function incrementApprovalCount(userId: string, cap: TrustCapability): Promise<void> {
   const current = await restSelectOne("trust_levels", {
