@@ -52,6 +52,20 @@ interface TodayResponse {
   stageCounts: Record<string, number>;
   needsSetup?: boolean;
   needsGmail?: boolean;
+  sameSchoolPool?: { total: number; contacted: number; remaining: number };
+  userSchool?: string | null;
+}
+
+// Short school name for in-line copy. "Massachusetts Institute of Technology"
+// is too long for "5 X alums left" — we want "5 MIT alums left". Drops "University"
+// from the common cases.
+function shortSchool(name: string | null | undefined): string {
+  if (!name) return "school";
+  const lower = name.toLowerCase();
+  if (lower.includes("massachusetts institute")) return "MIT";
+  if (lower.startsWith("rice")) return "Rice";
+  if (lower.startsWith("brown")) return "Brown";
+  return name.replace(/\s+University$/i, "");
 }
 
 const TRUST_LABEL: Record<"C" | "B" | "A", string> = {
@@ -351,6 +365,22 @@ export default function TodayPage() {
             <p className="mt-2 text-sm text-[#14182A]/70">
               {approved.length} ready to send · {pending.length} in review
             </p>
+            {/* Same-school remaining — sets expectations before the user
+                hits the "all my drafts are cross-school" wall. Hidden when
+                pool is large enough to not matter (>10 remaining). */}
+            {data.sameSchoolPool && data.sameSchoolPool.total > 0 && data.sameSchoolPool.remaining <= 10 && data.userSchool && (
+              <p className="mt-2 text-xs text-[#14182A]/55">
+                {data.sameSchoolPool.remaining > 0 ? (
+                  <>
+                    {data.sameSchoolPool.remaining} {shortSchool(data.userSchool)} alum{data.sameSchoolPool.remaining === 1 ? "" : "s"} left at your target firms ({data.sameSchoolPool.contacted} of {data.sameSchoolPool.total} already touched)
+                  </>
+                ) : (
+                  <>
+                    Reached every {shortSchool(data.userSchool)} alum at your target firms ({data.sameSchoolPool.total} total). Future drafts will be cross-school — <a href="/setup" className="underline text-[#2E5A88]">add more firms</a> to widen the pool.
+                  </>
+                )}
+              </p>
+            )}
             {/* Anchor jumps — quick navigation between sections */}
             {(approvedCold.length + approvedFollowup.length + pendingCold.length + pendingFollowup.length) > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
@@ -383,6 +413,31 @@ export default function TodayPage() {
             prominently so the user doesn't waste time approving drafts that
             can't go anywhere. */}
         {data.needsGmail && <GmailRequiredBanner />}
+
+        {/* Same-school pool exhausted banner. Sets the "what to do next"
+            decision in front of the user instead of letting them hit Run
+            Alma five more times getting cross-school candidates with no
+            warning. Particularly load-bearing for MIT testers. */}
+        {data.sameSchoolPool &&
+          data.sameSchoolPool.total > 0 &&
+          data.sameSchoolPool.remaining === 0 &&
+          data.userSchool && (
+          <div className="mb-6 rounded-2xl bg-[#9A7110]/10 border border-[#9A7110]/30 p-5">
+            <p className="text-xs uppercase tracking-wider text-[#9A7110] font-semibold mb-1">Pool note</p>
+            <p className="font-[family-name:var(--font-fraunces)] text-lg text-[#14182A]">
+              You&rsquo;ve reached every {shortSchool(data.userSchool)} alum at your target firms.
+            </p>
+            <p className="mt-1 text-sm text-[#14182A]/70">
+              {data.sameSchoolPool.total} total contacted. The next Run Alma drafts will be cross-school — different framing, still real bankers, but no school overlap to lean on.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <a href="/setup" className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 font-medium hover:bg-[#2E5A88] transition-colors">
+                Add more firms →
+              </a>
+              <span className="text-[#14182A]/55 self-center">or keep clicking Run Alma to draft cross-school</span>
+            </div>
+          </div>
+        )}
 
         {/* Trust controls */}
         <div className="mb-8 rounded-2xl bg-white p-5 border border-[#D9CFB5]">

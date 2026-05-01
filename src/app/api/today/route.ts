@@ -41,10 +41,62 @@ export async function GET(request: Request) {
       .eq("user_id", ctx.user.id),
     ctx.supabase
       .from("profiles")
-      .select("target_firms, gmail_connected_at")
+      .select("target_firms, gmail_connected_at, university")
       .eq("id", ctx.user.id)
       .maybeSingle(),
   ]);
+
+  // Same-school pool sizing — surface "X {school} alums left at your target
+  // firms" so testers know when they're about to fall back to cross-school
+  // candidates. Particularly load-bearing for MIT users where the pool is
+  // ~1 banker per firm; without a counter they'd hit warmth=30 cross-school
+  // drafts after 5-10 Run Almas with no warning. Computed inline (cheap —
+  // 2 small queries) so the /today header can render the badge.
+  let sameSchoolPool = { total: 0, contacted: 0, remaining: 0 };
+  if (profile?.university && profile?.target_firms && profile.target_firms.length > 0) {
+    const [{ count: total }, contactedResult] = await Promise.all([
+      ctx.supabase
+        .from("bankers")
+        .select("id", { count: "exact", head: true })
+        .eq("university", profile.university)
+        .in("firm_id", profile.target_firms)
+        .not("email", "is", null),
+      // Bankers we've already contacted = connections (any stage) + active drafts.
+      // Same logic the Researcher uses — alreadyContactedBankerIds in
+      // services/agents/researcher.ts. Inline-rebuilt here because pulling that
+      // helper cross-package would require lifting it out of agents/.
+      Promise.all([
+        ctx.supabase
+          .from("connections")
+          .select("banker_id")
+          .eq("user_id", ctx.user.id),
+        ctx.supabase
+          .from("drafts")
+          .select("banker_id")
+          .eq("user_id", ctx.user.id)
+          .in("status", ["pending_critic", "needs_revision", "approved", "rejected_unresolvable"])
+          .is("sent_at", null),
+      ]).then(async ([c, d]) => {
+        const contactedIds = new Set<string>();
+        for (const row of c.data ?? []) if (typeof row.banker_id === "string") contactedIds.add(row.banker_id);
+        for (const row of d.data ?? []) if (typeof row.banker_id === "string") contactedIds.add(row.banker_id);
+        if (contactedIds.size === 0) return 0;
+        const { count: contactedSameSchool } = await ctx.supabase
+          .from("bankers")
+          .select("id", { count: "exact", head: true })
+          .eq("university", profile.university!)
+          .in("firm_id", profile.target_firms!)
+          .in("id", Array.from(contactedIds))
+          .not("email", "is", null);
+        return contactedSameSchool ?? 0;
+      }),
+    ]);
+    sameSchoolPool = {
+      total: total ?? 0,
+      contacted: contactedResult,
+      remaining: Math.max(0, (total ?? 0) - contactedResult),
+    };
+  }
 
   // Phase 2: hydrate drafts with their latest critic_review + iteration
   // history so the override modal can show the user exactly what the Critic
@@ -109,6 +161,8 @@ export async function GET(request: Request) {
       stageCounts,
       needsSetup,
       needsGmail,
+      sameSchoolPool,
+      userSchool: profile?.university ?? null,
     },
     {
       headers: {
