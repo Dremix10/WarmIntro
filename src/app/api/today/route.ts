@@ -112,7 +112,12 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
+        // max-age=5 gives a 5s window where repeat loads (hitting Back, opening
+        // the tab again right away) skip the server entirely. SWR handles the
+        // rest — instant render, revalidate in background. 5s is short enough
+        // that "Run Alma" → reload still feels live, since planner runs take
+        // 20-50s to produce new drafts.
+        "Cache-Control": "private, max-age=5, stale-while-revalidate=300",
       },
     },
   );

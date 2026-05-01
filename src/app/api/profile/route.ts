@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       .single();
 
     const cacheHeaders = {
-      "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
+      "Cache-Control": "private, max-age=5, stale-while-revalidate=300",
     };
 
     if (!profile) {

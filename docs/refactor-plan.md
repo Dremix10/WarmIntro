@@ -405,7 +405,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 The user-stated #1 priority. Every other batch is academic until the app feels snappy.
 
-**0.1 Single auth path** *(biggest single win, ~300ms median saved)* `⚠ blocks on D1`
+**Status as of 2026-05-01:** 0.2 + 0.3 + 0.5 are essentially done. 0.1 (the single biggest win) is the unblocked next step. 0.4 (optimistic UI) is the highest-ROI UI piece still pending. 0.6 is blocked on Vercel Hobby's daily-cron limit.
+
+**0.1 Single auth path** *(biggest single win, ~300ms median saved)* `⚠ blocks on D1` `⏳ pending`
 
 Today: middleware verifies the session against Supabase, then the route does the same call again. Two network round-trips to Supabase Auth before any business logic.
 
@@ -418,42 +420,42 @@ Plan:
 
 Files: `src/proxy.ts`, `src/lib/auth.ts`, every `route.ts` (no change required if `getUser()` keeps the same signature).
 
-**0.2 Parallelize independent reads** *(~150-300ms saved on read endpoints)*
+**0.2 Parallelize independent reads** *(~150-300ms saved on read endpoints)* `✅ done`
 
-Wrap independent queries in `Promise.all`:
-- `src/app/api/today/route.ts` — 5 queries, all independent.
-- `src/app/api/drafts/[id]/send/route.ts` — draft + profile + banker (3 queries).
-- `src/app/api/profile/route.ts`
-- `src/app/api/connections/route.ts`
-- `src/app/api/admin/users/route.ts` — already uses `in()` joins; check if anything still serializes.
+Wrap independent queries in `Promise.all`. Status:
+- `src/app/api/today/route.ts` — DONE: 5-query phase 1 + 2-query phase 2 are both `Promise.all`.
+- `src/services/outreach/sendDraft.ts` — DONE: draft + profile read in parallel (D6+D7 refactor pulled this out of the route handlers).
+- `src/app/api/profile/route.ts` — single read; nothing to parallelise.
+- `src/app/api/connections/route.ts` — single read; nothing to parallelise.
+- `src/app/api/admin/users/route.ts` — already uses `in()` joins.
 
 Pattern:
 ```ts
 const [drafts, trust, recent, pipeline, profile] = await Promise.all([...]);
 ```
 
-**0.3 HTTP cache headers on read GETs** *(repeat-load latency drops to ~50ms)* `⚠ blocks on D2`
+**0.3 HTTP cache headers on read GETs** *(repeat-load latency drops to ~50ms)* `✅ done`
 
-Add `Cache-Control: private, max-age=10, stale-while-revalidate=60` on:
+Set `Cache-Control: private, max-age=5, stale-while-revalidate=300` on:
 - `/api/today`, `/api/profile`, `/api/connections`, `/api/agents/runs`.
 
-Browser shows cached response instantly; revalidates in background. Trade-off: data is up to 10s stale on second view. Acceptable for non-critical reads.
+5s of fresh-cache + 5min SWR. The fresh window means immediate Back/refresh skips the server entirely; SWR makes everything else feel instant via cached render + background revalidate. Picked 5s over 10s because "Run Alma" → reload should still surface fresh drafts.
 
-**0.4 Optimistic UI on action buttons** *(zero-perceived-latency for clicks)*
+**0.4 Optimistic UI on action buttons** *(zero-perceived-latency for clicks)* `⏳ pending`
 
 Approve / skip / edit / stage-move all update local React state instantly. Server confirms in background; revert with toast on failure.
 
 Files: `src/app/today/page.tsx`, `src/app/crm/page.tsx`, `src/components/OutreachDraft.tsx`, `src/components/ConnectionCard.tsx`.
 
-**0.5 Tighter middleware matcher**
+**0.5 Tighter middleware matcher** `✅ done`
 
-Current matcher in `src/proxy.ts:297-299` runs middleware on virtually every path. Tighten to skip purely static routes (favicon, fonts, image manifests) — they're getting the gate-check tax for no reason.
+`src/proxy.ts:344-348` now excludes `_next/static`, `_next/image`, `_next/data`, favicon, robots, sitemap, manifest, plus all of woff/woff2/ttf/otf/svg/png/jpg/jpeg/gif/webp/ico/txt/xml/json/map/css/js. Bypass-prefix list also covers /api/cron, /api/auth, /api/pilot-signup, /api/demo, /api/setup/firms.
 
-**0.6 Cron pre-warm** *(mitigates cold-start tax during business hours)*
+**0.6 Cron pre-warm** *(mitigates cold-start tax during business hours)* `🚫 blocked`
 
-Cheap trick: add `cron/warm` route that pings the 4-5 hottest endpoints every 5 min (during 6am-11pm America/New_York). Keeps those functions warm so the first user click of the morning isn't a 2s cold start.
+Vercel Hobby plan caps cron at daily granularity (we already had to downgrade /api/cron/tick from per-minute to daily). 5-minute pre-warm requires Pro plan or moving the cron schedule to the Ubuntu VPS. Revisit when the VPS is wired up.
 
-**0.7 Replace or delete in-process caches** `⚠ blocks on D3`
+**0.7 Replace or delete in-process caches** `⚠ blocks on D3` `⏳ pending`
 
 `claude.ts`'s "LRU" map is per-instance; cleared on every cold start; doesn't actually save anything. Either:
 - Delete (cleanest), OR
