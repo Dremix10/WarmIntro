@@ -519,6 +519,35 @@ function buildDraftPrompt(
   if (anchors.length > 0) {
     parts.push(`COMMON-GROUND ANCHORS (use the highest-confidence one for the opener):\n${JSON.stringify(anchors, null, 2)}\n`);
   }
+
+  // Surface distinctive facts from about_section as candidate openers.
+  // findCommonGround only returns OVERLAPS (shared school, shared major,
+  // shared city) — banker-only facts like "participated in HLS's 2022
+  // Corporate Governance Roundtable" don't fit that schema and get dropped.
+  // dc118 hit this live: skipped a draft because the model didn't mention
+  // the roundtable he wanted to anchor on, even though the about_section
+  // had it. Explicitly listing distinctive sentences from about_section
+  // here puts them in the model's candidate pool alongside findCommonGround
+  // anchors, with a clear "prefer the more specific one" instruction.
+  if (banker.aboutSection && banker.aboutSection.trim().length >= 80) {
+    // Split into sentences, drop opener ("X is an Associate at Y") which
+    // the model already has via banker.title/firm, keep the distinctive
+    // ones (longer, contain proper nouns or specific events).
+    const sentences = banker.aboutSection
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 30);
+    // Skip the first sentence — it's almost always the role+firm summary
+    // already encoded in the BANKER block.
+    const distinctive = sentences.slice(1).slice(0, 4);
+    if (distinctive.length > 0) {
+      parts.push(
+        `DISTINCTIVE BANKER FACTS (from curator about_section — already verified, source URLs surface in /today's "Sources" disclosure). These are STRONGER than firm+group anchors when they exist; prefer the most specific one for the opener:\n` +
+          distinctive.map((s, i) => `[${i + 1}] ${s}`).join("\n") +
+          `\n`
+      );
+    }
+  }
   if (scoutedFindings.length > 0) {
     // Real-time-scouted findings about this banker (LinkedIn posts, press
     // mentions, podcast appearances). Use AT MOST one in the email, and only
