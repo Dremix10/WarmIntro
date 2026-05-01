@@ -39,11 +39,24 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { data: draft } = await ctx.supabase
     .from("drafts")
-    .select("id, user_id, banker_id, connection_id, type, gmail_draft_id")
+    .select("id, user_id, banker_id, connection_id, type, gmail_draft_id, sent_at, status")
     .eq("id", id)
     .single();
   if (!draft || draft.user_id !== ctx.user.id) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  // Guard: don't let a Skip click overwrite a draft that's already been
+  // sent. dc118 hit this — sent a draft via override, then the lingering
+  // /today UI element (stale cache) still showed Skip. Click set status
+  // to "skipped" while sent_at remained set, leaving an inconsistent
+  // row that confused the connections-based exclusion logic.
+  if (draft.sent_at) {
+    return NextResponse.json({
+      ok: true,
+      alreadySent: true,
+      sentAt: draft.sent_at,
+    });
   }
 
   if (draft.gmail_draft_id) {
