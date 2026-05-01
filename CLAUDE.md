@@ -14,11 +14,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Canonical docs (read these before starting new work)
 
+- **Database schema reference:** `docs/DATABASE_SCHEMA.md` — every table, column, RLS policy, index, FK chain. **Start here if you don't have direct Supabase access.** Companion: `docs/AGENT_DATA_FLOWS.md` (what each agent reads/writes for each user-triggered flow) and `docs/QUERIES_COOKBOOK.md` (copy-paste SQL for common debugging queries).
 - **Design spec:** `docs/superpowers/specs/2026-04-23-alma-ib-agent-design.md` — the agreed architecture for the IB wedge and the 6-agent system (Planner, Researcher, Correspondent, Critic, Watcher, Curator). Scope, user flow, agent prompts+tools+I/O, data model, integrations, delivery plan, YC narrative.
 - **Brainstorm that produced the spec:** `docs/superpowers/brainstorm/2026-04-23-alma-ib-brainstorm.md` — decisions chronologically with rationale. Useful when you need to understand *why* something is the way it is.
 - **Backend handoff for frontend cofounder:** `BACKEND_HANDOFF.md` — what the backend exposes (tables, endpoints, OAuth flow, agent behavior), what wiring is still needed on the UI side.
 - **Frontend handoff for backend cofounder:** `FRONTEND_HANDOFF.md` — what the frontend renders and what it expects from the backend.
 - **Backlog:** `BACKEND_REQUESTS.md` — running list of backend asks surfaced from frontend work.
+
+### For cofounders without Supabase or MCP access
+
+Evangelos and Theofanis don't yet have direct DB access. Until they do,
+the three docs above are the substitute:
+
+- `docs/DATABASE_SCHEMA.md` answers "what columns does table X have, what's the type, is it nullable, is there RLS, what are the FKs?"
+- `docs/AGENT_DATA_FLOWS.md` answers "when a user clicks Run Alma, what tables get read and written and in what order?"
+- `docs/QUERIES_COOKBOOK.md` answers "how do I find the most recent Critic rejects?" or "how do I see per-user Anthropic spend?"
+
+If you're proposing a schema change, add a migration in `supabase/migrations/0NN_<name>.sql` and update `docs/DATABASE_SCHEMA.md` in the same PR. The migration file is ground truth; the doc is the readable view.
 
 ## The 6 agents (canonical — see spec Section 3)
 
