@@ -416,14 +416,21 @@ function buildDraftPrompt(
   // recurring failure was the model trying to be specific anyway,
   // producing name-drops or fabrications. The thin-data switch routes
   // it to student-side anchors instead. See BASE_VOICE > THIN-DATA MODE.
+  //
+  // A populated banker.aboutSection (Curator-synthesized from real
+  // findings via src/services/curator/synthesize-profile.ts) IS rich
+  // enough banker context to support a banker-specific opener. Don't
+  // route those to thin-data even if Scout returned no posts/deals.
   const richFindings = scoutedFindings.filter(
     (f) => f.sourceType !== "linkedin_profile" && f.sourceType !== "other"
   );
+  const hasAboutSection = Boolean(banker.aboutSection && banker.aboutSection.trim().length >= 60);
   const dataState = {
     hasRichFindings: richFindings.length > 0, // a deal, post, alumni mention, podcast, etc.
     hasOnlyProfileLevelFindings: scoutedFindings.length > 0 && richFindings.length === 0,
     hasAnchors: anchors.length > 0,
-    thinData: !richFindings.length && !anchors.length,
+    hasAboutSection,
+    thinData: !richFindings.length && !anchors.length && !hasAboutSection,
   };
   parts.push(`DATA STATE (use this to decide whether to invoke THIN-DATA MODE from the system prompt):\n${JSON.stringify(dataState, null, 2)}\n`);
   if (dataState.thinData) {
