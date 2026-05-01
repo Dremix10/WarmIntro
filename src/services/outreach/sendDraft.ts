@@ -369,7 +369,14 @@ async function recordSent(args: RecordSentArgs): Promise<SendDraftResult> {
     // Mark the draft sent. Clear gmail_draft_id since (if we used the
     // drafts.send API) Gmail has converted the draft into a sent
     // message and our pointer is stale.
-    const draftUpdate: Record<string, unknown> = {
+    const draftUpdate: {
+      status: string;
+      sent_at: string;
+      send_started_at: string | null;
+      updated_at: string;
+      sent_message_id?: string;
+      gmail_draft_id?: string | null;
+    } = {
       status: "sent",
       sent_at: now,
       send_started_at: null, // claim released
