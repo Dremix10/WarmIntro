@@ -6,22 +6,38 @@
 // bucket — only when the bucket worsens or the cooldown expires.
 
 import { startAgentRun, endAgentRun, logSignal } from "./shared";
-import { restSelect, gte, eq } from "@/lib/supabase-rest";
+import { restSelect, gte, lt, eq } from "@/lib/supabase-rest";
 import { sendTelegram } from "@/lib/telegram";
 
 export interface SentinelOutput {
   alertsSent: number;
   errors: number;
   creditWarnings: string[];
+  stuckSending: number;
+  gmailFailureUsers: number;
 }
 
 const HUNTER_LOW_CREDIT_PCT = 0.2; // alert when <20% remaining
 const USER_DAILY_SPEND_THRESHOLD_USD = Number(process.env.ALMA_USER_SPEND_ALERT_USD ?? "5");
+// Drafts wedged in 'sending' state for longer than this are early-warning
+// for the dual-write hazard in outreach/sendDraft.ts. The 5-min stale-claim
+// guard there will eventually recover them on the user's next click — the
+// 10-min sentinel window means "something is wrong before users notice."
+// If this alert fires regularly, it's the signal to ship Choice 2 (the
+// reconciler cron) — see docs/refactor-plan.md D6.
+const STUCK_SENDING_THRESHOLD_MIN = 10;
+// Per-user threshold for repeated draft_send_failed signals in a single
+// hour. Catches OAuth-token-expired loops that would otherwise be
+// invisible (the helper auto-reverts the row to 'approved' so neither
+// stuck-sending nor agent-errors checks notice them).
+const GMAIL_FAILURE_PER_USER_HOUR = 5;
 const ALERT_COOLDOWN_HOURS = {
   hunter_credit: 24,    // once a day max for credit warnings
   agent_errors: 1,      // once an hour for error bursts
   critical_signal: 1,   // once an hour for critical signals
   user_spend: 6,        // re-fire every 6h if a user keeps burning
+  stuck_sending: 1,     // once an hour for wedged sends
+  gmail_failures: 2,    // every 2h per affected-user bucket
 } as const;
 
 type AlertKey = keyof typeof ALERT_COOLDOWN_HOURS;
@@ -92,7 +108,7 @@ async function getHunterBalance(): Promise<{ available: number; total: number } 
 
 export async function runSentinel(): Promise<SentinelOutput> {
   const ctx = await startAgentRun({ agent: "curator", triggeredBy: "cron", inputSummary: { mode: "sentinel" } });
-  const out: SentinelOutput = { alertsSent: 0, errors: 0, creditWarnings: [] };
+  const out: SentinelOutput = { alertsSent: 0, errors: 0, creditWarnings: [], stuckSending: 0, gmailFailureUsers: 0 };
 
   try {
     // Check 1: agent errors in last 30 min
@@ -198,10 +214,94 @@ export async function runSentinel(): Promise<SentinelOutput> {
       }
     }
 
+    // Check 5: drafts wedged in 'sending' for > STUCK_SENDING_THRESHOLD_MIN.
+    // The CAS guard in outreach/sendDraft.ts auto-recovers stale claims at
+    // 5 min — anything still 'sending' at 10 min means either nobody has
+    // come back to retry OR something is genuinely stuck (Gmail-OK +
+    // DB-fail dual-write hazard, repeated process death). Either way,
+    // worth a Telegram ping so we can decide if the residual matters
+    // enough to ship Choice 2 (the reconciler cron).
+    const stuckBefore = new Date(Date.now() - STUCK_SENDING_THRESHOLD_MIN * 60 * 1000).toISOString();
+    const stuckDrafts = await restSelect("drafts", {
+      select: "id, user_id, banker_id, send_started_at",
+      filters: {
+        status: eq("sending"),
+        send_started_at: lt(stuckBefore),
+      },
+      limit: 25,
+    });
+    out.stuckSending = stuckDrafts.length;
+
+    if (stuckDrafts.length > 0) {
+      const stuckBucket = stuckDrafts.length > 5 ? "lt5" : stuckDrafts.length > 2 ? "lt10" : "lt20";
+      if (await shouldAlert("stuck_sending", stuckBucket)) {
+        const sample = stuckDrafts
+          .slice(0, 5)
+          .map((d) => `${(d.id as string).slice(0, 8)}… (user ${(d.user_id as string).slice(0, 8)}…, started ${d.send_started_at})`)
+          .join("\n");
+        const sent = (await sendTelegram(
+          `🟠 Drafts wedged in 'sending' > ${STUCK_SENDING_THRESHOLD_MIN} min\n\n${stuckDrafts.length} stuck draft(s):\n${sample}\n\nIf this fires regularly, ship the reconciler cron (Choice 2 in D6).`
+        )).sent;
+        if (sent) {
+          out.alertsSent++;
+          await recordAlert("stuck_sending", stuckBucket, { count: stuckDrafts.length });
+        }
+      }
+    }
+
+    // Check 6: per-user gmail_send_failed bursts. If a user's OAuth
+    // token expired or their Gmail is otherwise broken, every send
+    // produces a draft_send_failed signal and the helper reverts the
+    // row to 'approved'. Neither stuck-sending nor agent-errors
+    // catches this because the row never wedges and no agent crashes.
+    const failureSince = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const failureSignals = await restSelect("signals", {
+      select: "user_id",
+      filters: {
+        signal_type: eq("draft_send_failed"),
+        occurred_at: gte(failureSince),
+      },
+      limit: 500,
+    });
+    const failuresByUser: Record<string, number> = {};
+    for (const s of failureSignals) {
+      const uid = s.user_id as string | null;
+      if (!uid) continue;
+      failuresByUser[uid] = (failuresByUser[uid] ?? 0) + 1;
+    }
+    const affectedUsers = Object.entries(failuresByUser).filter(([, n]) => n >= GMAIL_FAILURE_PER_USER_HOUR);
+    out.gmailFailureUsers = affectedUsers.length;
+
+    if (affectedUsers.length > 0) {
+      const failBucket = affectedUsers.length > 3 ? "lt5" : "lt10";
+      if (await shouldAlert("gmail_failures", failBucket)) {
+        const top = affectedUsers
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([uid, count]) => `${uid.slice(0, 8)}…: ${count} fails`)
+          .join("\n");
+        const sent = (await sendTelegram(
+          `🔶 Gmail send failures · last 1h (≥${GMAIL_FAILURE_PER_USER_HOUR}/user)\n\n${affectedUsers.length} user(s) affected:\n${top}\n\nLikely cause: expired OAuth token. Check /admin.`
+        )).sent;
+        if (sent) {
+          out.alertsSent++;
+          await recordAlert("gmail_failures", failBucket, { count: affectedUsers.length });
+        }
+      }
+    }
+
     await logSignal({
       agent: "curator",
       signalType: "sentinel_run",
-      metadata: { alertsSent: out.alertsSent, errors: out.errors, hunterAvailable: hunter?.available, hunterTotal: hunter?.total, overBudgetUsers: overBudget.length },
+      metadata: {
+        alertsSent: out.alertsSent,
+        errors: out.errors,
+        hunterAvailable: hunter?.available,
+        hunterTotal: hunter?.total,
+        overBudgetUsers: overBudget.length,
+        stuckSending: out.stuckSending,
+        gmailFailureUsers: out.gmailFailureUsers,
+      },
     });
     await endAgentRun(ctx, out as unknown as Record<string, unknown>);
     return out;

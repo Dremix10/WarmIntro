@@ -482,6 +482,7 @@ export type Database = {
           iteration_count: number
           pre_edit_ai_body: string | null
           scheduled_send_at: string | null
+          send_started_at: string | null
           sent_at: string | null
           sent_message_id: string | null
           skip_reason: string | null
@@ -506,6 +507,7 @@ export type Database = {
           iteration_count?: number
           pre_edit_ai_body?: string | null
           scheduled_send_at?: string | null
+          send_started_at?: string | null
           sent_at?: string | null
           sent_message_id?: string | null
           skip_reason?: string | null
@@ -530,6 +532,7 @@ export type Database = {
           iteration_count?: number
           pre_edit_ai_body?: string | null
           scheduled_send_at?: string | null
+          send_started_at?: string | null
           sent_at?: string | null
           sent_message_id?: string | null
           skip_reason?: string | null

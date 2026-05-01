@@ -1,128 +1,81 @@
-// POST /api/drafts/send-all — sends every approved-not-sent draft for the
-// current user via Gmail. Returns per-draft success/failure so the UI can
-// surface partial outcomes.
+// POST /api/drafts/send-all — sends every approved-not-sent draft for
+// the current user via Gmail. Returns per-draft outcome so the UI can
+// surface partial results. Capped at 5 drafts per call so a long Gmail
+// run doesn't blow the 60s function limit. Hit the button again to
+// keep going.
 //
-// Capped at 5 drafts per call so a long Gmail run doesn't blow the 60s
-// function limit. Hit the button again to keep going.
+// Each draft routes through outreach.sendDraft so the CAS guard,
+// connection upsert, signal log, and error revert match the single-send
+// path exactly. Result type is extended with a "skipped" outcome for
+// drafts that were already in 'sending' state (planner racing the user).
 
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { getAdminClient } from "@/lib/supabase-admin";
-import { sendEmailAsUser, isGmailSendSuccess } from "@/services/gmail/send";
-import { logSignal } from "@/services/signals/log";
+import { sendDraft } from "@/services/outreach/sendDraft";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const BATCH_CAP = 5;
 
-interface BankerJoin { name: string; email: string | null; firm_id: string | null; firms: { name: string } | null }
-interface DraftRow { id: string; banker_id: string | null; subject: string | null; body: string; user_edited_body: string | null; critic_override: boolean; type: "cold" | "followup" | "reply" | "thank_you"; bankers: BankerJoin | null }
+interface PerDraftResult {
+  draftId: string;
+  banker: string;
+  outcome: "sent" | "skipped" | "failed";
+  error?: string;
+}
 
 export async function POST(request: Request) {
   const ctx = await getUser(request);
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const admin = getAdminClient();
+
+  // Quick gate: if Gmail isn't connected, fail fast before iterating.
+  // The helper enforces this per-draft too, but bailing here saves five
+  // round-trips on the most common misconfig.
   const { data: profile } = await admin
     .from("profiles")
     .select("gmail_email")
     .eq("id", ctx.user.id)
-    .single();
+    .maybeSingle();
   if (!profile?.gmail_email) {
     return NextResponse.json({ error: "Gmail not connected" }, { status: 400 });
   }
 
   const { data: drafts } = await admin
     .from("drafts")
-    .select("id, banker_id, subject, body, user_edited_body, type, critic_override, bankers(name, email, firm_id, firms(name))")
+    .select("id")
     .eq("user_id", ctx.user.id)
     .eq("status", "approved")
     .is("sent_at", null)
     .limit(BATCH_CAP);
 
-  const queue = (drafts ?? []) as unknown as DraftRow[];
-  const results: Array<{ draftId: string; banker: string; ok: boolean; error?: string }> = [];
+  const queue = drafts ?? [];
+  const results: PerDraftResult[] = [];
 
   for (const d of queue) {
-    const banker = d.bankers;
-    if (!banker?.email) {
-      results.push({ draftId: d.id, banker: banker?.name ?? "?", ok: false, error: "no_email" });
-      continue;
-    }
-    const sentRes = await sendEmailAsUser({
-      userId: ctx.user.id,
-      fromEmail: profile.gmail_email,
-      toEmail: banker.email,
-      subject: d.subject ?? "",
-      body: d.body,
-    });
-    if (!isGmailSendSuccess(sentRes)) {
-      const errReason = sentRes.error.reason;
-      const errBody = sentRes.error.body ?? sentRes.error.message ?? "";
-      results.push({ draftId: d.id, banker: banker.name, ok: false, error: `${errReason}: ${errBody.slice(0, 100)}` });
-      continue;
-    }
-    const sent = sentRes;
-
-    await admin
-      .from("drafts")
-      .update({
-        status: "sent",
-        sent_at: new Date().toISOString(),
-        sent_message_id: sent.sentMessageId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", d.id);
-
-    if (d.banker_id) {
-      // Upsert connection at "sent" stage
-      const { data: existing } = await admin
-        .from("connections")
-        .select("id")
-        .eq("user_id", ctx.user.id)
-        .eq("banker_id", d.banker_id)
-        .maybeSingle();
-      const now = new Date().toISOString();
-      if (existing) {
-        await admin.from("connections").update({ stage: "sent", last_send_message_id: sent.sentMessageId, thread_id: sent.gmailThreadId, silence_days: 0, needs_followup: false, updated_at: now }).eq("id", existing.id);
+    const r = await sendDraft({ userId: ctx.user.id, draftId: d.id, via: "send_all" });
+    if (r.ok) {
+      if (r.status === "sent") {
+        results.push({ draftId: d.id, banker: r.bankerName, outcome: "sent" });
       } else {
-        await admin.from("connections").insert({
-          user_id: ctx.user.id,
-          banker_id: d.banker_id,
-          alumni_id: d.banker_id,
-          alumni_name: banker.name,
-          alumni_role: "",
-          alumni_linkedin_url: "",
-          company_id: banker.firm_id ?? "",
-          company_name: banker.firms?.name ?? "",
-          stage: "sent",
-          last_send_message_id: sent.sentMessageId,
-          thread_id: sent.gmailThreadId,
-        });
+        // skipped_already_sending — count as skipped, not error.
+        results.push({ draftId: d.id, banker: r.bankerName, outcome: "skipped" });
       }
+    } else {
+      results.push({
+        draftId: d.id,
+        banker: "bankerName" in r ? r.bankerName : "?",
+        outcome: "failed",
+        error: r.error,
+      });
     }
-
-    await logSignal({
-      userId: ctx.user.id,
-      bankerId: d.banker_id ?? undefined,
-      draftId: d.id,
-      agent: "planner",
-      signalType: "draft_sent",
-      metadata: {
-        batch: true,
-        via: "send_all",
-        type: d.type,
-        userEdited: Boolean(d.user_edited_body),
-        criticOverride: Boolean(d.critic_override),
-        bodyLength: d.body.length,
-      },
-    });
-
-    results.push({ draftId: d.id, banker: banker.name, ok: true });
   }
 
-  const sent = results.filter((r) => r.ok).length;
-  const failed = results.filter((r) => !r.ok).length;
-  return NextResponse.json({ ok: true, sent, failed, results });
+  const sent = results.filter((r) => r.outcome === "sent").length;
+  const skipped = results.filter((r) => r.outcome === "skipped").length;
+  const failed = results.filter((r) => r.outcome === "failed").length;
+  return NextResponse.json({ ok: true, sent, skipped, failed, results });
 }
