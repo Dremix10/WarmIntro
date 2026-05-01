@@ -38,7 +38,7 @@ async function handleHoneypot(request: NextRequest) {
       event: "honeypot_hit",
       ip,
       user_agent: userAgent,
-      metadata: { headers: headerRecord } as never,
+      metadata: { headers: headerRecord },
     });
   } catch {
     // Silently swallow — logging failure should not reveal anything

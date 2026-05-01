@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { exchangeCodeForTokens, encryptToken } from "@/services/gmail/oauth";
 import { getAdminClient } from "@/lib/supabase-admin";
+import type { TablesInsert } from "@/lib/db-helpers";
 
 export const runtime = "nodejs";
 
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await admin.from("profiles").upsert(payload as never, { onConflict: "id" });
+  const { error } = await admin.from("profiles").upsert(payload as TablesInsert<"profiles">, { onConflict: "id" });
   if (error) {
     console.error("[gmail/callback] profile upsert failed", error);
     return NextResponse.redirect(new URL(`/setup?gmail_error=persist_failed`, request.url));

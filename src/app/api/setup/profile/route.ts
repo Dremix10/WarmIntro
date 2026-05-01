@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { getAdminClient } from "@/lib/supabase-admin";
+import type { TablesInsert } from "@/lib/db-helpers";
 
 interface SetupProfileRequest {
   targetFirms?: string[];
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
   if (body.storyOneLiner !== undefined) payload.story_one_liner = body.storyOneLiner;
   if (body.resumeText !== undefined) payload.resume_text = body.resumeText;
 
-  const { error } = await admin.from("profiles").upsert(payload as never, { onConflict: "id" });
+  const { error } = await admin.from("profiles").upsert(payload as TablesInsert<"profiles">, { onConflict: "id" });
 
   if (error) {
     console.error("[setup/profile] upsert failed", error);

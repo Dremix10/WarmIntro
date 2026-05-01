@@ -2,6 +2,7 @@
 // Runs Sunday 11 PM UTC via /api/cron/weekly-flywheel
 
 import { getAdminClient } from "@/lib/supabase-admin";
+import type { Json } from "@/lib/database.types";
 
 interface BucketStat {
   scoreBucket: "0-4" | "5-6" | "7-8" | "9-10";
@@ -117,7 +118,7 @@ export async function runWeeklyFlywheel(): Promise<FlywheelRunResult> {
       bankerResponseRate,
       openerConversion,
       groupActivityTier,
-    } as unknown as never,
+    } as unknown as Json,
     is_active: true,
   });
 
@@ -193,8 +194,8 @@ export async function runWeeklyFlywheel(): Promise<FlywheelRunResult> {
 
   await admin.from("critic_calibration").insert({
     version: nextCalibVersion,
-    bucket_stats: bucketStats as unknown as never,
-    axis_correlations: axisCorrelations as unknown as never,
+    bucket_stats: bucketStats as unknown as Json,
+    axis_correlations: axisCorrelations as unknown as Json,
     notes: `Auto-computed from ${outcomes.length} reviewed drafts, ${(signals ?? []).length} signals.`,
   });
 
@@ -215,7 +216,7 @@ export async function runWeeklyFlywheel(): Promise<FlywheelRunResult> {
   await admin.from("flywheel_releases").insert({
     week_of: weekStart.toISOString().slice(0, 10),
     headline,
-    changes: changes as unknown as never,
+    changes: changes as unknown as Json,
     scoring_weights_version: nextWeightVersion,
     critic_calibration_version: nextCalibVersion,
   });

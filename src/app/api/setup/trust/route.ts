@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import type { TrustLevel } from "@/shared/ib-types";
+import type { TablesInsert } from "@/lib/db-helpers";
 
 interface TrustSetupRequest {
   sendNewEmail?: TrustLevel;
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     updates.daily_batch_size = n;
   }
 
-  await ctx.supabase.from("trust_levels").upsert(updates as never, { onConflict: "user_id" });
+  await ctx.supabase.from("trust_levels").upsert(updates as TablesInsert<"trust_levels">, { onConflict: "user_id" });
   return NextResponse.json({ ok: true });
 }
 
