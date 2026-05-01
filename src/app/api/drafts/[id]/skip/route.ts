@@ -1,22 +1,50 @@
-// POST /api/drafts/[id]/skip — user skips this draft, no send.
-// Also deletes the corresponding Gmail draft (if any) to keep both
-// surfaces in sync.
+// POST /api/drafts/[id]/skip — user skips this draft.
+//
+// Body (all optional):
+//   reason: string       — what was wrong with the draft. Saved as
+//                          drafts.skip_reason and emitted as a signal so
+//                          we can mine skip patterns for prompt iteration.
+//   regenerate: boolean  — if true, after marking the old draft skipped,
+//                          immediately fire a fresh Correspondent + Critic
+//                          run for the same banker, threading the user's
+//                          reason in as cumulative critic feedback. The
+//                          response includes the new draft id.
+//
+// Also deletes the corresponding Gmail draft (if any) so both surfaces
+// stay in sync.
 
 import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { deleteGmailDraft } from "@/services/gmail/send";
+import { runCorrespondent } from "@/services/agents/correspondent";
+import { runCritic } from "@/services/agents/critic";
+import { logSignal } from "@/services/signals/log";
+import type { DraftType } from "@/shared/ib-types";
+
+export const runtime = "nodejs";
+
+interface SkipBody {
+  reason?: string;
+  regenerate?: boolean;
+}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await getUser(request);
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
+  const body = (await request.json().catch(() => ({}))) as SkipBody;
+  const reason = typeof body?.reason === "string" ? body.reason.trim().slice(0, 1000) : "";
+  const regenerate = body?.regenerate === true;
+
   const { data: draft } = await ctx.supabase
     .from("drafts")
-    .select("id, user_id, gmail_draft_id")
+    .select("id, user_id, banker_id, connection_id, type, gmail_draft_id")
     .eq("id", id)
     .single();
-  if (!draft || draft.user_id !== ctx.user.id) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!draft || draft.user_id !== ctx.user.id) {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
 
   if (draft.gmail_draft_id) {
     try {
@@ -28,7 +56,84 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   await ctx.supabase
     .from("drafts")
-    .update({ status: "skipped", gmail_draft_id: null, updated_at: new Date().toISOString() })
+    .update({
+      status: "skipped",
+      gmail_draft_id: null,
+      skip_reason: reason || null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id);
-  return NextResponse.json({ ok: true });
+
+  await logSignal({
+    userId: ctx.user.id,
+    agent: "planner",
+    signalType: "draft_skipped",
+    metadata: { draft_id: id, banker_id: draft.banker_id, reason: reason || null, regenerated: regenerate },
+  });
+
+  if (!regenerate) {
+    return NextResponse.json({ ok: true });
+  }
+
+  if (!draft.banker_id) {
+    // Defensive: shouldn't happen — skip routes only fire on real drafts
+    // tied to a banker — but the generated types allow null so guard it.
+    return NextResponse.json({ ok: true, regenerated: false, reason: "no_banker" });
+  }
+
+  // Regenerate path: pull every prior Critic verdict on the skipped draft
+  // and append the user's reason as one more verdict, then re-run the
+  // Correspondent → Critic loop once. The unique-active-draft index is
+  // satisfied because the old row is now `skipped`.
+  const { data: priorReviews } = await ctx.supabase
+    .from("critic_reviews")
+    .select("feedback, created_at")
+    .eq("draft_id", id)
+    .order("created_at", { ascending: true });
+
+  const priorFeedback = (priorReviews ?? [])
+    .map((r) => (typeof r.feedback === "string" ? r.feedback : ""))
+    .filter(Boolean);
+
+  const revisionFeedbackHistory = reason
+    ? [...priorFeedback, `USER SKIPPED THIS DRAFT. Treat their reason as the highest-priority verdict, more important than any prior Critic feedback: ${reason}`]
+    : priorFeedback;
+
+  try {
+    const fresh = await runCorrespondent({
+      userId: ctx.user.id,
+      type: draft.type as DraftType,
+      bankerId: draft.banker_id,
+      connectionId: draft.connection_id ?? undefined,
+      revisionFeedbackHistory: revisionFeedbackHistory.length > 0 ? revisionFeedbackHistory : undefined,
+      iteration: 0,
+    });
+
+    if (!fresh.draftId) {
+      // Researcher had nothing fresh to anchor on, or the model returned
+      // unusable output. Surface the failure so the UI doesn't hang.
+      return NextResponse.json({
+        ok: true,
+        regenerated: false,
+        reason: fresh.rejectedForNoAnchor ? "no_anchor" : "regenerate_failed",
+      });
+    }
+
+    const review = await runCritic({ draftId: fresh.draftId });
+
+    return NextResponse.json({
+      ok: true,
+      regenerated: true,
+      newDraftId: fresh.draftId,
+      criticVerdict: review.verdict,
+      criticScore: review.overallScore ?? null,
+    });
+  } catch (err) {
+    return NextResponse.json({
+      ok: true,
+      regenerated: false,
+      reason: "regenerate_error",
+      error: String(err).slice(0, 300),
+    });
+  }
 }

@@ -484,6 +484,7 @@ export type Database = {
           scheduled_send_at: string | null
           sent_at: string | null
           sent_message_id: string | null
+          skip_reason: string | null
           status: string
           subject: string | null
           type: string
@@ -507,6 +508,7 @@ export type Database = {
           scheduled_send_at?: string | null
           sent_at?: string | null
           sent_message_id?: string | null
+          skip_reason?: string | null
           status?: string
           subject?: string | null
           type: string
@@ -530,6 +532,7 @@ export type Database = {
           scheduled_send_at?: string | null
           sent_at?: string | null
           sent_message_id?: string | null
+          skip_reason?: string | null
           status?: string
           subject?: string | null
           type?: string

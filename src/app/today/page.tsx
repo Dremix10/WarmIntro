@@ -127,6 +127,8 @@ export default function TodayPage() {
   const [error, setError] = useState<string | null>(null);
   const [sentToast, setSentToast] = useState<{ banker: string; firm: string | null } | null>(null);
   const [actionToasts, setActionToasts] = useState<ActionToast[]>([]);
+  const [skipModalDraftId, setSkipModalDraftId] = useState<string | null>(null);
+  const [skipBusy, setSkipBusy] = useState<"idle" | "skipping" | "regenerating">("idle");
 
   function pushActionToast(message: string) {
     const id = Date.now() + Math.random();
@@ -260,6 +262,29 @@ export default function TodayPage() {
   /** Caller-driven reload — used when the caller wants to animate first */
   async function reload() {
     await load({ silent: true });
+  }
+
+  async function confirmSkip(draftId: string, reason: string, regenerate: boolean) {
+    setSkipBusy(regenerate ? "regenerating" : "skipping");
+    try {
+      const result = await act(
+        draftId,
+        "skip",
+        { reason: reason || undefined, regenerate },
+        { deferReload: true }
+      );
+      if (regenerate) {
+        // The backend just minted a fresh draft. Force a non-silent reload
+        // so the new card surfaces and the user gets visual feedback.
+        await load();
+      } else if (!result.ok) {
+        // Skip-only failures already trigger a revert toast inside act();
+        // nothing else to do here.
+      }
+    } finally {
+      setSkipModalDraftId(null);
+      setSkipBusy("idle");
+    }
   }
 
   async function updateTrust(field: keyof TrustState, value: string | boolean | number): Promise<void> {
@@ -419,6 +444,7 @@ export default function TodayPage() {
                 onAction={act}
                 onReload={reload}
                 onSent={onSent}
+                onSkipRequest={(id) => setSkipModalDraftId(id)}
                 trustLevel={data.trust?.send_new_email ?? "C"}
                 needsGmail={data.needsGmail ?? false}
               />
@@ -527,6 +553,75 @@ export default function TodayPage() {
           ))}
         </div>
       )}
+
+      {skipModalDraftId && (
+        <SkipReasonModal
+          busy={skipBusy}
+          onCancel={() => skipBusy === "idle" && setSkipModalDraftId(null)}
+          onConfirm={(reason, regenerate) => confirmSkip(skipModalDraftId, reason, regenerate)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SkipReasonModal({
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  busy: "idle" | "skipping" | "regenerating";
+  onCancel: () => void;
+  onConfirm: (reason: string, regenerate: boolean) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const disabled = busy !== "idle";
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#14182A]/40 px-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-md rounded-2xl bg-white border border-[#D9CFB5] shadow-xl p-6">
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#C86B4F] font-semibold mb-1">Skip draft</p>
+        <h3 className="font-[family-name:var(--font-fraunces)] text-2xl text-[#14182A] mb-2">
+          What was wrong with it?
+        </h3>
+        <p className="text-sm text-[#14182A]/65 mb-4 leading-relaxed">
+          Optional, but the more specific you are the better the next draft will be. Try-again sends the reason to the Correspondent as feedback and writes a fresh draft for the same banker.
+        </p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder='e.g. "the opener is too generic — feels like blast outreach"'
+          rows={3}
+          maxLength={1000}
+          disabled={disabled}
+          className="w-full rounded-lg border border-[#D9CFB5] bg-white px-3 py-2 text-sm placeholder:text-[#14182A]/35 focus:outline-none focus:border-[#2E5A88] disabled:opacity-50 mb-4"
+        />
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={disabled}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-[#14182A]/55 hover:text-[#14182A] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(reason.trim(), false)}
+            disabled={disabled}
+            className="rounded-lg border border-[#D9CFB5] px-3 py-1.5 text-xs font-medium text-[#14182A] hover:bg-[#EAE3D2] disabled:opacity-50"
+          >
+            {busy === "skipping" ? "Skipping…" : "Just skip"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(reason.trim(), true)}
+            disabled={disabled}
+            className="rounded-lg bg-[#1B3B5F] text-white px-4 py-1.5 text-xs font-medium hover:bg-[#2E5A88] transition-colors disabled:opacity-50"
+          >
+            {busy === "regenerating" ? "Writing a new one…" : "Skip and try again →"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -536,6 +631,7 @@ function DraftCard({
   onAction,
   onReload,
   onSent,
+  onSkipRequest,
   trustLevel,
   needsGmail,
 }: {
@@ -543,6 +639,7 @@ function DraftCard({
   onAction: (id: string, action: "approve" | "skip" | "send" | "stop" | "mark_sent", payload?: Record<string, unknown>, opts?: { deferReload?: boolean }) => Promise<{ ok: boolean; error?: string }>;
   onReload: () => Promise<void>;
   onSent?: (banker: string, firm: string | null) => void;
+  onSkipRequest: (id: string) => void;
   trustLevel: "C" | "B" | "A";
   needsGmail: boolean;
 }) {
@@ -896,7 +993,7 @@ function DraftCard({
                 )}
                 <button
                   type="button"
-                  onClick={() => onAction(draft.id, "skip")}
+                  onClick={() => onSkipRequest(draft.id)}
                   className="rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium hover:bg-[#EAE3D2] transition-colors"
                 >
                   Skip
@@ -918,7 +1015,7 @@ function DraftCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onAction(draft.id, "skip")}
+                  onClick={() => onSkipRequest(draft.id)}
                   className="rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium hover:bg-[#EAE3D2] transition-colors"
                 >
                   Skip
@@ -935,7 +1032,7 @@ function DraftCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onAction(draft.id, "skip")}
+                  onClick={() => onSkipRequest(draft.id)}
                   className="rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium hover:bg-[#EAE3D2] transition-colors"
                 >
                   Skip
