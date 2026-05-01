@@ -248,21 +248,25 @@ export default function AdminPage() {
             <div className="flex items-baseline justify-between mb-3">
               <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Waitlist</h2>
               <div className="flex items-center gap-3">
-                {requests.some((r) => isSyntheticEmail(r.email)) && (
-                  <button
-                    type="button"
-                    onClick={cleanupE2eRequests}
-                    disabled={cleanupState.busy}
-                    className="text-[10px] text-[#C86B4F] hover:underline disabled:opacity-50"
-                    title="Bulk-delete all CI smoke-test signups (e2e-*, smoke-*, *@example.com)"
-                  >
-                    {cleanupState.busy
-                      ? "Cleaning…"
-                      : cleanupState.deleted !== undefined
-                        ? `Cleaned ${cleanupState.deleted} ✓`
-                        : "Clean e2e signups ↗"}
-                  </button>
-                )}
+                {(() => {
+                  const syntheticCount = requests.filter((r) => !r.approved && isSyntheticEmail(r.email)).length;
+                  if (syntheticCount === 0) return null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={cleanupE2eRequests}
+                      disabled={cleanupState.busy}
+                      className="rounded-lg bg-[#C86B4F]/10 text-[#C86B4F] border border-[#C86B4F]/30 px-3 py-1.5 text-xs font-medium hover:bg-[#C86B4F] hover:text-white transition-colors disabled:opacity-50"
+                      title="Bulk-delete CI test signups (e2e-*, smoke-*, *@example.com). Real waitlist entries are unaffected."
+                    >
+                      {cleanupState.busy
+                        ? "Cleaning…"
+                        : cleanupState.deleted !== undefined
+                          ? `Cleaned ${cleanupState.deleted} ✓`
+                          : `Clean ${syntheticCount} test signup${syntheticCount === 1 ? "" : "s"}`}
+                    </button>
+                  );
+                })()}
                 <p className="text-xs text-[#14182A]/55">{requests.filter((r) => !r.approved).length} pending</p>
               </div>
             </div>
@@ -458,46 +462,55 @@ function UserRow({ user, resetState, welcomeState, onReset, onSendWelcome }: {
         </div>
       </button>
 
-      {expanded && user.profile && (
+      {expanded && (
         <div className="border-t border-[#D9CFB5] p-4 text-xs space-y-2">
-          <p><span className="text-[#14182A]/50">Major / grad:</span> {user.profile.major} · &lsquo;{String(user.profile.graduationYear).slice(2)}</p>
-          <p><span className="text-[#14182A]/50">Target firms:</span> {user.profile.targetFirmCount} picked</p>
-          <p><span className="text-[#14182A]/50">Target groups:</span> {user.profile.targetGroups.join(", ") || "none"}</p>
-          {user.profile.storyOneLiner && (
-            <p><span className="text-[#14182A]/50">Why IB:</span> {user.profile.storyOneLiner}</p>
-          )}
-          {user.profile.hasResume && (
-            <p>
-              <span className="text-[#14182A]/50">Resume:</span>{" "}
-              <button
-                type="button"
-                onClick={async () => {
-                  const { data: { session: s } } = await supabase.auth.getSession();
-                  const res = await fetch(`/api/admin/users/${user.id}/resume`, {
-                    headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-                  });
-                  if (!res.ok) {
-                    const json = await res.json().catch(() => ({}));
-                    alert(`Couldn't fetch resume: ${(json as { error?: string }).error ?? res.statusText}`);
-                    return;
-                  }
-                  // Trigger download via blob URL — the route already sets
-                  // Content-Disposition so the filename is clean.
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  // Don't override the server-supplied filename.
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
-                }}
-                className="text-[#2E5A88] hover:underline"
-              >
-                Download .txt ({user.profile.resumeChars.toLocaleString()} chars)
-              </button>
-            </p>
+          {user.profile ? (
+            <>
+              <p><span className="text-[#14182A]/50">Major / grad:</span> {user.profile.major} · &lsquo;{String(user.profile.graduationYear).slice(2)}</p>
+              <p><span className="text-[#14182A]/50">Target firms:</span> {user.profile.targetFirmCount} picked</p>
+              <p><span className="text-[#14182A]/50">Target groups:</span> {user.profile.targetGroups.join(", ") || "none"}</p>
+              {user.profile.storyOneLiner && (
+                <p><span className="text-[#14182A]/50">Why IB:</span> {user.profile.storyOneLiner}</p>
+              )}
+              {user.profile.hasResume && (
+                <p>
+                  <span className="text-[#14182A]/50">Resume:</span>{" "}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { data: { session: s } } = await supabase.auth.getSession();
+                      const res = await fetch(`/api/admin/users/${user.id}/resume`, {
+                        headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+                      });
+                      if (!res.ok) {
+                        const json = await res.json().catch(() => ({}));
+                        alert(`Couldn't fetch resume: ${(json as { error?: string }).error ?? res.statusText}`);
+                        return;
+                      }
+                      // Trigger download via blob URL — the route already sets
+                      // Content-Disposition so the filename is clean.
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      // Don't override the server-supplied filename.
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="text-[#2E5A88] hover:underline"
+                  >
+                    Download .txt ({user.profile.resumeChars.toLocaleString()} chars)
+                  </button>
+                </p>
+              )}
+            </>
+          ) : (
+            // No profiles row yet — typical for users we just approved who
+            // haven't clicked through the welcome link. Action buttons below
+            // still need to render so the admin can re-issue the welcome.
+            <p className="text-[#14182A]/55">User hasn&rsquo;t finished onboarding yet — no profile row. Use the buttons below to (re)issue a setup link.</p>
           )}
 
           <div className="pt-3 border-t border-[#EAE3D2] flex flex-wrap items-center gap-2">
