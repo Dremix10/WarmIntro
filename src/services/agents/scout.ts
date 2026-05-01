@@ -17,7 +17,15 @@ export interface ScoutedFinding {
   url: string;
   title: string;
   snippet: string | null;
-  sourceType: "linkedin_post" | "article" | "press_mention" | "podcast" | "deal_announcement" | "other";
+  sourceType:
+    | "linkedin_post"
+    | "linkedin_profile"
+    | "article"
+    | "press_mention"
+    | "podcast"
+    | "deal_announcement"
+    | "alumni_mention"
+    | "other";
   publishedHint: string | null;
   scoutedAt: string;
 }
@@ -60,8 +68,13 @@ async function serperSearch(query: string, opts: { num?: number; recentOnly?: bo
 function classifySource(url: string): ScoutedFinding["sourceType"] {
   const u = url.toLowerCase();
   if (u.includes("linkedin.com/posts/") || u.includes("linkedin.com/feed/update")) return "linkedin_post";
+  // Plain LinkedIn /in/ profile pages — Serper's snippet for these usually
+  // includes the banker's headline + about excerpt, which is real anchor
+  // material the Correspondent can use without fabricating.
+  if (u.includes("linkedin.com/in/")) return "linkedin_profile";
   if (u.includes("podcast") || u.includes("spotify.com/episode") || u.includes("apple.com/podcast")) return "podcast";
   if (u.includes("/press") || u.includes("/news") || /announce|acquir|merger|raise/.test(u)) return "deal_announcement";
+  if (u.endsWith(".edu") || /\.edu\//.test(u)) return "alumni_mention";
   if (u.includes("bloomberg") || u.includes("wsj.com") || u.includes("reuters") || u.includes("ft.com") || u.includes("axios.com") || u.includes("forbes")) return "press_mention";
   if (u.includes("article") || u.includes("/blog/")) return "article";
   return "other";
@@ -95,6 +108,14 @@ const AUTHORITATIVE_DOMAINS = [
   "nytimes.com",
   "barrons.com",
   "marketwatch.com",
+  // IB / deal trade press — these surface specific deals that mainstream
+  // outlets miss; high signal-to-noise for our use case.
+  "mergermarket.com",
+  "pitchbook.com",
+  "reorg.com",
+  "alphasense.com",
+  "dealstreetasia.com",
+  "thedeal.com",
   // Firm-tier domains worth pulling in directly.
   "goldmansachs.com",
   "morganstanley.com",
@@ -114,9 +135,16 @@ const AUTHORITATIVE_DOMAINS = [
   "jefferies.com",
 ];
 
+// .edu domains pass auth check too — alumni newsletters / school newsrooms
+// often spotlight alumni in IB roles, useful as anchor material.
+function isEduDomain(host: string): boolean {
+  return host === "edu" || host.endsWith(".edu");
+}
+
 function isAuthoritativeUrl(url: string): boolean {
   try {
     const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    if (isEduDomain(host)) return true;
     return AUTHORITATIVE_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`));
   } catch {
     return false;
@@ -146,19 +174,28 @@ function mentionsBanker(banker: ScoutInput, organic: SerperOrganic): boolean {
     return organic.link.toLowerCase().includes(slug);
   }
 
-  // Non-LinkedIn authoritative source: require firm name in snippet.
-  return banker.firmName ? haystack.includes(banker.firmName.toLowerCase()) : false;
+  // Non-LinkedIn authoritative source: firm name OR a firm-token must
+  // appear somewhere in title/snippet/URL. The url-path check catches
+  // firm bio pages like "evercore.com/people/joe-smith" where the firm
+  // name might not appear verbatim in the snippet.
+  if (!banker.firmName) return true; // accept .edu and pure press hits when we have no firm to filter on
+  const firm = banker.firmName.toLowerCase();
+  // First firm-token (e.g. "Goldman" from "Goldman Sachs") catches more
+  // matches without losing precision since we already locked in name + auth domain.
+  const firmToken = firm.split(/\s+/)[0];
+  return haystack.includes(firm) || (firmToken.length >= 4 && haystack.includes(firmToken));
 }
 
 // Drop the generic LinkedIn directory pages — they aren't findings.
 function isUsefulUrl(url: string): boolean {
   if (!url) return false;
   if (url.includes("/pub/dir/")) return false;
-  if (url.includes("/in/") && !url.includes("/posts/") && !url.includes("/recent-activity/")) {
-    // Plain /in/ profile page. It's the banker's own profile, not a
-    // specific finding — Correspondent already has the linkedin_url.
-    return false;
-  }
+  // Plain /in/ profile pages used to be rejected as "not a specific
+  // finding," but Serper's snippet for these usually has the banker's
+  // headline + about excerpt — real anchor material the Correspondent
+  // can use without fabricating. Empirically: 12 of 14 bankers drafted
+  // in last 36h had ZERO findings, dropping all profile-page hits was
+  // the biggest contributor.
   return true;
 }
 
