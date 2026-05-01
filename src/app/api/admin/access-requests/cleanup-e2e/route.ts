@@ -1,5 +1,5 @@
 // POST /api/admin/access-requests/cleanup-e2e — bulk-deletes pilot_signups
-// rows whose email matches the e2e test pattern (e2e-<digits>-<digits>@<...>).
+// rows whose email matches any synthetic-email pattern (e2e-/smoke-/@example.com).
 // One click clears the backlog of CI smoke-test signups instead of clicking
 // reject on each row.
 
@@ -31,11 +31,14 @@ export async function POST(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Postgres ILIKE pattern — case-insensitive, anchored to start.
+  // Postgres ILIKE on three synthetic patterns — must match the regex in
+  // src/lib/synthetic-email.ts. Kept as ILIKE here because Supabase doesn't
+  // do regex filtering in PostgREST and pulling the full table to filter
+  // in JS would race with concurrent inserts.
   const { data: rows, error: selErr } = await admin
     .from("pilot_signups")
     .select("id, email")
-    .ilike("email", "e2e-%@%");
+    .or("email.ilike.e2e-%@%,email.ilike.smoke-%@%,email.ilike.%@example.com");
   if (selErr) return NextResponse.json({ error: selErr.message }, { status: 500 });
 
   if (!rows || rows.length === 0) {

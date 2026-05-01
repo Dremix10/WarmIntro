@@ -7,6 +7,7 @@ import { getUser } from "@/lib/auth";
 import { runPlanner } from "@/services/agents/planner";
 import { sendTelegram } from "@/lib/telegram";
 import { logSignal } from "@/services/signals/log";
+import { isSyntheticEmail } from "@/lib/synthetic-email";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -14,13 +15,6 @@ export const maxDuration = 60;
 // If a run takes longer than this, we log + alert even on success — slow
 // runs are a UX bomb (user sees a spinner for 50+ seconds and abandons).
 const SLOW_THRESHOLD_MS = 45_000;
-
-// E2E synthetic-user pattern. CI's e2e-user-journey.sh signs up
-// e2e-<timestamp>-<rand>@brown.edu and triggers a real run. The run is
-// legitimately slow (~50s) because the agent pipeline isn't mocked, but
-// these aren't real users — they don't see a spinner, they're a script.
-// Same skip pattern as /api/auth/reset-password.
-const E2E_USER_PATTERN = /^e2e-\d+(?:-\d+)?@/i;
 
 export async function POST(request: Request) {
   const ctx = await getUser(request);
@@ -48,7 +42,7 @@ export async function POST(request: Request) {
     // the signal — fire-and-forget swallowed the only signal we'd have that
     // the alert never reached us. Latency cost is ~200-500ms, fine.
     if (durationMs > SLOW_THRESHOLD_MS) {
-      const isE2E = E2E_USER_PATTERN.test(userEmail);
+      const isE2E = isSyntheticEmail(userEmail);
       // Always log the signal — even synthetic e2e runs are useful data
       // for slow-run trends — but suppress the Telegram for synthetic
       // users so the channel stays signal-only.

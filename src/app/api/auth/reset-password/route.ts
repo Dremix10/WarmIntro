@@ -16,6 +16,7 @@ import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 import { logSignal } from "@/services/signals/log";
 import { getFromAddress } from "@/lib/email-from";
+import { isSyntheticEmail } from "@/lib/synthetic-email";
 
 export const runtime = "nodejs";
 
@@ -110,13 +111,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // Skip Resend for synthetic E2E test addresses. The e2e-user-journey
-  // script signs up `e2e-<timestamp>-<rand>@brown.edu` and runs the reset
-  // flow — those addresses don't exist on Brown's mail server, so each
-  // run was generating a permanent bounce in Resend (every push). The
-  // test only asserts the endpoint returns 200, so logging + skipping
-  // the actual send keeps coverage and stops the bounces.
-  if (/^e2e-\d+(?:-\d+)?@/.test(normalized)) {
+  // Skip Resend for synthetic CI addresses. e2e-user-journey signs up
+  // `e2e-<ts>-<rand>@brown.edu`; smoke.sh signs up `smoke-<ts>-<rand>@example.com`.
+  // Those addresses don't accept mail, so each run permanently bounced in
+  // Resend. Tests only assert the endpoint returns 200, so logging +
+  // skipping the actual send keeps coverage and stops the bounces.
+  if (isSyntheticEmail(normalized)) {
     await logSignal({
       userId: user.id,
       agent: "planner",

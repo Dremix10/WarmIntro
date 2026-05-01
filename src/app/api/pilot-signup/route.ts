@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { sendTelegram } from "@/lib/telegram";
+import { isSyntheticEmail } from "@/lib/synthetic-email";
 
 export async function POST(request: Request) {
   try {
@@ -48,7 +49,9 @@ export async function POST(request: Request) {
 
     // Real-time admin ping. Fire-and-forget — don't add latency to the
     // user's response, and don't fail the signup if Telegram is down.
-    if (isNew) {
+    // Skip synthetic CI emails (smoke-/e2e-/@example.com) so the channel
+    // stays signal-only and real signups don't get drowned by test runs.
+    if (isNew && !isSyntheticEmail(email)) {
       void sendTelegram(
         `📥 New Alma access request\n\n` +
           `Email: ${email}\n` +

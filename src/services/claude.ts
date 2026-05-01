@@ -1,7 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getAdminClient } from "@/lib/supabase-admin";
 
-const client = new Anthropic();
+// Lazy + explicit-apiKey construction. Eager `new Anthropic()` at module
+// load occasionally fired "Could not resolve authentication method" on
+// Vercel cron paths — likely a serverless instance starting before env
+// propagation completes. Reading process.env.ANTHROPIC_API_KEY at first-
+// use sidesteps the race and gives a clearer error if the var is missing.
+let _client: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (_client) return _client;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY missing — set it in Vercel project env (or .env.local locally)");
+  }
+  _client = new Anthropic({ apiKey });
+  return _client;
+}
 // Default model for cheap/parallel work (Researcher Serper synthesis,
 // fact-check extract, Scout classification). Correspondent + Critic
 // override to Opus because Sonnet ignored both system-prompt HARD BANS
@@ -71,7 +85,7 @@ export async function askClaude(
   const maxTokens = options?.maxTokens ?? 1024;
   const model = options?.model ?? MODEL;
 
-  const response = await client.messages.create({
+  const response = await getClient().messages.create({
     model,
     max_tokens: maxTokens,
     ...(options?.systemPrompt ? { system: options.systemPrompt } : {}),

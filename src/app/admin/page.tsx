@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
 import { SkeletonPage } from "@/components/Skeleton";
+import { isSyntheticEmail } from "@/lib/synthetic-email";
 
 interface AdminUser {
   id: string;
@@ -125,7 +126,7 @@ export default function AdminPage() {
   }
 
   async function cleanupE2eRequests() {
-    if (!window.confirm("Delete all e2e-* test signups? This is irreversible.")) return;
+    if (!window.confirm("Delete all synthetic test signups (e2e-*, smoke-*, *@example.com)? This is irreversible.")) return;
     setCleanupState({ busy: true });
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch("/api/admin/access-requests/cleanup-e2e", {
@@ -139,7 +140,7 @@ export default function AdminPage() {
     }
     setCleanupState({ deleted: json.deleted ?? 0 });
     // Drop the matching rows locally so the count updates without a reload.
-    setRequests((rs) => rs.filter((r) => !/^e2e-\d+(?:-\d+)?@/i.test(r.email)));
+    setRequests((rs) => rs.filter((r) => !isSyntheticEmail(r.email)));
   }
 
   async function sendWelcome(userId: string) {
@@ -247,13 +248,13 @@ export default function AdminPage() {
             <div className="flex items-baseline justify-between mb-3">
               <h2 className="font-[family-name:var(--font-fraunces)] text-2xl">Waitlist</h2>
               <div className="flex items-center gap-3">
-                {requests.some((r) => /^e2e-\d+(?:-\d+)?@/i.test(r.email)) && (
+                {requests.some((r) => isSyntheticEmail(r.email)) && (
                   <button
                     type="button"
                     onClick={cleanupE2eRequests}
                     disabled={cleanupState.busy}
                     className="text-[10px] text-[#C86B4F] hover:underline disabled:opacity-50"
-                    title="Bulk-delete all e2e-* CI smoke-test signups"
+                    title="Bulk-delete all CI smoke-test signups (e2e-*, smoke-*, *@example.com)"
                   >
                     {cleanupState.busy
                       ? "Cleaning…"
