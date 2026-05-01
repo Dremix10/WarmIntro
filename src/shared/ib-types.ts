@@ -34,6 +34,9 @@ export interface Banker {
   linkedinUrl?: string;
   email?: string;
   emailVerified: boolean;
+  /** ISO timestamp of when the row was last updated. Used to detect stale
+   *  summer-analyst rows whose email may have been deactivated. */
+  updatedAt?: string;
   source: "hunter" | "serper" | "rice_directory" | "brown_directory" | "user_added" | "manual_seed" | "curator";
 }
 

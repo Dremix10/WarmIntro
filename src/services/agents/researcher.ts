@@ -4,7 +4,8 @@
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { findRealAlumni } from "@/services/linkedin-search";
-import { enrichEmailBatch } from "@/services/hunter/enrich";
+import { enrichEmailBatch, verifyEmailViaHunter } from "@/services/hunter/enrich";
+import { getAdminClient } from "@/lib/supabase-admin";
 import { getActiveScoringWeights } from "@/services/signals/aggregate";
 import { restSelect, restSelectOne, restUpdate, eq, isNull } from "@/lib/supabase-rest";
 import type { Banker } from "@/shared/ib-types";
@@ -50,6 +51,19 @@ const WARMTH_CLOSE_GRAD = 10;
 const WARMTH_MID_GRAD = 5;
 const WARMTH_SENIOR_ROLE = 5;
 const WARMTH_HIGH_RESPONSE_RATE = 10;
+// Penalty for summer-analyst / intern titles. Their work email is usually
+// deactivated 6-12 months after the program ends (PJT auto-replies with
+// "no longer an active address"), so even a same-school SA from last
+// summer is a worse contact than a current full-time analyst.
+const WARMTH_SUMMER_INTERN_PENALTY = 25;
+// If a banker's row is stale by more than this and their title looks
+// summer/intern-y, re-verify the email via Hunter before surfacing.
+const STALE_SUMMER_THRESHOLD_DAYS = 270; // ~9 months
+
+function isSummerOrInternTitle(title: string): boolean {
+  const t = title.toLowerCase();
+  return /summer\s+analyst|summer\s+intern|\bintern\b/.test(t);
+}
 
 function seniorityScore(title: string): number {
   const t = title.toLowerCase();
@@ -78,7 +92,10 @@ function computeWarmth(
   if (snr >= 2) score += WARMTH_SENIOR_ROLE;
   // Response rate boost (per-banker from flywheel)
   if (responseRateBoost > 0.3) score += WARMTH_HIGH_RESPONSE_RATE;
-  return Math.min(100, Math.round(score));
+  // Stale-email risk: SA / intern emails get deactivated. Always penalize so
+  // a current full-time analyst beats a year-old SA from the same school.
+  if (isSummerOrInternTitle(banker.title)) score -= WARMTH_SUMMER_INTERN_PENALTY;
+  return Math.min(100, Math.max(0, Math.round(score)));
 }
 
 async function loadUserProfile(userId: string): Promise<UserProfileRow | null> {
@@ -124,7 +141,7 @@ async function queryBankerDB(
   // accepts firm IDs without quotes for slug-shaped values (no commas, no
   // spaces) so we drop them.
   const params = new URLSearchParams({
-    select: "*",
+    select: "id,firm_id,group_id,name,title,seniority,grad_year,university,linkedin_url,email,email_verified,source,updated_at",
     email: "not.is.null",
     limit: String(rowLimit),
   });
@@ -153,6 +170,7 @@ async function queryBankerDB(
     email: string | null;
     email_verified: boolean;
     source: string | null;
+    updated_at: string | null;
   }>;
 
   return rows
@@ -175,6 +193,7 @@ async function queryBankerDB(
         linkedinUrl: b.linkedin_url ?? undefined,
         email: b.email ?? undefined,
         emailVerified: Boolean(b.email_verified),
+        updatedAt: b.updated_at ?? undefined,
         source: (b.source as Banker["source"]) ?? "manual_seed",
       })
     );
@@ -261,6 +280,71 @@ export async function runResearcher(input: ResearcherInput): Promise<ResearcherO
       if (!a.sameSchool && b.sameSchool) return 1;
       return b.warmth - a.warmth;
     });
+
+    // Re-verify stale summer-analyst rows before surfacing. These bankers
+    // had emails that worked at some point, but PJT (and most BB / EB
+    // firms) deactivate intern addresses 6-12 months after the program
+    // ends. Hunter's email-verifier is the cheapest oracle for "is this
+    // address still alive." If it says undeliverable, null out the email
+    // so future Researcher runs skip the row at the email IS NOT NULL
+    // gate, and skip them right now too.
+    const cutoffMs = Date.now() - STALE_SUMMER_THRESHOLD_DAYS * 24 * 60 * 60 * 1000;
+    const staleSummers = scored.filter(
+      (s) =>
+        isSummerOrInternTitle(s.banker.title) &&
+        s.banker.email &&
+        s.banker.updatedAt &&
+        new Date(s.banker.updatedAt).getTime() < cutoffMs
+    );
+    if (staleSummers.length > 0) {
+      const verifications = await Promise.all(
+        staleSummers.map(async (s) => ({
+          banker: s.banker,
+          result: await verifyEmailViaHunter(s.banker.email!),
+        }))
+      );
+      const undeliverable = verifications.filter((v) => v.result && !v.result.deliverable);
+      if (undeliverable.length > 0) {
+        // Null out the dead emails so the bankers don't keep recycling
+        // through. Cache result in updated_at = now so we don't re-verify
+        // them again next run.
+        try {
+          const admin = getAdminClient();
+          await Promise.all(
+            undeliverable.map((u) =>
+              admin
+                .from("bankers")
+                .update({
+                  email: null,
+                  email_verified: false,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", u.banker.id)
+            )
+          );
+        } catch (err) {
+          console.warn("[researcher] stale-summer email nullify failed", err);
+        }
+        await Promise.all(
+          undeliverable.map((u) =>
+            logSignal({
+              userId: input.userId,
+              bankerId: u.banker.id,
+              agent: "researcher",
+              signalType: "stale_summer_email_dropped",
+              metadata: { title: u.banker.title, status: u.result?.status, score: u.result?.score },
+            })
+          )
+        );
+      }
+      // Drop the dead-email candidates from the scored list before slicing top.
+      const deadIds = new Set(undeliverable.map((u) => u.banker.id));
+      if (deadIds.size > 0) {
+        for (let i = scored.length - 1; i >= 0; i--) {
+          if (deadIds.has(scored[i].banker.id)) scored.splice(i, 1);
+        }
+      }
+    }
 
     const top = scored.slice(0, input.needed);
 

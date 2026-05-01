@@ -88,6 +88,62 @@ export async function enrichEmailViaHunter(
   }
 }
 
+interface HunterVerifierResponse {
+  data?: {
+    status?: "valid" | "invalid" | "accept_all" | "webmail" | "disposable" | "unknown";
+    result?: "deliverable" | "undeliverable" | "risky" | "unknown";
+    score?: number;
+  };
+}
+
+export interface VerifyResult {
+  deliverable: boolean;
+  status: string; // hunter's raw status
+  score: number; // 0..100
+}
+
+/**
+ * Verify an existing email address via Hunter's /email-verifier endpoint.
+ * Returns null when Hunter is not configured or the request fails — caller
+ * should treat null as "couldn't determine, leave the banker alone."
+ *
+ * Costs one verification credit per call. Use sparingly — only for stale
+ * banker rows we suspect have moved on (e.g. expired summer-analyst
+ * addresses), not for every Researcher run.
+ */
+export async function verifyEmailViaHunter(email: string): Promise<VerifyResult | null> {
+  const apiKey = process.env.HUNTER_API_KEY;
+  if (!apiKey) {
+    warnMissingKey();
+    return null;
+  }
+  try {
+    const url = new URL("https://api.hunter.io/v2/email-verifier");
+    url.searchParams.set("email", email);
+    url.searchParams.set("api_key", apiKey);
+    const res = await fetch(url.toString(), { method: "GET" });
+    if (!res.ok) {
+      console.warn(`[hunter] verify failed ${res.status} for ${email}`);
+      return null;
+    }
+    const json = (await res.json()) as HunterVerifierResponse;
+    const status = json.data?.status ?? "unknown";
+    const result = json.data?.result ?? "unknown";
+    const score = json.data?.score ?? 0;
+    return {
+      // Treat 'risky' and 'undeliverable' as not-deliverable. 'accept_all'
+      // is ambiguous (server accepts everything) — we accept it to avoid
+      // false negatives but mark score-based.
+      deliverable: result === "deliverable" || (status === "accept_all" && score >= 50),
+      status: `${status}:${result}`,
+      score,
+    };
+  } catch (err) {
+    console.warn("[hunter] verify network error", err);
+    return null;
+  }
+}
+
 /**
  * Batch enrich — parallelizes up to 5 at a time to respect rate limits.
  */
