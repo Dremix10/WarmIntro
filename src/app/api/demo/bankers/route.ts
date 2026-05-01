@@ -51,24 +51,56 @@ const TIER_MAP: Record<string, "BB" | "EB" | "MM" | "Other"> = {
   middle_market: "MM",
 };
 
+// LinkedIn UI fragments that show up in Serper snippets for /in/ pages
+// but aren't anchor-worthy ("Brown University Graphic.", "Experience: J.P.",
+// "View mutual connections", etc.). These are noise; we want a real
+// sentence about who the banker is, not chrome from LinkedIn's profile UI.
+const LINKEDIN_UI_NOISE = /^(experience|education|view mutual|featured|activity|posts|about|skills|recommendations|contact info|languages|certifications|interests|honors|projects|volunteer|publications|courses|test scores|patents|organizations)[\s:.]*$/i;
+
+function isLinkedInUiFragment(line: string): boolean {
+  const t = line.trim();
+  // Generic single-word labels followed by a colon or period
+  if (LINKEDIN_UI_NOISE.test(t)) return true;
+  // "Brown University Graphic" pattern — LinkedIn's image-card label
+  if (/\bGraphic\.?$/.test(t)) return true;
+  // "'s Post ..." — leftover after stripping the banker's name prefix
+  if (/^'?s\s+(post|profile|connection)/i.test(t)) return true;
+  return false;
+}
+
 function pickAnchorLine(findings: FindingRow[], bankerName: string): string | null {
   // Prefer alumni_mention (school newsroom, conferences), then
-  // linkedin_post (real activity), then linkedin_profile snippet.
+  // linkedin_post (real activity), then press / deal announcements,
+  // then linkedin_profile snippet.
   const order = ["alumni_mention", "linkedin_post", "press_mention", "deal_announcement", "linkedin_profile", "other"];
   const sorted = [...findings].sort((a, b) => order.indexOf(a.source_type) - order.indexOf(b.source_type));
-  for (const f of sorted) {
-    const s = (f.snippet ?? "").trim();
-    if (!s) continue;
-    // Drop the snippet down to a single sentence ending at the first
-    // period. If it starts with the banker's name, trim that since the
-    // demo email already names them.
-    const firstSentence = s.split(/(?<=\.)\s+/)[0]?.slice(0, 200) ?? s.slice(0, 200);
-    if (firstSentence.toLowerCase().startsWith(bankerName.toLowerCase())) {
-      // "Asha Williams · Associate at Morgan Stanley · ..." → drop the prefix
-      const tail = firstSentence.slice(bankerName.length).replace(/^[\s·,—\-]+/, "");
-      if (tail.length > 10) return tail;
+
+  // Two-pass: first try to find a SUBSTANTIVE line (>=40 chars, not UI
+  // noise) in any source. If that fails, fall back to whatever's there.
+  // This prevents the demo from showing "Experience: J.P." or "Brown
+  // University Graphic." as an anchor — both empirically observed in
+  // production output and useless to the Correspondent / user.
+  const passes: Array<{ minLen: number; rejectNoise: boolean }> = [
+    { minLen: 40, rejectNoise: true },
+    { minLen: 0, rejectNoise: false },
+  ];
+
+  for (const pass of passes) {
+    for (const f of sorted) {
+      const s = (f.snippet ?? "").trim();
+      if (!s) continue;
+      // Drop the snippet down to a single sentence ending at the first
+      // period. If it starts with the banker's name, trim that since the
+      // demo email already names them.
+      let line = s.split(/(?<=\.)\s+/)[0]?.slice(0, 200) ?? s.slice(0, 200);
+      if (line.toLowerCase().startsWith(bankerName.toLowerCase())) {
+        const tail = line.slice(bankerName.length).replace(/^[\s·,—\-]+/, "");
+        if (tail.length >= 10) line = tail;
+      }
+      if (line.length < pass.minLen) continue;
+      if (pass.rejectNoise && isLinkedInUiFragment(line)) continue;
+      return line;
     }
-    return firstSentence;
   }
   return null;
 }
