@@ -190,15 +190,29 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
     // this, claims like "you went to Rice" get flagged as fabrications even
     // when banker.university IS Rice in the DB. Pull a minimal banker
     // context once for the LLM-scoring step.
-    const bankerForCritic = draft.banker_id
-      ? await restSelectOne("bankers", {
-          select: "name, title, university, grad_year, firm_id, linkedin_url",
-          filters: { id: eq(draft.banker_id) },
-        })
-      : null;
+    //
+    // Also surface the curator-synthesized about_section. Without it, the
+    // LLM Critic flags real grounded claims (Robert Ragland co-founded
+    // Carter & Clyde — sourced from Crunchbase finding, captured in
+    // synthesis) as fabrication risk because they're not in the minimal
+    // structured fields above. Same gap the fact-checker had — fixed there
+    // in 15030a4/55db36e, this is the LLM-Critic equivalent.
+    const [bankerForCritic, profileForCritic] = draft.banker_id
+      ? await Promise.all([
+          restSelectOne("bankers", {
+            select: "name, title, university, grad_year, firm_id, linkedin_url",
+            filters: { id: eq(draft.banker_id) },
+          }),
+          restSelectOne("banker_profiles", {
+            select: "about_section",
+            filters: { banker_id: eq(draft.banker_id) },
+          }),
+        ])
+      : [null, null];
     const firmForCritic = bankerForCritic?.firm_id
       ? await restSelectOne("firms", { select: "name", filters: { id: eq(bankerForCritic.firm_id) } })
       : null;
+    const aboutForCritic = (profileForCritic?.about_section as string | null) ?? null;
     const knownFactsBlock = bankerForCritic
       ? `KNOWN BANKER FACTS (these are NOT fabrications — our DB has them. Do NOT flag the email for stating them):
 - Name: ${bankerForCritic.name}
@@ -206,7 +220,10 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
 - Firm: ${firmForCritic?.name ?? "(unknown)"}
 - University: ${bankerForCritic.university ?? "(not in DB)"}
 - Graduation year: ${bankerForCritic.grad_year ?? "(not in DB)"}
-- LinkedIn: ${bankerForCritic.linkedin_url ?? "(not in DB)"}
+- LinkedIn: ${bankerForCritic.linkedin_url ?? "(not in DB)"}${aboutForCritic ? `
+
+CURATOR-SYNTHESIZED ABOUT SECTION (also grounded — facts here are sourced from real findings, treat as known):
+${aboutForCritic}` : ""}
 
 `
       : "";
