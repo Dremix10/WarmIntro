@@ -13,6 +13,7 @@ import { randomBytes } from "node:crypto";
 import { sendTelegram } from "@/lib/telegram";
 import { getFromAddress } from "@/lib/email-from";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
+import { logSignal } from "@/services/signals/log";
 
 export const runtime = "nodejs";
 
@@ -100,6 +101,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   // doesn't have to forward by hand. Failure is non-blocking — admin still
   // has the link via Telegram + the API response.
   let emailSent = false;
+  let resendId: string | null = null;
+  let emailError: string | null = null;
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
     const greeting = row.name ? `Hi ${row.name.split(" ")[0]}` : "Hi";
@@ -123,10 +126,36 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         }),
       });
       emailSent = r.ok;
-    } catch {
+      if (r.ok) {
+        const j = (await r.json().catch(() => ({}))) as { id?: string };
+        resendId = j.id ?? null;
+      } else {
+        emailError = `Resend ${r.status}: ${(await r.text().catch(() => "")).slice(0, 200)}`;
+      }
+    } catch (err) {
       emailSent = false;
+      emailError = err instanceof Error ? err.message : String(err);
     }
+  } else {
+    emailError = "RESEND_API_KEY not set";
   }
+
+  // Audit trail — without this signal, "did the welcome email actually
+  // ship?" was unanswerable, which is exactly what bit us on the David
+  // Weng approve. logSignal is fire-and-forget and never throws.
+  await logSignal({
+    userId,
+    agent: "planner",
+    signalType: emailSent ? "welcome_email_sent" : "welcome_email_failed",
+    metadata: {
+      via: "admin_approve",
+      sender_admin: ctx.user.email,
+      to: email,
+      resend_id: resendId,
+      from: getFromAddress(),
+      error: emailError,
+    },
+  });
 
   // Telegram backup — admin can still copy the link if email delivery
   // failed or RESEND_API_KEY isn't set.

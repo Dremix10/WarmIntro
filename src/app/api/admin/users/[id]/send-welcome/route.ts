@@ -108,6 +108,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     metadata: {
       via: "admin_send_welcome",
       sender_admin: ctx.user.email,
+      to: email,
       resend_id: sendBody.id ?? null,
       from: getFromAddress(),
     },
