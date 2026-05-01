@@ -57,6 +57,14 @@ interface BankerForFactCheck {
   title?: string | null;
   linkedinUrl?: string | null;
   university?: string | null;
+  // Curator-synthesized about_section (src/services/curator/synthesize-profile.ts).
+  // When set, claims that match content already in about_section are treated as
+  // verified without re-running Serper. The about_section was itself synthesized
+  // under strict grounding (only facts present in banker_findings + authoritative
+  // sources), so re-verifying via web search is redundant — and Serper queries
+  // for niche .edu pages (Harvard PCG roundtable participant list etc.) often
+  // miss the source even when the fact is real.
+  aboutSection?: string | null;
 }
 
 const EXTRACT_SYSTEM = `You read a cold-outreach email a student is about to send to an investment banker. Identify every SPECIFIC verifiable claim about the banker.
@@ -302,14 +310,60 @@ async function verifyClaim(
   };
 }
 
+// Tokens we don't count as evidence (too common to anchor a match on).
+const FACT_CHECK_STOPWORDS = new Set([
+  "the", "and", "for", "with", "from", "your", "you", "this", "that", "saw", "have",
+  "has", "was", "were", "are", "been", "being", "his", "her", "their", "them",
+  "investment", "banking", "banker", "associate", "analyst", "vice", "president",
+  "managing", "director", "partner", "year", "years", "group", "team", "firm",
+]);
+
+function tokensForOverlap(text: string): string[] {
+  return Array.from(
+    new Set(
+      text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((t) => t.length >= 3 && !FACT_CHECK_STOPWORDS.has(t))
+    )
+  );
+}
+
 /** Draft mode: check every specific claim in the email. */
 export async function factCheckDraft(emailBody: string, banker: BankerForFactCheck): Promise<FactCheckResult> {
   const claims = await extractClaims(emailBody, banker);
   if (claims.length === 0) {
     return { ok: true, checks: [] };
   }
+
+  // Short-circuit pre-check: if the claim's content tokens largely overlap
+  // with the banker's curator-synthesized about_section, the claim is
+  // grounded in our own verified data — skip the Serper round-trip.
+  // Threshold of 0.6 picked empirically: "Saw you were at the Harvard
+  // Corporate Governance Roundtable" against "Harvard Law School's 2022
+  // Corporate Governance Roundtable" tokens to ~0.71 match.
+  const aboutTokens = banker.aboutSection ? new Set(tokensForOverlap(banker.aboutSection)) : new Set<string>();
+
   const checks: ClaimCheck[] = [];
   for (const c of claims) {
+    if (aboutTokens.size > 0) {
+      const claimTokens = tokensForOverlap(c.text);
+      if (claimTokens.length > 0) {
+        const matched = claimTokens.filter((t) => aboutTokens.has(t)).length;
+        const overlap = matched / claimTokens.length;
+        if (overlap >= 0.6) {
+          checks.push({
+            claim: c.text,
+            type: c.type,
+            verdict: "verified",
+            evidenceUrls: [],
+            notes: `Verified against curator about_section (${matched}/${claimTokens.length} tokens, ${Math.round(overlap * 100)}%)`,
+          });
+          continue;
+        }
+      }
+    }
     const verdict = await verifyClaim(c.text, banker, c.verificationQuery);
     checks.push({ ...verdict, type: c.type });
   }

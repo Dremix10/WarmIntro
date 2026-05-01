@@ -87,9 +87,20 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
         filters: { id: eq(draft.banker_id ?? "") },
       });
       if (banker) {
-        const firm = banker.firm_id
-          ? await restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } })
-          : null;
+        const [firm, profile] = await Promise.all([
+          banker.firm_id
+            ? restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } })
+            : Promise.resolve(null),
+          // Pull the curator-synthesized about_section so the fact-checker
+          // can short-circuit on claims already grounded in our own data.
+          // Without this, niche-but-real facts (e.g. Harvard PCG roundtable
+          // participant lists on .edu pages) get rejected because Serper
+          // can't re-verify them.
+          restSelectOne("banker_profiles", {
+            select: "about_section",
+            filters: { banker_id: eq(banker.id as string) },
+          }),
+        ]);
         let factCheck;
         try {
           factCheck = await factCheckDraft(draft.body as string, {
@@ -98,6 +109,7 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
             firmName: (firm?.name as string | undefined) ?? null,
             linkedinUrl: banker.linkedin_url as string | null,
             university: banker.university as string | null,
+            aboutSection: (profile?.about_section as string | null) ?? null,
           });
         } catch (err) {
           // Fact-check extraction itself failed — Claude returned malformed
