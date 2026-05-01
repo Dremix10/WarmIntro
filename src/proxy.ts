@@ -206,7 +206,10 @@ async function getSessionEmailFromCookie(request: NextRequest, response: NextRes
   }
 }
 
-async function checkTestingGate(request: NextRequest): Promise<NextResponse | null> {
+async function checkTestingGate(
+  request: NextRequest,
+  response: NextResponse,
+): Promise<NextResponse | null> {
   if (!TESTING_GATE_ENABLED) return null;
 
   const { pathname, origin } = request.nextUrl;
@@ -220,12 +223,15 @@ async function checkTestingGate(request: NextRequest): Promise<NextResponse | nu
     return null;
   }
 
-  // Prepare a response we can attach refreshed cookies to
-  const passthroughResponse = NextResponse.next();
-  const email = await getSessionEmailFromCookie(request, passthroughResponse);
+  // Cookies refreshed by Supabase auth (when the access token expires) are
+  // written to `response` here. The caller MUST return that same response
+  // on the happy path so the browser actually receives the rotated tokens
+  // — otherwise refresh-token rotation eats the next request and the user
+  // gets bounced (this was the bug that surfaced right after password reset).
+  const email = await getSessionEmailFromCookie(request, response);
 
   if (email && isAllowlisted(email)) {
-    return null; // allowlisted tester, let through
+    return null; // allowlisted — caller returns `response` (with refreshed cookies)
   }
 
   // For API routes: 403 JSON
@@ -256,8 +262,13 @@ export async function proxy(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
+  // Single response object — Supabase auth-cookie refreshes get written here
+  // and flow back to the browser. All happy-path returns must use THIS
+  // response so refreshed cookies aren't dropped.
+  const response = NextResponse.next();
+
   // Private-beta gate runs FIRST — everything else is inside the gate
-  const gate = await checkTestingGate(request);
+  const gate = await checkTestingGate(request, response);
   if (gate) return gate;
 
   // Reject oversized payloads
@@ -271,14 +282,15 @@ export async function proxy(request: NextRequest) {
 
   const ip = getClientIp(request);
 
-  // Only do IP-based rate limiting for API routes
+  // Only do IP-based rate limiting for API routes — pages flow through
+  // with the shared response so refreshed cookies make it back.
   if (!pathname.startsWith("/api/")) {
-    return NextResponse.next();
+    return response;
   }
 
   // Rate-limit exempt routes (cron) skip both global and tier checks
   if (RATE_LIMIT_EXEMPT_ROUTES.some((r) => pathname.startsWith(r))) {
-    return NextResponse.next();
+    return response;
   }
 
   // Global per-IP rate limit — applies before any tier-specific check
@@ -334,7 +346,7 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 // Skip middleware for static assets, fonts, manifests, and the gate page itself.
