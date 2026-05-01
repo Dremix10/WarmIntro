@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     { runs: runs ?? [], flywheel: flywheel ?? [] },
     {
       headers: {
-        "Cache-Control": "private, max-age=5, stale-while-revalidate=300",
+        "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
       },
     },
   );

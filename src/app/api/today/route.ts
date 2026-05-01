@@ -112,12 +112,16 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        // max-age=5 gives a 5s window where repeat loads (hitting Back, opening
-        // the tab again right away) skip the server entirely. SWR handles the
-        // rest — instant render, revalidate in background. 5s is short enough
-        // that "Run Alma" → reload still feels live, since planner runs take
-        // 20-50s to produce new drafts.
-        "Cache-Control": "private, max-age=5, stale-while-revalidate=300",
+        // max-age=0 — every navigation revalidates with the server. The
+        // 5s fresh window we tried (557ee9a) caused real bugs: Skip a
+        // draft, browser served the pre-skip snapshot for 5s, user saw
+        // the OLD draft body marked "Ready to send" while the DB had the
+        // new regenerated one in needs_revision. The bug was unfixable
+        // by users without Cmd+Shift+R, which is unacceptable for a
+        // shipped product. SWR=300 still gives instant repaint from the
+        // previous cached response while the server fetch resolves in
+        // the background — but the data is always fresh-on-arrival.
+        "Cache-Control": "private, max-age=0, stale-while-revalidate=300",
       },
     },
   );
