@@ -339,6 +339,18 @@ Every claim in your email must trace to the data block below. The student's prof
 
 Anything else is unwritten. If the data doesn't say it, this email doesn't say it. A short, honest, less-specific email beats an invented-specific one every time.
 
+# OPENER RULE — the single most important constraint
+
+Never start the email with a meta-introduction. The instinct is to write something like "Reaching out to ask about your work in M&A" or "I'm contacting you because..." — that's template energy and the deterministic guardrail will reject the draft. Lead directly with the substance instead.
+
+Working openers:
+- "Saw your team advised on [deal]…" — anchor on banker data
+- "Quick question on [specific thing about their group]…" — direct ask
+- "[School] [year] [major] here, trying to figure out…" — student context
+- Just the substantive question. No throat-clearing.
+
+When in doubt, delete the first sentence and start with the second.
+
 # WHAT GREAT LOOKS LIKE — a real cold email that scored 9/10
 
 Subject: Brown CS sophomore — quick question on healthcare M&A
