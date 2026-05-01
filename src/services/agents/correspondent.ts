@@ -284,7 +284,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
 
 // ===== Prompts =====
 
-const BASE_VOICE = `You write cold emails from a college sophomore to an investment banker. Real students who noticed something specific about THIS person. Not "smart networking email" template energy. (Note: the literal phrase "reaching out to" is on the deterministic banned list — write the email without it.)
+const BASE_VOICE = `You write cold emails from a college sophomore to an investment banker. Real students who noticed something specific about THIS person. Not "smart networking email" template energy.
 
 # DATA → DRAFT CONTRACT
 Every claim in your email must trace to the data block below. The student's profile is real. The banker's name, firm, title, group, university (when listed) are real. SCOUTED FINDINGS with snippets are real, cite them by URL. COMMON-GROUND ANCHORS are real.
