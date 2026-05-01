@@ -160,36 +160,56 @@ function isAuthoritativeUrl(url: string): boolean {
 }
 
 function mentionsBanker(banker: ScoutInput, organic: SerperOrganic): boolean {
-  // Hard gate 1: source must be authoritative. Drops Facebook / random
-  // news aggregators / forum posts that share name+firm tokens with the
-  // real banker but are tangential.
-  if (!isAuthoritativeUrl(organic.link)) return false;
-
+  const linkLower = organic.link.toLowerCase();
   const haystack = `${organic.title} ${organic.snippet ?? ""} ${organic.link}`.toLowerCase();
-  const nameHit = haystack.includes(banker.bankerName.toLowerCase());
-  if (!nameHit) return false;
+  const nameLower = banker.bankerName.toLowerCase();
+  if (!haystack.includes(nameLower)) return false;
 
-  // Hard gate 2: for LinkedIn URLs (the most common source), require the
-  // banker's exact slug to appear in the URL — that's the only signal
-  // that this is *their* post/profile, not someone else's that happens
-  // to mention them. For non-LinkedIn authoritative sources, fall back
-  // to firm-name match (a Bloomberg article about Goldman that names
-  // the banker is a real finding).
-  if (organic.link.toLowerCase().includes("linkedin.com")) {
+  // Path A: LinkedIn URLs. Require the banker's exact LinkedIn slug to
+  // appear in the URL — only signal that this is *their* post/profile,
+  // not someone else's tangential mention.
+  if (linkLower.includes("linkedin.com")) {
     if (!banker.linkedinUrl) return false;
     const slug = banker.linkedinUrl.replace(/.*linkedin\.com\/in\//, "").replace(/[/?#].*$/, "").toLowerCase();
     if (!slug || slug.length < 4) return false;
-    return organic.link.toLowerCase().includes(slug);
+    return linkLower.includes(slug);
   }
 
-  // Non-LinkedIn authoritative source: firm name OR a firm-token must
-  // appear somewhere in title/snippet/URL. The url-path check catches
-  // firm bio pages like "evercore.com/people/joe-smith" where the firm
-  // name might not appear verbatim in the snippet.
-  if (!banker.firmName) return true; // accept .edu and pure press hits when we have no firm to filter on
+  // Path B: non-LinkedIn URL whose slug contains BOTH the banker's first
+  // and last name as kebab-case tokens (e.g.
+  // wpri.com/.../caroline-parente-shares-about-her-experience-as-miss-rhode-island-2023/).
+  // High-confidence signal that the URL is about THIS person — strong
+  // enough to drop the authoritative-domain requirement, which used to
+  // miss legitimate finds on local-news / podcast / regional press
+  // sites we hadn't whitelisted. Empirically discovered when Caroline
+  // Parente's Miss Rhode Island 2023 feature on wpri.com was getting
+  // dropped by the old gate.
+  const nameParts = nameLower.split(/\s+/).filter(Boolean);
+  const first = nameParts[0] ?? "";
+  const last = nameParts[nameParts.length - 1] ?? "";
+  let urlPath = "";
+  try {
+    urlPath = new URL(organic.link).pathname.toLowerCase();
+  } catch {
+    /* fall through */
+  }
+  if (
+    first.length >= 3 &&
+    last.length >= 3 &&
+    first !== last &&
+    urlPath.includes(first) &&
+    urlPath.includes(last)
+  ) {
+    return true;
+  }
+
+  // Path C: authoritative domain + firm-name in haystack. Existing gate
+  // for tier-1 press / firm bio pages where the URL slug doesn't carry
+  // the banker's full name (e.g. Bloomberg article naming the banker
+  // in body, not URL).
+  if (!isAuthoritativeUrl(organic.link)) return false;
+  if (!banker.firmName) return true; // .edu hits without firm filter
   const firm = banker.firmName.toLowerCase();
-  // First firm-token (e.g. "Goldman" from "Goldman Sachs") catches more
-  // matches without losing precision since we already locked in name + auth domain.
   const firmToken = firm.split(/\s+/)[0];
   return haystack.includes(firm) || (firmToken.length >= 4 && haystack.includes(firmToken));
 }
