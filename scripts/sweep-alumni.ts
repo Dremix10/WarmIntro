@@ -21,7 +21,7 @@ if (!SUPABASE_URL || !SERVICE_KEY || !SERPER_KEY || !ANTHROPIC_KEY) {
   process.exit(1);
 }
 
-const SCHOOLS = ["Rice University", "Brown University"];
+const SCHOOLS = ["Rice University", "Brown University", "Massachusetts Institute of Technology"];
 const RESULTS_PER_FIRM_SCHOOL = 8;
 const RATE_LIMIT_DELAY_MS = 1100; // Serper ~1 qps to be safe
 
@@ -200,7 +200,17 @@ async function insertBankers(rows: Array<SweepCandidate & ClassifiedProfile>): P
   const payload = ibOnly.map((r) => ({
     firm_id: r.firm.id,
     name: `${r.firstName} ${r.lastName}`.trim() || r.name,
-    title: r.title,
+    // bankers.title is NOT NULL. Claude classifier sometimes returns null
+    // when the LinkedIn snippet has no title text (often happens for new-
+    // grad analysts whose profiles only show school + firm). Fall back to
+    // a seniority-derived label so the insert succeeds — Researcher will
+    // still display these correctly.
+    title: r.title || (r.seniority === "analyst" ? "Investment Banking Analyst"
+      : r.seniority === "associate" ? "Investment Banking Associate"
+      : r.seniority === "vp" ? "Vice President, Investment Banking"
+      : r.seniority === "director" ? "Director, Investment Banking"
+      : r.seniority === "md" ? "Managing Director"
+      : "Investment Banking"),
     seniority: r.seniority,
     grad_year: r.gradYear,
     university: r.university,
