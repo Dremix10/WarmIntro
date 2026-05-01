@@ -4,7 +4,7 @@
 
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { OPUS_MODEL } from "@/services/claude";
-import { restSelectOne, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
+import { restSelectOne, restSelect, restInsert, restUpdate, eq } from "@/lib/supabase-rest";
 import { factCheckDraft } from "./fact-checker";
 import type { CriticScores, CriticVerdict } from "@/shared/ib-types";
 import type { Json } from "@/lib/database.types";
