@@ -32,7 +32,7 @@ the three docs above are the substitute:
 
 If you're proposing a schema change, add a migration in `supabase/migrations/0NN_<name>.sql` and update `docs/DATABASE_SCHEMA.md` in the same PR. The migration file is ground truth; the doc is the readable view.
 
-## The 6 agents (canonical — see spec Section 3)
+## The 7 agents (canonical — see spec Section 3 + extensions)
 
 1. **Planner** (`src/services/agents/planner.ts`) — deterministic orchestrator, not an LLM call
 2. **Researcher** (`src/services/agents/researcher.ts`) — finds + ranks bankers
@@ -40,8 +40,13 @@ If you're proposing a schema change, add a migration in `supabase/migrations/0NN
 4. **Critic** (`src/services/agents/critic.ts`) — reviews every draft before send; 4-axis scoring; reject/revise loop max 3 iterations
 5. **Watcher** (`src/services/agents/watcher.ts`) — polls Gmail, classifies reply intent, advances stages
 6. **Curator** (`src/services/agents/curator.ts`) — 24/7 background data steward; schema-proposal authority
+7. **Architect** (`src/services/agents/architect.ts`) — meta-prompting. Daily Telegram digest of recurring failure patterns + positive, example-driven suggestions for the Correspondent / Critic prompts. v1: observation only — admin reviews and edits prompts manually. Upgrade path to v2 (versioned `prompts` table + admin approve) and v3 (A/B-tested auto-rollout) documented in `architect.ts`.
 
 Shared utilities in `src/services/agents/shared.ts`.
+
+### Prompting style across agents
+
+**Positive instruction + worked examples beats negative bans.** When writing or refactoring an agent system prompt, structure it as: state what success looks like, give a concrete annotated example, then map common failure patterns to their *positive* fixes. Negative-only "DO NOT" lists pile up over iterations and the model regresses on them. The `BASE_VOICE` constant in `correspondent.ts` is the working reference — use it as the template. The Architect agent uses this same rule when generating prompt-fix suggestions for the rest of the system.
 
 ## Commands
 

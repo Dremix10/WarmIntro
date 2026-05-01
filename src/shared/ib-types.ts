@@ -162,7 +162,7 @@ export interface CommonGroundAnchor {
 
 // ===== Agent activity =====
 
-export type AgentName = "planner" | "researcher" | "correspondent" | "critic" | "watcher" | "curator" | "scout";
+export type AgentName = "planner" | "researcher" | "correspondent" | "critic" | "watcher" | "curator" | "scout" | "architect";
 
 export interface AgentRun {
   id: string;

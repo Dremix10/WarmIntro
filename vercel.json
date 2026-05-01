@@ -5,6 +5,7 @@
     { "path": "/api/cron/daily-sweep", "schedule": "0 14 * * *" },
     { "path": "/api/cron/night-preview", "schedule": "0 1 * * *" },
     { "path": "/api/cron/sentinel", "schedule": "0 15 * * *" },
+    { "path": "/api/cron/architect", "schedule": "0 16 * * *" },
     { "path": "/api/cron/weekly-flywheel", "schedule": "0 23 * * 0" }
   ]
 }
