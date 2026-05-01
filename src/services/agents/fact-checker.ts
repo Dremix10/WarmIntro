@@ -65,6 +65,14 @@ interface BankerForFactCheck {
   // for niche .edu pages (Harvard PCG roundtable participant list etc.) often
   // miss the source even when the fact is real.
   aboutSection?: string | null;
+  // Underlying banker_findings rows the synthesis was based on. When the
+  // about_section short-circuit verifies a claim, we look through these to
+  // find the URL(s) whose snippet/title overlaps with the claim — that's
+  // what gets surfaced as `evidenceUrls` in the UI under "Sources". Without
+  // this, the user sees a verified claim but no source citation, which (as
+  // dc118 reported live: "i cant verify the roundtable. how did u find
+  // that?") undermines the user's trust before they hit Send.
+  findings?: Array<{ url: string; title?: string | null; snippet?: string | null }>;
 }
 
 const EXTRACT_SYSTEM = `You read a cold-outreach email a student is about to send to an investment banker. Identify every SPECIFIC verifiable claim about the banker.
@@ -387,12 +395,38 @@ export async function factCheckDraft(emailBody: string, banker: BankerForFactChe
       }
     }
     if (verifiedFromAbout) {
+      // Surface source URLs from the underlying findings so the /today UI's
+      // "Sources" disclosure can show the user where the claim came from.
+      // Without this, an unfamiliar-looking claim (Harvard PCG roundtable,
+      // Carter & Clyde co-founder, etc.) reads as fabricated to the user
+      // even when it's real and grounded.
+      const claimDistinctive = new Set(
+        c.text
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, " ")
+          .split(/\s+/)
+          .filter((t) => t.length >= 4 && !FACT_CHECK_STOPWORDS.has(t))
+      );
+      const evidenceUrls: string[] = [];
+      for (const f of banker.findings ?? []) {
+        const haystack = `${f.title ?? ""} ${f.snippet ?? ""}`.toLowerCase();
+        // Count overlap with the claim's distinctive 4+ char tokens. The
+        // finding is supportive when ≥2 distinctive tokens of the claim
+        // appear in its title/snippet.
+        let overlap = 0;
+        for (const tok of claimDistinctive) {
+          if (haystack.includes(tok)) overlap++;
+          if (overlap >= 2) break;
+        }
+        if (overlap >= 2) evidenceUrls.push(f.url);
+        if (evidenceUrls.length >= 3) break;
+      }
       checks.push({
         claim: c.text,
         type: c.type,
         verdict: "verified",
-        evidenceUrls: [],
-        notes: `Verified against curator about_section — ${verifiedFromAbout}`,
+        evidenceUrls,
+        notes: `Verified against curator about_section — ${verifiedFromAbout}${evidenceUrls.length > 0 ? ` · ${evidenceUrls.length} source URL(s) from findings` : ""}`,
       });
       continue;
     }

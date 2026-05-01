@@ -87,7 +87,7 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
         filters: { id: eq(draft.banker_id ?? "") },
       });
       if (banker) {
-        const [firm, profile] = await Promise.all([
+        const [firm, profile, findings] = await Promise.all([
           banker.firm_id
             ? restSelectOne("firms", { select: "name", filters: { id: eq(banker.firm_id) } })
             : Promise.resolve(null),
@@ -100,6 +100,17 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
             select: "about_section",
             filters: { banker_id: eq(banker.id as string) },
           }),
+          // Underlying findings — passed into fact-checker so when the
+          // about_section short-circuit fires, evidenceUrls get populated
+          // with the actual source URLs (Harvard PCG list, Crunchbase
+          // page, FINRA broker page, etc.). Without this, the /today UI's
+          // "Sources" disclosure stays empty and the user can't verify
+          // niche-looking claims before hitting Send.
+          restSelect("banker_findings", {
+            select: "url, title, snippet",
+            filters: { banker_id: eq(banker.id as string) },
+            limit: 20,
+          }),
         ]);
         let factCheck;
         try {
@@ -110,6 +121,11 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
             linkedinUrl: banker.linkedin_url as string | null,
             university: banker.university as string | null,
             aboutSection: (profile?.about_section as string | null) ?? null,
+            findings: (findings ?? []).map((f) => ({
+              url: f.url as string,
+              title: (f.title as string | null) ?? null,
+              snippet: (f.snippet as string | null) ?? null,
+            })),
           });
         } catch (err) {
           // Fact-check extraction itself failed — Claude returned malformed
