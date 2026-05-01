@@ -485,17 +485,34 @@ function buildDraftPrompt(
     (f) => f.sourceType !== "linkedin_profile" && f.sourceType !== "other"
   );
   const hasAboutSection = Boolean(banker.aboutSection && banker.aboutSection.trim().length >= 60);
+  const sameSchool = Boolean(
+    banker.university && user.university &&
+    banker.university.trim().toLowerCase() === user.university.trim().toLowerCase()
+  );
   const dataState = {
     hasRichFindings: richFindings.length > 0, // a deal, post, alumni mention, podcast, etc.
     hasOnlyProfileLevelFindings: scoutedFindings.length > 0 && richFindings.length === 0,
     hasAnchors: anchors.length > 0,
     hasAboutSection,
+    sameSchool,
     thinData: !richFindings.length && !anchors.length && !hasAboutSection,
   };
   parts.push(`DATA STATE (use this to decide whether to invoke THIN-DATA MODE from the system prompt):\n${JSON.stringify(dataState, null, 2)}\n`);
   if (dataState.thinData) {
     parts.push(
       `→ Thin-data mode is active. Anchor on a STUDENT-SIDE specific (a class, a real curiosity, a project) per the THIN-DATA EXAMPLE in the system prompt. Treat school/firm overlap as context, not the opener. Do NOT invent banker-specific claims.\n`
+    );
+  }
+  if (!sameSchool) {
+    // Cross-school case — most common when the student's same-school pool
+    // at their target firms is exhausted. Empirically (dc118 testing
+    // 2026-05-01) the model defaults to fake-warm school framing here:
+    // "I noticed you went to Brown" / "fellow Bruno here" / "saw your path
+    // from Brown to Goldman" — none of which the student can honestly say
+    // because they're at a different school. The right move under cross-
+    // school is to NOT pretend the school overlap exists.
+    parts.push(
+      `→ CROSS-SCHOOL: the banker did NOT attend the student's school. Do NOT lean on a school anchor. Do NOT write "fellow ${user.university} alum" or "I noticed you went to ${banker.university}" or any framing that implies shared school energy. Anchor on a banker-specific signal (a deal, a recent post, their group, their about_section) OR a clear student-side specific reason for picking THIS firm/banker. The banker should feel intentionally selected, not blast-targeted.\n`
     );
   }
 

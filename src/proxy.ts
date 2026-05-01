@@ -114,7 +114,7 @@ const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB (PDF uploads)
 //   2. Explicit email override (TESTING_ALLOWED_EMAILS): for off-domain testers
 //      (e.g. @gmail.com founders, design partners). Comma-separated.
 const TESTING_GATE_ENABLED = process.env.TESTING_GATE_ENABLED !== "false";
-const TESTING_ALLOWED_DOMAINS = (process.env.TESTING_ALLOWED_DOMAINS ?? "rice.edu,brown.edu")
+const TESTING_ALLOWED_DOMAINS = (process.env.TESTING_ALLOWED_DOMAINS ?? "rice.edu,brown.edu,mit.edu")
   .split(",")
   .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
   .filter(Boolean);
