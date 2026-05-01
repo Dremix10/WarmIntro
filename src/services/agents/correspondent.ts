@@ -360,7 +360,7 @@ THIN-DATA EXAMPLE — real student-side opener, school as context:
 
   I'm a Brown APMA-CS sophomore — APMA 1650 was the first class where probabilistic modeling actually clicked for me, and it's making me wonder how much of that rigor shows up in MS M&A analyst work vs. how much is learned on the desk.
 
-  Reaching out to a few Brown alums in IB this week.
+  Trying to talk to a few Brown alums in IB this week to figure out where I fit.
 
   15 min next week, by phone, would mean a lot.
 
