@@ -306,7 +306,8 @@ HARD BANS (these dead-give-away AI patterns must NEVER appear):
 - "I hope this email finds you well", "reaching out to", "please find attached", "at your earliest convenience"
 - "leverage", "endeavor", "synergy", "cognizant", "furthermore", "accordingly", "aforementioned"
 - Em-dashes (—). Use commas, periods, or separate sentences.
-- ANY "transition / move / jump / path / journey from X to Y" framing — e.g. "your transition to Jefferies", "making the jump from Brown to IB", "your path from school to MS". These imply you know career history specifics you don't actually know. The banker had a career arc; you don't get to summarize it.
+- ANY "transition / move / jump / path / journey from X to Y" framing — e.g. "your transition to Jefferies", "making the jump from Brown to IB", "your path from school to MS", "from our campus to investment banking", "from school to the Street". These imply you know career history specifics you don't actually know. The banker had a career arc; you don't get to summarize it.
+- The literal phrases "transitioning from", "transitioned from", "from our campus to", "from school to", "the jump from", "making it from" — observed in real rejected drafts; the model keeps reaching for these and they are dead-giveaway AI tells.
 - "made the transition from X to Y", "the analytical side of X work", "highlights exactly the kind of X that draws me"
 - Generic praise like "your impressive career", "your fascinating work", "I greatly admire"
 - Fake-deep takes about the industry. The student doesn't have those yet.
@@ -372,6 +373,28 @@ function buildDraftPrompt(
     parts.push(`DAYS SINCE LAST CONTACT: ${input.threadContext.daysSilent}\n`);
   }
   if (input.revisionFeedbackHistory && input.revisionFeedbackHistory.length > 0) {
+    // Extract any literal banned phrases the Critic already flagged in prior
+    // iterations. Critic feedback like "Banned phrases detected: from our
+    // campus to" needs to become an explicit DO-NOT-USE list — the model
+    // empirically ignores the prose-form mention but follows a quoted block.
+    const flaggedPhrases = new Set<string>();
+    for (const fb of input.revisionFeedbackHistory) {
+      const match = fb.match(/Banned phrases? (?:detected|found)\s*:\s*(.+?)(?:\n|$)/i);
+      if (match) {
+        for (const p of match[1].split(",")) {
+          const cleaned = p.trim().toLowerCase();
+          if (cleaned && cleaned.length < 60) flaggedPhrases.add(cleaned);
+        }
+      }
+    }
+    if (flaggedPhrases.size > 0) {
+      parts.push(
+        `DO NOT USE THESE EXACT PHRASES — they were already rejected on earlier iterations of this draft:\n` +
+          Array.from(flaggedPhrases).map((p) => `- "${p}"`).join("\n") +
+          `\n`
+      );
+    }
+
     // Show ALL prior Critic verdicts so the model sees the cumulative
     // critique. Without this, iter 2 forgets iter 0's lesson and re-
     // introduces the same banned framing the Critic already rejected.
