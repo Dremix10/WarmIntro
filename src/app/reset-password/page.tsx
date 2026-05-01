@@ -44,6 +44,24 @@ function ResetPasswordInner() {
         setState("err");
         return;
       }
+
+      // CRITICAL: Supabase's admin.updateUserById revokes all existing
+      // sessions for this user server-side. The browser cookie still
+      // contains the now-dead tokens, but supabase-js client-side will
+      // happily report `getSession()` truthy until those cookies are
+      // explicitly cleared. That divergence — UI thinks signed-in, server
+      // refuses every request — is what produces the "Your dashboard →
+      // bounces back to landing" loop. Sign out the browser EXPLICITLY
+      // here so the redirect to /login lands clean and the user's next
+      // signInWithPassword mints a fresh, valid session.
+      try {
+        const { supabase: sb } = await import("@/lib/supabase-browser");
+        await sb.auth.signOut();
+      } catch {
+        // Best-effort. If signOut fails the /login refreshSession guard
+        // (added 3d1f129) catches it as a fallback.
+      }
+
       setState("saved");
       setTimeout(() => router.push("/login"), 1500);
     } catch (err) {
