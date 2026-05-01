@@ -143,17 +143,34 @@ export default function AdminPage() {
     setRequests((rs) => rs.filter((r) => !isSyntheticEmail(r.email)));
   }
 
-  async function sendWelcome(userId: string) {
-    if (!window.confirm("Send the welcome email to this user? Mints a fresh setup link (1h TTL).")) return;
+  async function sendWelcome(userId: string, opts?: { postUpdate?: boolean }) {
+    const postUpdate = opts?.postUpdate ?? false;
+    const confirmMsg = postUpdate
+      ? "Re-send a transactional welcome (skips users who already set a password). Adds an 'updated link' note explaining the second email."
+      : "Send the welcome email to this user? Mints a fresh setup link (1h TTL).";
+    if (!window.confirm(confirmMsg)) return;
     setWelcomeState((s) => ({ ...s, [userId]: { busy: true } }));
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch(`/api/admin/users/${userId}/send-welcome`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
+      body: JSON.stringify(
+        postUpdate
+          ? {
+              skipIfPasswordSet: true,
+              updateNote:
+                "We shipped a quick update right after sending your first welcome. This is a fresh setup link in case the first one didn't land cleanly — either link works.",
+            }
+          : {}
+      ),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
       setWelcomeState((s) => ({ ...s, [userId]: { error: json.error ?? `HTTP ${res.status}` } }));
+      return;
+    }
+    if (json.skipped) {
+      setWelcomeState((s) => ({ ...s, [userId]: { error: `Skipped: ${json.skipped}` } }));
       return;
     }
     setWelcomeState((s) => ({ ...s, [userId]: { sent: true, emailId: json.emailId } }));
@@ -319,6 +336,7 @@ export default function AdminPage() {
               welcomeState={welcomeState[u.id]}
               onReset={() => resetPassword(u.id)}
               onSendWelcome={() => sendWelcome(u.id)}
+              onResendPostUpdate={() => sendWelcome(u.id, { postUpdate: true })}
             />
           ))}
         </div>
@@ -442,12 +460,13 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function UserRow({ user, resetState, welcomeState, onReset, onSendWelcome }: {
+function UserRow({ user, resetState, welcomeState, onReset, onSendWelcome, onResendPostUpdate }: {
   user: AdminUser;
   resetState: { busy?: boolean; link?: string; sent?: boolean; error?: string } | undefined;
   welcomeState: { busy?: boolean; sent?: boolean; emailId?: string; error?: string } | undefined;
   onReset: () => void;
   onSendWelcome: () => void;
+  onResendPostUpdate: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const setupComplete = Boolean(user.profile && user.profile.targetFirmCount > 0);
@@ -542,6 +561,15 @@ function UserRow({ user, resetState, welcomeState, onReset, onSendWelcome }: {
               title="Mints a fresh setup token (1h) and emails the welcome body. Use for users who never got the welcome (e.g. created outside the approve flow)."
             >
               {welcomeState?.busy ? "Sending…" : "Send welcome"}
+            </button>
+            <button
+              type="button"
+              onClick={onResendPostUpdate}
+              disabled={welcomeState?.busy}
+              className="rounded-lg border border-[#C86B4F] text-[#C86B4F] px-3 py-1.5 text-xs font-medium hover:bg-[#C86B4F] hover:text-white transition-colors disabled:opacity-50"
+              title="Re-send the welcome with an 'updated link' note. Skips users who already set a password — safe to click for users you suspect didn't get the original."
+            >
+              {welcomeState?.busy ? "…" : "Resend (post-update)"}
             </button>
             {resetState?.link && (
               <span className="text-[10px] text-[#14182A]/60">

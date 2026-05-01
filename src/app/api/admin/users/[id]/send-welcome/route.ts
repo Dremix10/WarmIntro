@@ -28,6 +28,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!ctx) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!isAdmin(ctx.user.email)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
+  // Optional body: { skipIfPasswordSet?: boolean, updateNote?: string }.
+  // - skipIfPasswordSet=true: bail out (with reason) if the user already
+  //   completed password_set. Used for "resend after a deliverability fix"
+  //   so we don't spam users who already got in cleanly via the first email.
+  // - updateNote: shown as a banner above the CTA + appends "(updated link)"
+  //   to the subject so the recipient understands why a second email is
+  //   arriving. See src/lib/welcome-email.ts.
+  const body = (await request.json().catch(() => ({}))) as {
+    skipIfPasswordSet?: boolean;
+    updateNote?: string;
+  };
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const resendKey = process.env.RESEND_API_KEY?.trim();
@@ -43,6 +55,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
   const email = target.user.email;
+
+  // Skip-if-password-set check
+  if (body.skipIfPasswordSet) {
+    const { data: priorSets } = await admin
+      .from("signals")
+      .select("id")
+      .eq("user_id", target.user.id)
+      .eq("signal_type", "password_set")
+      .limit(1);
+    if (priorSets && priorSets.length > 0) {
+      return NextResponse.json({
+        ok: true,
+        skipped: "already_password_set",
+        sentTo: email,
+      });
+    }
+  }
 
   // Pull a friendly first name from profiles if available — falls back
   // to "Hi" when we don't have it.
@@ -70,7 +99,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const siteOrigin = SITE_URL.replace(/\/$/, "");
   const setupLink = `${siteOrigin}/reset-password?token=${token}`;
   const forgotPath = `${siteOrigin}/forgot-password`;
-  const { subject, html, text } = buildWelcomeEmail({ greeting, setupLink, forgotPath });
+  const { subject, html, text } = buildWelcomeEmail({
+    greeting,
+    setupLink,
+    forgotPath,
+    updateNote: body.updateNote,
+  });
 
   const replyTo = (process.env.ALMA_REPLY_TO_EMAIL ?? "founders@alma.careers").trim();
 
