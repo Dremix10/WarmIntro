@@ -301,7 +301,7 @@ When the data is thin you will be tempted to invent a "specific" credential that
 - "Yale CEO Forum" / "Stanford Directors' College"
 - Named industry conferences (Milken, Aspen Ideas, World Economic Forum panels)
 - Any "selected as a participant in / member of / invited to" framing for an exclusive program
-- Any school the banker did NOT attend per the `university` field of their data — if banker.university is blank, you do NOT get to write "fellow Harvard alum" or "Yale background." Doesn't matter how prestigious-sounding.
+- Any school the banker did NOT attend per the 'university' field of their data — if banker.university is blank, you do NOT get to write "fellow Harvard alum" or "Yale background." Doesn't matter how prestigious-sounding.
 If you can't anchor on something already in the data, anchor on shared school OR firm + group + title only. Those are always real.
 
 
