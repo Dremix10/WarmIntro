@@ -116,6 +116,14 @@ const AUTHORITATIVE_DOMAINS = [
   "alphasense.com",
   "dealstreetasia.com",
   "thedeal.com",
+  // Public banker-registration sources. FINRA brokercheck is the official
+  // US securities regulator — verifies "currently employed by X firm at
+  // Y address" verbatim. RocketReach aggregates banker contact data and
+  // routinely surfaces titles + firms from LinkedIn / firm bios. The
+  // Correspondent's DATA → DRAFT contract still constrains how these
+  // get used — they unlock anchors that were getting filtered out.
+  "finra.org",
+  "rocketreach.co",
   // Firm-tier domains worth pulling in directly.
   "goldmansachs.com",
   "morganstanley.com",
