@@ -22,9 +22,9 @@ const SURFACES: Surface[] = [
     Mock: TodayMock,
   },
   {
-    eyebrow: "Archipelago",
-    title: "Your network, as a place.",
-    body: "Every bank is an island. Every intro builds more of a home on it.",
+    eyebrow: "Network",
+    title: "Where you’re warmest.",
+    body: "Every banker in your orbit, sorted by warmth. Same-school alumni rise to the top.",
     authedHref: "/network",
     Mock: NetworkMock,
   },

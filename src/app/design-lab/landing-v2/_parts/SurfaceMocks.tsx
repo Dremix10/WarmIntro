@@ -134,214 +134,104 @@ export function TodayMock() {
 }
 
 export function NetworkMock() {
-  // Archipelago — three banks as islands, ascending diagonally to telegraph
-  // progression. Stages: foundation (just sent) → walls (replied) → home
-  // (interview earned). SVG viewBox is 320×200 (16:10) — honest pixels.
-  type Stage = "foundation" | "walls" | "home";
-  const ISLANDS: { name: string; stage: Stage; cx: number; cy: number; base: number }[] = [
-    { name: "Morgan Stanley", stage: "foundation", cx: 60, cy: 138, base: 38 },
-    { name: "Goldman Sachs", stage: "walls", cx: 160, cy: 108, base: 42 },
-    { name: "Evercore", stage: "home", cx: 260, cy: 78, base: 44 },
+  // Warmth-list miniature. Mirrors what /network actually renders: bankers
+  // sorted by warmth, each with a warmth ring + common-ground chips. Sized
+  // for the 16:10 surface card.
+  const BANKERS = [
+    { initial: "M", name: "Maya Chen", role: "VP, TMT · Morgan Stanley", warmth: 91, chips: ["Same school", "Senior"], color: PALETTE.blue },
+    { initial: "S", name: "Sara Patel", role: "VP, Sponsors · Evercore", warmth: 84, chips: ["Same school", "VP"], color: PALETTE.terracotta },
+    { initial: "A", name: "Alex Park", role: "Associate · Goldman Sachs", warmth: 76, chips: ["Class of '20"], color: PALETTE.blueHover },
+    { initial: "R", name: "Ravi Patel", role: "Associate · Morgan Stanley", warmth: 71, chips: ["Senior"], color: PALETTE.blue },
   ];
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden"
-      style={{
-        background: `radial-gradient(130% 90% at 50% 0%, #F4EDDB 0%, #EAE3D2 60%, #DDD3BE 100%)`,
-      }}
+      className="relative flex h-full w-full flex-col overflow-hidden p-4 md:p-5"
+      style={{ backgroundColor: PALETTE.bg }}
       aria-hidden
     >
-      {/* Header chrome */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-baseline justify-between px-4 pt-3.5">
-        <div className="flex items-baseline gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-1.5">
           <span
-            className="text-[14px] md:text-[15px]"
+            className="text-[15px] md:text-[17px]"
             style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
           >
-            Archipelago
+            Network
           </span>
           <span className="text-[9px] md:text-[10px]" style={{ color: PALETTE.faint }}>
-            3 banks · 14 paths
+            sorted by warmth
+          </span>
+        </div>
+        <div
+          className="flex shrink-0 items-center gap-0.5 rounded-full p-0.5 text-[8px] md:text-[9px]"
+          style={{ backgroundColor: PALETTE.cardBg, border: `1px solid ${PALETTE.border}` }}
+        >
+          <span
+            className="rounded-full px-1.5 py-[2px] font-semibold text-white"
+            style={{ backgroundColor: PALETTE.blue }}
+          >
+            All
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            ≥ 70
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            Same school
           </span>
         </div>
       </div>
 
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 320 200"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <defs>
-          <radialGradient id="ar-island-shadow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(20,24,42,0.22)" />
-            <stop offset="100%" stopColor="rgba(20,24,42,0)" />
-          </radialGradient>
-          <linearGradient id="ar-sand" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#F6E7B6" />
-            <stop offset="100%" stopColor="#D6BD86" />
-          </linearGradient>
-          <linearGradient id="ar-grass" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#B0BF92" />
-            <stop offset="100%" stopColor="#83965E" />
-          </linearGradient>
-        </defs>
-
-        {ISLANDS.map((island, i) => {
-          const { cx, cy, base, stage, name } = island;
-          // Construction sits centered horizontally on the island, anchored
-          // to the top of the grass plateau (cy - base*0.05).
-          const groundY = cy - base * 0.04;
-          return (
-            <g key={i}>
-              {/* Drop shadow on water */}
-              <ellipse
-                cx={cx + 2}
-                cy={cy + base * 0.55}
-                rx={base * 1.1}
-                ry={base * 0.3}
-                fill="url(#ar-island-shadow)"
-              />
-              {/* Sand */}
-              <ellipse cx={cx} cy={cy + base * 0.36} rx={base} ry={base * 0.42} fill="url(#ar-sand)" />
-              {/* Grass plateau */}
-              <ellipse
-                cx={cx}
-                cy={cy + base * 0.24}
-                rx={base * 0.78}
-                ry={base * 0.32}
-                fill="url(#ar-grass)"
-              />
-              {/* Highlight on plateau */}
-              <ellipse
-                cx={cx - base * 0.08}
-                cy={cy + base * 0.18}
-                rx={base * 0.46}
-                ry={base * 0.12}
-                fill="rgba(255,255,255,0.32)"
-              />
-
-              {/* Construction — sized larger so it reads at small render */}
-              {stage === "foundation" && (
-                <g>
-                  <rect
-                    x={cx - 11}
-                    y={groundY - 4}
-                    width="22"
-                    height="4"
-                    fill="#B5A88D"
-                    stroke="rgba(20,24,42,0.25)"
-                    strokeWidth="0.6"
-                    rx="0.6"
-                  />
-                  {/* Marker stones */}
-                  <circle cx={cx - 8} cy={groundY - 6.5} r="1.2" fill="#9B8E70" />
-                  <circle cx={cx + 8} cy={groundY - 6.5} r="1.2" fill="#9B8E70" />
-                </g>
-              )}
-
-              {stage === "walls" && (
-                <g>
-                  {/* Foundation */}
-                  <rect x={cx - 13} y={groundY - 3} width="26" height="3" fill="#B5A88D" />
-                  {/* Walls */}
-                  <rect
-                    x={cx - 12}
-                    y={groundY - 13}
-                    width="24"
-                    height="10"
-                    fill="#FCFAF5"
-                    stroke="rgba(20,24,42,0.28)"
-                    strokeWidth="0.7"
-                  />
-                  {/* Wall studs */}
-                  <line
-                    x1={cx - 4}
-                    y1={groundY - 13}
-                    x2={cx - 4}
-                    y2={groundY - 3}
-                    stroke="rgba(20,24,42,0.15)"
-                    strokeWidth="0.5"
-                  />
-                  <line
-                    x1={cx + 4}
-                    y1={groundY - 13}
-                    x2={cx + 4}
-                    y2={groundY - 3}
-                    stroke="rgba(20,24,42,0.15)"
-                    strokeWidth="0.5"
-                  />
-                </g>
-              )}
-
-              {stage === "home" && (
-                <g>
-                  {/* Foundation */}
-                  <rect x={cx - 14} y={groundY - 3} width="28" height="3" fill="#B5A88D" />
-                  {/* Walls */}
-                  <rect
-                    x={cx - 13}
-                    y={groundY - 14}
-                    width="26"
-                    height="11"
-                    fill="#FCFAF5"
-                    stroke="rgba(20,24,42,0.3)"
-                    strokeWidth="0.7"
-                  />
-                  {/* Roof */}
-                  <polygon
-                    points={`${cx - 15},${groundY - 14} ${cx},${groundY - 24} ${cx + 15},${groundY - 14}`}
-                    fill={PALETTE.terracotta}
-                    stroke="rgba(20,24,42,0.3)"
-                    strokeWidth="0.7"
-                    strokeLinejoin="round"
-                  />
-                  {/* Door */}
-                  <rect x={cx - 2} y={groundY - 9} width="4" height="6" fill={PALETTE.blue} rx="0.4" />
-                  {/* Windows */}
-                  <rect x={cx - 9.5} y={groundY - 11} width="4" height="3.5" fill={PALETTE.ochre} stroke="rgba(20,24,42,0.3)" strokeWidth="0.4" />
-                  <rect x={cx + 5.5} y={groundY - 11} width="4" height="3.5" fill={PALETTE.ochre} stroke="rgba(20,24,42,0.3)" strokeWidth="0.4" />
-                  {/* Chimney */}
-                  <rect x={cx + 6} y={groundY - 22} width="2.4" height="5" fill="#9B8E70" stroke="rgba(20,24,42,0.3)" strokeWidth="0.4" />
-                </g>
-              )}
-
-              {/* Labels under island */}
-              <text
-                x={cx}
-                y={cy + base * 0.85}
-                textAnchor="middle"
-                fontSize="11"
-                fontWeight="600"
-                fill={PALETTE.ink}
-                fontFamily="var(--font-fraunces)"
+      <div className="mt-3 flex flex-1 flex-col gap-1.5 md:mt-3 md:gap-2">
+        {BANKERS.map((b, i) => (
+          <div
+            key={i}
+            className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 md:gap-3 md:px-3"
+            style={{ backgroundColor: PALETTE.cardBg, border: `1px solid ${PALETTE.border}` }}
+          >
+            {/* Warmth ring miniature */}
+            <div className="relative shrink-0" style={{ width: 24, height: 24 }} aria-hidden>
+              <svg width={24} height={24} viewBox="0 0 24 24" className="-rotate-90 block">
+                <circle cx={12} cy={12} r={10} stroke={PALETTE.borderSoft} strokeWidth={2} fill="none" />
+                <circle
+                  cx={12} cy={12} r={10}
+                  stroke={b.color} strokeWidth={2} fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 10}
+                  strokeDashoffset={2 * Math.PI * 10 * (1 - b.warmth / 100)}
+                />
+              </svg>
+              <span
+                className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold tabular-nums md:text-[9px]"
+                style={{ fontFamily: "var(--font-fraunces)", color: b.color }}
               >
-                {name}
-              </text>
-              <text
-                x={cx}
-                y={cy + base * 0.85 + 11}
-                textAnchor="middle"
-                fontSize="8"
-                fill={PALETTE.muted}
-              >
-                {stage === "foundation" ? "sent" : stage === "walls" ? "coffee" : "home"}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* Bottom legend */}
-      <div
-        className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] md:text-[9px]"
-        style={{
-          backgroundColor: "rgba(255,255,255,0.85)",
-          border: `1px solid ${PALETTE.border}`,
-          color: PALETTE.muted,
-        }}
-      >
-        sent → coffee → <span style={{ color: PALETTE.ink, fontWeight: 600 }}>home</span>
+                {b.warmth}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-semibold leading-tight md:text-[11px]" style={{ color: PALETTE.ink }}>
+                {b.name}
+              </div>
+              <div className="truncate text-[8px] md:text-[9px]" style={{ color: PALETTE.faint }}>
+                {b.role}
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-1">
+              {b.chips.map((c, j) => (
+                <span
+                  key={j}
+                  className="rounded-full px-1.5 py-[1px] text-[7px] font-medium md:text-[8px]"
+                  style={{
+                    backgroundColor: c.includes("school") ? "rgba(46,90,136,0.12)" : PALETTE.bg,
+                    color: c.includes("school") ? PALETTE.blue : PALETTE.muted,
+                    border: `1px solid ${c.includes("school") ? "rgba(46,90,136,0.25)" : PALETTE.border}`,
+                  }}
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
