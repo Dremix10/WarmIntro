@@ -348,108 +348,209 @@ export function NetworkMock() {
 }
 
 export function CrmMock() {
-  const COLS = [
+  // Transit-map miniature. Mirrors what /pipeline actually renders: each
+  // firm is a horizontal line, stations are stages, bankers are circular
+  // markers. Sized to the 16:10 surface card.
+  type Stage = "sent" | "replied" | "coffee" | "referral" | "first";
+  const STATIONS: { stage: Stage; label: string }[] = [
+    { stage: "sent", label: "Sent" },
+    { stage: "replied", label: "Replied" },
+    { stage: "coffee", label: "Coffee" },
+    { stage: "referral", label: "Referral" },
+    { stage: "first", label: "1st Rd" },
+  ];
+  type Marker = { stage: Stage; initial: string; size: "s" | "m" | "l"; status?: "positive" | "due" };
+  type Firm = { name: string; tier: string; color: string; markers: Marker[] };
+
+  const FIRMS: Firm[] = [
     {
-      name: "Sent",
-      count: 8,
-      cards: [
-        { who: "M. Chen", firm: "MS TMT", age: "2d" },
-        { who: "J. Liu", firm: "JPM Healthcare", age: "1d" },
+      name: "Morgan Stanley",
+      tier: "BB",
+      color: PALETTE.blue,
+      markers: [
+        { stage: "sent", initial: "J", size: "s", status: "due" },
+        { stage: "replied", initial: "R", size: "m", status: "positive" },
+        { stage: "coffee", initial: "M", size: "l", status: "positive" },
       ],
     },
     {
-      name: "Replied",
-      count: 4,
-      cards: [{ who: "S. Patel", firm: "Evercore", age: "today" }],
-    },
-    {
-      name: "Coffee",
-      count: 3,
-      cards: [
-        { who: "A. Park", firm: "Goldman", age: "Tue 4pm" },
-        { who: "R. Kim", firm: "Lazard", age: "Thu 2pm" },
+      name: "Goldman Sachs",
+      tier: "BB",
+      color: PALETTE.blueHover,
+      markers: [
+        { stage: "sent", initial: "S", size: "s" },
+        { stage: "replied", initial: "A", size: "m", status: "positive" },
       ],
     },
     {
-      name: "Referral",
-      count: 2,
-      cards: [{ who: "T. Wong", firm: "Citi M&A", age: "warm" }],
+      name: "Evercore",
+      tier: "EB",
+      color: PALETTE.terracotta,
+      markers: [
+        { stage: "coffee", initial: "N", size: "m", status: "positive" },
+        { stage: "referral", initial: "S", size: "l", status: "positive" },
+      ],
     },
     {
-      name: "1st rd",
-      count: 1,
-      cards: [{ who: "K. Nash", firm: "Moelis", age: "scheduled" }],
+      name: "Lazard",
+      tier: "EB",
+      color: "#5A3D5C",
+      markers: [
+        { stage: "first", initial: "R", size: "l", status: "positive" },
+      ],
     },
   ];
 
+  const sizePx: Record<Marker["size"], number> = { s: 12, m: 14, l: 17 };
+  const fontPx: Record<Marker["size"], number> = { s: 7, m: 8, l: 10 };
+
   return (
     <div
-      className="relative h-full w-full overflow-hidden p-3 md:p-4"
+      className="relative flex h-full w-full flex-col overflow-hidden p-3 md:p-4"
       style={{ backgroundColor: PALETTE.bg }}
       aria-hidden
     >
+      {/* Top bar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-1.5">
           <span
-            className="text-[12px] md:text-[14px]"
-            style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink }}
+            className="text-[13px] md:text-[15px]"
+            style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
           >
             Pipeline
           </span>
-          <span className="text-[7px] md:text-[8px]" style={{ color: PALETTE.faint }}>
-            18 active · 2 won this cycle
+          <span className="text-[8px] md:text-[9px]" style={{ color: PALETTE.faint }}>
+            4 firms · 8 active
           </span>
         </div>
-        <span className="text-[7px] md:text-[8px]" style={{ color: PALETTE.muted }}>
-          filter ⌄
-        </span>
+        <div
+          className="flex shrink-0 items-center gap-0.5 rounded-full p-0.5 text-[7px] md:text-[8px]"
+          style={{ backgroundColor: PALETTE.cardBg, border: `1px solid ${PALETTE.border}` }}
+        >
+          <span
+            className="rounded-full px-1.5 py-[2px] font-semibold text-white"
+            style={{ backgroundColor: PALETTE.blue }}
+          >
+            All
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            BB
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            EB
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            MM
+          </span>
+        </div>
       </div>
 
-      <div className="mt-2 grid h-[calc(100%-1.5rem)] grid-cols-5 gap-1.5 md:mt-3 md:gap-2">
-        {COLS.map((col, i) => (
-          <div key={i} className="flex flex-col gap-1 md:gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span
-                className="text-[6px] font-bold uppercase tracking-wider md:text-[7px]"
-                style={{ color: PALETTE.muted }}
+      {/* Station headers */}
+      <div
+        className="mt-2.5 grid items-baseline pb-1 md:mt-3"
+        style={{ gridTemplateColumns: `52px repeat(${STATIONS.length}, minmax(0, 1fr))` }}
+      >
+        <div />
+        {STATIONS.map((st) => (
+          <div
+            key={st.stage}
+            className="text-center text-[6px] font-bold uppercase tracking-[0.06em] md:text-[7px]"
+            style={{ color: PALETTE.muted }}
+          >
+            {st.label}
+          </div>
+        ))}
+      </div>
+
+      {/* Firm rows */}
+      <div className="flex flex-1 flex-col justify-around">
+        {FIRMS.map((firm) => (
+          <div
+            key={firm.name}
+            className="relative grid items-center"
+            style={{
+              gridTemplateColumns: `52px repeat(${STATIONS.length}, minmax(0, 1fr))`,
+              color: firm.color,
+            }}
+          >
+            {/* Firm label */}
+            <div className="pr-1.5 text-right">
+              <div
+                className="truncate text-[7px] leading-tight md:text-[8px]"
+                style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
               >
-                {col.name}
-              </span>
-              <span
-                className="text-[6px] md:text-[7px]"
+                {firm.name}
+              </div>
+              <div
+                className="text-[5px] font-bold uppercase tracking-[0.06em] md:text-[6px]"
                 style={{ color: PALETTE.faint }}
               >
-                {col.count}
-              </span>
+                {firm.tier}
+              </div>
             </div>
-            <div className="flex flex-1 flex-col gap-1 overflow-hidden md:gap-1.5">
-              {col.cards.map((c, j) => (
+
+            {/* The line */}
+            <svg
+              className="pointer-events-none absolute"
+              style={{ left: "52px", right: 0, top: 0, height: "100%" }}
+              preserveAspectRatio="none"
+              viewBox="0 0 100 24"
+            >
+              <path
+                d="M 0 12 L 100 12"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+
+            {/* Stations + markers */}
+            {STATIONS.map((st) => {
+              const marker = firm.markers.find((m) => m.stage === st.stage);
+              return (
                 <div
-                  key={j}
-                  className="rounded-md p-1 md:p-1.5"
-                  style={{
-                    backgroundColor: PALETTE.cardBg,
-                    border: `1px solid ${PALETTE.border}`,
-                  }}
+                  key={st.stage}
+                  className="relative flex items-center justify-center"
+                  style={{ height: "24px" }}
                 >
-                  <div className="text-[7px] font-semibold md:text-[8px]" style={{ color: PALETTE.ink }}>
-                    {c.who}
-                  </div>
-                  <div className="text-[6px] md:text-[7px]" style={{ color: PALETTE.faint }}>
-                    {c.firm}
-                  </div>
-                  <div
-                    className="mt-0.5 inline-block rounded-sm px-1 text-[5px] md:text-[6px]"
+                  {/* Empty tick on the line */}
+                  <span
+                    className="absolute z-[1] rounded-full"
                     style={{
-                      backgroundColor: i >= 2 ? "rgba(232,179,57,0.18)" : "rgba(46,90,136,0.08)",
-                      color: i >= 2 ? "#92400E" : PALETTE.blue,
+                      width: "4px",
+                      height: "4px",
+                      backgroundColor: PALETTE.cardBg,
+                      border: `1.2px solid ${firm.color}`,
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
                     }}
-                  >
-                    {c.age}
-                  </div>
+                  />
+                  {/* Banker marker */}
+                  {marker && (
+                    <div
+                      className="relative z-[2] flex items-center justify-center rounded-full font-semibold text-white"
+                      style={{
+                        width: `${sizePx[marker.size]}px`,
+                        height: `${sizePx[marker.size]}px`,
+                        fontSize: `${fontPx[marker.size]}px`,
+                        fontFamily: "var(--font-fraunces)",
+                        backgroundColor: firm.color,
+                        boxShadow:
+                          marker.status === "positive"
+                            ? `0 0 0 2px ${PALETTE.bg}, 0 0 0 4px rgba(46,90,136,0.45)`
+                            : marker.status === "due"
+                              ? `0 0 0 2px ${PALETTE.bg}, 0 0 0 4px rgba(232,179,57,0.5)`
+                              : `0 0 0 2px ${PALETTE.bg}`,
+                      }}
+                    >
+                      {marker.initial}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         ))}
       </div>
