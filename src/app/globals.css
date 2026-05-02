@@ -407,3 +407,42 @@ html, body {
     animation: none;
   }
 }
+
+/* Pipeline transit-map — pulsing halo around banker markers when activity is
+   fresh (Aegean blue) or a follow-up is overdue (amber). Outer ring grows +
+   fades to mimic a soft sonar pulse. */
+@keyframes alma-halo-positive {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(46, 90, 136, 0.55),
+      0 0 0 5px rgba(46, 90, 136, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(46, 90, 136, 0.55),
+      0 0 0 14px rgba(46, 90, 136, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+}
+@keyframes alma-halo-due {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(232, 179, 57, 0.6),
+      0 0 0 5px rgba(232, 179, 57, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(232, 179, 57, 0.6),
+      0 0 0 14px rgba(232, 179, 57, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-status="positive"], [data-status="due"] { animation: none !important; }
+}

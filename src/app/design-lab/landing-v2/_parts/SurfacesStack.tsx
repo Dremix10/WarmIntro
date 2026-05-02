@@ -32,7 +32,7 @@ const SURFACES: Surface[] = [
     eyebrow: "Pipeline",
     title: "Every banker, every stage.",
     body: "Draft → sent → replied → coffee → referral → first round → superday → offer.",
-    authedHref: "/crm",
+    authedHref: "/pipeline",
     Mock: CrmMock,
   },
 ];

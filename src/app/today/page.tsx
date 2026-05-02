@@ -601,7 +601,7 @@ export default function TodayPage() {
             <div>
               <p className="text-sm font-medium">Sent to {sentToast.banker}{sentToast.firm ? ` at ${sentToast.firm}` : ""}</p>
               <p className="text-xs text-white/80 mt-0.5">
-                Watching for replies. Track in <a href="/crm" className="underline hover:text-white">CRM</a>.
+                Watching for replies. Track in <a href="/pipeline" className="underline hover:text-white">Pipeline</a>.
               </p>
             </div>
           </div>
