@@ -69,10 +69,10 @@ export function PipelineProgress({
       {stage && (
         <button
           type="button"
-          onClick={() => router.push("/crm")}
+          onClick={() => router.push("/pipeline")}
           className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg border border-[#D9CFB5] px-4 py-2 text-sm font-medium text-[#4A5260] hover:bg-[#FBF7EC] transition-colors"
         >
-          View in CRM &rarr;
+          View pipeline &rarr;
         </button>
       )}
       {stage === "referral" && (
