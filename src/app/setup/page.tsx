@@ -215,7 +215,8 @@ function SetupInner() {
     // If user already completed setup, hydrate target_firms / target_groups /
     // story so /setup acts as edit mode.
     hydrateExistingPicks();
-  }, [profile?.name]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.name, session?.user?.id]);
 
   async function hydrateExistingPicks() {
     if (!session) return;
@@ -859,20 +860,32 @@ function SetupInner() {
             </div>
 
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
-              <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">When should Alma run each day?</p>
-              <p className="text-sm text-[#14182A]/70 mb-1">
-                Once a day at this time, Alma drafts new outreach to bankers at your target firms. Approved drafts go out from your Gmail.
+              <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">What time should Alma send each day?</p>
+              <p className="text-sm text-[#14182A]/70 mb-4">
+                Once a day at this time, Alma drafts new outreach. Emails go out from your Gmail.
               </p>
-              <p className="text-xs text-[#14182A]/50 italic mb-3 font-[family-name:var(--font-fraunces)]">
-                Most students pick 7-8am so emails land before bankers&apos; first coffee.
-              </p>
-              <input
-                type="time"
-                value={preferredTime}
-                onChange={(e) => setPreferredTime(e.target.value)}
-                className="rounded-lg border border-[#D9CFB5] bg-[#EAE3D2]/40 px-3 py-2 text-sm"
-              />
-              <p className="mt-2 text-[11px] text-[#14182A]/40">Change anytime from your dashboard.</p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  { label: "6:00 am", value: "06:00" },
+                  { label: "7:00 am", value: "07:00" },
+                  { label: "8:00 am", value: "08:00" },
+                  { label: "9:00 am", value: "09:00" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setPreferredTime(opt.value)}
+                    className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors text-left ${
+                      preferredTime === opt.value
+                        ? "bg-[#2E5A88] text-white border-[#2E5A88]"
+                        : "bg-white text-[#14182A] border-[#D9CFB5] hover:border-[#2E5A88]"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] text-[#14182A]/40">7 am is most common — emails land before bankers&rsquo; first meeting. Change anytime from your dashboard.</p>
             </div>
 
             <button
@@ -895,7 +908,7 @@ function SetupInner() {
           </div>
         )}
 
-        {step === "done" && gmailConnected === false && (
+        {step === "done" && gmailConnected !== true && (
           <div className="rounded-2xl bg-white p-8 border-2 border-[#C86B4F]/30 text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-3xl mb-2">Almost there.</p>
             <p className="text-sm text-[#14182A]/70 mb-1">Profile saved. Alma can&apos;t draft outreach until Gmail is connected — that&apos;s the mailbox the messages send from.</p>

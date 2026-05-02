@@ -148,12 +148,12 @@ export default function CrmPage() {
     setLoading(true);
     const { data: conns } = await supabase
       .from("connections")
-      .select("id, banker_id, stage, updated_at, bankers(id, name, title, university, linkedin_url, email, warmth_score, firms(id, name, tier))")
+      .select("id, banker_id, stage, updated_at, warmth, bankers(id, name, title, university, linkedin_url, email, firms(id, name, tier))")
       .eq("user_id", session.user.id);
 
     const { data: drafts } = await supabase
       .from("drafts")
-      .select("id, banker_id, updated_at, bankers(id, name, title, university, linkedin_url, email, warmth_score, firms(id, name, tier))")
+      .select("id, banker_id, updated_at, bankers(id, name, title, university, linkedin_url, email, firms(id, name, tier))")
       .eq("user_id", session.user.id)
       .is("sent_at", null)
       .in("status", ["pending_critic", "needs_revision", "approved"]);
@@ -162,9 +162,9 @@ export default function CrmPage() {
     type BankerJoin = {
       id: string; name: string; title: string | null;
       university: string | null; linkedin_url: string | null; email: string | null;
-      warmth_score: number | null; firms: FirmJoin;
+      firms: FirmJoin;
     };
-    type ConnRow = { id: string; banker_id: string; stage: string; updated_at: string; bankers: BankerJoin | null };
+    type ConnRow = { id: string; banker_id: string; stage: string; updated_at: string; warmth: number | null; bankers: BankerJoin | null };
     type DraftRow = { id: string; banker_id: string; updated_at: string; bankers: BankerJoin | null };
 
     const seen = new Set<string>();
@@ -184,7 +184,7 @@ export default function CrmPage() {
         university: c.bankers.university,
         linkedinUrl: c.bankers.linkedin_url,
         email: c.bankers.email,
-        warmth: c.bankers.warmth_score,
+        warmth: c.warmth ?? null,
         stage: (c.stage as Stage) ?? "sent",
         updatedAt: c.updated_at,
       });
@@ -203,7 +203,7 @@ export default function CrmPage() {
         university: d.bankers.university,
         linkedinUrl: d.bankers.linkedin_url,
         email: d.bankers.email,
-        warmth: d.bankers.warmth_score,
+        warmth: null,
         stage: "draft",
         updatedAt: d.updated_at,
       });
