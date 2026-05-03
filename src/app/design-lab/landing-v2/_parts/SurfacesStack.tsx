@@ -22,10 +22,10 @@ const SURFACES: Surface[] = [
     Mock: TodayMock,
   },
   {
-    eyebrow: "Network",
-    title: "Where you’re warmest.",
-    body: "Every banker in your orbit, sorted by warmth. Same-school alumni rise to the top.",
-    authedHref: "/network",
+    eyebrow: "Deck",
+    title: "Each firm is a deck.",
+    body: "Tap a deck to fan its bankers out. Each card’s style tells you the level you’ve reached.",
+    authedHref: "/deck",
     Mock: NetworkMock,
   },
   {

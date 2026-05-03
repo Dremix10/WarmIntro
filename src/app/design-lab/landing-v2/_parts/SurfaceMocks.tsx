@@ -134,15 +134,20 @@ export function TodayMock() {
 }
 
 export function NetworkMock() {
-  // Warmth-list miniature. Mirrors what /network actually renders: bankers
-  // sorted by warmth, each with a warmth ring + common-ground chips. Sized
+  // Decks miniature — mirrors what /deck actually renders. Two firm decks,
+  // each shown as a small stacked card with firm name + level pill. Sized
   // for the 16:10 surface card.
-  const BANKERS = [
-    { initial: "M", name: "Maya Chen", role: "VP, TMT · Morgan Stanley", warmth: 91, chips: ["Same school", "Senior"], color: PALETTE.blue },
-    { initial: "S", name: "Sara Patel", role: "VP, Sponsors · Evercore", warmth: 84, chips: ["Same school", "VP"], color: PALETTE.terracotta },
-    { initial: "A", name: "Alex Park", role: "Associate · Goldman Sachs", warmth: 76, chips: ["Class of '20"], color: PALETTE.blueHover },
-    { initial: "R", name: "Ravi Patel", role: "Associate · Morgan Stanley", warmth: 71, chips: ["Senior"], color: PALETTE.blue },
+  const DECKS = [
+    { firm: "Lazard", tier: "EB · Restructuring", count: 2, roman: "V", name: "1st Round", color: "#5A3D5C", levelTone: "gold" },
+    { firm: "Goldman Sachs", tier: "BB · M&A", count: 3, roman: "IV", name: "Referral", color: "#2E5A88", levelTone: "ochre" },
+    { firm: "Morgan Stanley", tier: "BB · TMT", count: 4, roman: "III", name: "Coffee", color: "#1B3B5F", levelTone: "blue" },
   ];
+  const tonePill = (t: string) =>
+    t === "gold"
+      ? { bg: "rgba(201,162,76,0.15)", border: "rgba(201,162,76,0.45)", color: "#8E6E14" }
+      : t === "ochre"
+        ? { bg: "rgba(232,179,57,0.15)", border: "rgba(232,179,57,0.45)", color: "#92400E" }
+        : { bg: "rgba(46,90,136,0.10)", border: "rgba(46,90,136,0.30)", color: PALETTE.blue };
 
   return (
     <div
@@ -156,10 +161,10 @@ export function NetworkMock() {
             className="text-[15px] md:text-[17px]"
             style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
           >
-            Network
+            Deck
           </span>
           <span className="text-[9px] md:text-[10px]" style={{ color: PALETTE.faint }}>
-            sorted by warmth
+            3 firms · 9 bankers
           </span>
         </div>
         <div
@@ -172,66 +177,74 @@ export function NetworkMock() {
           >
             All
           </span>
-          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
-            ≥ 70
-          </span>
-          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
-            Same school
-          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>BB</span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>EB</span>
         </div>
       </div>
 
-      <div className="mt-3 flex flex-1 flex-col gap-1.5 md:mt-3 md:gap-2">
-        {BANKERS.map((b, i) => (
-          <div
-            key={i}
-            className="flex flex-1 items-center gap-2.5 rounded-lg px-2.5 py-1.5 md:gap-3 md:px-3"
-            style={{ backgroundColor: PALETTE.cardBg, border: `1px solid ${PALETTE.border}` }}
-          >
-            {/* Warmth ring miniature */}
-            <div className="relative shrink-0" style={{ width: 24, height: 24 }} aria-hidden>
-              <svg width={24} height={24} viewBox="0 0 24 24" className="-rotate-90 block">
-                <circle cx={12} cy={12} r={10} stroke={PALETTE.borderSoft} strokeWidth={2} fill="none" />
-                <circle
-                  cx={12} cy={12} r={10}
-                  stroke={b.color} strokeWidth={2} fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 10}
-                  strokeDashoffset={2 * Math.PI * 10 * (1 - b.warmth / 100)}
-                />
-              </svg>
-              <span
-                className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold tabular-nums md:text-[9px]"
-                style={{ fontFamily: "var(--font-fraunces)", color: b.color }}
+      <div className="mt-3 flex flex-1 flex-col gap-2 md:mt-3 md:gap-2.5">
+        {DECKS.map((d, i) => {
+          const pill = tonePill(d.levelTone);
+          return (
+            <div key={i} className="relative flex-1">
+              {/* Ghost cards behind */}
+              <div
+                className="absolute inset-0 rounded-[10px]"
+                style={{
+                  backgroundColor: PALETTE.cardBg,
+                  border: `1px solid ${PALETTE.border}`,
+                  transform: "translate(-3px, 2px) rotate(-1.4deg)",
+                  opacity: 0.85,
+                }}
+              />
+              <div
+                className="absolute inset-0 rounded-[10px]"
+                style={{
+                  backgroundColor: PALETTE.cardBg,
+                  border: `1px solid ${PALETTE.border}`,
+                  transform: "translate(3px, 2px) rotate(1.4deg)",
+                  opacity: 0.85,
+                }}
+              />
+              {/* Top card */}
+              <div
+                className="relative flex h-full items-center justify-between gap-2 rounded-[10px] px-2.5 md:px-3"
+                style={{
+                  backgroundImage: "linear-gradient(180deg, #fff 0%, #FCFAF5 100%)",
+                  border: `1px solid ${PALETTE.border}`,
+                  boxShadow: "0 1px 0 0 rgba(255,255,255,0.9) inset, 0 4px 10px -4px rgba(20,24,42,0.10)",
+                }}
               >
-                {b.warmth}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] font-semibold leading-tight md:text-[11px]" style={{ color: PALETTE.ink }}>
-                {b.name}
-              </div>
-              <div className="truncate text-[8px] md:text-[9px]" style={{ color: PALETTE.faint }}>
-                {b.role}
-              </div>
-            </div>
-            <div className="flex shrink-0 gap-1">
-              {b.chips.map((c, j) => (
-                <span
-                  key={j}
-                  className="rounded-full px-1.5 py-[1px] text-[7px] font-medium md:text-[8px]"
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="truncate text-[10px] leading-tight md:text-[11px]"
+                    style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
+                  >
+                    {d.firm}
+                  </div>
+                  <div className="text-[7px] md:text-[8px]" style={{ color: PALETTE.faint }}>
+                    {d.count} bankers · {d.tier}
+                  </div>
+                </div>
+                <div
+                  className="flex shrink-0 items-baseline gap-[3px] rounded-full px-1.5 py-[1px] text-[7px] font-semibold md:text-[8px]"
                   style={{
-                    backgroundColor: c.includes("school") ? "rgba(46,90,136,0.12)" : PALETTE.bg,
-                    color: c.includes("school") ? PALETTE.blue : PALETTE.muted,
-                    border: `1px solid ${c.includes("school") ? "rgba(46,90,136,0.25)" : PALETTE.border}`,
+                    backgroundColor: pill.bg,
+                    border: `1px solid ${pill.border}`,
+                    color: pill.color,
                   }}
                 >
-                  {c}
-                </span>
-              ))}
+                  <span style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", fontWeight: 600 }}>
+                    {d.roman}
+                  </span>
+                  <span style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "6px" }}>
+                    {d.name}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

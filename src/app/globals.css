@@ -410,3 +410,234 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   [data-status="positive"], [data-status="due"] { animation: none !important; }
 }
+
+/* /deck — firm-decks UX. Each firm = a stack of cards (closed). Click → ghosts
+   collapse + top card fades + open header bar slides in + banker cards leap
+   into the spread below with staggered arc easing. */
+.alma-deck {
+  position: relative;
+  perspective: 1200px;
+  transition: padding-bottom 600ms cubic-bezier(.22,.75,.3,1);
+  padding-bottom: 0;
+}
+.alma-deck[data-open] { padding-bottom: 16px; }
+
+.alma-deck-stack {
+  position: relative;
+  height: 196px;
+  cursor: pointer;
+  transition: height 540ms cubic-bezier(.22,.75,.3,1), transform 480ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-deck:hover .alma-deck-stack { transform: translateY(-2px); }
+.alma-deck[data-open] .alma-deck-stack {
+  transform: translateY(0);
+  height: 64px;
+}
+
+.alma-deck-stack-card {
+  position: absolute; inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+  border: 1px solid #D9CFB5;
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.9) inset,
+    0 1px 2px 0 rgba(20,24,42,0.04),
+    0 12px 28px -12px rgba(20,24,42,0.10);
+  transition: transform 540ms cubic-bezier(.22,.75,.3,1), opacity 380ms ease;
+  pointer-events: none;
+}
+.alma-deck-stack-card.ghost-1 { transform: translate(-6px, 5px) rotate(-3deg); opacity: 0.85; z-index: 1; }
+.alma-deck-stack-card.ghost-2 { transform: translate(6px, 5px) rotate(3deg); opacity: 0.85; z-index: 1; }
+.alma-deck-stack-card.top { z-index: 2; }
+
+.alma-deck[data-open] .alma-deck-stack-card.ghost-1 { transform: translate(-2px, 1px) rotate(-1deg) scale(0.97); opacity: 0; }
+.alma-deck[data-open] .alma-deck-stack-card.ghost-2 { transform: translate(2px, 1px) rotate(1deg) scale(0.97); opacity: 0; }
+.alma-deck[data-open] .alma-deck-stack-card.top { transform: scale(0.96); opacity: 0; }
+
+.alma-deck-top-content {
+  position: relative; z-index: 3;
+  padding: 18px 20px;
+  height: 100%;
+  display: flex; flex-direction: column; justify-content: space-between;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+.alma-deck[data-open] .alma-deck-top-content { opacity: 0; }
+
+/* Open-state header — same spot as collapsed stack so the deck never blanks. */
+.alma-deck-open-header {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 64px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+  border: 1px solid #D9CFB5;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 18px -8px rgba(20,24,42,0.10);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  opacity: 0; pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 360ms cubic-bezier(.22,.75,.3,1) 80ms, transform 360ms cubic-bezier(.22,.75,.3,1) 80ms;
+  z-index: 4;
+}
+.alma-deck[data-open] .alma-deck-open-header {
+  opacity: 1; pointer-events: auto;
+  transform: translateY(0);
+}
+
+.alma-deck-stage-pill {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid #D9CFB5;
+  background: rgba(46, 90, 136, 0.08);
+  color: #1B3B5F;
+  flex-shrink: 0;
+}
+.alma-deck-stage-roman {
+  font-family: var(--font-fraunces, Georgia, serif);
+  font-style: italic;
+  font-weight: 600;
+}
+.alma-deck-stage-name {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #5C6472;
+}
+/* Tier-tinted highest-level pills */
+.alma-deck[data-highest="V"] .alma-deck-stage-pill,
+.alma-deck[data-highest="VI"] .alma-deck-stage-pill,
+.alma-deck[data-highest="VII"] .alma-deck-stage-pill {
+  background: rgba(201, 162, 76, 0.15);
+  border-color: rgba(201, 162, 76, 0.45);
+  color: #8E6E14;
+}
+.alma-deck[data-highest="V"] .alma-deck-stage-pill .alma-deck-stage-name,
+.alma-deck[data-highest="VI"] .alma-deck-stage-pill .alma-deck-stage-name,
+.alma-deck[data-highest="VII"] .alma-deck-stage-pill .alma-deck-stage-name {
+  color: #8E6E14;
+}
+.alma-deck[data-highest="IV"] .alma-deck-stage-pill {
+  background: rgba(232, 179, 57, 0.15);
+  border-color: rgba(232, 179, 57, 0.45);
+  color: #92400E;
+}
+.alma-deck[data-highest="IV"] .alma-deck-stage-pill .alma-deck-stage-name {
+  color: #92400E;
+}
+
+.alma-deck-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #D9CFB5;
+  color: #5C6472;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  z-index: 10;
+  opacity: 0; pointer-events: none;
+  transition: opacity 240ms ease, background 200ms ease, color 200ms ease;
+}
+.alma-deck[data-open] .alma-deck-close { opacity: 1; pointer-events: auto; }
+.alma-deck-close:hover { background: white; color: #14182A; }
+
+/* Spread reveals when deck opens. Cards leap in with stagger. */
+.alma-deck-spread {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 700ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-deck[data-open] .alma-deck-spread { max-height: 2400px; }
+
+@keyframes alma-card-leap-in {
+  0%   { opacity: 0; transform: translateY(-30px) scale(0.92); }
+  50%  { opacity: 1; transform: translateY(-6px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.alma-banker-card {
+  opacity: 0;
+  transform: translateY(-30px) scale(0.92);
+  position: relative;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+  border: 1px solid #D9CFB5;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 18px -8px rgba(20,24,42,0.10);
+  cursor: pointer;
+  transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+}
+.alma-deck[data-open] .alma-banker-card {
+  animation: alma-card-leap-in 700ms cubic-bezier(.22,.7,.3,1.05) forwards;
+  animation-delay: var(--alma-stagger, 80ms);
+}
+.alma-banker-card:hover {
+  transform: translateY(-1px);
+  border-color: #2E5A88;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 16px 32px -10px rgba(20,24,42,0.16);
+}
+.alma-banker-card[data-active] {
+  border-color: #1B3B5F;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 0 0 2px rgba(27,59,95,0.18), 0 16px 32px -10px rgba(20,24,42,0.18);
+}
+
+/* Tier visual treatments — paper / aegean / ochre / gold */
+.alma-banker-card[data-tier="paper"] {
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+}
+.alma-banker-card[data-tier="aegean"] {
+  background: linear-gradient(180deg, #fff 0%, #F4F8FC 100%);
+  border-left: 3px solid #2E5A88;
+  padding-left: 14px;
+}
+.alma-banker-card[data-tier="ochre"] {
+  background: linear-gradient(180deg, #FFFCF2 0%, #FAEFD2 100%);
+  border-left: 3px solid #E8B339;
+  padding-left: 14px;
+}
+.alma-banker-card[data-tier="gold"] {
+  background: linear-gradient(180deg, #FFFCF2 0%, #FBF1D6 100%);
+  border-color: #C9A24C;
+  border-left: 4px solid #C9A24C;
+  padding-left: 13px;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(201, 162, 76, 0.18), 0 16px 32px -10px rgba(201, 162, 76, 0.28);
+}
+
+.alma-banker-warmth {
+  background: rgba(46, 90, 136, 0.10);
+  color: #1B3B5F;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.alma-banker-card[data-tier="ochre"] .alma-banker-warmth {
+  background: rgba(232, 179, 57, 0.18);
+  color: #92400E;
+}
+.alma-banker-card[data-tier="gold"] .alma-banker-warmth {
+  background: rgba(201, 162, 76, 0.18);
+  color: #8E6E14;
+}
+
+.alma-banker-stage-roman { color: #1B3B5F; }
+.alma-banker-stage-name { color: #5C6472; }
+.alma-banker-card[data-tier="ochre"] .alma-banker-stage-roman,
+.alma-banker-card[data-tier="ochre"] .alma-banker-stage-name { color: #92400E; }
+.alma-banker-card[data-tier="gold"] .alma-banker-stage-roman,
+.alma-banker-card[data-tier="gold"] .alma-banker-stage-name { color: #8E6E14; }
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-deck-stack, .alma-deck-stack-card, .alma-deck-top-content,
+  .alma-deck-open-header, .alma-deck-close, .alma-deck-spread,
+  .alma-banker-card { transition: none !important; animation: none !important; }
+  .alma-deck[data-open] .alma-banker-card { opacity: 1; transform: none; }
+}
