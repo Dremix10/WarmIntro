@@ -1,8 +1,10 @@
 // Inline product mocks for the landing surfaces section.
-// These are not real screenshots — they're high-fidelity reproductions of
-// what /today, /network, and /crm look like when populated, drawn in
-// React + Tailwind so they stay crisp at any size and match the palette
-// exactly. Demo data is illustrative.
+// Drawn in React + Tailwind so they stay crisp at any size and match the
+// Alma palette exactly. Each mirrors what the actual page renders:
+//   TodayMock     → /today    (queue + trust dial)
+//   DeckMock      → /deck     (firm decks + level pills)
+//   PipelineMock  → /pipeline (transit map by firm)
+// Demo data is illustrative.
 
 const PALETTE = {
   bg: "#EAE3D2",
@@ -133,7 +135,7 @@ export function TodayMock() {
   );
 }
 
-export function NetworkMock() {
+export function DeckMock() {
   // Decks miniature — mirrors what /deck actually renders. Two firm decks,
   // each shown as a small stacked card with firm name + level pill. Sized
   // for the 16:10 surface card.
@@ -250,7 +252,7 @@ export function NetworkMock() {
   );
 }
 
-export function CrmMock() {
+export function PipelineMock() {
   // Transit-map miniature. Mirrors what /pipeline actually renders: each
   // firm is a horizontal line, stations are stages, bankers are circular
   // markers. Sized to the 16:10 surface card.

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-browser";
-import { TodayMock, NetworkMock, CrmMock } from "./SurfaceMocks";
+import { TodayMock, DeckMock, PipelineMock } from "./SurfaceMocks";
 
 type Surface = {
   eyebrow: string;
@@ -26,14 +26,14 @@ const SURFACES: Surface[] = [
     title: "Each firm is a deck.",
     body: "Tap a deck to fan its bankers out. Each card’s style tells you the level you’ve reached.",
     authedHref: "/deck",
-    Mock: NetworkMock,
+    Mock: DeckMock,
   },
   {
     eyebrow: "Pipeline",
     title: "Every banker, every stage.",
     body: "Draft → sent → replied → coffee → referral → first round → superday → offer.",
     authedHref: "/pipeline",
-    Mock: CrmMock,
+    Mock: PipelineMock,
   },
 ];
 
