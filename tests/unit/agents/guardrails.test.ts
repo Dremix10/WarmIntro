@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyGuardrails, hasBlockingFlags } from "@/services/guardrails";
+import { applyGuardrails, hasBlockingFlags, sanitizeEmailSubject } from "@/services/guardrails";
 
 const LONG_ENOUGH_BODY = `
 Hi Sarah,
@@ -14,6 +14,12 @@ Brown '28 | Applied Mathematics-Computer Science
 `;
 
 describe("applyGuardrails", () => {
+  it("normalizes em dashes out of email subjects", () => {
+    expect(sanitizeEmailSubject("Brown CS sophomore — quick question on healthcare M&A")).toBe(
+      "Brown CS sophomore - quick question on healthcare M&A"
+    );
+  });
+
   it("hard-blocks live tester casual hedge language", () => {
     const result = applyGuardrails(LONG_ENOUGH_BODY.replace("trying to understand", "kinda trying to understand"));
 

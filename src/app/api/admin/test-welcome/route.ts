@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         from: fromAddress,
         to: [targetEmail],
         reply_to: replyTo,
-        subject: "You're in — Alma is yours",
+        subject: "You're in: Alma is yours",
         text: textBody,
         html,
       }),

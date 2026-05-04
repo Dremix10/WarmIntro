@@ -259,7 +259,7 @@ export const MOCK_OUTREACH_DRAFTS: OutreachDraft[] = [
     id: "draft-email-1",
     alumniId: "alumni-1",
     companyId: "tesla",
-    subject: "Fellow Rice MechE & Robotics Club member — quick question about Tesla",
+    subject: "Fellow Rice MechE & Robotics Club member - quick question about Tesla",
     body: `Hi Sarah,
 
 I hope this message finds you well! My name is Alex Rivera, and I'm a junior studying Mechanical Engineering at Rice University. I'm currently the president of the Rice Robotics Club — I saw that you were a member during your time at Rice, which is awesome!

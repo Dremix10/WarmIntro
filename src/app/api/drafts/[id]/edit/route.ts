@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { logSignal } from "@/services/signals/log";
 import { ensureGmailDraft } from "@/services/gmail/sync-draft";
+import { sanitizeEmailSubject } from "@/services/guardrails";
 import type { Database } from "@/lib/database.types";
 
 type DraftUpdate = Database["public"]["Tables"]["drafts"]["Update"];
@@ -17,6 +18,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { subject, body } = (await request.json()) as { subject?: string; body?: string };
   if (!body) return NextResponse.json({ error: "missing_body" }, { status: 400 });
+  const cleanedSubject = sanitizeEmailSubject(subject ?? "");
 
   const { data: draft } = await ctx.supabase
     .from("drafts")
@@ -25,13 +27,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .single();
   if (!draft || draft.user_id !== ctx.user.id) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  const subjectChanged = (subject ?? "") !== (draft.subject ?? "");
+  const subjectChanged = cleanedSubject !== (draft.subject ?? "");
   const bodyChanged = body !== draft.body;
   const charsBefore = (draft.body ?? "").length;
   const charsAfter = body.length;
 
   const update: DraftUpdate = {
-    subject,
+    subject: cleanedSubject,
     body,
     user_edited_body: body,
     status: "approved",
@@ -68,5 +70,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     console.warn(`[edit] ensureGmailDraft failed for ${id}`, err);
   }
 
-  return NextResponse.json({ ok: true, subject: subject ?? null, body });
+  return NextResponse.json({ ok: true, subject: cleanedSubject || null, body });
 }

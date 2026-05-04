@@ -7,7 +7,7 @@ type Tone = "casual" | "warm" | "formal";
 
 const EMAIL_DRAFTS: Record<Tone, { subject: string; body: string }> = {
   casual: {
-    subject: "Fellow Brown alum — quick question about MS TMT",
+    subject: "Fellow Brown alum - quick question about MS TMT",
     body: `Hi Maya,
 
 Kinsey here, a Brown junior recruiting for summer analyst. Saw you're a VP on Morgan Stanley TMT and noticed you worked on the recent software deal that just closed.
@@ -20,7 +20,7 @@ Thanks either way,
 Kinsey`,
   },
   warm: {
-    subject: "Brown alum reaching out — would love your perspective",
+    subject: "Brown alum reaching out - would love your perspective",
     body: `Hi Maya,
 
 I'm Kinsey, a Brown junior recruiting for summer analyst. I came across your profile and was drawn to your path — Brown Econ to MS TMT, now covering software M&A. That's the exact arc I'm trying to understand right now.
@@ -35,7 +35,7 @@ Thanks for considering it, Maya.
 Brown &rsquo;27`,
   },
   formal: {
-    subject: "Brown alumna outreach — networking call request",
+    subject: "Brown alumna outreach - networking call request",
     body: `Dear Maya,
 
 My name is Kinsey Harper, and I am a junior at Brown University recruiting for summer analyst programs. I came across your profile while researching Morgan Stanley's TMT group, where you serve as a Vice President.

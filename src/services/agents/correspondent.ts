@@ -4,7 +4,7 @@
 import { startAgentRun, endAgentRun, askClaudeJSON, logSignal } from "./shared";
 import { OPUS_MODEL } from "@/services/claude";
 import { restSelectOne, restSelect, restInsert, restUpdate, eq, isNull } from "@/lib/supabase-rest";
-import { applyGuardrails } from "@/services/guardrails";
+import { applyGuardrails, sanitizeEmailSubject } from "@/services/guardrails";
 import { scoutBankerFindings, type ScoutedFinding } from "./scout";
 import type { CommonGroundAnchor, DraftType } from "@/shared/ib-types";
 
@@ -266,6 +266,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
     });
 
     // Step 3: Apply guardrails
+    const cleanedSubject = sanitizeEmailSubject(drafted.subject);
     const { body: cleanedBody, flags } = applyGuardrails(drafted.body);
 
     // Step 4: Persist as draft. On revise iterations we MUST update the
@@ -276,7 +277,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
       await restUpdate(
         "drafts",
         {
-          subject: drafted.subject,
+          subject: cleanedSubject,
           body: cleanedBody,
           guardrail_flags: flags,
           status: "pending_critic",
@@ -296,7 +297,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
         banker_id: input.bankerId,
         connection_id: input.connectionId,
         type: input.type,
-        subject: drafted.subject,
+        subject: cleanedSubject,
         body: cleanedBody,
         guardrail_flags: flags,
         status: "pending_critic",
@@ -318,7 +319,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
 
     return {
       draftId,
-      subject: drafted.subject,
+      subject: cleanedSubject,
       body: cleanedBody,
       anchors,
       rejectedForNoAnchor: false,
@@ -353,7 +354,7 @@ When in doubt, delete the first sentence and start with the second.
 
 # WHAT GREAT LOOKS LIKE — a real cold email that scored 9/10
 
-Subject: Brown CS sophomore — quick question on healthcare M&A
+Subject: Brown CS sophomore - quick question on healthcare M&A
 
 Hi Sarah,
 
@@ -630,6 +631,6 @@ function buildDraftPrompt(
     );
   }
 
-  parts.push(`Return JSON: {"subject": string, "body": string}`);
+  parts.push(`Return JSON: {"subject": string, "body": string}. Subject must not contain em dashes or en dashes; use a colon or plain hyphen if needed.`);
   return parts.join("\n");
 }

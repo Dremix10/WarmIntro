@@ -2,6 +2,7 @@
 // Captures the Message-ID header for future reply-thread matching
 
 import { getAccessTokenForUser } from "./tokens";
+import { sanitizeEmailSubject } from "@/services/guardrails";
 
 export interface GmailSendResult {
   sentMessageId: string; // RFC 822 Message-ID from headers
@@ -21,10 +22,11 @@ function encodeSubject(subject: string): string {
 function buildMime(opts: { from: string; to: string; subject: string; body: string; messageId: string }): string {
   // Date header improves deliverability. Some spam filters flag mail without it.
   const dateHeader = new Date().toUTCString();
+  const subject = sanitizeEmailSubject(opts.subject);
   const lines = [
     `From: ${opts.from}`,
     `To: ${opts.to}`,
-    `Subject: ${encodeSubject(opts.subject)}`,
+    `Subject: ${encodeSubject(subject)}`,
     `Message-ID: ${opts.messageId}`,
     `Date: ${dateHeader}`,
     `MIME-Version: 1.0`,

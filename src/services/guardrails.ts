@@ -17,6 +17,13 @@ export interface GuardrailResult {
 const MIN_BODY_CHARS = 150;
 const MAX_BODY_CHARS = 1400;
 
+export function sanitizeEmailSubject(subject: string): string {
+  return subject
+    .replace(/\s*[—–]\s*/g, " - ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function applyGuardrails(body: string): GuardrailResult {
   let cleaned = body;
 

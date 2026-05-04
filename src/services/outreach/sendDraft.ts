@@ -27,7 +27,7 @@
 //      bursts of 'draft_send_failed' signals (D6 Check 5 + Check 6).
 
 import { getAdminClient } from "@/lib/supabase-admin";
-import { sendEmailAsUser, sendGmailDraft, isGmailSendSuccess } from "@/services/gmail/send";
+import { sendEmailAsUser, sendGmailDraft, saveToDrafts, isGmailSendSuccess } from "@/services/gmail/send";
 import type { GmailSendError, GmailSendResult } from "@/services/gmail/send";
 import { logSignal } from "@/services/signals/log";
 import { upsertConnectionAtStage, type BankerSnapshot } from "@/services/pipeline/upsertConnectionAtStage";
@@ -282,18 +282,35 @@ export async function sendDraft(input: SendDraftInput): Promise<SendDraftResult>
   // we have a stored gmail_draft_id; otherwise fall back to a fresh send.
   let sendRes: GmailSendResult | { error: GmailSendError };
   try {
-    sendRes = draftWithBanker.gmail_draft_id
-      ? await sendGmailDraft({
-          userId: input.userId,
-          gmailDraftId: draftWithBanker.gmail_draft_id,
-        })
-      : await sendEmailAsUser({
-          userId: input.userId,
-          fromEmail: profile!.gmail_email!,
-          toEmail: bankerEmail!,
-          subject: draftWithBanker.subject ?? "",
-          body: draftWithBanker.body,
-        });
+    if (draftWithBanker.gmail_draft_id) {
+      const synced = await saveToDrafts({
+        userId: input.userId,
+        fromEmail: profile!.gmail_email!,
+        toEmail: bankerEmail!,
+        subject: draftWithBanker.subject ?? "",
+        body: draftWithBanker.body,
+        existingDraftId: draftWithBanker.gmail_draft_id,
+      });
+      sendRes = synced
+        ? await sendGmailDraft({
+            userId: input.userId,
+            gmailDraftId: synced.draftId,
+          })
+        : {
+            error: {
+              reason: "gmail_rejected",
+              message: "Could not update Gmail draft subject before send.",
+            },
+          };
+    } else {
+      sendRes = await sendEmailAsUser({
+        userId: input.userId,
+        fromEmail: profile!.gmail_email!,
+        toEmail: bankerEmail!,
+        subject: draftWithBanker.subject ?? "",
+        body: draftWithBanker.body,
+      });
+    }
   } catch (err) {
     // Exception thrown during the call itself (network, code bug).
     // Email was NOT sent — safe to revert.
