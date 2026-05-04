@@ -10,6 +10,8 @@ Context for any AI coding agent (Codex, Claude, Aider, Cursor, etc.) working on 
 4. **`docs/QUERIES_COOKBOOK.md`** — copy-paste SQL for common debugging queries.
 5. **`BACKEND_HANDOFF.md` / `FRONTEND_HANDOFF.md` / `BACKEND_REQUESTS.md`** — running cross-cofounder handoff docs.
 6. **`docs/superpowers/specs/2026-04-23-alma-ib-agent-design.md`** — the agreed architecture for the IB wedge.
+7. **`docs/MONITORING.md`** — signal taxonomy + how to recreate the live activity tracker (was a Claude Monitor process; bash poll loop + variants documented).
+8. **`docs/OPEN_TASKS.md`** — tasks pending at the Claude → Codex migration (#27, #28, #58, #75, #76).
 
 <!-- BEGIN:nextjs-agent-rules -->
 ## This is NOT the Next.js you know
@@ -123,7 +125,7 @@ This section captures snapshots that decay fast. Treat as starting points, not f
 
 ### Tester verification queue
 
-Two tasks track features shipped but not yet user-confirmed: **#58** (10 items from earlier batch) and **#76** (5 items from the 2026-05-02 Anya batch — eye toggle, preset time picker, useEffect+auth deps fix, /pipeline column fix, /today→/pipeline link). Walk Anya's path end-to-end before counting them done.
+Two tasks track features shipped but not yet user-confirmed: **#58** (10 items from earlier batch) and **#76** (5 items from the 2026-05-02 Anya batch — eye toggle, preset time picker, useEffect+auth deps fix, /pipeline column fix, /today→/pipeline link). Walk Anya's path end-to-end before counting them done. Full task descriptions in `docs/OPEN_TASKS.md`.
 
 ## Testing patterns (durable lessons)
 
