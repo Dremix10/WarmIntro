@@ -324,7 +324,7 @@ export function JourneyScene() {
         </g>
       </svg>
 
-      <div className="pointer-events-none absolute left-6 top-5 max-w-sm rounded-2xl bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
+      <div className="pointer-events-none absolute left-3 top-3 max-w-[200px] rounded-xl bg-white/95 px-3 py-2 shadow-sm backdrop-blur sm:left-6 sm:top-5 sm:max-w-sm sm:rounded-2xl sm:px-4 sm:py-3">
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#5C6472]">
           Your archipelago
         </p>

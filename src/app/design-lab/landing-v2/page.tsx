@@ -107,7 +107,7 @@ function Hero() {
         <AnimatedHeadline />
 
         <p
-          className="mt-8 max-w-2xl text-lg leading-[1.55] text-[#4A5260] opacity-0 md:text-xl"
+          className="mt-6 max-w-2xl text-base leading-[1.55] text-[#4A5260] opacity-0 sm:mt-8 sm:text-lg md:text-xl"
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1500ms forwards" }}
         >
           Alma is your AI networking team. It finds the alumni who&rsquo;ll take your call, drafts the
@@ -173,7 +173,7 @@ function FunnelSection() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             The IB funnel, honestly
           </p>
-          <h2 className="mx-auto mt-4 max-w-3xl text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[60px]">
+          <h2 className="mx-auto mt-4 max-w-3xl text-[28px] leading-[1.1] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] sm:text-[40px] sm:leading-[1.08] md:text-[60px]">
             <span className="block">It takes ~120 networking calls to land one offer.</span>
             <span className="block italic text-[#2E5A88]">Consistency wins.</span>
           </h2>
@@ -209,7 +209,7 @@ function FAQSection() {
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             Honest answers
           </p>
-          <h2 className="mt-4 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
+          <h2 className="mt-4 text-[30px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] sm:text-[40px] md:text-[64px]">
             Questions worth asking.
           </h2>
         </div>
@@ -241,7 +241,7 @@ function ClosingCTA() {
     <section className="relative mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
       <GradientOrb className="left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" size={680} opacity={0.34} />
       <Reveal>
-        <h2 className="relative mx-auto max-w-xl text-[56px] leading-[1.02] tracking-[-0.02em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[88px]">
+        <h2 className="relative mx-auto max-w-xl text-[40px] leading-[1.05] tracking-[-0.02em] font-[family-name:var(--font-fraunces)] text-[#14182A] sm:text-[56px] sm:leading-[1.02] md:text-[88px]">
           Ready to <span className="italic text-[#2E5A88]">leap</span>?
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm text-[#4A5260] md:text-base">

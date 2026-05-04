@@ -72,7 +72,7 @@ export function FunnelMathAnimated() {
       ref={ref}
       className="rounded-3xl border border-[#D9CFB5] bg-white p-6 md:p-8"
     >
-      <div className="flex items-end justify-between gap-2 md:gap-3">
+      <div className="flex items-end justify-between gap-1 sm:gap-2 md:gap-3">
         {STAGES.map((s, i) => (
           <AnimatedBar
             key={s.label}
@@ -177,26 +177,26 @@ function AnimatedBar({
   return (
     <div className="flex flex-1 flex-col items-center">
       <p
-        className={`mb-3 font-[family-name:var(--font-fraunces)] tabular-nums leading-none md:text-4xl ${
-          isLast ? "text-4xl" : "text-3xl"
+        className={`mb-2 font-[family-name:var(--font-fraunces)] tabular-nums leading-none sm:mb-3 ${
+          isLast ? "text-2xl sm:text-3xl md:text-4xl" : "text-xl sm:text-2xl md:text-3xl"
         } ${numberColor}`}
       >
         {count}
       </p>
-      <div className="flex h-[220px] w-full items-end">
+      <div className="flex h-[160px] w-full items-end sm:h-[200px] md:h-[220px]">
         <div
           className={`mx-auto w-full max-w-[44px] rounded-t-lg ${barClass}`}
           style={barStyle}
         />
       </div>
       <p
-        className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.14em] text-[#14182A]"
+        className="mt-2 text-center text-[8px] font-medium uppercase tracking-[0.1em] text-[#14182A] sm:mt-3 sm:text-[10px] sm:tracking-[0.14em]"
         style={labelStyle}
       >
         {stage.label}
       </p>
       <p
-        className="mt-0.5 text-center text-[10px] text-[#5C6472]"
+        className="mt-0.5 hidden text-center text-[10px] text-[#5C6472] sm:block"
         style={subStyle}
       >
         {stage.sub}
