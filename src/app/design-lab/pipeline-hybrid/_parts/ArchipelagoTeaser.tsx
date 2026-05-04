@@ -4,7 +4,7 @@ export function ArchipelagoTeaser() {
   return (
     <section className="mt-8">
       <Link
-        href="/network"
+        href="/deck"
         className="group flex items-stretch gap-5 overflow-hidden rounded-2xl border border-[#D9CFB5] bg-gradient-to-br from-[#F4EDDB] via-[#EFE5C8] to-[#E3D4A8] p-5 transition-colors hover:border-[#2E5A88]"
       >
         <div className="flex-1 min-w-0">

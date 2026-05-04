@@ -219,10 +219,10 @@ export default function DemoPage() {
   return (
     <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A]">
       <PublicTopBar />
-      <div className="max-w-3xl mx-auto px-6 py-12 pt-20">
-        <div className="text-center mb-10">
+      <div className="max-w-3xl mx-auto px-6 py-10 pt-14 sm:py-12 sm:pt-20">
+        <div className="text-center mb-8 sm:mb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-3">60-second preview</p>
-          <h1 className="font-[family-name:var(--font-fraunces)] text-4xl sm:text-5xl mb-4">See what Alma would do for you</h1>
+          <h1 className="font-[family-name:var(--font-fraunces)] text-3xl sm:text-4xl md:text-5xl mb-4">See what Alma would do for you</h1>
           <p className="text-base sm:text-lg text-[#14182A]/70 font-[family-name:var(--font-fraunces)] italic max-w-xl mx-auto">
             Drop your resume. We&apos;ll show you the first three bankers Alma would email this week — and the actual drafts Alma would write in your voice.
           </p>

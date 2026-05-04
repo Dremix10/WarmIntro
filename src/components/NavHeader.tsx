@@ -5,7 +5,7 @@ import { useAppState } from "@/components/AppProvider";
 
 const NAV_ITEMS = [
   { path: "/today", label: "Today" },
-  { path: "/network", label: "Network" },
+  { path: "/deck", label: "Deck" },
   { path: "/pipeline", label: "Pipeline" },
 ];
 

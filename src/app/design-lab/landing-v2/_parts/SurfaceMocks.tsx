@@ -1,8 +1,10 @@
 // Inline product mocks for the landing surfaces section.
-// These are not real screenshots — they're high-fidelity reproductions of
-// what /today, /network, and /crm look like when populated, drawn in
-// React + Tailwind so they stay crisp at any size and match the palette
-// exactly. Demo data is illustrative.
+// Drawn in React + Tailwind so they stay crisp at any size and match the
+// Alma palette exactly. Each mirrors what the actual page renders:
+//   TodayMock     → /today    (queue + trust dial)
+//   DeckMock      → /deck     (firm decks + level pills)
+//   PipelineMock  → /pipeline (transit map by firm)
+// Demo data is illustrative.
 
 const PALETTE = {
   bg: "#EAE3D2",
@@ -133,323 +135,327 @@ export function TodayMock() {
   );
 }
 
-export function NetworkMock() {
-  // Archipelago — three banks as islands, ascending diagonally to telegraph
-  // progression. Stages: foundation (just sent) → walls (replied) → home
-  // (interview earned). SVG viewBox is 320×200 (16:10) — honest pixels.
-  type Stage = "foundation" | "walls" | "home";
-  const ISLANDS: { name: string; stage: Stage; cx: number; cy: number; base: number }[] = [
-    { name: "Morgan Stanley", stage: "foundation", cx: 60, cy: 138, base: 38 },
-    { name: "Goldman Sachs", stage: "walls", cx: 160, cy: 108, base: 42 },
-    { name: "Evercore", stage: "home", cx: 260, cy: 78, base: 44 },
+export function DeckMock() {
+  // Decks miniature — mirrors what /deck actually renders. Two firm decks,
+  // each shown as a small stacked card with firm name + level pill. Sized
+  // for the 16:10 surface card.
+  const DECKS = [
+    { firm: "Lazard", tier: "EB · Restructuring", count: 2, roman: "V", name: "1st Round", color: "#5A3D5C", levelTone: "gold" },
+    { firm: "Goldman Sachs", tier: "BB · M&A", count: 3, roman: "IV", name: "Referral", color: "#2E5A88", levelTone: "ochre" },
+    { firm: "Morgan Stanley", tier: "BB · TMT", count: 4, roman: "III", name: "Coffee", color: "#1B3B5F", levelTone: "blue" },
   ];
+  const tonePill = (t: string) =>
+    t === "gold"
+      ? { bg: "rgba(201,162,76,0.15)", border: "rgba(201,162,76,0.45)", color: "#8E6E14" }
+      : t === "ochre"
+        ? { bg: "rgba(232,179,57,0.15)", border: "rgba(232,179,57,0.45)", color: "#92400E" }
+        : { bg: "rgba(46,90,136,0.10)", border: "rgba(46,90,136,0.30)", color: PALETTE.blue };
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden"
-      style={{
-        background: `radial-gradient(130% 90% at 50% 0%, #F4EDDB 0%, #EAE3D2 60%, #DDD3BE 100%)`,
-      }}
+      className="relative flex h-full w-full flex-col overflow-hidden p-4 md:p-5"
+      style={{ backgroundColor: PALETTE.bg }}
       aria-hidden
     >
-      {/* Header chrome */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-baseline justify-between px-4 pt-3.5">
-        <div className="flex items-baseline gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-1.5">
           <span
-            className="text-[14px] md:text-[15px]"
+            className="text-[15px] md:text-[17px]"
             style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
           >
-            Archipelago
+            Deck
           </span>
           <span className="text-[9px] md:text-[10px]" style={{ color: PALETTE.faint }}>
-            3 banks · 14 paths
+            3 firms · 9 bankers
           </span>
+        </div>
+        <div
+          className="flex shrink-0 items-center gap-0.5 rounded-full p-0.5 text-[8px] md:text-[9px]"
+          style={{ backgroundColor: PALETTE.cardBg, border: `1px solid ${PALETTE.border}` }}
+        >
+          <span
+            className="rounded-full px-1.5 py-[2px] font-semibold text-white"
+            style={{ backgroundColor: PALETTE.blue }}
+          >
+            All
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>BB</span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>EB</span>
         </div>
       </div>
 
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 320 200"
-        preserveAspectRatio="xMidYMid slice"
-      >
-        <defs>
-          <radialGradient id="ar-island-shadow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(20,24,42,0.22)" />
-            <stop offset="100%" stopColor="rgba(20,24,42,0)" />
-          </radialGradient>
-          <linearGradient id="ar-sand" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#F6E7B6" />
-            <stop offset="100%" stopColor="#D6BD86" />
-          </linearGradient>
-          <linearGradient id="ar-grass" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#B0BF92" />
-            <stop offset="100%" stopColor="#83965E" />
-          </linearGradient>
-        </defs>
-
-        {ISLANDS.map((island, i) => {
-          const { cx, cy, base, stage, name } = island;
-          // Construction sits centered horizontally on the island, anchored
-          // to the top of the grass plateau (cy - base*0.05).
-          const groundY = cy - base * 0.04;
+      <div className="mt-3 flex flex-1 flex-col gap-2 md:mt-3 md:gap-2.5">
+        {DECKS.map((d, i) => {
+          const pill = tonePill(d.levelTone);
           return (
-            <g key={i}>
-              {/* Drop shadow on water */}
-              <ellipse
-                cx={cx + 2}
-                cy={cy + base * 0.55}
-                rx={base * 1.1}
-                ry={base * 0.3}
-                fill="url(#ar-island-shadow)"
+            <div key={i} className="relative flex-1">
+              {/* Ghost cards behind */}
+              <div
+                className="absolute inset-0 rounded-[10px]"
+                style={{
+                  backgroundColor: PALETTE.cardBg,
+                  border: `1px solid ${PALETTE.border}`,
+                  transform: "translate(-3px, 2px) rotate(-1.4deg)",
+                  opacity: 0.85,
+                }}
               />
-              {/* Sand */}
-              <ellipse cx={cx} cy={cy + base * 0.36} rx={base} ry={base * 0.42} fill="url(#ar-sand)" />
-              {/* Grass plateau */}
-              <ellipse
-                cx={cx}
-                cy={cy + base * 0.24}
-                rx={base * 0.78}
-                ry={base * 0.32}
-                fill="url(#ar-grass)"
+              <div
+                className="absolute inset-0 rounded-[10px]"
+                style={{
+                  backgroundColor: PALETTE.cardBg,
+                  border: `1px solid ${PALETTE.border}`,
+                  transform: "translate(3px, 2px) rotate(1.4deg)",
+                  opacity: 0.85,
+                }}
               />
-              {/* Highlight on plateau */}
-              <ellipse
-                cx={cx - base * 0.08}
-                cy={cy + base * 0.18}
-                rx={base * 0.46}
-                ry={base * 0.12}
-                fill="rgba(255,255,255,0.32)"
-              />
-
-              {/* Construction — sized larger so it reads at small render */}
-              {stage === "foundation" && (
-                <g>
-                  <rect
-                    x={cx - 11}
-                    y={groundY - 4}
-                    width="22"
-                    height="4"
-                    fill="#B5A88D"
-                    stroke="rgba(20,24,42,0.25)"
-                    strokeWidth="0.6"
-                    rx="0.6"
-                  />
-                  {/* Marker stones */}
-                  <circle cx={cx - 8} cy={groundY - 6.5} r="1.2" fill="#9B8E70" />
-                  <circle cx={cx + 8} cy={groundY - 6.5} r="1.2" fill="#9B8E70" />
-                </g>
-              )}
-
-              {stage === "walls" && (
-                <g>
-                  {/* Foundation */}
-                  <rect x={cx - 13} y={groundY - 3} width="26" height="3" fill="#B5A88D" />
-                  {/* Walls */}
-                  <rect
-                    x={cx - 12}
-                    y={groundY - 13}
-                    width="24"
-                    height="10"
-                    fill="#FCFAF5"
-                    stroke="rgba(20,24,42,0.28)"
-                    strokeWidth="0.7"
-                  />
-                  {/* Wall studs */}
-                  <line
-                    x1={cx - 4}
-                    y1={groundY - 13}
-                    x2={cx - 4}
-                    y2={groundY - 3}
-                    stroke="rgba(20,24,42,0.15)"
-                    strokeWidth="0.5"
-                  />
-                  <line
-                    x1={cx + 4}
-                    y1={groundY - 13}
-                    x2={cx + 4}
-                    y2={groundY - 3}
-                    stroke="rgba(20,24,42,0.15)"
-                    strokeWidth="0.5"
-                  />
-                </g>
-              )}
-
-              {stage === "home" && (
-                <g>
-                  {/* Foundation */}
-                  <rect x={cx - 14} y={groundY - 3} width="28" height="3" fill="#B5A88D" />
-                  {/* Walls */}
-                  <rect
-                    x={cx - 13}
-                    y={groundY - 14}
-                    width="26"
-                    height="11"
-                    fill="#FCFAF5"
-                    stroke="rgba(20,24,42,0.3)"
-                    strokeWidth="0.7"
-                  />
-                  {/* Roof */}
-                  <polygon
-                    points={`${cx - 15},${groundY - 14} ${cx},${groundY - 24} ${cx + 15},${groundY - 14}`}
-                    fill={PALETTE.terracotta}
-                    stroke="rgba(20,24,42,0.3)"
-                    strokeWidth="0.7"
-                    strokeLinejoin="round"
-                  />
-                  {/* Door */}
-                  <rect x={cx - 2} y={groundY - 9} width="4" height="6" fill={PALETTE.blue} rx="0.4" />
-                  {/* Windows */}
-                  <rect x={cx - 9.5} y={groundY - 11} width="4" height="3.5" fill={PALETTE.ochre} stroke="rgba(20,24,42,0.3)" strokeWidth="0.4" />
-                  <rect x={cx + 5.5} y={groundY - 11} width="4" height="3.5" fill={PALETTE.ochre} stroke="rgba(20,24,42,0.3)" strokeWidth="0.4" />
-                  {/* Chimney */}
-                  <rect x={cx + 6} y={groundY - 22} width="2.4" height="5" fill="#9B8E70" stroke="rgba(20,24,42,0.3)" strokeWidth="0.4" />
-                </g>
-              )}
-
-              {/* Labels under island */}
-              <text
-                x={cx}
-                y={cy + base * 0.85}
-                textAnchor="middle"
-                fontSize="11"
-                fontWeight="600"
-                fill={PALETTE.ink}
-                fontFamily="var(--font-fraunces)"
+              {/* Top card */}
+              <div
+                className="relative flex h-full items-center justify-between gap-2 rounded-[10px] px-2.5 md:px-3"
+                style={{
+                  backgroundImage: "linear-gradient(180deg, #fff 0%, #FCFAF5 100%)",
+                  border: `1px solid ${PALETTE.border}`,
+                  boxShadow: "0 1px 0 0 rgba(255,255,255,0.9) inset, 0 4px 10px -4px rgba(20,24,42,0.10)",
+                }}
               >
-                {name}
-              </text>
-              <text
-                x={cx}
-                y={cy + base * 0.85 + 11}
-                textAnchor="middle"
-                fontSize="8"
-                fill={PALETTE.muted}
-              >
-                {stage === "foundation" ? "sent" : stage === "walls" ? "coffee" : "home"}
-              </text>
-            </g>
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="truncate text-[10px] leading-tight md:text-[11px]"
+                    style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
+                  >
+                    {d.firm}
+                  </div>
+                  <div className="text-[7px] md:text-[8px]" style={{ color: PALETTE.faint }}>
+                    {d.count} bankers · {d.tier}
+                  </div>
+                </div>
+                <div
+                  className="flex shrink-0 items-baseline gap-[3px] rounded-full px-1.5 py-[1px] text-[7px] font-semibold md:text-[8px]"
+                  style={{
+                    backgroundColor: pill.bg,
+                    border: `1px solid ${pill.border}`,
+                    color: pill.color,
+                  }}
+                >
+                  <span style={{ fontFamily: "var(--font-fraunces)", fontStyle: "italic", fontWeight: 600 }}>
+                    {d.roman}
+                  </span>
+                  <span style={{ textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "6px" }}>
+                    {d.name}
+                  </span>
+                </div>
+              </div>
+            </div>
           );
         })}
-      </svg>
-
-      {/* Bottom legend */}
-      <div
-        className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] md:text-[9px]"
-        style={{
-          backgroundColor: "rgba(255,255,255,0.85)",
-          border: `1px solid ${PALETTE.border}`,
-          color: PALETTE.muted,
-        }}
-      >
-        sent → coffee → <span style={{ color: PALETTE.ink, fontWeight: 600 }}>home</span>
       </div>
     </div>
   );
 }
 
-export function CrmMock() {
-  const COLS = [
+export function PipelineMock() {
+  // Transit-map miniature. Mirrors what /pipeline actually renders: each
+  // firm is a horizontal line, stations are stages, bankers are circular
+  // markers. Sized to the 16:10 surface card.
+  type Stage = "sent" | "replied" | "coffee" | "referral" | "first";
+  const STATIONS: { stage: Stage; label: string }[] = [
+    { stage: "sent", label: "Sent" },
+    { stage: "replied", label: "Replied" },
+    { stage: "coffee", label: "Coffee" },
+    { stage: "referral", label: "Referral" },
+    { stage: "first", label: "1st Rd" },
+  ];
+  type Marker = { stage: Stage; initial: string; size: "s" | "m" | "l"; status?: "positive" | "due" };
+  type Firm = { name: string; tier: string; color: string; markers: Marker[] };
+
+  const FIRMS: Firm[] = [
     {
-      name: "Sent",
-      count: 8,
-      cards: [
-        { who: "M. Chen", firm: "MS TMT", age: "2d" },
-        { who: "J. Liu", firm: "JPM Healthcare", age: "1d" },
+      name: "Morgan Stanley",
+      tier: "BB",
+      color: PALETTE.blue,
+      markers: [
+        { stage: "sent", initial: "J", size: "s", status: "due" },
+        { stage: "replied", initial: "R", size: "m", status: "positive" },
+        { stage: "coffee", initial: "M", size: "l", status: "positive" },
       ],
     },
     {
-      name: "Replied",
-      count: 4,
-      cards: [{ who: "S. Patel", firm: "Evercore", age: "today" }],
-    },
-    {
-      name: "Coffee",
-      count: 3,
-      cards: [
-        { who: "A. Park", firm: "Goldman", age: "Tue 4pm" },
-        { who: "R. Kim", firm: "Lazard", age: "Thu 2pm" },
+      name: "Goldman Sachs",
+      tier: "BB",
+      color: PALETTE.blueHover,
+      markers: [
+        { stage: "sent", initial: "S", size: "s" },
+        { stage: "replied", initial: "A", size: "m", status: "positive" },
       ],
     },
     {
-      name: "Referral",
-      count: 2,
-      cards: [{ who: "T. Wong", firm: "Citi M&A", age: "warm" }],
+      name: "Evercore",
+      tier: "EB",
+      color: PALETTE.terracotta,
+      markers: [
+        { stage: "coffee", initial: "N", size: "m", status: "positive" },
+        { stage: "referral", initial: "S", size: "l", status: "positive" },
+      ],
     },
     {
-      name: "1st rd",
-      count: 1,
-      cards: [{ who: "K. Nash", firm: "Moelis", age: "scheduled" }],
+      name: "Lazard",
+      tier: "EB",
+      color: "#5A3D5C",
+      markers: [
+        { stage: "first", initial: "R", size: "l", status: "positive" },
+      ],
     },
   ];
 
+  const sizePx: Record<Marker["size"], number> = { s: 12, m: 14, l: 17 };
+  const fontPx: Record<Marker["size"], number> = { s: 7, m: 8, l: 10 };
+
   return (
     <div
-      className="relative h-full w-full overflow-hidden p-3 md:p-4"
+      className="relative flex h-full w-full flex-col overflow-hidden p-3 md:p-4"
       style={{ backgroundColor: PALETTE.bg }}
       aria-hidden
     >
+      {/* Top bar */}
       <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-1.5">
           <span
-            className="text-[12px] md:text-[14px]"
-            style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink }}
+            className="text-[13px] md:text-[15px]"
+            style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
           >
             Pipeline
           </span>
-          <span className="text-[7px] md:text-[8px]" style={{ color: PALETTE.faint }}>
-            18 active · 2 won this cycle
+          <span className="text-[8px] md:text-[9px]" style={{ color: PALETTE.faint }}>
+            4 firms · 8 active
           </span>
         </div>
-        <span className="text-[7px] md:text-[8px]" style={{ color: PALETTE.muted }}>
-          filter ⌄
-        </span>
+        <div
+          className="flex shrink-0 items-center gap-0.5 rounded-full p-0.5 text-[7px] md:text-[8px]"
+          style={{ backgroundColor: PALETTE.cardBg, border: `1px solid ${PALETTE.border}` }}
+        >
+          <span
+            className="rounded-full px-1.5 py-[2px] font-semibold text-white"
+            style={{ backgroundColor: PALETTE.blue }}
+          >
+            All
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            BB
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            EB
+          </span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
+            MM
+          </span>
+        </div>
       </div>
 
-      <div className="mt-2 grid h-[calc(100%-1.5rem)] grid-cols-5 gap-1.5 md:mt-3 md:gap-2">
-        {COLS.map((col, i) => (
-          <div key={i} className="flex flex-col gap-1 md:gap-1.5">
-            <div className="flex items-baseline justify-between">
-              <span
-                className="text-[6px] font-bold uppercase tracking-wider md:text-[7px]"
-                style={{ color: PALETTE.muted }}
+      {/* Station headers */}
+      <div
+        className="mt-2.5 grid items-baseline pb-1 md:mt-3"
+        style={{ gridTemplateColumns: `52px repeat(${STATIONS.length}, minmax(0, 1fr))` }}
+      >
+        <div />
+        {STATIONS.map((st) => (
+          <div
+            key={st.stage}
+            className="text-center text-[6px] font-bold uppercase tracking-[0.06em] md:text-[7px]"
+            style={{ color: PALETTE.muted }}
+          >
+            {st.label}
+          </div>
+        ))}
+      </div>
+
+      {/* Firm rows */}
+      <div className="flex flex-1 flex-col justify-around">
+        {FIRMS.map((firm) => (
+          <div
+            key={firm.name}
+            className="relative grid items-center"
+            style={{
+              gridTemplateColumns: `52px repeat(${STATIONS.length}, minmax(0, 1fr))`,
+              color: firm.color,
+            }}
+          >
+            {/* Firm label */}
+            <div className="pr-1.5 text-right">
+              <div
+                className="truncate text-[7px] leading-tight md:text-[8px]"
+                style={{ fontFamily: "var(--font-fraunces)", color: PALETTE.ink, fontWeight: 600 }}
               >
-                {col.name}
-              </span>
-              <span
-                className="text-[6px] md:text-[7px]"
+                {firm.name}
+              </div>
+              <div
+                className="text-[5px] font-bold uppercase tracking-[0.06em] md:text-[6px]"
                 style={{ color: PALETTE.faint }}
               >
-                {col.count}
-              </span>
+                {firm.tier}
+              </div>
             </div>
-            <div className="flex flex-1 flex-col gap-1 overflow-hidden md:gap-1.5">
-              {col.cards.map((c, j) => (
+
+            {/* The line */}
+            <svg
+              className="pointer-events-none absolute"
+              style={{ left: "52px", right: 0, top: 0, height: "100%" }}
+              preserveAspectRatio="none"
+              viewBox="0 0 100 24"
+            >
+              <path
+                d="M 0 12 L 100 12"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+
+            {/* Stations + markers */}
+            {STATIONS.map((st) => {
+              const marker = firm.markers.find((m) => m.stage === st.stage);
+              return (
                 <div
-                  key={j}
-                  className="rounded-md p-1 md:p-1.5"
-                  style={{
-                    backgroundColor: PALETTE.cardBg,
-                    border: `1px solid ${PALETTE.border}`,
-                  }}
+                  key={st.stage}
+                  className="relative flex items-center justify-center"
+                  style={{ height: "24px" }}
                 >
-                  <div className="text-[7px] font-semibold md:text-[8px]" style={{ color: PALETTE.ink }}>
-                    {c.who}
-                  </div>
-                  <div className="text-[6px] md:text-[7px]" style={{ color: PALETTE.faint }}>
-                    {c.firm}
-                  </div>
-                  <div
-                    className="mt-0.5 inline-block rounded-sm px-1 text-[5px] md:text-[6px]"
+                  {/* Empty tick on the line */}
+                  <span
+                    className="absolute z-[1] rounded-full"
                     style={{
-                      backgroundColor: i >= 2 ? "rgba(232,179,57,0.18)" : "rgba(46,90,136,0.08)",
-                      color: i >= 2 ? "#92400E" : PALETTE.blue,
+                      width: "4px",
+                      height: "4px",
+                      backgroundColor: PALETTE.cardBg,
+                      border: `1.2px solid ${firm.color}`,
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
                     }}
-                  >
-                    {c.age}
-                  </div>
+                  />
+                  {/* Banker marker */}
+                  {marker && (
+                    <div
+                      className="relative z-[2] flex items-center justify-center rounded-full font-semibold text-white"
+                      style={{
+                        width: `${sizePx[marker.size]}px`,
+                        height: `${sizePx[marker.size]}px`,
+                        fontSize: `${fontPx[marker.size]}px`,
+                        fontFamily: "var(--font-fraunces)",
+                        backgroundColor: firm.color,
+                        boxShadow:
+                          marker.status === "positive"
+                            ? `0 0 0 2px ${PALETTE.bg}, 0 0 0 4px rgba(46,90,136,0.45)`
+                            : marker.status === "due"
+                              ? `0 0 0 2px ${PALETTE.bg}, 0 0 0 4px rgba(232,179,57,0.5)`
+                              : `0 0 0 2px ${PALETTE.bg}`,
+                      }}
+                    >
+                      {marker.initial}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         ))}
       </div>

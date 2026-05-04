@@ -356,8 +356,8 @@ export default function TodayPage() {
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A] fade-in">
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <div>
+        <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+          <div className="w-full sm:w-auto">
             <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Today</p>
             <h1 className="text-4xl font-[family-name:var(--font-fraunces)] font-medium">
               Your queue
@@ -392,7 +392,7 @@ export default function TodayPage() {
             )}
           </div>
 
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex w-full flex-row items-center gap-2 sm:w-auto sm:flex-col sm:items-end">
             <RunAlmaNowButton
               onDone={() => load({ silent: true })}
               onStatusChange={setRunStatus}
@@ -490,11 +490,11 @@ export default function TodayPage() {
         {Object.keys(data.stageCounts).length > 0 && (
           <div className="mb-8 rounded-2xl bg-white p-5 border border-[#D9CFB5]">
             <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-3">Pipeline</p>
-            <div className="flex gap-4 text-sm">
+            <div className="grid grid-cols-4 gap-3 text-sm sm:grid-cols-7 sm:gap-4">
               {(["sent", "replied", "coffee", "referral", "first_round", "superday", "offer"] as const).map((stage) => (
                 <div key={stage}>
-                  <p className="font-[family-name:var(--font-fraunces)] text-2xl">{data.stageCounts[stage] ?? 0}</p>
-                  <p className="text-xs text-[#14182A]/60 capitalize">{stage.replace("_", " ")}</p>
+                  <p className="font-[family-name:var(--font-fraunces)] text-xl sm:text-2xl">{data.stageCounts[stage] ?? 0}</p>
+                  <p className="text-[10px] text-[#14182A]/60 capitalize sm:text-xs">{stage.replace("_", " ")}</p>
                 </div>
               ))}
             </div>
@@ -596,7 +596,7 @@ export default function TodayPage() {
           user to where the conversation is being tracked. */}
       {sentToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 sent-toast-enter">
-          <div className="rounded-2xl bg-gradient-to-br from-[#1B3B5F] to-[#2E5A88] text-white px-5 py-3 shadow-2xl flex items-center gap-3 max-w-sm">
+          <div className="rounded-2xl bg-gradient-to-br from-[#1B3B5F] to-[#2E5A88] text-white px-5 py-3 shadow-2xl flex items-center gap-3 max-w-[calc(100vw-2rem)] sm:max-w-sm">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-base">✓</span>
             <div>
               <p className="text-sm font-medium">Sent to {sentToast.banker}{sentToast.firm ? ` at ${sentToast.firm}` : ""}</p>
@@ -611,7 +611,7 @@ export default function TodayPage() {
       {/* Revert toasts — surfaced when an optimistic skip / approve / mark-sent
           fails on the server. Bottom-right, auto-dismiss after 4.5s. */}
       {actionToasts.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-[60] space-y-2 max-w-sm">
+        <div className="fixed bottom-4 left-4 right-4 z-[60] space-y-2 sm:left-auto sm:max-w-sm">
           {actionToasts.map((t) => (
             <div
               key={t.id}

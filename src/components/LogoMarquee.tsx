@@ -62,7 +62,7 @@ export function LogoMarquee() {
   return (
     <div className="overflow-hidden border-y border-[#D9CFB5] bg-[#F4EDDB]">
       <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
-        <p className="shrink-0 text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6472]">
+        <p className="hidden shrink-0 text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6472] sm:block">
           Bulge Bracket coverage live ·{" "}
           <span className="text-[#1B3B5F]">EB + MM</span> rolling out
         </p>
