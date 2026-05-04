@@ -444,9 +444,17 @@ function FirmDeckCard({
         </div>
       </div>
 
-      {/* Open-state header — keeps the firm name visible while the cards are spread */}
-      <div className="alma-deck-open-header">
-        <div className="min-w-0">
+      {/* Open-state header — keeps the firm name visible while the cards
+          are spread. Clickable: tapping the firm name (or anywhere in the
+          header) collapses the deck back. The ✕ button still works as the
+          most explicit affordance. */}
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        aria-label={`Close ${deck.firmName} deck`}
+        className="alma-deck-open-header"
+      >
+        <div className="min-w-0 text-left">
           <div className="font-[family-name:var(--font-fraunces)] font-semibold text-[16px] text-[#14182A] truncate">
             {deck.firmName}
           </div>
@@ -458,7 +466,7 @@ function FirmDeckCard({
           <span className="alma-deck-stage-roman">{highestRoman}</span>
           <span className="alma-deck-stage-name">{highestName}</span>
         </span>
-      </div>
+      </button>
 
       {/* Close button */}
       <button
