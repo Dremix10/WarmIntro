@@ -256,18 +256,36 @@ export function PipelineMock() {
   // Transit-map miniature. Mirrors what /pipeline actually renders: each
   // firm is a horizontal line, stations are stages, bankers are circular
   // markers. Sized to the 16:10 surface card.
-  type Stage = "sent" | "replied" | "coffee" | "referral" | "first";
+  type Stage = "sent" | "replied" | "coffee" | "referral" | "first" | "offer";
   const STATIONS: { stage: Stage; label: string }[] = [
     { stage: "sent", label: "Sent" },
     { stage: "replied", label: "Replied" },
     { stage: "coffee", label: "Coffee" },
     { stage: "referral", label: "Referral" },
     { stage: "first", label: "1st Rd" },
+    { stage: "offer", label: "Offer" },
   ];
   type Marker = { stage: Stage; initial: string; size: "s" | "m" | "l"; status?: "positive" | "due" };
   type Firm = { name: string; tier: string; color: string; markers: Marker[] };
 
   const FIRMS: Firm[] = [
+    {
+      name: "Lazard",
+      tier: "EB",
+      color: "#5A3D5C",
+      markers: [
+        { stage: "offer", initial: "R", size: "l", status: "positive" },
+      ],
+    },
+    {
+      name: "Evercore",
+      tier: "EB",
+      color: PALETTE.terracotta,
+      markers: [
+        { stage: "coffee", initial: "N", size: "m", status: "positive" },
+        { stage: "referral", initial: "S", size: "l", status: "positive" },
+      ],
+    },
     {
       name: "Morgan Stanley",
       tier: "BB",
@@ -287,24 +305,27 @@ export function PipelineMock() {
         { stage: "replied", initial: "A", size: "m", status: "positive" },
       ],
     },
-    {
-      name: "Evercore",
-      tier: "EB",
-      color: PALETTE.terracotta,
-      markers: [
-        { stage: "coffee", initial: "N", size: "m", status: "positive" },
-        { stage: "referral", initial: "S", size: "l", status: "positive" },
-      ],
-    },
-    {
-      name: "Lazard",
-      tier: "EB",
-      color: "#5A3D5C",
-      markers: [
-        { stage: "first", initial: "R", size: "l", status: "positive" },
-      ],
-    },
   ];
+
+  const STAGE_INDEX: Record<Stage, number> = {
+    sent: 0,
+    replied: 1,
+    coffee: 2,
+    referral: 3,
+    first: 4,
+    offer: 5,
+  };
+  const TICK_CENTERS = STATIONS.map((_, i) => ((i + 0.5) * 100) / STATIONS.length);
+  function highestStageIndex(firm: Firm): number {
+    return firm.markers.reduce(
+      (highest, marker) => Math.max(highest, STAGE_INDEX[marker.stage]),
+      -1,
+    );
+  }
+  function fillEndForFirm(firm: Firm): number {
+    const highest = highestStageIndex(firm);
+    return highest === STATIONS.length - 1 ? 100 : TICK_CENTERS[Math.max(0, highest)];
+  }
 
   const sizePx: Record<Marker["size"], number> = { s: 12, m: 14, l: 17 };
   const fontPx: Record<Marker["size"], number> = { s: 7, m: 8, l: 10 };
@@ -403,16 +424,26 @@ export function PipelineMock() {
             >
               <path
                 d="M 0 12 L 100 12"
-                stroke="currentColor"
+                stroke={PALETTE.border}
                 strokeWidth="1.4"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray="1.5 2.5"
+                opacity="0.85"
+              />
+              <path
+                d={`M 0 12 L ${fillEndForFirm(firm)} 12`}
+                stroke="currentColor"
+                strokeWidth="1.6"
                 strokeLinecap="round"
                 fill="none"
               />
             </svg>
 
             {/* Stations + markers */}
-            {STATIONS.map((st) => {
+            {STATIONS.map((st, idx) => {
               const marker = firm.markers.find((m) => m.stage === st.stage);
+              const reached = idx <= highestStageIndex(firm);
               return (
                 <div
                   key={st.stage}
@@ -426,7 +457,7 @@ export function PipelineMock() {
                       width: "4px",
                       height: "4px",
                       backgroundColor: PALETTE.cardBg,
-                      border: `1.2px solid ${firm.color}`,
+                      border: `1.2px solid ${reached ? firm.color : PALETTE.border}`,
                       top: "50%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",

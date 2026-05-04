@@ -15,6 +15,19 @@ export function FirmLine({
 }) {
   const stationMap = stationsByFirm.get(firm.id);
   if (!stationMap) return null;
+  const stationRows = STATIONS.map((station, index) => ({
+    station,
+    index,
+    bankers: stationMap.get(station.stage) ?? [],
+  }));
+  const highestIdx = stationRows.reduce(
+    (highest, entry) => (entry.bankers.length > 0 ? entry.index : highest),
+    -1,
+  );
+  const tickX =
+    highestIdx >= 0 ? ((highestIdx + 0.5) * 100) / STATIONS.length : 0;
+  const fillEnd = highestIdx === STATIONS.length - 1 ? 100 : Math.max(0, tickX);
+  const atFinal = highestIdx === STATIONS.length - 1;
 
   return (
     <div
@@ -41,25 +54,51 @@ export function FirmLine({
       >
         <path
           d="M 0 40 L 100 40"
-          stroke="currentColor"
-          strokeWidth="3"
+          stroke="#D9CFB5"
+          strokeWidth="2.4"
           strokeLinecap="round"
+          strokeDasharray="1.5 2.5"
+          opacity="0.85"
           fill="none"
         />
-        <path
-          className="alma-line-flow"
-          d="M 0 40 L 100 40"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          fill="none"
-        />
+        {fillEnd > 0 && (
+          <path
+            className="alma-fill-grow"
+            d={`M 0 40 L ${fillEnd} 40`}
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            fill="none"
+            pathLength={1}
+          />
+        )}
+        {!atFinal && fillEnd < 100 && (
+          <path
+            className="alma-line-flow"
+            d={`M ${fillEnd} 40 L 100 40`}
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.6"
+          />
+        )}
+        {fillEnd > 0 && !atFinal && (
+          <circle
+            cx={fillEnd}
+            cy={40}
+            r={2.4}
+            fill="currentColor"
+            className="alma-fill-tip"
+          />
+        )}
       </svg>
-      {STATIONS.map((station) => (
+      {stationRows.map(({ station, index, bankers }) => (
         <Station
           key={station.stage}
           firmColor={firm.color}
-          bankers={stationMap.get(station.stage) ?? []}
+          tickReached={index <= highestIdx}
+          bankers={bankers}
           onOpen={onOpenBanker}
           activeBankerId={activeBankerId}
         />

@@ -724,9 +724,44 @@ html, body {
   opacity: 0.7;
 }
 
+.alma-fill-grow {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: alma-fill-grow 1.2s cubic-bezier(.22, .75, .3, 1) 200ms forwards;
+}
+
+@keyframes alma-fill-grow {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.alma-fill-tip {
+  animation: alma-fill-tip 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 2px currentColor);
+  transform-origin: center;
+}
+
+@keyframes alma-fill-tip {
+  0%, 100% {
+    r: 2.4;
+    opacity: 1;
+  }
+  50% {
+    r: 4;
+    opacity: 0.55;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .alma-line-flow {
     animation: none;
     opacity: 0;
+  }
+  .alma-fill-grow {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .alma-fill-tip {
+    animation: none;
   }
 }

@@ -7,11 +7,13 @@ import type { PipelineRow } from "../_lib/types";
 
 export function Station({
   firmColor,
+  tickReached,
   bankers,
   onOpen,
   activeBankerId,
 }: {
   firmColor: string;
+  tickReached: boolean;
   bankers: PipelineRow[];
   onOpen: (bankerId: string) => void;
   activeBankerId: string | null;
@@ -24,7 +26,7 @@ export function Station({
     <div className="relative h-full flex items-center justify-center">
       <span
         className="absolute top-1/2 left-1/2 z-[1] h-[8px] w-[8px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[2px] bg-white"
-        style={{ borderColor: firmColor }}
+        style={{ borderColor: tickReached ? firmColor : "#D9CFB5" }}
         aria-hidden
       />
 
