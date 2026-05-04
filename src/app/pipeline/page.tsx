@@ -410,25 +410,86 @@ export default function CrmPage() {
                         </div>
                       </div>
 
-                      {/* Line — solid horizontal stroke + a translucent
-                          dashed overlay that flows forward, suggesting
-                          continuous "about to advance" motion. */}
-                      <svg
-                        className="absolute pointer-events-none"
-                        style={{ left: "140px", right: 0, top: 0, height: "80px" }}
-                        preserveAspectRatio="none"
-                        viewBox="0 0 100 80"
-                      >
-                        <path d="M 0 40 L 100 40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
-                        <path
-                          d="M 0 40 L 100 40"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          fill="none"
-                          className="alma-line-flow"
-                        />
-                      </svg>
+                      {/* Line — progress bar. Three layers:
+                          (1) muted dashed track full-width — the "potential
+                              path" for this firm
+                          (2) solid fill from x=0 up to the firm's highest
+                              station (or x=100 if at the final station)
+                          (3) forward-flowing dash overlay on the unfilled
+                              portion only — suggests "about to advance"
+                              ANTICIPATION specifically into the next stage,
+                              not motion across the whole line
+                          (4) a soft pulsing dot at the leading edge of the
+                              fill, signalling "this firm is alive and
+                              about to step forward" */}
+                      {(() => {
+                        // Compute per-firm progress: highest station that has
+                        // any banker. Index into STATIONS array (0..N-1).
+                        let highestIdx = -1;
+                        for (let i = 0; i < STATIONS.length; i++) {
+                          const list = stationMap.get(STATIONS[i].stage) ?? [];
+                          if (list.length > 0) highestIdx = i;
+                        }
+                        const tickX = STATIONS.length > 0
+                          ? ((highestIdx + 0.5) * 100) / STATIONS.length
+                          : 0;
+                        const fillEnd = highestIdx === STATIONS.length - 1 ? 100 : Math.max(0, tickX);
+                        const atFinal = highestIdx === STATIONS.length - 1;
+                        return (
+                          <svg
+                            className="absolute pointer-events-none"
+                            style={{ left: "140px", right: 0, top: 0, height: "80px" }}
+                            preserveAspectRatio="none"
+                            viewBox="0 0 100 80"
+                          >
+                            {/* Track */}
+                            <path
+                              d="M 0 40 L 100 40"
+                              stroke="#D9CFB5"
+                              strokeWidth="2.4"
+                              strokeLinecap="round"
+                              strokeDasharray="1.5 2.5"
+                              fill="none"
+                              opacity="0.85"
+                            />
+                            {/* Fill */}
+                            {fillEnd > 0 && (
+                              <path
+                                d={`M 0 40 L ${fillEnd} 40`}
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                fill="none"
+                                className="alma-fill-grow"
+                              />
+                            )}
+                            {/* Forward-flow only on the unfilled (remaining) portion */}
+                            {!atFinal && fillEnd < 100 && (
+                              <path
+                                d={`M ${fillEnd} 40 L 100 40`}
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                fill="none"
+                                className="alma-line-flow"
+                                opacity="0.6"
+                              />
+                            )}
+                            {/* Leading-edge pulse dot — sits at the rightmost
+                                point of the fill. Hidden if the firm is at
+                                the final stage (no further to advance). */}
+                            {fillEnd > 0 && !atFinal && (
+                              <circle
+                                cx={fillEnd}
+                                cy={40}
+                                r={2.4}
+                                fill="currentColor"
+                                className="alma-fill-tip"
+                              />
+                            )}
+                          </svg>
+                        );
+                      })()}
 
                       {/* Stations */}
                       {STATIONS.map((st) => {
