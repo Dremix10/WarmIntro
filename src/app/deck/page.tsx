@@ -237,39 +237,48 @@ export default function DeckPage() {
           <EmptyState />
         ) : (
           <>
-            {/* Filter toolbar */}
-            <div className="mb-3 flex flex-wrap items-center gap-1.5 rounded-xl border border-[#D9CFB5] bg-white px-3 py-2.5">
-              <FilterPill active={tierFilter === "all"} onClick={() => setTierFilter("all")} count={counts.all}>All</FilterPill>
-              <FilterPill active={tierFilter === "bulge_bracket"} onClick={() => setTierFilter("bulge_bracket")} count={counts.bb}>BB</FilterPill>
-              <FilterPill active={tierFilter === "elite_boutique"} onClick={() => setTierFilter("elite_boutique")} count={counts.eb}>EB</FilterPill>
-              <FilterPill active={tierFilter === "middle_market"} onClick={() => setTierFilter("middle_market")} count={counts.mm}>MM</FilterPill>
-              <span className="mx-1.5 h-4 w-px bg-[#ECE7DE]" aria-hidden />
-              <FilterPill active={warmthFilter === "all"} onClick={() => setWarmthFilter("all")}>Any warmth</FilterPill>
-              <FilterPill active={warmthFilter === "70"} onClick={() => setWarmthFilter("70")} count={counts.warm70}>≥ 70</FilterPill>
-              <FilterPill active={warmthFilter === "85"} onClick={() => setWarmthFilter("85")} count={counts.warm85}>≥ 85</FilterPill>
-              <span className="mx-1.5 h-4 w-px bg-[#ECE7DE]" aria-hidden />
-              <FilterPill active={sameSchoolOnly} onClick={() => setSameSchoolOnly((v) => !v)} count={counts.sameSchool}>Same school</FilterPill>
-              <span className="ml-auto text-[11px] text-[#8A8674]">
+            {/* Filter toolbar — single-line horizontal scroll under sm to avoid
+                wrap-to-3-lines on a 390px phone. */}
+            <div className="mb-3 rounded-xl border border-[#D9CFB5] bg-white px-3 py-2.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto sm:flex-wrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <FilterPill active={tierFilter === "all"} onClick={() => setTierFilter("all")} count={counts.all}>All</FilterPill>
+                <FilterPill active={tierFilter === "bulge_bracket"} onClick={() => setTierFilter("bulge_bracket")} count={counts.bb}>BB</FilterPill>
+                <FilterPill active={tierFilter === "elite_boutique"} onClick={() => setTierFilter("elite_boutique")} count={counts.eb}>EB</FilterPill>
+                <FilterPill active={tierFilter === "middle_market"} onClick={() => setTierFilter("middle_market")} count={counts.mm}>MM</FilterPill>
+                <span className="mx-1.5 h-4 w-px shrink-0 bg-[#ECE7DE]" aria-hidden />
+                <FilterPill active={warmthFilter === "all"} onClick={() => setWarmthFilter("all")}>Any warmth</FilterPill>
+                <FilterPill active={warmthFilter === "70"} onClick={() => setWarmthFilter("70")} count={counts.warm70}>≥ 70</FilterPill>
+                <FilterPill active={warmthFilter === "85"} onClick={() => setWarmthFilter("85")} count={counts.warm85}>≥ 85</FilterPill>
+                <span className="mx-1.5 h-4 w-px shrink-0 bg-[#ECE7DE]" aria-hidden />
+                <FilterPill active={sameSchoolOnly} onClick={() => setSameSchoolOnly((v) => !v)} count={counts.sameSchool}>Same school</FilterPill>
+                <span className="ml-auto pl-3 text-[11px] text-[#8A8674] shrink-0 hidden sm:inline">
+                  {decks.length} deck{decks.length === 1 ? "" : "s"}
+                </span>
+              </div>
+              <p className="mt-1.5 text-right text-[10px] text-[#8A8674] sm:hidden">
                 {decks.length} deck{decks.length === 1 ? "" : "s"}
-              </span>
+              </p>
             </div>
 
-            {/* Levels scale */}
-            <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-[#ECE7DE] bg-gradient-to-b from-white/55 to-transparent px-4 py-2.5">
-              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#5C6472] mr-1">Levels</span>
-              {STAGE_ORDER.map((s, i) => (
-                <span key={s} className="contents">
-                  <span className="flex items-baseline gap-1 text-[11px] text-[#5C6472]">
-                    <span className="font-[family-name:var(--font-fraunces)] font-semibold text-[12px] text-[#14182A]">
-                      {STAGE_ROMAN[s]}
+            {/* Levels scale — horizontal-scroll under sm so I → II → III ... reads
+                as a single linear row and doesn't wrap into a broken sentence. */}
+            <div className="mb-6 rounded-xl border border-[#ECE7DE] bg-gradient-to-b from-white/55 to-transparent px-4 py-2.5">
+              <div className="flex items-center gap-2 overflow-x-auto sm:flex-wrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#5C6472] shrink-0 mr-1">Levels</span>
+                {STAGE_ORDER.map((s, i) => (
+                  <span key={s} className="contents">
+                    <span className="flex items-baseline gap-1 text-[11px] text-[#5C6472] shrink-0">
+                      <span className="font-[family-name:var(--font-fraunces)] font-semibold text-[12px] text-[#14182A]">
+                        {STAGE_ROMAN[s]}
+                      </span>
+                      {STAGE_NAME[s]}
                     </span>
-                    {STAGE_NAME[s]}
+                    {i < STAGE_ORDER.length - 1 && (
+                      <span className="text-[#8A8674] text-[11px] mx-0.5 shrink-0" aria-hidden>→</span>
+                    )}
                   </span>
-                  {i < STAGE_ORDER.length - 1 && (
-                    <span className="text-[#8A8674] text-[11px] mx-0.5" aria-hidden>→</span>
-                  )}
-                </span>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Deck grid */}
