@@ -116,6 +116,12 @@ When given a multi-hour window (his exam, his sleep, his calendar block), defaul
 
 This section captures snapshots that decay fast. Treat as starting points, not facts.
 
+### Launch sprint (snapshot 2026-05-04)
+
+- **Goal:** collect public access requests before Dremix's Keel interview on 2026-05-06 and the YC application planned late on 2026-05-07.
+- **Public posture:** the app is still gated, but the request list is open. Landing CTAs should route to `/request-access` first and `/demo` second; avoid sending new visitors to `/coming-soon`.
+- **Landing message:** lead with Alma as an email-first IB recruiting agent: Gmail drafts, real-thread reply tracking, trust gradient, live pipeline, and prompt calibration from tester feedback. Avoid stale "pending May 3" flywheel copy and avoid making "closed beta / 100 founding users" the main public message.
+
 ### Email iteration loop (snapshot 2026-05-02)
 
 - **Done:** BASE_VOICE refactored to positive-instruction + worked-examples. Scout backfilled (180 → 239 findings, 0 zero-finding bankers). Iter cap dropped 3 → 2. Last 24h Critic data showed 5/6 drafts approved at 8.25 on iter 0. Specificity moved from chronic 4–6 to stable 7.

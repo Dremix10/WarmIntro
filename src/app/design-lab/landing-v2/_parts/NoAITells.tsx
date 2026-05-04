@@ -13,7 +13,9 @@ Sarah`;
 // What Alma writes — short, specific, sounds like a real sophomore.
 const ALMA = `Hi Maya,
 
-I'm a Brown CS sophomore looking at TMT and saw your team led the Q4 software deal. The structure was wild. I'm trying to learn how a banker actually thinks about a deal like that. Free for 15 minutes next week?
+I'm a Brown sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal, and I'm trying to understand how bankers think through retention and product risk in a process like that.
+
+Would 15 minutes by phone next week work?
 
 Sarah`;
 
@@ -99,7 +101,7 @@ export function NoAITells() {
 
       <Reveal delay={300}>
         <p className="mx-auto mt-8 max-w-md text-center text-xs text-[#5C6472]">
-          Specific deal reference. Honest framing. One concrete ask. No formal hedging. Reads like a sophomore who actually noticed something, not a template.
+          Specific deal reference. Real student context. One concrete ask. No hedging. Reads like a sophomore who actually noticed something, not a template.
         </p>
       </Reveal>
     </section>

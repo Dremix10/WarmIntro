@@ -53,10 +53,10 @@ export default function RequestAccessPage() {
       <PublicTopBar />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Closed beta</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Request list open</p>
           <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request access</h1>
           <p className="text-sm text-[#14182A]/70">
-            Alma is invite-only while we run a closed beta with 100 founding users. Drop your email and we&rsquo;ll reach out when a spot opens.
+            Alma is gated while we onboard the founding cohort for the 2026 IB cycle. Drop your school email and we&rsquo;ll reach out as soon as we can support you well.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function RequestAccessPage() {
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Got it.</p>
             <p className="text-sm text-[#14182A]/70 mb-3">
-              We&rsquo;ll email <strong>{email}</strong> when there&rsquo;s a spot.
+              We&rsquo;ll email <strong>{email}</strong> when your access is ready.
             </p>
             <p className="text-xs text-[#14182A]/55 mb-4 leading-relaxed">
               School inboxes (Rice, Brown, MIT, anywhere on Microsoft 365) sometimes route
@@ -120,7 +120,7 @@ export default function RequestAccessPage() {
               disabled={state === "submitting"}
               className="w-full rounded-xl bg-[#1B3B5F] text-white py-3 text-sm font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
             >
-              {state === "submitting" ? "Sending…" : "Request access"}
+              {state === "submitting" ? "Sending..." : "Request access"}
             </button>
             <p className="text-xs text-[#14182A]/55 text-center pt-2">
               Already have access? <a href="/login" className="underline text-[#2E5A88]">Sign in →</a>

@@ -27,21 +27,21 @@ const STEPS: Step[] = [
     shortLabel: "Write",
     eyebrow: "Step 2 · in your voice",
     title: "Email drafted, sounds like you",
-    body: "Hi Maya, I'm a Brown CS sophomore looking at TMT and saw your team led the Q4 software deal. I'm trying to learn how a banker actually thinks about a deal like that. Free for 15 minutes next week?",
+    body: "Hi Maya, I'm a Brown sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal and wanted to understand how bankers think through retention and product risk. Would 15 minutes by phone next week work?",
     variant: "draft",
   },
   {
     shortLabel: "Send",
     eyebrow: "Step 3 · from your Gmail",
-    title: "Sent from your inbox at your preferred time",
-    body: "Goes out at 8am Tuesday from your real address. Banker replies to you, not to a third-party system.",
+    title: "Drafted in Gmail at your preferred time",
+    body: "Starts as a Gmail draft in Copilot. When you approve, it sends from your real address and the banker replies to your thread, not to a third-party system.",
     variant: "approve",
   },
   {
     shortLabel: "Reply",
     eyebrow: "Step 4 · 2 days later",
     title: "Reply received from Maya",
-    body: "\"Tuesday 4pm work for you?\" Pipeline advances from Sent → Coffee. Follow-up suggestions surface automatically.",
+    body: "\"Tuesday 4pm work for you?\" Pipeline advances from Sent to Coffee. Follow-up suggestions surface automatically.",
   },
 ];
 
@@ -239,7 +239,7 @@ export function AgentLoop() {
         </div>
 
         <p className="mx-auto mt-6 max-w-md text-center text-xs text-[#8A8674]">
-          One banker takes about 90 seconds end to end. Multiply by your batch size, Alma runs while you sleep.
+          One banker takes about 90 seconds end to end. Multiply by your batch size, and Alma keeps the queue moving while you sleep.
         </p>
       </div>
     </section>

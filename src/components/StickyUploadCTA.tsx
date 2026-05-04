@@ -22,17 +22,17 @@ export function StickyUploadCTA({ afterPx = 700 }: { afterPx?: number }) {
     >
       <div className="flex items-center gap-2 rounded-full border border-[#D9CFB5] bg-white p-1.5 shadow-lg shadow-[#1B3B5F]/10">
         <a
-          href="/demo"
+          href="/request-access"
           className="rounded-full bg-[#1B3B5F] px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           style={{ animation: "pulse-shadow 5.5s ease-in-out infinite" }}
         >
-          Try the demo →
+          Request access →
         </a>
         <a
-          href="/request-access"
+          href="/demo"
           className="rounded-full px-4 py-2 text-xs font-medium text-[#1B3B5F] transition-colors hover:bg-[#1B3B5F]/5"
         >
-          Request access
+          Try the demo
         </a>
         <button
           type="button"

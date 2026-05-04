@@ -30,13 +30,13 @@ export function TodayMock() {
       who: "Maya Chen",
       firm: "Morgan Stanley · TMT",
       warmth: 88,
-      line: "Saw your team led the Q4 software deal…",
+      line: "Saw your team led the Q4 software deal",
     },
     {
       who: "Alex Park",
       firm: "Goldman Sachs · M&A",
       warmth: 76,
-      line: "Brown CS '20, same Fenway club as you…",
+      line: "Brown CS '20, same Fenway club as you",
     },
   ];
 
@@ -56,7 +56,7 @@ export function TodayMock() {
             Today
           </span>
           <span className="text-[9px] md:text-[10px]" style={{ color: PALETTE.faint }}>
-            Tue · Apr 30
+            Today
           </span>
         </div>
         <div

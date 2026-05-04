@@ -18,15 +18,15 @@ import { FoundersStrip } from "./_parts/FoundersStrip";
 const FAQ = [
   {
     q: "Is Alma a jobs board?",
-    a: "No. Alma doesn't list applications. It helps you reach the bankers who actually decide who gets a first round. The offer is almost never won on the application form.",
+    a: "No. Alma does not list applications. It helps you find the bankers who are most likely to take your call, write the outreach, and keep the follow-up loop moving until your pipeline turns into interviews.",
   },
   {
     q: "Why connect my Gmail?",
-    a: "So messages send from your real address. Bankers reply to you, not to a third-party system. We use the narrowest scope possible (compose drafts and watch only Alma-sent threads for replies). Every action is logged at /account/privacy and you can revoke anytime.",
+    a: "So outreach stays in your real inbox. Alma creates Gmail drafts, watches Alma-started threads for replies, and logs every action at /account/privacy. You can revoke access anytime.",
   },
   {
     q: "What does it cost?",
-    a: "Free through the 2026 recruiting cycle for Brown and Rice students.",
+    a: "The founding cohort is free through the 2026 recruiting cycle while we work closely with Brown, Rice, and MIT testers.",
   },
   {
     q: "I'm not a finance major. Does that matter?",
@@ -34,11 +34,26 @@ const FAQ = [
   },
   {
     q: "Which banks do you cover?",
-    a: "All of them. Bulge Bracket (GS, MS, JPM, BAML, Citi, Barclays, DB, UBS), Elite Boutiques (Evercore, Centerview, Lazard, Moelis, PJT, Guggenheim, Perella, Greenhill, Qatalyst), Middle Market (Jefferies, Houlihan Lokey, Raymond James, William Blair, Baird, Piper Sandler). Pick a tier, pick a group, go.",
+    a: "We cover the main IB recruiting targets students ask for: Bulge Bracket, Elite Boutique, and Middle Market firms, with firm and group picks during setup.",
   },
   {
     q: "Are you private-beta or public?",
-    a: "Private beta right now, invite-only for Brown and Rice. If you don't have an invite, drop your email at /coming-soon and we'll let you in as we open up.",
+    a: "The product is still gated, but the request list is open. Request access and we will bring students in as fast as we can support them well.",
+  },
+];
+
+const LIVE_POINTS = [
+  {
+    k: "Gmail-first",
+    v: "Drafts land in Gmail. Replies are watched from the original thread.",
+  },
+  {
+    k: "Trust dial",
+    v: "Start in Copilot, then graduate to preview-veto or autopilot when you are ready.",
+  },
+  {
+    k: "Live pipeline",
+    v: "Sent, replied, coffee, referral, first round, superday, offer.",
   },
 ];
 
@@ -52,6 +67,7 @@ export default function LandingV2() {
 
       <Hero />
       <LogoMarquee />
+      <LaunchStatus />
 
       <Divider />
       <AgentLoop />
@@ -83,7 +99,14 @@ function TopBar() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <p className="text-2xl italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">alma</p>
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
+          <a href="#how" className="hidden hover:text-[#1B3B5F] sm:inline">How it works</a>
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
+          <a
+            href="/request-access"
+            className="hidden rounded-full bg-[#1B3B5F] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5A88] sm:inline-flex"
+          >
+            Request access
+          </a>
           <AuthAwareLogin className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]" />
         </nav>
       </div>
@@ -101,7 +124,7 @@ function Hero() {
           className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472] opacity-0"
           style={{ animation: "fade-rise 700ms cubic-bezier(.22,.75,.3,1) 0ms forwards" }}
         >
-          Investment banking &middot; for Brown, Rice &amp; MIT students &middot; 2026 cycle
+          Investment banking &middot; request list open &middot; 2026 cycle
         </p>
 
         <AnimatedHeadline />
@@ -110,9 +133,9 @@ function Hero() {
           className="mt-6 max-w-2xl text-base leading-[1.55] text-[#4A5260] opacity-0 sm:mt-8 sm:text-lg md:text-xl"
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1500ms forwards" }}
         >
-          Alma is your AI networking team. It finds the alumni who&rsquo;ll take your call, drafts the
-          emails you&rsquo;d actually send, and tracks every reply through superday. You spend your
-          week on the calls, not the inbox.
+          Alma is the email-first recruiting agent for students breaking into investment banking.
+          It finds the right alumni, drafts outreach in your voice, mirrors it into Gmail, tracks
+          replies, and keeps your pipeline moving while you focus on calls.
         </p>
 
         <div
@@ -120,16 +143,16 @@ function Hero() {
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1750ms forwards", pointerEvents: "auto" }}
         >
           <a
-            href="/demo"
+            href="/request-access"
             className="rounded-full bg-[#1B3B5F] px-7 py-3.5 text-base font-semibold text-white shadow-[0_8px_24px_-8px_rgba(27,59,95,.5)] transition-all hover:-translate-y-0.5 hover:bg-[#2E5A88] hover:shadow-[0_12px_32px_-8px_rgba(27,59,95,.6)]"
           >
-            Try the demo →
+            Request access →
           </a>
           <a
-            href="/request-access"
+            href="/demo"
             className="alma-card rounded-full border border-[#1B3B5F] px-6 py-3.5 text-base font-medium text-[#1B3B5F] hover:bg-[#1B3B5F]/5"
           >
-            Request access
+            Try the demo
           </a>
           <a
             href="/login"
@@ -138,7 +161,7 @@ function Hero() {
             Already in? Sign in →
           </a>
         </div>
-        <p className="mt-4 ml-1 text-xs text-[#5C6472]">Closed beta · 100 founding users · free for 2026 cycle</p>
+        <p className="mt-4 ml-1 text-xs text-[#5C6472]">Founding cohort · request queue open · free for 2026 cycle</p>
 
         <div
           className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-dashed border-[#D9CFB5] pt-4 opacity-0"
@@ -156,9 +179,26 @@ function Hero() {
             </span>
           </span>
           <span className="text-xs text-[#5C6472]">
-            Built by <strong className="text-[#14182A]">4 students at Rice, Brown, and MIT</strong> — going through the IB cycle right now ourselves
+            Built by <strong className="text-[#14182A]">4 students at Rice, Brown, and MIT</strong> who are recruiting and testing with students live
           </span>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function LaunchStatus() {
+  return (
+    <section className="bg-[#F4EDDB]">
+      <div className="mx-auto grid max-w-5xl gap-4 px-6 py-7 md:grid-cols-3">
+        {LIVE_POINTS.map((point) => (
+          <div key={point.k} className="border-l border-[#D9CFB5] pl-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#2E5A88]">
+              {point.k}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-[#4A5260]">{point.v}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -191,7 +231,7 @@ function FunnelSection() {
 
       <Reveal delay={200}>
         <p className="mx-auto mt-12 max-w-2xl text-center text-lg font-[family-name:var(--font-fraunces)] italic leading-snug text-[#4A5260] md:text-xl">
-          &ldquo;Five minutes a morning. Sixteen weeks of consistency. One offer.&rdquo;
+          &ldquo;Five minutes a morning. Sixteen weeks of consistent outreach. One serious pipeline.&rdquo;
           <br />
           <span className="text-xs not-italic text-[#5C6472]">· Alma</span>
         </p>
@@ -242,23 +282,23 @@ function ClosingCTA() {
       <GradientOrb className="left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" size={680} opacity={0.34} />
       <Reveal>
         <h2 className="relative mx-auto max-w-xl text-[40px] leading-[1.05] tracking-[-0.02em] font-[family-name:var(--font-fraunces)] text-[#14182A] sm:text-[56px] sm:leading-[1.02] md:text-[88px]">
-          Ready to <span className="italic text-[#2E5A88]">leap</span>?
+          Get your recruiting system <span className="italic text-[#2E5A88]">running</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm text-[#4A5260] md:text-base">
-          Three minutes to set up. One hour a week to maintain. One offer to change the year.
+          Request access now. We are opening the founding cohort in waves while recruiting season is still moving.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="/demo"
+            href="/request-access"
             className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           >
-            Try the demo →
+            Request access →
           </a>
           <a
-            href="/request-access"
+            href="/demo"
             className="rounded-full border border-[#1B3B5F] px-6 py-3 text-sm font-semibold text-[#1B3B5F] transition-colors hover:bg-[#1B3B5F]/5"
           >
-            Request access
+            Try the demo
           </a>
           <a
             href="mailto:founders@alma.careers"
@@ -285,7 +325,7 @@ function Footer() {
     <footer className="border-t border-[#D9CFB5] bg-[#F4EDDB]">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-xs text-[#5C6472]">
         <p className="italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">
-          alma &middot; built at Brown &amp; Rice
+          alma &middot; built at Rice, Brown &amp; MIT
         </p>
         <div className="flex flex-wrap items-center gap-5">
           <a href="#about" className="hover:text-[#1B3B5F]">About</a>

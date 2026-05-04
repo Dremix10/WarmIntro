@@ -55,7 +55,7 @@ export function FoundersStrip() {
               Track winner · Y-Claude Hackathon at Rice
             </p>
             <p className="mt-1 text-xs text-[#5C6472]">
-              April 2026 · Now in private beta with Rice, Brown &amp; MIT testers
+              April 2026 · Founding cohort with Rice, Brown &amp; MIT testers
             </p>
           </div>
         </div>

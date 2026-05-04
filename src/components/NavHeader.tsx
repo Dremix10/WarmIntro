@@ -13,6 +13,7 @@ const HIDE_NAV_ROUTES = [
   "/",
   "/demo",
   "/coming-soon",
+  "/request-access",
   "/login",
   "/forgot-password",
   "/reset-password",

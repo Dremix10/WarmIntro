@@ -8,23 +8,23 @@ const MODES: { id: Mode; label: string; subtitle: string; description: string }[
   {
     id: "copilot",
     label: "Copilot",
-    subtitle: "drafts only · you copy & send",
+    subtitle: "Gmail drafts · you send",
     description:
-      "Alma drafts every email and shows it to you. You copy, edit, send from Gmail. Nothing leaves your inbox without you. Most students start here for the first two weeks.",
+      "Alma writes each email as a Gmail draft. You edit, approve, and send. Nothing leaves your inbox without you.",
   },
   {
     id: "preview",
     label: "Preview-veto",
-    subtitle: "15-min window · skip if you want",
+    subtitle: "30-min window · skip/edit",
     description:
-      "Each draft sits in a 15-minute window. Tap 'skip' to kill it. Otherwise it sends from Gmail at the time you set.",
+      "Alma queues a preview before the send window. Tap skip, edit the ask, or let it send from Gmail at the time you set.",
   },
   {
     id: "auto",
     label: "Autopilot",
-    subtitle: "sends + Sunday digest",
+    subtitle: "sends + digest",
     description:
-      "Alma sends. You read a Sunday digest. One tap returns to Preview-veto.",
+      "Alma sends approved categories for you and rolls the activity into a digest. One tap returns to Preview-veto.",
   },
 ];
 
@@ -46,7 +46,6 @@ function useReducedMotion() {
 export function TrustGradient() {
   const sectionRef = useRef<HTMLElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [userOverride, setUserOverride] = useState<number | null>(null);
   const reducedMotion = useReducedMotion();
 
   // Reduced-motion fallback: auto-advance through modes once on viewport entry,
@@ -76,7 +75,6 @@ export function TrustGradient() {
   const current = MODES[activeIdx];
 
   const handleClick = (idx: number) => {
-    setUserOverride(idx);
     setActiveIdx(idx);
   };
 
@@ -165,7 +163,7 @@ export function TrustGradient() {
         </div>
 
         <p className="mt-4 text-center text-xs text-[#8A8674]">
-          Auto-graduates as you approve drafts. Always one tap to step back.
+          Starts in Copilot. Graduates only after approvals. Always one tap to step back.
         </p>
       </div>
     </section>

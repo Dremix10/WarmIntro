@@ -39,12 +39,12 @@ function buildDemoEmail(p: ParsedProfile, b: DemoBankerReal): { subject: string;
   const firmShort = b.firm.split(/\s+/)[0];
   const groupBit = b.group ? ` ${b.group}` : "";
   const subject = sameSchool
-    ? `${userUni.split(" ")[0]} ${userMajor} — quick question on ${firmShort}${groupBit}`
-    : `${userUni.split(" ")[0]} sophomore — 15 min on ${firmShort}?`;
+    ? `${userUni.split(" ")[0]} ${userMajor} - quick question on ${firmShort}${groupBit}`
+    : `${userUni.split(" ")[0]} sophomore - 15 min on ${firmShort}?`;
 
   const opener = sameSchool
-    ? `Saw you went to ${b.university} too — I'm a ${userUni} ${userMajor} (sophomore) starting to look seriously at ${firmShort}${groupBit}.`
-    : `Saw you're at ${b.firm}${groupBit ? `'s${groupBit} group` : ""} — I'm a ${userUni} ${userMajor} (sophomore) trying to figure out the path into ${firmShort}-style work.`;
+    ? `Saw you went to ${b.university} too. I'm a ${userUni} ${userMajor} sophomore starting to look seriously at ${firmShort}${groupBit}.`
+    : `Saw you're at ${b.firm}${groupBit ? `'s${groupBit} group` : ""}. I'm a ${userUni} ${userMajor} sophomore trying to figure out the path into ${firmShort}-style work.`;
 
   const middle = p.storyOneLiner
     ? `\n\nA line on me: ${p.storyOneLiner}`
@@ -224,7 +224,7 @@ export default function DemoPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-3">60-second preview</p>
           <h1 className="font-[family-name:var(--font-fraunces)] text-3xl sm:text-4xl md:text-5xl mb-4">See what Alma would do for you</h1>
           <p className="text-base sm:text-lg text-[#14182A]/70 font-[family-name:var(--font-fraunces)] italic max-w-xl mx-auto">
-            Drop your resume. We&apos;ll show you the first three bankers Alma would email this week — and the actual drafts Alma would write in your voice.
+            Drop your resume. We&apos;ll show you the first three bankers Alma would email this week and the actual drafts Alma would write in your voice.
           </p>
         </div>
 
@@ -243,7 +243,7 @@ export default function DemoPage() {
                 ) : (
                   <>
                     <p className="font-[family-name:var(--font-fraunces)] text-xl mb-1">Drop a PDF here</p>
-                    <p className="text-xs text-[#14182A]/50">or tap to browse — no account needed</p>
+                    <p className="text-xs text-[#14182A]/50">or tap to browse, no account needed</p>
                   </>
                 )}
               </div>
@@ -278,7 +278,7 @@ export default function DemoPage() {
                   major: "Computer Science",
                   clubs: ["Rice Investment Banking Club", "Rice Quant Society"],
                   technicalSkills: ["Python", "SQL", "Excel"],
-                  storyOneLiner: "CS sophomore curious about how tech deals get done — drawn to TMT and software M&A specifically.",
+                  storyOneLiner: "CS sophomore curious about how tech deals get done, drawn to TMT and software M&A specifically.",
                 };
                 setProfile(sampleProfile);
                 track("demo_parsed", { name: "Sam Rivera", major: "Computer Science", university: "Rice University", source: "sample" });
@@ -317,12 +317,12 @@ export default function DemoPage() {
             <div>
               <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-2">Three bankers Alma would email this week</p>
               <p className="text-sm text-[#14182A]/70 font-[family-name:var(--font-fraunces)] italic mb-4">
-                Every Monday, Alma queues ~5 of these. You approve. Alma sends from your Gmail. Replies come back to you — Alma tracks the thread.
+                Every Monday, Alma queues about 5 of these. You approve. Alma sends from your Gmail. Replies come back to you, and Alma tracks the thread.
               </p>
               <div className="space-y-4">
                 {bankers.length === 0 && (
                   <div className="rounded-2xl border border-[#D9CFB5] bg-white p-6 text-center text-sm text-[#14182A]/65">
-                    Couldn&rsquo;t pull a fresh banker batch right now. Try again in a sec, or drop your email below — we&rsquo;ll loop you in when we open access.
+                    Couldn&rsquo;t pull a fresh banker batch right now. Try again in a sec, or drop your email below and we&rsquo;ll loop you in as access opens.
                   </div>
                 )}
                 {bankers.map((b) => {
@@ -377,18 +377,18 @@ export default function DemoPage() {
             <div className="rounded-3xl bg-[#1B3B5F] p-8 text-center">
               <p className="font-[family-name:var(--font-fraunces)] text-3xl text-white mb-2">Ready for the real thing?</p>
               <p className="text-sm text-white/80 max-w-lg mx-auto mb-6 italic font-[family-name:var(--font-fraunces)]">
-                Alma runs this loop every week — with real bankers at your target firms, drafts in your voice, replies tracked through superday. Drop your email and we&apos;ll send you early access the moment the beta opens.
+                Alma runs this loop every week with real bankers at your target firms, drafts in your voice, and replies tracked through superday. Drop your email and we&apos;ll send access when your spot is ready.
               </p>
               <form onSubmit={handleSignup} className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@rice.edu or you@brown.edu" required
                   className="flex-1 rounded-xl bg-white/10 border border-white/20 px-4 py-3 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30" />
                 <button type="submit" className="rounded-xl bg-[#C86B4F] text-white px-6 py-3 text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap">
-                  Get early access
+                  Request access
                 </button>
               </form>
               {signupError && <p className="text-xs text-[#E8B339] mt-3">{signupError}</p>}
-              <p className="text-[10px] text-white/40 mt-4">Closed beta · Brown, Rice &amp; MIT undergrads · 2026 cycle</p>
+              <p className="text-[10px] text-white/40 mt-4">Request list open · Brown, Rice &amp; MIT undergrads · 2026 cycle</p>
             </div>
           </div>
         )}
@@ -397,7 +397,7 @@ export default function DemoPage() {
           <div className="rounded-3xl bg-white p-10 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-3xl mb-2">You&apos;re on the list.</p>
             <p className="text-sm text-[#14182A]/70 italic font-[family-name:var(--font-fraunces)] max-w-md mx-auto">
-              We text everyone personally the day the beta opens up for your campus. In the meantime, forward the demo link to a friend breaking into IB — the more of your class is in, the better the network for all of you.
+              We reach out personally when your access is ready. In the meantime, forward the demo link to a friend breaking into IB. The more of your class is in, the better the network for all of you.
             </p>
             <p className="mt-6 text-xs text-[#14182A]/40">Share: <code className="text-[#2E5A88]">alma.careers/demo</code></p>
           </div>

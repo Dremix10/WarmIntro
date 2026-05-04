@@ -23,9 +23,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Alma — The warm-intro engine for Brown & Rice students",
+  title: "Alma - Email-first recruiting for investment banking",
   description:
-    "Alma reads your resume, finds alumni at companies where you'd thrive, and drafts the outreach you'd actually send. One hour a week is enough.",
+    "Alma finds the right bankers, drafts outreach in your voice, mirrors it into Gmail, and tracks replies through your investment banking pipeline.",
 };
 
 export const viewport: import("next").Viewport = {
