@@ -96,6 +96,10 @@ Schema is in `supabase/migrations/`. Read `docs/DATABASE_SCHEMA.md` for the huma
 
 When a Supabase select returns empty unexpectedly, **first verify every column name against `docs/DATABASE_SCHEMA.md`** before assuming RLS or auth. PostgREST silently returns empty rows when a selected column doesn't exist — no loud error. (Concrete bite: `bankers.warmth_score` doesn't exist; `warmth` lives on `connections`.)
 
+Codex local MCP: on 2026-05-04, `~/.codex/config.toml` was configured with a global `supabase` remote MCP server scoped to this project, read-only, and expecting a Supabase PAT from `SUPABASE_ACCESS_TOKEN`:
+`https://mcp.supabase.com/mcp?project_ref=pddeejkicavcyhondnim&read_only=true&features=database,docs,debugging,development`.
+This Codex build reported hosted OAuth as unsupported, so do not paste PATs into chat; the user should create a Supabase PAT and expose it to Codex as `SUPABASE_ACCESS_TOKEN` if they want the MCP tools active. If tools are not visible in a new Codex session, run `codex mcp list` / `codex mcp get supabase`. Until authenticated, live DB queries can still use the repo env + Supabase service-role client, but treat that as sensitive access and summarize rather than dumping rows.
+
 ### Vercel
 
 Web app deploys from `main`. Production domain is `alma.careers`. Welcome / approve / reset / night-preview emails send from `welcome@alma.careers`.
