@@ -7,7 +7,7 @@ import { findRealAlumni } from "@/services/linkedin-search";
 import { enrichEmailBatch, verifyEmailViaHunter } from "@/services/hunter/enrich";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { getActiveScoringWeights } from "@/services/signals/aggregate";
-import { restSelect, restSelectOne, restUpdate, eq, isNull } from "@/lib/supabase-rest";
+import { restSelect, restSelectOne, restUpdate, eq, gte, isNull } from "@/lib/supabase-rest";
 import type { Banker } from "@/shared/ib-types";
 
 interface UserProfileRow {
@@ -59,6 +59,7 @@ const WARMTH_SUMMER_INTERN_PENALTY = 25;
 // If a banker's row is stale by more than this and their title looks
 // summer/intern-y, re-verify the email via Hunter before surfacing.
 const STALE_SUMMER_THRESHOLD_DAYS = 270; // ~9 months
+const SKIPPED_DRAFT_COOLDOWN_DAYS = 30;
 
 function isSummerOrInternTitle(title: string): boolean {
   const t = title.toLowerCase();
@@ -212,8 +213,11 @@ async function alreadyContactedBankerIds(userId: string): Promise<string[]> {
   //    3 iterations, retrying the same banker with the same prompt would
   //    just produce another rejection — better to surface the existing
   //    draft for the user to override or skip than to spawn duplicates.
-  //    Skipped/sent drafts don't block — the user might want to retry a
-  //    skipped one later.
+  //    Sent drafts become connections. Recently skipped drafts block too:
+  //    in live testing, normal Run Alma could resurface the same banker
+  //    right after the user skipped them, which felt like no progress.
+  //    Regeneration still intentionally retries the same banker through
+  //    /api/drafts/[id]/skip when regenerate=true.
   const activeDrafts = await restSelect("drafts", {
     select: "banker_id",
     filters: {
@@ -222,8 +226,18 @@ async function alreadyContactedBankerIds(userId: string): Promise<string[]> {
       sent_at: isNull,
     },
   });
+  const skippedSince = new Date(Date.now() - SKIPPED_DRAFT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const recentSkippedDrafts = await restSelect("drafts", {
+    select: "banker_id",
+    filters: {
+      user_id: eq(userId),
+      status: eq("skipped"),
+      sent_at: isNull,
+      updated_at: gte(skippedSince),
+    },
+  });
   const ids = new Set<string>();
-  for (const r of [...conns, ...activeDrafts]) {
+  for (const r of [...conns, ...activeDrafts, ...recentSkippedDrafts]) {
     if (typeof r.banker_id === "string") ids.add(r.banker_id);
   }
   return Array.from(ids);

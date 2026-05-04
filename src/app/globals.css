@@ -138,6 +138,9 @@ html, body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 @keyframes confetti-fall {
@@ -508,19 +511,30 @@ html, body {
   inset: 0 0 auto 0;
   height: 64px;
   padding: 12px 16px;
+  width: 100%;
   border-radius: 14px;
   background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
   border: 1px solid #D9CFB5;
   box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 18px -8px rgba(20,24,42,0.10);
+  color: inherit;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  font: inherit;
   opacity: 0;
   pointer-events: none;
+  text-align: left;
   transform: translateY(-4px);
-  transition: opacity 360ms cubic-bezier(.22,.75,.3,1) 80ms, transform 360ms cubic-bezier(.22,.75,.3,1) 80ms;
+  transition:
+    opacity 360ms cubic-bezier(.22,.75,.3,1) 80ms,
+    transform 360ms cubic-bezier(.22,.75,.3,1) 80ms,
+    background 180ms ease;
   z-index: 4;
+}
+.alma-deck-open-header:hover {
+  background: linear-gradient(180deg, #fff 0%, #F7F0DE 100%);
 }
 .alma-deck[data-open] .alma-deck-open-header {
   opacity: 1;
@@ -697,5 +711,22 @@ html, body {
   .alma-deck[data-open] .alma-banker-card {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes alma-line-flow {
+  to { stroke-dashoffset: 16; }
+}
+
+.alma-line-flow {
+  stroke-dasharray: 10 6;
+  animation: alma-line-flow 1.4s linear infinite;
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-line-flow {
+    animation: none;
+    opacity: 0;
   }
 }

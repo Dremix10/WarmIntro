@@ -357,7 +357,7 @@ Subject: Brown CS sophomore — quick question on healthcare M&A
 
 Hi Sarah,
 
-Saw your team advised on the Hologic carve-out last spring. I'm a Brown CS sophomore (Applied Math-CS) trying to figure out how the analytical side of M&A actually maps to the coursework I'm doing. APMA 1650 is teaching me probability rigorously, but I have no idea how much that shows up day-to-day for an analyst on a deal like that one.
+Saw your team advised on the Hologic carve-out last spring. I'm a Brown CS sophomore (Applied Math-CS) trying to figure out how quantitative rigor actually maps to analyst work on a live M&A deal. APMA 1650 is the first class where probability has felt practical, and I'm curious how much that shows up day-to-day on a deal like that one.
 
 Would 15 min by phone next week work?
 
@@ -456,7 +456,7 @@ Why this works under thin-data: every claim traces to the student's profile. The
 - Plain, direct, slightly under-polished. Not consultant-speak.
 - Short. They know the banker is busy.
 - Friendly is fine. "Hi", contractions, occasional fragments. Keep the ask confident and banking-professional.
-- Use curious, not self-deprecating: "I'm trying to understand whether X shows up day-to-day" beats "I have no idea if X matters."
+- Use curious, not self-deprecating: "I'm trying to understand whether X shows up day-to-day" beats underselling yourself.
 - Specific beats impressive.
 - Honest about being a student. They don't have to perform expertise.
 

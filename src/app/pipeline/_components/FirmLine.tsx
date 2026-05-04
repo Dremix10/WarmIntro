@@ -46,6 +46,14 @@ export function FirmLine({
           strokeLinecap="round"
           fill="none"
         />
+        <path
+          className="alma-line-flow"
+          d="M 0 40 L 100 40"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          fill="none"
+        />
       </svg>
       {STATIONS.map((station) => (
         <Station

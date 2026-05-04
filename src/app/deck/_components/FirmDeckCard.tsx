@@ -60,7 +60,14 @@ export function FirmDeckCard({
         </div>
       </div>
 
-      <OpenHeader firmName={deck.firmName} bankerCount={deck.bankers.length} tierLabel={tierLabel} roman={highestRoman} name={highestName} />
+      <OpenHeader
+        firmName={deck.firmName}
+        bankerCount={deck.bankers.length}
+        tierLabel={tierLabel}
+        roman={highestRoman}
+        name={highestName}
+        onClose={() => setOpen(false)}
+      />
 
       <button
         type="button"
@@ -132,15 +139,22 @@ function OpenHeader({
   tierLabel,
   roman,
   name,
+  onClose,
 }: {
   firmName: string;
   bankerCount: number;
   tierLabel: string;
   roman: string;
   name: string;
+  onClose: () => void;
 }) {
   return (
-    <div className="alma-deck-open-header">
+    <button
+      type="button"
+      className="alma-deck-open-header"
+      onClick={onClose}
+      aria-label={`Close ${firmName} deck`}
+    >
       <div className="min-w-0">
         <div className="truncate font-[family-name:var(--font-fraunces)] text-[16px] font-semibold text-[#14182A]">
           {firmName}
@@ -153,7 +167,7 @@ function OpenHeader({
         <span className="alma-deck-stage-roman">{roman}</span>
         <span className="alma-deck-stage-name">{name}</span>
       </span>
-    </div>
+    </button>
   );
 }
 
@@ -163,4 +177,3 @@ function getTierLabel(tier: FirmDeck["firmTier"]): string {
   if (tier === "middle_market") return "MM";
   return "Firm";
 }
-

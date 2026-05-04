@@ -121,7 +121,7 @@ This section captures snapshots that decay fast. Treat as starting points, not f
 
 ### Pending decisions
 
-- **Casual hedges → BASE_VOICE banned phrases.** Anya consistently skipped drafts containing *"I have no idea"*, *"weird"*, *"if you have it?"*, *"kinda"*, *"sorta"*, *"tbh"*. For IB outreach these read as unprofessional. Critic catches some at voiceMatch=6–7 but doesn't reject hard enough. Fix is a 5-line edit in `src/services/agents/correspondent.ts`. Asked Dremix on 2026-05-02; he requested session summary before answering. Re-ask at the start of the next session.
+- **Casual hedges blocked.** Anya consistently skipped drafts containing *"I have no idea"*, *"weird"*, *"if you have it?"*, *"kinda"*, *"sorta"*, *"tbh"*. Shipped 2026-05-04: these now fail deterministic guardrails and `BASE_VOICE` no longer teaches "I have no idea" in the worked example. Verify the next Anya-style skipped draft set has no casual hedge language.
 
 ### Tester verification queue
 

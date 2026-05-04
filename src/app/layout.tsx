@@ -28,6 +28,14 @@ export const metadata: Metadata = {
     "Alma reads your resume, finds alumni at companies where you'd thrive, and drafts the outreach you'd actually send. One hour a week is enough.",
 };
 
+export const viewport: import("next").Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

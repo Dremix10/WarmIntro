@@ -84,6 +84,10 @@ export const BANNED_WORDS = [
   "herein",
   "wherewith",
   "whereby",
+  "kinda",
+  "sorta",
+  "tbh",
+  "weird",
 ];
 
 export const BANNED_PHRASES = [
@@ -108,6 +112,16 @@ export const BANNED_PHRASES = [
   "your leap from",
   "your path from",
   "your journey from",
+  "went from",
+  "came up through",
+  "promoted internally",
+  "after starting out at",
+  "starting out at",
+  "started out at",
+  "law-to-banking path",
+  "summer analyst stint",
+  "before going full-time",
+  "straight into the full-time",
   "the move from",
   "the switch from",
   "the transition from",
@@ -123,4 +137,11 @@ export const BANNED_PHRASES = [
   "your impressive",
   "your fascinating",
   "i greatly admire",
+  // Live tester voice: casual hedges read as unprofessional in IB outreach.
+  "i have no idea",
+  "if you have it",
+  "kinda",
+  "sorta",
+  "tbh",
+  "weird",
 ];

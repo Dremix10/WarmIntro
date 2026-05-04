@@ -6,15 +6,13 @@ Five tasks were pending at session close. **#75 and #76 are the freshest** — t
 
 ---
 
-## #75 — Add casual hedges to BASE_VOICE banned phrases
+## #75 — DONE — Add casual hedges to BASE_VOICE banned phrases
 
-**Status:** Pending Dremix approval (asked 2026-05-02; he requested session summary before answering).
+**Status:** Shipped 2026-05-04. Guardrails now block the live-testing hedge words/phrases, and `BASE_VOICE` no longer teaches "I have no idea" in its worked example.
 
 **Why:** Anya consistently skipped drafts containing "I have no idea", "weird", "if you have it?", "kinda", "sorta", "tbh" on `ar225@rice.edu`. Critic catches some at voiceMatch=6–7 but doesn't reject hard enough — so users override and send watered-down emails. For IB outreach specifically, casual hedges read as unprofessional; banking emails skew formal even from juniors.
 
-**Action:** Add the phrases above to the banned-phrases list in `src/services/agents/correspondent.ts` `BASE_VOICE`. ~5-line edit, ~5 minutes.
-
-**Re-ask Dremix at the start of the next session** before shipping.
+**Action:** Verify the next Anya-style skipped draft set has no casual hedge language.
 
 ---
 
