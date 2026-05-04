@@ -291,30 +291,45 @@ export default function CrmPage() {
           </div>
         ) : (
           <>
-            {/* Toolbar — tier filter + counts + status legend */}
-            <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-3 rounded-xl border border-[#D9CFB5] bg-white px-3 py-2.5">
-              <div className="flex items-center gap-1.5">
-                {(["all", "bulge_bracket", "elite_boutique", "middle_market"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTierFilter(t)}
-                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-                      tierFilter === t
-                        ? "bg-[#1B3B5F] text-white border-[#1B3B5F]"
-                        : "bg-white text-[#5C6472] border-[#D9CFB5] hover:border-[#2E5A88] hover:text-[#1B3B5F]"
-                    }`}
-                  >
-                    {t === "all" ? "All" : t === "bulge_bracket" ? "BB" : t === "elite_boutique" ? "EB" : "MM"}
-                  </button>
-                ))}
-                <span className="ml-3 text-[11px] text-[#8A8674]">
+            {/* Toolbar — tier filter + counts + status legend.
+                On mobile, legend dots are icon-only (labels appear under sm:). */}
+            <div className="mb-3 rounded-xl border border-[#D9CFB5] bg-white px-3 py-2.5">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-5 sm:gap-y-3">
+                <div className="flex items-center gap-1.5">
+                  {(["all", "bulge_bracket", "elite_boutique", "middle_market"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTierFilter(t)}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                        tierFilter === t
+                          ? "bg-[#1B3B5F] text-white border-[#1B3B5F]"
+                          : "bg-white text-[#5C6472] border-[#D9CFB5] hover:border-[#2E5A88] hover:text-[#1B3B5F]"
+                      }`}
+                    >
+                      {t === "all" ? "All" : t === "bulge_bracket" ? "BB" : t === "elite_boutique" ? "EB" : "MM"}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[11px] text-[#8A8674]">
                   {firms.length} firm{firms.length === 1 ? "" : "s"} · {totalActive} banker{totalActive === 1 ? "" : "s"}
                 </span>
-              </div>
-              <div className="ml-auto flex items-center gap-5 text-[11px] text-[#5C6472]">
-                <LegendDot color="#2E5A88" label="Fresh activity" />
-                <LegendDot color="#E8B339" label="Action due" />
+                <div className="ml-auto flex items-center gap-3 text-[11px] text-[#5C6472] sm:gap-5">
+                  <span className="inline-flex items-center min-w-0 sm:min-w-[120px]">
+                    <span
+                      className="inline-block h-[10px] w-[10px] shrink-0 rounded-full mr-2"
+                      style={{ backgroundColor: "#2E5A88", boxShadow: "0 0 0 2px white inset, 0 0 0 3px #2E5A88" }}
+                    />
+                    <span className="hidden sm:inline">Fresh activity</span>
+                  </span>
+                  <span className="inline-flex items-center min-w-0 sm:min-w-[120px]">
+                    <span
+                      className="inline-block h-[10px] w-[10px] shrink-0 rounded-full mr-2"
+                      style={{ backgroundColor: "#E8B339", boxShadow: "0 0 0 2px white inset, 0 0 0 3px #E8B339" }}
+                    />
+                    <span className="hidden sm:inline">Action due</span>
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -329,8 +344,36 @@ export default function CrmPage() {
               </div>
             )}
 
-            {/* The map */}
-            <div className="relative overflow-x-auto rounded-2xl border border-[#D9CFB5] bg-gradient-to-b from-[#FCFAF5] to-[#F4EDDB] p-4 sm:p-6 pt-16 sm:pt-20">
+            {/* MOBILE: per-firm vertical accordion. Each firm collapses to a
+                row showing name + tier + highest stage pill + banker count.
+                Tap to expand to a vertical list of bankers. Same banker click
+                opens the same detail panel as the transit map. */}
+            <div className="md:hidden space-y-2">
+              {firms.map((firm) => {
+                const stationMap = stationsByFirm.get(firm.id);
+                if (!stationMap) return null;
+                const allBankers: typeof rows = [];
+                for (const st of STATIONS) {
+                  const list = stationMap.get(st.stage) ?? [];
+                  allBankers.push(...list);
+                }
+                if (allBankers.length === 0) return null;
+                return (
+                  <FirmAccordion
+                    key={firm.id}
+                    firmName={firm.name}
+                    firmTier={firm.tier === "bulge_bracket" ? "BB" : firm.tier === "elite_boutique" ? "EB" : "MM"}
+                    firmColor={firm.color}
+                    bankers={allBankers}
+                    onOpenBanker={(id) => setActiveBankerId(id)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* DESKTOP: full transit map. Hidden under md because its 900px
+                min-width can't be honestly compressed for portrait. */}
+            <div className="hidden md:block relative overflow-x-auto rounded-2xl border border-[#D9CFB5] bg-gradient-to-b from-[#FCFAF5] to-[#F4EDDB] p-4 sm:p-6 pt-16 sm:pt-20">
               {/* Stage labels along the top */}
               <div
                 className="grid items-baseline pb-3 mb-2"
@@ -658,6 +701,162 @@ function OverflowList({
 }
 
 // ---- Banker detail panel (right slide-out) ----------------------------------
+
+// ---- Mobile portrait accordion --------------------------------------------
+
+const STAGE_LABEL_SHORT: Record<string, string> = {
+  sent: "Sent",
+  replied: "Replied",
+  coffee: "Coffee",
+  referral: "Referral",
+  first_round: "1st Rd",
+  superday: "Superday",
+  offer: "Offer",
+};
+
+const STAGE_ROMAN_PI: Record<string, string> = {
+  sent: "I", replied: "II", coffee: "III", referral: "IV",
+  first_round: "V", superday: "VI", offer: "VII",
+};
+
+function FirmAccordion({
+  firmName,
+  firmTier,
+  firmColor,
+  bankers,
+  onOpenBanker,
+}: {
+  firmName: string;
+  firmTier: string;
+  firmColor: string;
+  bankers: CrmRow[];
+  onOpenBanker: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  // Highest stage among the firm's bankers — drives the level pill colour.
+  const highestStage = useMemo(() => {
+    const order = ["sent", "replied", "coffee", "referral", "first_round", "superday", "offer"];
+    let best = "sent";
+    let bestIdx = 0;
+    for (const b of bankers) {
+      const i = order.indexOf(b.stage);
+      if (i > bestIdx) { bestIdx = i; best = b.stage; }
+    }
+    return best;
+  }, [bankers]);
+
+  const highestRoman = STAGE_ROMAN_PI[highestStage] ?? "I";
+  const highestName = STAGE_LABEL_SHORT[highestStage] ?? "Sent";
+  const isHighStage = ["referral", "first_round", "superday", "offer"].includes(highestStage);
+  const isGold = ["first_round", "superday", "offer"].includes(highestStage);
+
+  const attentionCount = bankers.filter((b) => statusFor(b) !== null).length;
+
+  // Sort bankers by stage descending then warmth descending — surface the
+  // highest-priority bankers first inside the open list.
+  const sortedBankers = useMemo(() => {
+    const order = ["sent", "replied", "coffee", "referral", "first_round", "superday", "offer"];
+    return [...bankers].sort((a, b) => {
+      const ai = order.indexOf(a.stage);
+      const bi = order.indexOf(b.stage);
+      if (ai !== bi) return bi - ai;
+      return priorityScore(b) - priorityScore(a);
+    });
+  }, [bankers]);
+
+  return (
+    <div className="rounded-2xl border border-[#D9CFB5] bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+      >
+        <span
+          className="h-[34px] w-1 shrink-0 rounded-full"
+          style={{ backgroundColor: firmColor }}
+          aria-hidden
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="font-[family-name:var(--font-fraunces)] text-base font-semibold leading-tight text-[#14182A] truncate">
+              {firmName}
+            </span>
+            <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.08em] text-[#8A8674]">
+              {firmTier}
+            </span>
+          </div>
+          <div className="mt-0.5 text-[11px] text-[#5C6472]">
+            <strong className="text-[#14182A] font-semibold">{bankers.length}</strong>{" "}
+            banker{bankers.length === 1 ? "" : "s"}
+            {attentionCount > 0 && (
+              <>
+                {" · "}
+                <span className="text-[#9A7110] font-semibold">{attentionCount} need attention</span>
+              </>
+            )}
+          </div>
+        </div>
+        <span
+          className="shrink-0 inline-flex items-baseline gap-1 rounded-full px-2.5 py-[3px] text-[10px] font-semibold"
+          style={{
+            backgroundColor: isGold ? "rgba(201, 162, 76, 0.15)" : isHighStage ? "rgba(232, 179, 57, 0.15)" : "rgba(46, 90, 136, 0.10)",
+            border: `1px solid ${isGold ? "rgba(201, 162, 76, 0.45)" : isHighStage ? "rgba(232, 179, 57, 0.45)" : "rgba(46, 90, 136, 0.30)"}`,
+            color: isGold ? "#8E6E14" : isHighStage ? "#92400E" : "#1B3B5F",
+          }}
+        >
+          <span className="font-[family-name:var(--font-fraunces)] italic font-semibold">{highestRoman}</span>
+          <span className="uppercase tracking-[0.06em] text-[9px]">{highestName}</span>
+        </span>
+        <span className="shrink-0 text-[#8A8674] text-sm" aria-hidden>
+          {open ? "▾" : "▸"}
+        </span>
+      </button>
+
+      {open && (
+        <ul className="border-t border-[#ECE7DE] divide-y divide-[#ECE7DE]">
+          {sortedBankers.map((b) => {
+            const status = statusFor(b);
+            const stageRoman = STAGE_ROMAN_PI[b.stage] ?? "—";
+            const stageName = STAGE_LABEL_SHORT[b.stage] ?? b.stage;
+            return (
+              <li key={b.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenBanker(b.bankerId)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#FBF7EC] transition-colors"
+                >
+                  <span
+                    className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white font-[family-name:var(--font-fraunces)] font-semibold text-sm"
+                    style={{ backgroundColor: firmColor }}
+                  >
+                    {initial(b.name)}
+                    {status && (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white"
+                        style={{ backgroundColor: status === "positive" ? "#2E5A88" : "#E8B339" }}
+                        aria-hidden
+                      />
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-tight text-[#14182A] truncate">{b.name}</p>
+                    <p className="text-[11px] text-[#8A8674] truncate">{b.title ?? "—"}</p>
+                  </div>
+                  <span className="shrink-0 inline-flex items-baseline gap-1 text-[10px]">
+                    <span className="font-[family-name:var(--font-fraunces)] italic font-semibold text-[#1B3B5F]">{stageRoman}</span>
+                    <span className="uppercase tracking-[0.06em] text-[9px] text-[#8A8674]">{stageName}</span>
+                  </span>
+                  <span className="shrink-0 text-[#8A8674] text-xs" aria-hidden>›</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 interface DraftHistoryRow { id: string; subject: string | null; body: string; status: string; sent_at: string | null; created_at: string; type: string }
 interface SignalHistoryRow { signal_type: string; metadata: Record<string, unknown>; occurred_at: string }
