@@ -174,9 +174,22 @@ export function AgentLoop() {
           })}
         </div>
 
-        {/* Progress bar + replay */}
-        <div className="mx-auto mt-3 flex w-full max-w-5xl items-center gap-3">
-          <span className="font-mono text-xs tabular-nums text-[#8A8674]">
+        {/* Progress bar + nav. Prev/Next let users step through the four
+            phases manually — important on mobile where chip taps are hidden,
+            and on desktop for users who don't want to wait through the
+            auto-play timer. Tapping prev/next sets userOverride so the
+            timer stops; ↺ Replay re-enables auto-play from step 1. */}
+        <div className="mx-auto mt-4 flex w-full max-w-5xl items-center gap-3">
+          <button
+            type="button"
+            onClick={() => handleSelect(Math.max(0, activeIndex - 1))}
+            disabled={activeIndex === 0}
+            aria-label="Previous step"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#D9CFB5] bg-white text-[#1B3B5F] transition-colors hover:border-[#2E5A88] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            ‹
+          </button>
+          <span className="font-mono text-xs tabular-nums text-[#8A8674] shrink-0">
             {pad(activeIndex + 1)} / {pad(STEPS.length)}
           </span>
           <div className="h-[2px] flex-1 overflow-hidden rounded-sm bg-[#D9CFB5]">
@@ -185,13 +198,23 @@ export function AgentLoop() {
               style={{ width: `${((activeIndex + 1) / STEPS.length) * 100}%` }}
             />
           </div>
-          {atEnd && (
+          {atEnd ? (
             <button
               type="button"
               onClick={handleReplay}
-              className="text-xs font-semibold text-[#1B3B5F] hover:underline"
+              aria-label="Replay from start"
+              className="flex h-8 shrink-0 items-center justify-center rounded-full bg-[#1B3B5F] px-3 text-xs font-semibold text-white hover:bg-[#2E5A88]"
             >
               ↺ Replay
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSelect(Math.min(STEPS.length - 1, activeIndex + 1))}
+              aria-label="Next step"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1B3B5F] text-white transition-colors hover:bg-[#2E5A88]"
+            >
+              ›
             </button>
           )}
         </div>

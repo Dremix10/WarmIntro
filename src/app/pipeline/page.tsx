@@ -410,7 +410,9 @@ export default function CrmPage() {
                         </div>
                       </div>
 
-                      {/* Line — solid horizontal stroke spanning all stations */}
+                      {/* Line — solid horizontal stroke + a translucent
+                          dashed overlay that flows forward, suggesting
+                          continuous "about to advance" motion. */}
                       <svg
                         className="absolute pointer-events-none"
                         style={{ left: "140px", right: 0, top: 0, height: "80px" }}
@@ -418,6 +420,14 @@ export default function CrmPage() {
                         viewBox="0 0 100 80"
                       >
                         <path d="M 0 40 L 100 40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" />
+                        <path
+                          d="M 0 40 L 100 40"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          fill="none"
+                          className="alma-line-flow"
+                        />
                       </svg>
 
                       {/* Stations */}

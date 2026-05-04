@@ -28,6 +28,19 @@ export const metadata: Metadata = {
     "Alma reads your resume, finds alumni at companies where you'd thrive, and drafts the outreach you'd actually send. One hour a week is enough.",
 };
 
+// Lock the viewport on mobile: device-width, no zoom-to-fit, no pinch-zoom.
+// We do this with a viewport export (Next.js 16 idiomatic). User-scalable=no
+// prevents the iOS double-tap zoom that triggers when content overflows.
+// `viewport-fit=cover` lets content paint into the safe-area on notched
+// devices instead of black bars.
+export const viewport: import("next").Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
