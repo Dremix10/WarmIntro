@@ -256,18 +256,36 @@ export function PipelineMock() {
   // Transit-map miniature. Mirrors what /pipeline actually renders: each
   // firm is a horizontal line, stations are stages, bankers are circular
   // markers. Sized to the 16:10 surface card.
-  type Stage = "sent" | "replied" | "coffee" | "referral" | "first";
+  type Stage = "sent" | "replied" | "coffee" | "referral" | "first" | "offer";
   const STATIONS: { stage: Stage; label: string }[] = [
     { stage: "sent", label: "Sent" },
     { stage: "replied", label: "Replied" },
     { stage: "coffee", label: "Coffee" },
     { stage: "referral", label: "Referral" },
     { stage: "first", label: "1st Rd" },
+    { stage: "offer", label: "Offer" },
   ];
   type Marker = { stage: Stage; initial: string; size: "s" | "m" | "l"; status?: "positive" | "due" };
   type Firm = { name: string; tier: string; color: string; markers: Marker[] };
 
   const FIRMS: Firm[] = [
+    {
+      name: "Lazard",
+      tier: "EB",
+      color: "#5A3D5C",
+      markers: [
+        { stage: "offer", initial: "R", size: "l", status: "positive" },
+      ],
+    },
+    {
+      name: "Evercore",
+      tier: "EB",
+      color: PALETTE.terracotta,
+      markers: [
+        { stage: "coffee", initial: "N", size: "m", status: "positive" },
+        { stage: "referral", initial: "S", size: "l", status: "positive" },
+      ],
+    },
     {
       name: "Morgan Stanley",
       tier: "BB",
@@ -287,24 +305,27 @@ export function PipelineMock() {
         { stage: "replied", initial: "A", size: "m", status: "positive" },
       ],
     },
-    {
-      name: "Evercore",
-      tier: "EB",
-      color: PALETTE.terracotta,
-      markers: [
-        { stage: "coffee", initial: "N", size: "m", status: "positive" },
-        { stage: "referral", initial: "S", size: "l", status: "positive" },
-      ],
-    },
-    {
-      name: "Lazard",
-      tier: "EB",
-      color: "#5A3D5C",
-      markers: [
-        { stage: "first", initial: "R", size: "l", status: "positive" },
-      ],
-    },
   ];
+
+  // Each station occupies (100/N)% of the SVG viewBox horizontally. Tick
+  // centers sit at half-column from the start: tick[i] = (i + 0.5) * (100/N).
+  // The progress fill goes from 0 to that x-position (or all the way to 100
+  // if the firm reached the final station — then the line "fills the
+  // pipeline" end-to-end).
+  const STAGE_INDEX: Record<Stage, number> = {
+    sent: 0, replied: 1, coffee: 2, referral: 3, first: 4, offer: 5,
+  };
+  const TICK_CENTERS = STATIONS.map((_, i) => ((i + 0.5) * 100) / STATIONS.length);
+  function fillEndForFirm(firm: Firm): number {
+    let highest = 0;
+    for (const m of firm.markers) {
+      const idx = STAGE_INDEX[m.stage];
+      if (idx > highest) highest = idx;
+    }
+    // If the firm reached the final station, run the line to the very end
+    // (100). Otherwise fill up to that station's tick center.
+    return highest === STATIONS.length - 1 ? 100 : TICK_CENTERS[highest];
+  }
 
   const sizePx: Record<Marker["size"], number> = { s: 12, m: 14, l: 17 };
   const fontPx: Record<Marker["size"], number> = { s: 7, m: 8, l: 10 };
@@ -401,22 +422,39 @@ export function PipelineMock() {
               preserveAspectRatio="none"
               viewBox="0 0 100 24"
             >
-              {/* Line runs the full width of the stations area, including a
-                  short overshoot past the terminal station ticks. Mimics how
-                  real transit maps draw line ends — the line continues
-                  briefly beyond the first/last stop. */}
+              {/* Line is a progress bar: muted track underneath, filled
+                  segment in the firm color from the leftmost edge up to
+                  the highest station that firm has reached. If the firm
+                  reached the final station (Offer), the fill runs to the
+                  very end of the line. */}
               <path
                 d="M 0 12 L 100 12"
-                stroke="currentColor"
+                stroke={PALETTE.border}
                 strokeWidth="1.4"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray="1.5 2.5"
+                opacity="0.85"
+              />
+              <path
+                d={`M 0 12 L ${fillEndForFirm(firm)} 12`}
+                stroke="currentColor"
+                strokeWidth="1.6"
                 strokeLinecap="round"
                 fill="none"
               />
             </svg>
 
             {/* Stations + markers */}
-            {STATIONS.map((st) => {
+            {STATIONS.map((st, idx) => {
               const marker = firm.markers.find((m) => m.stage === st.stage);
+              // Highest stage this firm has reached. Used to colour ticks:
+              // reached → firm colour border (achieved); unreached → muted.
+              const highestIdx = firm.markers.reduce(
+                (max, m) => Math.max(max, STAGE_INDEX[m.stage]),
+                -1,
+              );
+              const reached = idx <= highestIdx;
               return (
                 <div
                   key={st.stage}
@@ -430,7 +468,7 @@ export function PipelineMock() {
                       width: "4px",
                       height: "4px",
                       backgroundColor: PALETTE.cardBg,
-                      border: `1.2px solid ${firm.color}`,
+                      border: `1.2px solid ${reached ? firm.color : PALETTE.border}`,
                       top: "50%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
