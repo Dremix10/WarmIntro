@@ -526,12 +526,17 @@ function SetupInner() {
     <div className="min-h-screen bg-[#EAE3D2] text-[#14182A]">
       <div className="max-w-5xl mx-auto px-6 py-10">
         <p className="text-xs uppercase tracking-wider text-[#2E5A88] font-semibold mb-1">Setup</p>
-        <h1 className="text-4xl font-[family-name:var(--font-fraunces)] font-medium mb-2">Let&apos;s get Alma running</h1>
+        <h1 className="text-3xl sm:text-4xl font-[family-name:var(--font-fraunces)] font-medium mb-2">Let&apos;s get Alma running</h1>
         <p className="text-sm text-[#14182A]/70 mb-6 italic font-[family-name:var(--font-fraunces)]">Three quick steps. You&apos;ll be live tonight.</p>
 
-        {/* Step indicator strip — equal-width pills + equal bars for symmetry */}
+        {/* Step indicator strip — equal-width pills + equal bars for symmetry.
+            On mobile the bars shrink and pill labels stay nowrap so the strip
+            fits on a 390px screen without overflow. */}
         {step !== "done" && (
-          <div className="mb-7 grid items-center gap-0" style={{ gridTemplateColumns: "1fr 28px 1fr 28px 1fr" }}>
+          <div
+            className="mb-7 grid items-center gap-0"
+            style={{ gridTemplateColumns: "1fr 8px 1fr 8px 1fr" }}
+          >
             {[
               { num: 1, label: "Resume" },
               { num: 2, label: "Confirm" },
@@ -541,7 +546,7 @@ function SetupInner() {
               return (
                 <div key={s.num} className="contents">
                   <div
-                    className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-all ${
+                    className={`flex items-center justify-center gap-2 whitespace-nowrap rounded-full border px-2 py-2 text-[11px] sm:px-3 sm:text-xs font-medium transition-all ${
                       state === "active"
                         ? "bg-[#1B3B5F] text-white border-[#1B3B5F] shadow-[0_8px_20px_-8px_rgba(27,59,95,0.45)]"
                         : state === "done"
@@ -550,7 +555,7 @@ function SetupInner() {
                     }`}
                   >
                     <span
-                      className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[11px] font-semibold font-[family-name:var(--font-fraunces)] ${
+                      className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-semibold font-[family-name:var(--font-fraunces)] ${
                         state === "active"
                           ? "bg-white text-[#1B3B5F]"
                           : state === "done"
@@ -562,7 +567,7 @@ function SetupInner() {
                     </span>
                     {s.label}
                   </div>
-                  {i < 2 && <span className="h-px bg-[#D9CFB5]" aria-hidden />}
+                  {i < 2 && <span className="h-px bg-[#D9CFB5] sm:w-7" aria-hidden />}
                 </div>
               );
             })}
@@ -578,8 +583,8 @@ function SetupInner() {
               ? "bg-[#C86B4F]/5 border-[#C86B4F]/20"
               : "bg-white border-[#D9CFB5]"
         }`}>
-          <div className="flex-1">
-            <p className={`font-medium ${
+          <div className="flex-1 min-w-0">
+            <p className={`font-medium truncate ${
               gmailConnected === true ? "text-[#2E5A88]"
                 : gmailConnected === false ? "text-[#14182A]"
                 : "text-[#14182A]/50"
@@ -591,7 +596,7 @@ function SetupInner() {
                   : "Gmail: checking…"}
             </p>
             {gmailConnected === false && (
-              <p className="text-xs text-[#14182A]/60 mt-0.5">Required for Alma to send. Opens in a new tab.</p>
+              <p className="text-xs text-[#14182A]/60 mt-0.5">Required for Alma to send.</p>
             )}
           </div>
           {gmailConnected === false && (
@@ -610,6 +615,7 @@ function SetupInner() {
         {step === "upload" && (
           <div className="grid grid-cols-1 md:grid-cols-[1fr_0.85fr] md:items-start gap-5 md:gap-6">
           <div className="space-y-4">
+            <MobileWhy step="upload" />
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-2">Step 1 of 3</p>
               <h2 className="font-[family-name:var(--font-fraunces)] text-2xl mb-4">Drop your resume</h2>
@@ -674,7 +680,7 @@ function SetupInner() {
               {parsed ? "Continue →" : "Drop your resume to continue"}
             </button>
           </div>
-          <MentorCompanion step="upload" />
+          <div className="hidden md:block"><MentorCompanion step="upload" /></div>
           </div>
         )}
 
@@ -682,6 +688,7 @@ function SetupInner() {
         {step === "confirm" && parsed && (
           <div className="grid grid-cols-1 md:grid-cols-[1fr_0.85fr] md:items-start gap-5 md:gap-6">
           <div className="space-y-4">
+            <MobileWhy step="confirm" />
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <div className="flex items-baseline justify-between mb-4">
                 <div>
@@ -728,7 +735,7 @@ function SetupInner() {
                     <p className="text-xs uppercase tracking-[0.18em] text-[#C86B4F] font-semibold">{TIER_LABEL[tier]}</p>
                     <p className="text-[10px] text-[#14182A]/40">{firmsByTier[tier].length} firms</p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                     {firmsByTier[tier].map((f) => (
                       <BankCard
                         key={f.id}
@@ -789,7 +796,7 @@ function SetupInner() {
               Next
             </button>
           </div>
-          <MentorCompanion step="confirm" />
+          <div className="hidden md:block"><MentorCompanion step="confirm" /></div>
           </div>
         )}
 
@@ -797,6 +804,7 @@ function SetupInner() {
         {step === "story" && parsed && (
           <div className="grid grid-cols-1 md:grid-cols-[1fr_0.85fr] md:items-start gap-5 md:gap-6">
           <div className="space-y-4">
+            <MobileWhy step="story" />
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="text-xs uppercase tracking-wider text-[#C86B4F] font-semibold mb-2">Step 3 of 3</p>
               <h2 className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">One sentence — why IB?</h2>
@@ -870,7 +878,7 @@ function SetupInner() {
                 type="time"
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
-                className="rounded-lg border border-[#D9CFB5] bg-[#EAE3D2]/40 px-3 py-2 text-sm"
+                className="w-40 rounded-lg border border-[#D9CFB5] bg-[#EAE3D2]/40 px-3 py-2 text-sm"
               />
               <p className="mt-2 text-[11px] text-[#14182A]/40">Change anytime from your dashboard.</p>
             </div>
@@ -884,7 +892,7 @@ function SetupInner() {
               {saving ? "Setting up..." : "Start Alma"}
             </button>
           </div>
-          <MentorCompanion step="story" />
+          <div className="hidden md:block"><MentorCompanion step="story" /></div>
           </div>
         )}
 
@@ -926,8 +934,50 @@ function SetupInner() {
  * Mentor companion — sticky sidecar that explains each onboarding step in
  * Alma's calm mentor voice. Renders different content per step. Below the
  * md breakpoint it stacks above the form on mobile (handled by the parent
- * grid).
+ * grid). On mobile we hide it entirely and use MobileWhy instead — a compact
+ * inline disclosure above each form section.
  */
+function MobileWhy({ step }: { step: "upload" | "confirm" | "story" }) {
+  // Tight one-line summary per step — what the user gets when they tap.
+  // Keeps mobile fast; users who want more open it.
+  const content = step === "upload" ? (
+    <>
+      <p><strong>Why your resume:</strong> I pull your school, major, and clubs to find alumni who&rsquo;ll take your call and write emails that sound like you.</p>
+      <p><strong>Where it lives:</strong> stored privately in your account. Delete any time from /account.</p>
+      <p><strong>Why Gmail:</strong> messages send from your address. Bankers reply to you, not Alma.</p>
+    </>
+  ) : step === "confirm" ? (
+    <>
+      <p><strong>Why double-check:</strong> 30 seconds now means every email I write later starts from the right place.</p>
+      <p><strong>BB / EB / MM:</strong> Bulge Bracket (GS, MS, JPM…), Elite Boutique (Evercore, Lazard…), Middle Market (Houlihan, Jefferies…).</p>
+      <p><strong>Coverage vs product:</strong> coverage = industry (TMT, Healthcare). Product = deal type (M&A, LevFin).</p>
+    </>
+  ) : (
+    <>
+      <p><strong>Why your story:</strong> bankers spot generic templates in 3 seconds. Specific is better than impressive — name a deal, a city, a teammate.</p>
+      <p><strong>Trust level:</strong> start in Copilot for the first two weeks. Dial up as you trust my voice.</p>
+      <p><strong>Run time:</strong> I draft once a day at this hour. 7-8am is popular — emails land before bankers&rsquo; first coffee.</p>
+    </>
+  );
+
+  return (
+    <details className="md:hidden rounded-2xl border border-[#D9CFB5] bg-gradient-to-br from-[#FCFAF5] to-[#F4EDDB] px-4 py-3 group">
+      <summary className="flex items-center gap-2 cursor-pointer list-none">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#1B3B5F] text-white italic font-medium text-xs font-[family-name:var(--font-fraunces)]">
+          a
+        </span>
+        <span className="flex-1 italic font-[family-name:var(--font-fraunces)] text-[13px] text-[#1B3B5F]">
+          Why we ask
+        </span>
+        <span className="text-[#8A8674] text-xs group-open:rotate-90 transition-transform" aria-hidden>›</span>
+      </summary>
+      <div className="mt-3 space-y-2 text-[12px] leading-[1.55] text-[#4A5260]">
+        {content}
+      </div>
+    </details>
+  );
+}
+
 function MentorCompanion({ step }: { step: "upload" | "confirm" | "story" }) {
   return (
     <aside
