@@ -401,13 +401,12 @@ export function PipelineMock() {
               preserveAspectRatio="none"
               viewBox="0 0 100 24"
             >
-              {/* Line spans precisely from first-station tick (x=10) to
-                  last-station tick (x=90). Each of the 5 stations occupies
-                  20% of viewBox width with its tick centered in the middle.
-                  Earlier the line ran 0→100 which left ghost stubs past
-                  each terminal tick. */}
+              {/* Line runs the full width of the stations area, including a
+                  short overshoot past the terminal station ticks. Mimics how
+                  real transit maps draw line ends — the line continues
+                  briefly beyond the first/last stop. */}
               <path
-                d="M 10 12 L 90 12"
+                d="M 0 12 L 100 12"
                 stroke="currentColor"
                 strokeWidth="1.4"
                 strokeLinecap="round"

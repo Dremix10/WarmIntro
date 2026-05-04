@@ -658,18 +658,37 @@ html, body {
   .alma-deck[data-open] .alma-banker-card { opacity: 1; transform: none; }
 }
 
-/* Transit-map firm line "about to proceed" — subtle dash flow that suggests
-   forward motion without being distracting. Each line gets a translucent
-   overlay stroke with a moving dash pattern. */
+/* Transit-map firm line "about to proceed" — dashed overlay that flows
+   forward (left → right, in the direction of stage progression). In SVG,
+   POSITIVE stroke-dashoffset shifts the dash pattern start backward along
+   the path, which makes the visible dashes appear to march FORWARD in
+   the direction the path was drawn. The path is drawn left-to-right, so
+   forward = rightward = correct direction of progress. */
 @keyframes alma-line-flow {
   from { stroke-dashoffset: 0; }
-  to   { stroke-dashoffset: -16; }
+  to   { stroke-dashoffset: 16; }
 }
 .alma-line-flow {
   stroke-dasharray: 4 4;
-  animation: alma-line-flow 1.6s linear infinite;
-  opacity: 0.55;
+  animation: alma-line-flow 1.4s linear infinite;
+  opacity: 0.7;
 }
 @media (prefers-reduced-motion: reduce) {
   .alma-line-flow { animation: none; opacity: 0; }
+}
+
+/* Mobile firm-accordion forward indicator. The transit map is desktop-only;
+   on phone the firm rows in /pipeline use a vertical accordion, and we want
+   the closed row to feel similarly forward-leaning. We add a small chevron
+   to the right side of each row that bobs subtly, signalling "tap to open
+   and see what's next." */
+@keyframes alma-firm-chevron-bob {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(2px); }
+}
+.alma-firm-chevron {
+  animation: alma-firm-chevron-bob 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .alma-firm-chevron { animation: none; }
 }

@@ -818,7 +818,10 @@ function FirmAccordion({
           <span className="font-[family-name:var(--font-fraunces)] italic font-semibold">{highestRoman}</span>
           <span className="uppercase tracking-[0.06em] text-[9px]">{highestName}</span>
         </span>
-        <span className="shrink-0 text-[#8A8674] text-sm" aria-hidden>
+        <span
+          className={`shrink-0 text-[#8A8674] text-sm ${open ? "" : "alma-firm-chevron"}`}
+          aria-hidden
+        >
           {open ? "▾" : "▸"}
         </span>
       </button>
