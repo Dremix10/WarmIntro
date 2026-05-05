@@ -4,7 +4,6 @@ const TILES = [
   { name: "Demetris", initial: "D", school: "Rice", color: "#1B3B5F" },
   { name: "Christos", initial: "C", school: "Rice", color: "#1B3B5F" },
   { name: "Evangelos", initial: "E", school: "Brown", color: "#7B1F2C" },
-  { name: "Theofanis", initial: "T", school: "MIT", color: "#8A8674" },
 ];
 
 export function FoundersStrip() {
@@ -42,7 +41,7 @@ export function FoundersStrip() {
         ))}
       </div>
 
-      <Reveal delay={4 * 80 + 80}>
+      <Reveal delay={TILES.length * 80 + 80}>
         <div className="mx-auto mt-10 flex max-w-xl items-center gap-4 alma-card rounded-2xl border border-[#D9CFB5] p-5 text-left">
           <span
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#FCD34D] bg-[#FEF3C7] text-base font-bold text-[#92400E]"
@@ -55,7 +54,7 @@ export function FoundersStrip() {
               Track winner · Y-Claude Hackathon at Rice
             </p>
             <p className="mt-1 text-xs text-[#5C6472]">
-              April 2026 · Founding cohort with Rice, Brown &amp; MIT testers
+              April 2026 · Founding cohort with Rice &amp; Brown testers
             </p>
           </div>
         </div>

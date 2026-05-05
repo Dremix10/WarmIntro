@@ -388,7 +388,7 @@ export default function DemoPage() {
                 </button>
               </form>
               {signupError && <p className="text-xs text-[#E8B339] mt-3">{signupError}</p>}
-              <p className="text-[10px] text-white/40 mt-4">Request list open · Brown, Rice &amp; MIT undergrads · 2026 cycle</p>
+              <p className="text-[10px] text-white/40 mt-4">Request list open · Brown &amp; Rice undergrads · 2026 cycle</p>
             </div>
           </div>
         )}

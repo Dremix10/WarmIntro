@@ -1,5 +1,7 @@
 # Alma launch kit — 3-day push to 25-30 signups
 
+> **2026-05-05 update:** Public launch posture is Rice/Brown only until Dremix reopens MIT expansion. For the 2026-05-06 accelerator-founder meeting, the pitch deck should end with a QR code to `https://alma.careers/request-access` or the homepage with the request-access CTA visible. Refresh all signup / activation / sent / reply numbers from Supabase before using this kit in a deck.
+
 > **Goal:** 25+ signups, 8-12 activations, 1-3 booked coffees by Apr 30 (YC submission day).
 > **Audience:** rising sophomores at Rice + Brown targeting SA2028 IB recruiting.
 > **Pitch in one line:** "I built an AI agent that runs your IB networking — finds bankers, writes the cold emails, tracks replies. Looking for 5 testers from [Rice/Brown]."

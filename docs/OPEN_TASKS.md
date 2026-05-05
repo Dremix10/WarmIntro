@@ -2,7 +2,27 @@
 
 The Claude task list (`TaskCreate`/`TaskList`) is local to Claude sessions and disappears when Claude is closed. This file is the migration snapshot for any AI agent (Codex, etc.) or human picking up the work.
 
-Five tasks were pending at session close. **#75 and #76 are the freshest** — they came out of the 2026-05-02 Anya testing session.
+This started as the Claude → Codex migration snapshot and now carries the live launch queue. **#77 and #78 are the freshest** — they came out of the 2026-05-05 pre-accelerator handoff.
+
+---
+
+## #77 — Accelerator pitch deck + launch QR
+
+**Status:** Pending for the next Codex session.
+
+**Context:** Dremix is meeting an accelerator founder on **2026-05-06** and plans to start the next session by creating a prompt that generates an Alma slide deck. The pitch should use current Supabase numbers, the email-first IB agent narrative, the trust gradient, the live reply pipeline, and the prompt-learning loop from tester feedback.
+
+**Action:** Generate or draft the deck prompt first. Include a final slide with a QR code to `https://alma.careers/request-access` or the homepage with the request-access CTA visible. Before writing traction slides, query live Supabase for current signups, activated users, sent drafts, replies, and coffees.
+
+---
+
+## #78 — Public copy: Rice/Brown only until MIT expansion reopens
+
+**Status:** Shipped 2026-05-05 for the main public surfaces; verify in browser next session.
+
+**Why:** The MIT person is not moving forward, and Dremix may delay MIT expansion. Public copy should not imply a Rice/Brown/MIT team or MIT founding cohort until that changes.
+
+**Action:** Landing, demo CTA, request-access helper copy, coming-soon, and test welcome preview were updated to Rice/Brown public positioning. Next session should visually check the landing page and QR destination before the accelerator meeting.
 
 ---
 

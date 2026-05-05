@@ -67,7 +67,7 @@ export default function RequestAccessPage() {
               We&rsquo;ll email <strong>{email}</strong> when your access is ready.
             </p>
             <p className="text-xs text-[#14182A]/55 mb-4 leading-relaxed">
-              School inboxes (Rice, Brown, MIT, anywhere on Microsoft 365) sometimes route
+              School inboxes (Rice, Brown, and other Microsoft 365 campuses) sometimes route
               new senders to <strong>spam</strong> on first contact. If you don&rsquo;t see the
               invite in your inbox, check there and mark <code className="bg-[#EAE3D2] px-1 rounded">welcome@alma.careers</code> as
               not-spam so future emails land cleanly.

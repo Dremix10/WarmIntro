@@ -417,7 +417,7 @@ export default function TodayPage() {
         {/* Same-school pool exhausted banner. Sets the "what to do next"
             decision in front of the user instead of letting them hit Run
             Alma five more times getting cross-school candidates with no
-            warning. Particularly load-bearing for MIT testers. */}
+            warning. Particularly load-bearing for off-default school testers. */}
         {data.sameSchoolPool &&
           data.sameSchoolPool.total > 0 &&
           data.sameSchoolPool.remaining === 0 &&

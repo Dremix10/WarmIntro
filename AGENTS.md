@@ -99,6 +99,7 @@ When a Supabase select returns empty unexpectedly, **first verify every column n
 Codex local MCP: on 2026-05-04, `~/.codex/config.toml` was configured with a global `supabase` remote MCP server scoped to this project, read-only, and expecting a Supabase PAT from `SUPABASE_ACCESS_TOKEN`:
 `https://mcp.supabase.com/mcp?project_ref=pddeejkicavcyhondnim&read_only=true&features=database,docs,debugging,development`.
 This Codex build reported hosted OAuth as unsupported, so do not paste PATs into chat; the user should create a Supabase PAT and expose it to Codex as `SUPABASE_ACCESS_TOKEN` if they want the MCP tools active. If tools are not visible in a new Codex session, run `codex mcp list` / `codex mcp get supabase`. Until authenticated, live DB queries can still use the repo env + Supabase service-role client, but treat that as sensitive access and summarize rather than dumping rows.
+On 2026-05-05 the PAT was exported into the macOS user environment with `launchctl setenv SUPABASE_ACCESS_TOKEN ...`; a fresh Codex session should be able to load the `supabase` MCP server. If the tool still is not visible, verify with `codex mcp list` and use `npx supabase db query --linked` as a fallback. Because the PAT was once pasted into chat, rotate it after the accelerator/YC crunch.
 
 ### Vercel
 
@@ -116,11 +117,19 @@ When given a multi-hour window (his exam, his sleep, his calendar block), defaul
 
 This section captures snapshots that decay fast. Treat as starting points, not facts.
 
-### Launch sprint (snapshot 2026-05-04)
+### Launch sprint (snapshot 2026-05-05)
 
-- **Goal:** collect public access requests before Dremix's Keel interview on 2026-05-06 and the YC application planned late on 2026-05-07.
+- **Goal:** collect public access requests before Dremix's accelerator-founder meeting on 2026-05-06 and the YC application planned late on 2026-05-07.
 - **Public posture:** the app is still gated, but the request list is open. Landing CTAs should route to `/request-access` first and `/demo` second; avoid sending new visitors to `/coming-soon`.
 - **Landing message:** lead with Alma as an email-first IB recruiting agent: Gmail drafts, real-thread reply tracking, trust gradient, live pipeline, and prompt calibration from tester feedback. Avoid stale "pending May 3" flywheel copy and avoid making "closed beta / 100 founding users" the main public message.
+- **Rice/Brown only for public copy.** MIT expansion is delayed because the MIT person is not moving forward. Do not describe the team, founding cohort, demo audience, or footer as MIT / Rice-Brown-MIT until Dremix explicitly reopens that expansion. Keep internal MIT code paths only where they already support existing school strings.
+- **Pitch deck next session:** Dremix plans to start the next session by creating a prompt that generates an accelerator slide deck for Alma. The last slide should include a QR code to `https://alma.careers/request-access` (or the landing page with the access form clearly visible). Use the latest launch metrics from Supabase before writing traction slides.
+
+### Live DB audit (snapshot 2026-05-05)
+
+- Supabase CLI live queries worked with the PAT-backed session; MCP should appear after restart.
+- Evangelos (`evangelos_paraskeva@brown.edu`) has not exhausted outreach: 88 eligible emailable bankers in target firms, 63 still available after excluding connections, active drafts, and 30-day skipped cooldown. Last 72h: 8 sent, 22 skipped, 5 open drafts. One `draft_send_failed` was `no_access_token` before Gmail connected; he connected Gmail and sent successfully about a minute later.
+- Anya (`ar225@rice.edu`) snapshot: 26 sent, 24 skipped, 2 replies. Bassam Latif at Moelis advanced to `coffee`; Subbu Hariharan reply classified `unknown`. No Anya drafts were created after the 2026-05-04 hedge/formality guardrail change, so the next Anya-style test should verify that fix.
 
 ### Email iteration loop (snapshot 2026-05-02)
 

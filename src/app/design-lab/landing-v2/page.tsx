@@ -26,7 +26,7 @@ const FAQ = [
   },
   {
     q: "What does it cost?",
-    a: "The founding cohort is free through the 2026 recruiting cycle while we work closely with Brown, Rice, and MIT testers.",
+    a: "The founding cohort is free through the 2026 recruiting cycle while we work closely with Brown and Rice testers.",
   },
   {
     q: "I'm not a finance major. Does that matter?",
@@ -179,7 +179,7 @@ function Hero() {
             </span>
           </span>
           <span className="text-xs text-[#5C6472]">
-            Built by <strong className="text-[#14182A]">4 students at Rice, Brown, and MIT</strong> who are recruiting and testing with students live
+            Built by <strong className="text-[#14182A]">3 students at Rice and Brown</strong> who are recruiting and testing with students live
           </span>
         </div>
       </div>
@@ -325,7 +325,7 @@ function Footer() {
     <footer className="border-t border-[#D9CFB5] bg-[#F4EDDB]">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-xs text-[#5C6472]">
         <p className="italic text-[#1B3B5F] font-[family-name:var(--font-fraunces)]">
-          alma &middot; built at Rice, Brown &amp; MIT
+          alma &middot; built at Rice &amp; Brown
         </p>
         <div className="flex flex-wrap items-center gap-5">
           <a href="#about" className="hover:text-[#1B3B5F]">About</a>
