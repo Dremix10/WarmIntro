@@ -255,14 +255,16 @@ export function DeckMock() {
 export function PipelineMock() {
   // Transit-map miniature. Mirrors what /pipeline actually renders: each
   // firm is a horizontal line, stations are stages, bankers are circular
-  // markers. Sized to the 16:10 surface card.
-  type Stage = "sent" | "replied" | "coffee" | "referral" | "first" | "offer";
+  // markers. Sized to the 16:10 surface card. 5 stations chosen for mobile
+  // compactness — production /pipeline shows 7 (Sent → Offer with 1st Round
+  // and Superday between Referral and Offer). The mock collapses to 5 so
+  // labels don't crowd at small render sizes.
+  type Stage = "sent" | "replied" | "coffee" | "referral" | "offer";
   const STATIONS: { stage: Stage; label: string }[] = [
     { stage: "sent", label: "Sent" },
     { stage: "replied", label: "Replied" },
     { stage: "coffee", label: "Coffee" },
-    { stage: "referral", label: "Referral" },
-    { stage: "first", label: "1st Rd" },
+    { stage: "referral", label: "Ref" },
     { stage: "offer", label: "Offer" },
   ];
   type Marker = { stage: Stage; initial: string; size: "s" | "m" | "l"; status?: "positive" | "due" };
@@ -297,7 +299,7 @@ export function PipelineMock() {
       ],
     },
     {
-      name: "Goldman Sachs",
+      name: "Goldman",
       tier: "BB",
       color: PALETTE.blueHover,
       markers: [
@@ -313,7 +315,11 @@ export function PipelineMock() {
   // if the firm reached the final station — then the line "fills the
   // pipeline" end-to-end).
   const STAGE_INDEX: Record<Stage, number> = {
-    sent: 0, replied: 1, coffee: 2, referral: 3, first: 4, offer: 5,
+    sent: 0,
+    replied: 1,
+    coffee: 2,
+    referral: 3,
+    offer: 4,
   };
   const TICK_CENTERS = STATIONS.map((_, i) => ((i + 0.5) * 100) / STATIONS.length);
   function fillEndForFirm(firm: Firm): number {
@@ -374,7 +380,7 @@ export function PipelineMock() {
       {/* Station headers */}
       <div
         className="mt-2.5 grid items-baseline pb-1 md:mt-3"
-        style={{ gridTemplateColumns: `52px repeat(${STATIONS.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `64px repeat(${STATIONS.length}, minmax(0, 1fr))` }}
       >
         <div />
         {STATIONS.map((st) => (
@@ -395,7 +401,7 @@ export function PipelineMock() {
             key={firm.name}
             className="relative grid items-center"
             style={{
-              gridTemplateColumns: `52px repeat(${STATIONS.length}, minmax(0, 1fr))`,
+              gridTemplateColumns: `64px repeat(${STATIONS.length}, minmax(0, 1fr))`,
               color: firm.color,
             }}
           >
@@ -418,7 +424,7 @@ export function PipelineMock() {
             {/* The line */}
             <svg
               className="pointer-events-none absolute"
-              style={{ left: "52px", right: 0, top: 0, height: "100%" }}
+              style={{ left: "64px", right: 0, top: 0, height: "100%" }}
               preserveAspectRatio="none"
               viewBox="0 0 100 24"
             >
@@ -461,14 +467,19 @@ export function PipelineMock() {
                   className="relative flex items-center justify-center"
                   style={{ height: "24px" }}
                 >
-                  {/* Empty tick on the line */}
+                  {/* Empty tick on the line. At reached stations, render as a
+                      solid firm-color dot so the fill line reads continuous;
+                      at unreached stations, keep the muted hollow ring so the
+                      dashed track is clearly the not-yet portion. */}
                   <span
                     className="absolute z-[1] rounded-full"
                     style={{
                       width: "4px",
                       height: "4px",
-                      backgroundColor: PALETTE.cardBg,
-                      border: `1.2px solid ${reached ? firm.color : PALETTE.border}`,
+                      backgroundColor: reached ? firm.color : PALETTE.cardBg,
+                      border: reached
+                        ? "none"
+                        : `1.2px solid ${PALETTE.border}`,
                       top: "50%",
                       left: "50%",
                       transform: "translate(-50%, -50%)",
