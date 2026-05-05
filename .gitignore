@@ -41,3 +41,4 @@ prompt.md
 # claude code worktrees + local state
 .claude/
 .superpowers/
+supabase/.temp/

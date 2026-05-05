@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { data: draft } = await ctx.supabase
     .from("drafts")
-    .select("id, user_id, banker_id, connection_id, type, gmail_draft_id, sent_at, status")
+    .select("id, user_id, banker_id, connection_id, type, subject, body, gmail_draft_id, sent_at, status")
     .eq("id", id)
     .single();
   if (!draft || draft.user_id !== ctx.user.id) {
@@ -79,6 +79,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   await logSignal({
     userId: ctx.user.id,
+    bankerId: draft.banker_id ?? undefined,
+    draftId: id,
     agent: "planner",
     signalType: "draft_skipped",
     metadata: { draft_id: id, banker_id: draft.banker_id, reason: reason || null, regenerated: regenerate },
@@ -111,6 +113,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const revisionFeedbackHistory = reason
     ? [...priorFeedback, `USER SKIPPED THIS DRAFT. Treat their reason as the highest-priority verdict, more important than any prior Critic feedback: ${reason}`]
     : priorFeedback;
+  revisionFeedbackHistory.push(
+    `PREVIOUS SKIPPED DRAFT TO AVOID REPEATING:\nSubject: ${draft.subject ?? "(none)"}\nBody:\n${(draft.body ?? "").slice(0, 1200)}\n\nThe replacement must be materially different. Do not reuse the same opener, central hook, or wording pattern.`
+  );
 
   try {
     const fresh = await runCorrespondent({

@@ -164,6 +164,7 @@ Tri-state state machines (`boolean | "unknown"`) trip the same trap from the ren
 
 - **Anya's voice is formal.** When user voice signals "formal" (school, major, role), Correspondent should not lean on casual hedges. Banking emails skew formal even from juniors.
 - **Critic's voiceMatch=6–7 is borderline reject** in practice — users override and send watered-down drafts. Either tighten the threshold or strengthen banned-phrases list (see pending decision).
+- **Prompt examples can hallucinate student facts.** Evangelos's May 4 test repeatedly produced "APMA 1650" even though his profile/resume did not contain it; the old `BASE_VOICE` example seeded that class number. Do not put specific course numbers, clubs, internships, projects, or summer stories in worked examples unless the prompt also makes them explicit placeholders. Critic now receives known student facts and should reject student-side claims that are not present.
 
 ## When you make changes
 

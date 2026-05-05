@@ -93,7 +93,7 @@ EXAMPLE of a great pattern + fix:
   Why: the model invents prestige-sounding credentials when banker data is thin (no Scout findings, no profile, no deals). All 6 fabrications in last 5 days had bankerFindingCount <= 1 AND bankerHasProfile = false.
   Fix at the right layer: the Correspondent prompt is fine — the upstream Scout/Curator path is starving the model. Either (a) gate drafting on having >= 1 verified anchor in the data, OR (b) when no anchors exist, force the Correspondent into a 'thin-data mode' that explicitly anchors on student-side specifics + a clear ask, with no banker-specific claims at all.
   Example before (bad opener under thin data): "Saw you were on the Harvard Corporate Governance Roundtable…"
-  Example after (thin-data mode): "I'm a Brown CS sophomore taking APMA 1650 — keep coming back to Goldman's TMT group when reading about deal structuring. 15 min next week?"
+  Example after (thin-data mode): "I'm a Brown Applied Math-CS sophomore trying to understand what analyst work in TMT actually looks like before recruiting starts. I keep coming back to Goldman because of the scale of its tech deals. Would 15 min next week work?"
 
 What NOT to do:
 - Don't propose adding more bans to the prompt — the BANNED_PHRASES guardrail in guardrails.ts already enforces deterministic phrase blocks; the model regresses on long DO-NOT lists.
@@ -117,9 +117,9 @@ async function gatherFailures(sinceIso: string): Promise<DraftFailure[]> {
     new Set((rejects as Array<{ draft_id: string }>).map((r) => r.draft_id))
   );
   const skipped = await restSelect("drafts", {
-    select: "id, type, status, body, banker_id, iteration_count, skip_reason, fact_check, created_at",
-    filters: { skip_reason: "not.is.null", created_at: gte(sinceIso) },
-    order: "created_at.desc",
+    select: "id, type, status, body, banker_id, iteration_count, skip_reason, fact_check, created_at, updated_at",
+    filters: { skip_reason: "not.is.null", updated_at: gte(sinceIso) },
+    order: "updated_at.desc",
     limit: 30,
   });
 

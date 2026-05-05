@@ -12,6 +12,8 @@ Five tasks were pending at session close. **#75 and #76 are the freshest** — t
 
 **Why:** Anya consistently skipped drafts containing "I have no idea", "weird", "if you have it?", "kinda", "sorta", "tbh" on `ar225@rice.edu`. Critic catches some at voiceMatch=6–7 but doesn't reject hard enough — so users override and send watered-down emails. For IB outreach specifically, casual hedges read as unprofessional; banking emails skew formal even from juniors.
 
+**2026-05-05 follow-up:** Evangelos's live test surfaced a sibling issue: `BASE_VOICE` examples seeded a fake "APMA 1650" class even though his profile did not contain it. Prompt examples now avoid named courses unless present in data, Critic receives known student facts, skip-regenerate prompts include the previous draft so the replacement must change the hook instead of repeating the same email, and Architect now looks at recently updated skip feedback rather than only drafts created inside the lookback.
+
 **Action:** Verify the next Anya-style skipped draft set has no casual hedge language.
 
 ---

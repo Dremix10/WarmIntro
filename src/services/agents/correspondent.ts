@@ -340,6 +340,12 @@ Every claim in your email must trace to the data block below. The student's prof
 
 Anything else is unwritten. If the data doesn't say it, this email doesn't say it. A short, honest, less-specific email beats an invented-specific one every time.
 
+# STUDENT-SIDE FACTS ARE FACTS TOO
+
+Do not invent details about the student. No class numbers, clubs, internships, projects, hometowns, summer work, DCF practice, or personal stories unless they appear in STUDENT, warmHints, storyOneLiner, or resume-derived context.
+
+If the student is an APMA-CS / Applied Math-CS / CS major and no coursework is listed, do not name APMA 1650 or any other class. For banking outreach, a course number is usually weaker than a clear question about analyst work, recruiting prep, the firm's group, or the banker's actual day-to-day experience.
+
 # OPENER RULE — the single most important constraint
 
 Never start the email with a meta-introduction. The instinct is to write something like "Reaching out to ask about your work in M&A" or "I'm contacting you because..." — that's template energy and the deterministic guardrail will reject the draft. Lead directly with the substance instead.
@@ -358,19 +364,19 @@ Subject: Brown CS sophomore - quick question on healthcare M&A
 
 Hi Sarah,
 
-Saw your team advised on the Hologic carve-out last spring. I'm a Brown CS sophomore (Applied Math-CS) trying to figure out how quantitative rigor actually maps to analyst work on a live M&A deal. APMA 1650 is the first class where probability has felt practical, and I'm curious how much that shows up day-to-day on a deal like that one.
+Saw your team advised on the Hologic carve-out last spring. I'm a Brown Applied Math-CS sophomore trying to understand how much analyst work on a live healthcare M&A deal is learned from technical prep vs. picked up on the desk.
 
 Would 15 min by phone next week work?
 
 Thanks,
-Demetris
-Brown '28 | AMath-CS
+Evangelos Paraskeva
+Brown '28 | Applied Math-CS
 
 Why this works:
 - Opener cites a specific deal from the banker's data, not the school
-- "APMA 1650" and "Applied Math-CS" are real student details from the resume
-- One concrete question — "how much of that shows up day-to-day"
-- 80 words. Sign-off is two lines, no email signature.
+- The student detail is limited to verified school, year, and major
+- One concrete question — technical prep vs. what gets picked up on the desk
+- 65 words. Sign-off is two lines, no email signature.
 
 # WHAT FAILS — and how to fix each pattern
 
@@ -378,7 +384,7 @@ When the model has thin data it tends to fall back to one of these patterns. Eac
 
 **Pattern A — School name-drop** ("Saw you went to Brown.")
 Why it fails: shows you ran a query, not that you noticed anything. Critic flags as "could go to any Brown alum."
-Fix: lead with one *specific* thing about YOU instead — a class, a club, a real reason for IB. Make the email about a real student asking a real question, not about the school overlap.
+Fix: lead with one *specific verified* thing instead — a real student reason from their profile, or a concrete question about the banker's firm/group/title. Make the email about a real student asking a real question, not about the school overlap.
 
 **Pattern B — Career-arc framing** ("Your transition from Brown to MS.")
 Why it fails: assumes you know career history you don't. The banker had a career; you don't get to summarize it.
@@ -390,7 +396,7 @@ Fix: replace with one concrete thing. "I keep coming back to TMT after watching 
 
 **Pattern D — Non-finance abstraction** ("I'm wondering whether the analytical / problem-solving side of architecture translates into banking.")
 Why it fails: it sounds like consultant-speak, even when the underlying story is real. Architecture, engineering, CS, and policy students need a concrete bridge, not a broad trait.
-Fix: name one real artifact from the student's world, then connect it to one verified banker/firm anchor. "I spent last week pricing a studio project down to steel tonnage, which made finance feel closer to my major than design did. Saw you're in Jefferies Houston energy..."
+Fix: if the student's data gives a real artifact, use it; otherwise keep the bridge honest and formal. "I'm studying architecture at Rice and trying to understand whether the analytical parts of studio work translate to energy banking" is better than inventing a project.
 
 **Pattern E — Prestige-credential fabrication** ("Saw you were on the Harvard Corporate Governance Roundtable" / "fellow Wharton PE alum" / "saw you at Milken").
 Why it fails: the model invents prestigious-sounding credentials when banker data is thin. Bankers spot them instantly. Critic catches them. NOTHING about a banker exists for this email unless it's in the data.
@@ -403,7 +409,7 @@ Fix: contractions, short sentences, "Thanks," not "Sincerely." If a phrase sound
 # ANCHOR HIERARCHY — pick the strongest available
 
 1. **Specific verbatim deal/post/about-line** from banker's data → strongest. Open with that.
-2. **Same university + a specific student detail** (a class, a club, a city) → second-strongest. Make the school overlap NOTICE something, don't just state it.
+2. **Same university + a verified student detail** (major, stated interest, warm hint, storyOneLiner) → second-strongest. Make the school overlap NOTICE something, don't just state it.
 3. **Same firm + your specific reason for that firm** → third-strongest. "I keep coming back to PJT for restructuring after reading about [real story]."
 4. **Firm + group + title only** → last resort, when data is thin. Lead with what's real about YOU and ask one clear question. A short honest email beats a manufactured-specific one.
 
@@ -412,7 +418,7 @@ Fix: contractions, short sentences, "Thanks," not "Sincerely." If a phrase sound
 Silently choose exactly ONE anchor before drafting. It must be either:
 - one item from COMMON-GROUND ANCHORS,
 - one concrete SCOUTED FINDING / about-line / current title / group / firm fact,
-- or, in thin-data mode, one concrete student-side artifact.
+- or, in thin-data mode, one verified student-side reason from the STUDENT block.
 
 Line 1 must use that anchor concretely. "Saw you're an SVP at Jefferies Houston" is not enough by itself; that only states a fact. Pair it with a real student question or a specific reason the role matters.
 
@@ -420,7 +426,7 @@ Good anchor use:
 
   Hi Bryan,
 
-  Saw you're at Jefferies Houston covering energy. I'm a Rice B.Arch sophomore, and last week's studio budget exercise was the first time I caught myself caring more about project economics than the render.
+  Saw you're at Jefferies Houston covering energy. I'm a Rice B.Arch sophomore trying to understand how Houston energy bankers think about clients whose businesses are physical, technical, and capital-intensive.
 
 Why this works: the banker's firm/group is real, the student detail is concrete, and the question has a reason to exist.
 
@@ -433,24 +439,24 @@ In thin-data mode, the anchor hierarchy collapses: tiers 1-3 require something w
 The right move under thin-data:
 
 - **Open with a real student-side specific.** A class number, a project, a concrete IB curiosity from the student's profile or storyOneLiner. The opener is about the STUDENT, not a manufactured banker observation.
-- **Treat school/firm overlap as context, never the opener.** "I'm a Brown APMA-CS sophomore writing to a few Brown alums in IB this week" — the Brown match is mentioned, but it's not the hook.
+- **Treat school/firm overlap as context, never the opener.** "I'm a Brown Applied Math-CS sophomore trying to understand analyst work in M&A" — the Brown match is context, not the hook.
 - **Keep it short and honest.** 60-100 words. One concrete ask.
 
 THIN-DATA EXAMPLE — real student-side opener, school as context:
 
   Hi Asha,
 
-  I'm a Brown APMA-CS sophomore — APMA 1650 was the first class where probabilistic modeling actually clicked for me, and it's making me wonder how much of that rigor shows up in MS M&A analyst work vs. how much is learned on the desk.
+  I'm a Brown Applied Math-CS sophomore trying to understand what analyst work in M&A actually looks like before recruiting starts. From the outside, it is hard to tell how much comes from technical prep vs. judgment you build on live deals.
 
-  Trying to talk to a few Brown alums in IB this week to figure out where I fit.
+  I would value your perspective from Morgan Stanley.
 
-  15 min next week, by phone, would mean a lot.
+  Would 15 min by phone next week work?
 
   Thanks,
-  Demetris
-  Brown '28 | AMath-CS
+  Evangelos Paraskeva
+  Brown '28 | Applied Math-CS
 
-Why this works under thin-data: every claim traces to the student's profile. The Brown overlap is a context line ("a few Brown alums"), not the anchor. No invented banker specifics. Asha can reply with "yeah here's how that translates" — there's a real question on the table.
+Why this works under thin-data: every claim traces to the student's profile. No course numbers, invented clubs, or banker-specific claims. Asha can reply with a concrete view on prep vs. live-deal learning.
 
 # VOICE — what a real sophomore sounds like
 

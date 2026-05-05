@@ -57,6 +57,7 @@ FABRICATION CHECK — this is the highest-priority axis. Score 0 and reject if A
 - Any "your team advised on ..." or "your work on the X deal" — must appear in deal_areas or recent_deals_mentioned
 - Any quote from the banker — must be verbatim in about_section or recent_post
 - Any specific career detail (role at firm X for Y years, school activity, etc.) — must be in the data
+- Any specific student detail (course number, named class, club, internship, summer project, DCF/modeling practice, hometown, personal story) — must be in the student facts provided
 If you see a specific claim and the data is empty or doesn't contain it, REJECT with "fabricated_claim". The student would rather send a short honest email than a fabricated specific one. Bankers spot fabrications instantly.
 
 Rules:
@@ -229,6 +230,10 @@ export async function runCritic(input: CriticInput): Promise<CriticOutput> {
           }),
         ])
       : [null, null];
+    const studentForCritic = await restSelectOne("profiles", {
+      select: "name, university, major, graduation_year, story_one_liner, warm_hints, resume_text",
+      filters: { id: eq(draft.user_id as string) },
+    });
     const firmForCritic = bankerForCritic?.firm_id
       ? await restSelectOne("firms", { select: "name", filters: { id: eq(bankerForCritic.firm_id) } })
       : null;
@@ -247,17 +252,31 @@ ${aboutForCritic}` : ""}
 
 `
       : "";
+    const studentFactsBlock = studentForCritic
+      ? `KNOWN STUDENT FACTS (these are the only student-specific claims the email may make):
+- Name: ${studentForCritic.name}
+- University: ${studentForCritic.university}
+- Major: ${studentForCritic.major}
+- Graduation year: ${studentForCritic.graduation_year}
+- Story one-liner: ${studentForCritic.story_one_liner ?? "(not provided)"}
+- Warm hints: ${Array.isArray(studentForCritic.warm_hints) ? studentForCritic.warm_hints.join("; ") || "(none)" : "(none)"}
+- Resume excerpt: ${(studentForCritic.resume_text ?? "").slice(0, 1800) || "(not provided)"}
+
+Reject as fabrication risk if the draft names a class number, club, internship, project, summer activity, or other student-side detail that does not appear above.
+
+`
+      : "";
 
     const prompt = `Review this draft:
 
-${knownFactsBlock}SUBJECT: ${draft.subject ?? "(no subject)"}
+${knownFactsBlock}${studentFactsBlock}SUBJECT: ${draft.subject ?? "(no subject)"}
 
 BODY:
 ${draft.body}
 
 TYPE: ${draft.type} (${draft.type === "cold" ? "first-time cold outreach to this banker" : draft.type === "followup" ? "follow-up on a prior unanswered email" : draft.type === "reply" ? "response to the banker's reply" : "thank-you after a coffee chat"})
 
-Important: Stating any of the KNOWN BANKER FACTS above (name, title, firm, university, grad year) is fine — that's data we have. Only flag if the email asserts something MORE SPECIFIC that's not in the known facts (e.g., a specific deal name, a specific post, a specific dated transition).
+Important: Stating any of the KNOWN BANKER FACTS or KNOWN STUDENT FACTS above is fine — that's data we have. Only flag if the email asserts something MORE SPECIFIC that's not in the known facts (e.g., a specific deal name, a specific post, a specific dated transition, or a named class/project not present in the student facts).
 
 Return JSON:
 {
