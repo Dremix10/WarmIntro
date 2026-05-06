@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Terms of Service · Alma",
-  description: "Terms of service for Alma — the AI recruiting team for Rice and Brown sophomores.",
+  description: "Terms of service for Alma — the AI recruiting team for students breaking into investment banking.",
 };
 
 export default function TermsPage() {
@@ -12,15 +12,15 @@ export default function TermsPage() {
 
         <div className="prose prose-sm space-y-5 text-[#14182A]/80">
           <p>
-            Alma (&ldquo;we&rdquo;, &ldquo;our&rdquo;) is a private-beta recruiting tool for Rice and Brown University
-            undergraduates pursuing investment banking. By using Alma you agree to these terms. If you don&apos;t
+            Alma (&ldquo;we&rdquo;, &ldquo;our&rdquo;) is a private-beta recruiting tool for students pursuing
+            investment banking. By using Alma you agree to these terms. If you don&apos;t
             agree, don&apos;t use Alma.
           </p>
 
           <h2 className="font-[family-name:var(--font-fraunces)] text-xl pt-4">Who can use Alma</h2>
           <p>
-            Alma is currently limited to verified students with <code>@rice.edu</code> or <code>@brown.edu</code>{" "}
-            email addresses. You must be 18 or older. You must be a real person, not an automated agent or company.
+            Alma is currently invite-only and limited to approved students with verified school email addresses.
+            You must be 18 or older. You must be a real person, not an automated agent or company.
           </p>
 
           <h2 className="font-[family-name:var(--font-fraunces)] text-xl pt-4">What Alma does on your behalf</h2>
@@ -49,7 +49,7 @@ export default function TermsPage() {
           <h2 className="font-[family-name:var(--font-fraunces)] text-xl pt-4">What you&apos;re responsible for</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>The content of emails sent via Alma — you approve and authorize every send (or set trust level = A).</li>
-            <li>Compliance with Rice&apos;s and Brown&apos;s honor codes and any recruiting program rules.</li>
+            <li>Compliance with your school&apos;s honor code and any recruiting program rules.</li>
             <li>Maintaining the security of your account and Gmail connection.</li>
           </ul>
 

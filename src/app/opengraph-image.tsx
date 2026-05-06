@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Alma - coffee chats, not cold sweat";
+export const alt = "Alma - email-first recruiting for investment banking";
 export const size = {
   width: 1200,
   height: 630,
@@ -38,7 +38,7 @@ export default function Image() {
         >
           <div
             style={{
-              color: "#E8B339",
+              color: "#C86B4F",
               fontSize: 24,
               fontWeight: 700,
               letterSpacing: 9,
@@ -70,12 +70,12 @@ export default function Image() {
               maxWidth: 760,
             }}
           >
-            <span>Email-first AI recruiting for Brown and Rice students</span>
+            <span>Email-first AI recruiting for students</span>
             <span>breaking into investment banking.</span>
           </div>
           <div
             style={{
-              color: "#E8B339",
+              color: "#C86B4F",
               fontSize: 24,
               fontWeight: 700,
               marginTop: 8,

@@ -21,13 +21,13 @@ const STEPS: Step[] = [
     shortLabel: "Find",
     eyebrow: "Step 1 · just now",
     title: "Maya Chen, VP TMT, Morgan Stanley",
-    body: "Brown CS alum · warmth 88 · led a software deal last quarter · posted 2 days ago.",
+    body: "Same-school alum · warmth 88 · led a software deal last quarter · posted 2 days ago.",
   },
   {
     shortLabel: "Write",
     eyebrow: "Step 2 · in your voice",
     title: "Email drafted, sounds like you",
-    body: "Hi Maya, I'm a Brown sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal and wanted to understand how bankers think through retention and product risk. Would 15 minutes by phone next week work?",
+    body: "Hi Maya, I'm a sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal and wanted to understand how bankers think through retention and product risk. Would 15 minutes by phone next week work?",
     variant: "draft",
   },
   {

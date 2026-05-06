@@ -25,12 +25,12 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "Alma - Email-first recruiting for investment banking",
   description:
-    "Alma helps Brown and Rice students find the right bankers, draft outreach in their voice, mirror it into Gmail, and track replies through the investment banking pipeline.",
+    "Alma helps students find the right bankers, draft outreach in their voice, mirror it into Gmail, and track replies through the investment banking pipeline.",
   metadataBase: new URL("https://alma.careers"),
   openGraph: {
     title: "Alma - Email-first recruiting for investment banking",
     description:
-      "The warm-intro engine for Brown and Rice students breaking into investment banking.",
+      "The warm-intro engine for students breaking into investment banking.",
     url: "https://alma.careers",
     siteName: "Alma",
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Alma - Email-first recruiting for investment banking",
     description:
-      "The warm-intro engine for Brown and Rice students breaking into investment banking.",
+      "The warm-intro engine for students breaking into investment banking.",
     images: ["/opengraph-image"],
   },
 };

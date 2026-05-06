@@ -43,6 +43,7 @@ function Tile({ bank }: { bank: Bank }) {
             width={40}
             height={24}
             className="max-h-6 w-auto object-contain"
+            style={{ height: "auto", width: "auto" }}
             unoptimized
           />
         </span>

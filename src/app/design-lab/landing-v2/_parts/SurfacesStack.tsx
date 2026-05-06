@@ -1,15 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase-browser";
 import { TodayMock, DeckMock, PipelineMock } from "./SurfaceMocks";
 
 type Surface = {
   eyebrow: string;
   title: string;
   body: string;
-  authedHref: string;
   Mock: React.ComponentType;
 };
 
@@ -18,39 +15,21 @@ const SURFACES: Surface[] = [
     eyebrow: "Your queue",
     title: "Today's outreach, lined up.",
     body: "Review Gmail-ready drafts, approve sends, skip with feedback, or let the trust window handle it.",
-    authedHref: "/today",
     Mock: TodayMock,
   },
   {
     eyebrow: "Deck",
     title: "Each firm is a deck.",
     body: "Tap a firm to fan its bankers out. Each card shows relationship strength, stage, and the next move.",
-    authedHref: "/deck",
     Mock: DeckMock,
   },
   {
     eyebrow: "Pipeline",
     title: "Every banker, every stage.",
     body: "Sent, replied, coffee, referral, first round, superday, offer. Closed threads stay recoverable.",
-    authedHref: "/pipeline",
     Mock: PipelineMock,
   },
 ];
-
-function useAuthHref(authedHref: string) {
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSignedIn(Boolean(session));
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSignedIn(Boolean(s));
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-  // Until session resolves, send to /demo — safe default for visitors.
-  return signedIn ? authedHref : "/demo";
-}
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState<boolean>(() =>
@@ -102,7 +81,7 @@ export function SurfacesStack() {
     <section
       ref={sectionRef}
       className="relative"
-      aria-label="Three product surfaces"
+      aria-label="Static product walkthrough"
     >
       <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
         <div className="mx-auto max-w-2xl text-center">
@@ -110,12 +89,12 @@ export function SurfacesStack() {
             Your week in Alma
           </p>
           <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            <span className="block">Three surfaces.</span>
-            <span className="block italic text-[#2E5A88]">Zero spreadsheet.</span>
+            <span className="block">The whole recruiting loop,</span>
+            <span className="block italic text-[#2E5A88]">without the spreadsheet.</span>
           </h2>
         </div>
 
-        {/* Leaflet — three panels unfold left-to-right with a 3D rotateY swing. */}
+        {/* Leaflet — three predetermined product panels unfold left-to-right. */}
         <div className="surface-leaflet mx-auto mt-14 grid w-full max-w-5xl grid-cols-1 gap-5 md:grid-cols-3 md:gap-7">
           {SURFACES.map((s, i) => {
             const state = i <= activeIdx ? "open" : "closed";
@@ -151,18 +130,13 @@ function SurfaceCard({
   state: "open" | "closed";
   delay: number;
 }) {
-  const href = useAuthHref(surface.authedHref);
-  const isDemo = href === "/demo";
-  const ctaLabel = isDemo ? "Try the demo" : "Take a look";
-
   return (
-    <Link
-      href={href}
+    <article
       data-state={state}
       style={{ ["--surface-delay" as string]: `${delay}ms` }}
-      className="surface-card group block"
+      className="surface-card block"
     >
-      <div className="alma-card flex h-full flex-col rounded-2xl border border-[#D9CFB5] p-4 transition-colors hover:border-[#2E5A88] md:p-5">
+      <div className="alma-card flex h-full flex-col rounded-2xl border border-[#D9CFB5] p-4 md:p-5">
         <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl border border-[#ECE7DE] bg-[#F4EDDB]">
           <surface.Mock />
         </div>
@@ -174,11 +148,8 @@ function SurfaceCard({
             {surface.title}
           </h3>
           <p className="mt-2 flex-1 text-sm leading-relaxed text-[#4A5260]">{surface.body}</p>
-          <p className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[#1B3B5F] group-hover:underline">
-            {ctaLabel} <span aria-hidden>→</span>
-          </p>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }

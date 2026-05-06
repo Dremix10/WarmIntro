@@ -17,9 +17,9 @@ export default function PrivacyPage() {
         <div className="space-y-6 text-sm leading-relaxed text-[#2A2F3B]">
           <Section title="What Alma Is">
             <p>
-              Alma is a networking tool that helps Brown and Rice University students break into
-              investment banking — finding alumni bankers, drafting outreach, and tracking the pipeline
-              from a first networking call through superday.
+              Alma is a networking tool that helps students break into investment banking — finding
+              relevant bankers, drafting outreach, and tracking the pipeline from a first networking
+              call through superday.
             </p>
           </Section>
 
@@ -80,8 +80,8 @@ export default function PrivacyPage() {
 
           <Section title="Contact">
             <p>
-              Questions about this policy? Reach out to the Alma team — we&rsquo;re Brown and Rice
-              students ourselves.
+              Questions about this policy? Reach out to the Alma team at{" "}
+              <a href="mailto:founders@alma.careers" className="underline">founders@alma.careers</a>.
             </p>
           </Section>
         </div>

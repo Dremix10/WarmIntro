@@ -36,7 +36,7 @@ export function TodayMock() {
       who: "Alex Park",
       firm: "Goldman Sachs · M&A",
       warmth: 76,
-      line: "Brown CS '20, same Fenway club as you",
+      line: "Same-school CS '20, shared club overlap",
     },
   ];
 

@@ -29,10 +29,10 @@ export function StickyUploadCTA({ afterPx = 700 }: { afterPx?: number }) {
           Request access →
         </a>
         <a
-          href="/demo"
+          href="#how"
           className="rounded-full px-4 py-2 text-xs font-medium text-[#1B3B5F] transition-colors hover:bg-[#1B3B5F]/5"
         >
-          Try the demo
+          How it works
         </a>
         <button
           type="button"

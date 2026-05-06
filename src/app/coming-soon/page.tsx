@@ -19,7 +19,7 @@ export default function ComingSoonPage() {
       });
       if (!res.ok) throw new Error("signup_failed");
       setStatus("ok");
-      setMessage("You're on the list. We will reach out as we open the founding cohort.");
+      setMessage("You're on the list. We will reach out as we open the first cohort.");
     } catch {
       setStatus("err");
       setMessage("Hmm, something broke. Try again in a bit.");
@@ -49,7 +49,7 @@ export default function ComingSoonPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@rice.edu"
+              placeholder="you@school.edu"
               className="flex-1 rounded-xl bg-white border border-[#D9CFB5] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#2E5A88]/20"
             />
             <button
@@ -63,7 +63,7 @@ export default function ComingSoonPage() {
         )}
         {status === "err" && <p className="text-sm text-[#C86B4F] mt-3">{message}</p>}
 
-        <p className="mt-10 text-xs text-[#14182A]/40">Built by Rice and Brown students.</p>
+        <p className="mt-10 text-xs text-[#14182A]/40">Email-first recruiting for the 2026 IB cycle.</p>
         <p className="mt-2 text-xs text-[#14182A]/40">
           Testers: <a href="/login" className="underline hover:text-[#2E5A88]">sign in</a>.
         </p>

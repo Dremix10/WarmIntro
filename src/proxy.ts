@@ -134,7 +134,6 @@ function isAllowlisted(email: string): boolean {
 // match every path on the site and disable the gate entirely.
 const GATE_BYPASS_PREFIXES = [
   "/coming-soon",
-  "/demo", // public-facing demo for lead capture
   "/request-access", // closed-beta waitlist form
   "/login", // testers sign in here
   "/forgot-password",
@@ -244,16 +243,22 @@ async function checkTestingGate(
   }
 
   // For pages: redirect to the public landing. The landing's CTAs route
-  // them to /demo (try it without an account), /request-access (ask for
-  // closed-beta access), or /login (existing testers). /demo as a hard
-  // redirect was correct when there was no public landing — now that
-  // / IS the public landing, dropping someone there is more honest and
-  // gives them every option instead of forcing the demo.
+  // them to the static walkthrough, /request-access (ask for closed-beta
+  // access), or /login (existing testers).
   return NextResponse.redirect(new URL("/", origin));
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // The upload-based demo is no longer part of the launch surface; keep
+  // old links from sending visitors into a less consistent experience.
+  if (pathname === "/demo") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.hash = "how";
+    return NextResponse.redirect(url);
+  }
 
   // /design-lab/* is dev-only — reference UIs for staged migration. Routable
   // when NODE_ENV !== "production" (i.e. `npm run dev`); 404 in prod and on

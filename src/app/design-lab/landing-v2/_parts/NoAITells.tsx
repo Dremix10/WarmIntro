@@ -5,7 +5,7 @@ import { Reveal } from "@/components/Reveal";
 // well", "passionate about", "deeply appreciate", "intersection of...".
 const TYPICAL_AI = `Hi Maya,
 
-I hope this email finds you well. I'm a sophomore at Brown studying CS, passionate about finance and excited about the intersection of technology and capital markets. I'd love to learn more about your journey at Morgan Stanley TMT and would deeply appreciate 15 minutes of your time for a virtual coffee.
+I hope this email finds you well. I'm a sophomore studying CS, passionate about finance and excited about the intersection of technology and capital markets. I'd love to learn more about your journey at Morgan Stanley TMT and would deeply appreciate 15 minutes of your time for a virtual coffee.
 
 Best,
 Sarah`;
@@ -13,7 +13,7 @@ Sarah`;
 // What Alma writes — short, specific, sounds like a real sophomore.
 const ALMA = `Hi Maya,
 
-I'm a Brown sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal, and I'm trying to understand how bankers think through retention and product risk in a process like that.
+I'm a sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal, and I'm trying to understand how bankers think through retention and product risk in a process like that.
 
 Would 15 minutes by phone next week work?
 

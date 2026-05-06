@@ -1,12 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { PublicTopBar } from "@/components/PublicTopBar";
 
-// Public access-request page. Sits next to /demo as the lighter-weight
-// option for visitors who don't want to upload a resume just to ask for
-// access. Submits to /api/pilot-signup which captures the request and
-// pings admins via Telegram. Approval is manual via /admin.
+// Public access-request page. Submits to /api/pilot-signup which captures
+// the request and pings admins via Telegram. Approval is manual via /admin.
 
 export default function RequestAccessPage() {
   const [email, setEmail] = useState("");
@@ -56,7 +55,7 @@ export default function RequestAccessPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Request list open</p>
           <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request access</h1>
           <p className="text-sm text-[#14182A]/70">
-            Alma is gated while we onboard the founding cohort for the 2026 IB cycle. Brown and Rice students are first in line. Drop your school email and we&rsquo;ll reach out as soon as we can support you well.
+            Alma is gated while we onboard the first cohort for the 2026 IB cycle. Drop your school email and we&rsquo;ll reach out as soon as we can support your campus well.
           </p>
         </div>
 
@@ -67,17 +66,17 @@ export default function RequestAccessPage() {
               We&rsquo;ll email <strong>{email}</strong> when your access is ready.
             </p>
             <p className="text-xs text-[#14182A]/55 mb-4 leading-relaxed">
-              School inboxes (Rice, Brown, and other Microsoft 365 campuses) sometimes route
-              new senders to <strong>spam</strong> on first contact. If you don&rsquo;t see the
+              School inboxes sometimes route new senders to <strong>spam</strong> on first contact.
+              If you don&rsquo;t see the
               invite in your inbox, check there and mark <code className="bg-[#EAE3D2] px-1 rounded">welcome@alma.careers</code> as
               not-spam so future emails land cleanly.
             </p>
-            <a
-              href="/demo"
+            <Link
+              href="/"
               className="inline-block rounded-xl bg-[#1B3B5F] text-white px-5 py-3 text-sm font-medium hover:bg-[#2E5A88] transition-colors"
             >
-              Try the demo →
-            </a>
+              Back to Alma →
+            </Link>
           </div>
         ) : (
           <form onSubmit={onSubmit} className="rounded-2xl bg-white p-6 border border-[#D9CFB5] space-y-3">
@@ -102,7 +101,7 @@ export default function RequestAccessPage() {
               type="text"
               value={university}
               onChange={(e) => setUniversity(e.target.value)}
-              placeholder="School (Rice or Brown)"
+              placeholder="School"
               className="w-full rounded-xl border border-[#D9CFB5] bg-white px-4 py-3 text-sm focus:border-[#2E5A88] focus:outline-none"
             />
             <input

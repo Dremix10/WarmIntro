@@ -97,7 +97,7 @@ export function FunnelMathAnimated() {
       </div>
 
       <div className="mt-5 flex items-center justify-between border-t border-[#ECE5D0] pt-4 text-[11px] text-[#5C6472] sm:mt-6 sm:pt-5 sm:text-xs">
-        <p>Based on the 2026 BB + EB cycle, Brown &amp; Rice cohorts</p>
+        <p>Based on early 2026 BB + EB recruiting cohorts</p>
         <p className="hidden font-medium text-[#C86B4F] sm:block">
           → that&rsquo;s ~8 calls/week for 16 weeks
         </p>
