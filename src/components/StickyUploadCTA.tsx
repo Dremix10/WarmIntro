@@ -17,7 +17,7 @@ export function StickyUploadCTA({ afterPx = 700 }: { afterPx?: number }) {
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2"
+      className="fixed bottom-6 left-1/2 z-40 hidden -translate-x-1/2 sm:block"
       style={{ animation: "fade-up-center 700ms cubic-bezier(.22,.75,.3,1)" }}
     >
       <div className="flex items-center gap-2 rounded-full border border-[#D9CFB5] bg-white p-1.5 shadow-lg shadow-[#1B3B5F]/10">
@@ -26,7 +26,7 @@ export function StickyUploadCTA({ afterPx = 700 }: { afterPx?: number }) {
           className="rounded-full bg-[#1B3B5F] px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           style={{ animation: "pulse-shadow 5.5s ease-in-out infinite" }}
         >
-          Request access →
+          Join cohort →
         </a>
         <a
           href="#how"

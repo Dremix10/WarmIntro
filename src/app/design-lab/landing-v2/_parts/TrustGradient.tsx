@@ -2,29 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Mode = "copilot" | "preview" | "auto";
+type Mode = "drafts" | "review" | "send";
 
 const MODES: { id: Mode; label: string; subtitle: string; description: string }[] = [
   {
-    id: "copilot",
-    label: "Copilot",
-    subtitle: "Gmail drafts · you send",
+    id: "drafts",
+    label: "Drafts first",
+    subtitle: "nothing sends",
     description:
-      "Alma writes each email as a Gmail draft. You edit, approve, and send. Nothing leaves your inbox without you.",
+      "Alma writes each email as a Gmail draft. You edit, approve, and send. This is where every founding user starts.",
   },
   {
-    id: "preview",
-    label: "Preview-veto",
-    subtitle: "30-min window · skip/edit",
+    id: "review",
+    label: "Ask me first",
+    subtitle: "preview window",
     description:
-      "Alma queues a preview before the send window. Tap skip, edit the ask, or let it send from Gmail at the time you set.",
+      "Once you trust the draft quality, Alma can queue a preview before the send window. You can skip, edit, or approve before it goes out.",
   },
   {
-    id: "auto",
-    label: "Autopilot",
-    subtitle: "sends + digest",
+    id: "send",
+    label: "Send routine batches",
+    subtitle: "optional later",
     description:
-      "Alma sends approved categories for you and rolls the activity into a digest. One tap returns to Preview-veto.",
+      "Later, you can let Alma send routine, already-approved outreach categories and send you a digest. One tap moves back to review-first.",
   },
 ];
 
@@ -49,7 +49,7 @@ export function TrustGradient() {
   const reducedMotion = useReducedMotion();
 
   // Reduced-motion fallback: auto-advance through modes once on viewport entry,
-  // then settle on Copilot.
+  // then settle on Drafts first.
   useEffect(() => {
     if (!reducedMotion) return;
     const sec = sectionRef.current;
@@ -82,7 +82,7 @@ export function TrustGradient() {
     <section
       ref={sectionRef}
       className="relative"
-      aria-label="Trust gradient"
+      aria-label="Send control settings"
     >
       <div className="mx-auto max-w-3xl px-6 py-24 md:py-32">
         <div className="text-center">
@@ -90,15 +90,15 @@ export function TrustGradient() {
             You stay in control
           </p>
           <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            <span className="block">Three trust levels.</span>
-            <span className="block italic text-[#2E5A88]">You pick. You change anytime.</span>
+            <span className="block">You decide what leaves Gmail.</span>
+            <span className="block italic text-[#2E5A88]">Start cautious. Speed up later.</span>
           </h2>
         </div>
 
         <div
           className="relative mx-auto mt-10 flex w-full items-center rounded-full border border-[#D9CFB5] bg-white p-2"
           role="radiogroup"
-          aria-label="Trust gradient mode"
+          aria-label="Send control mode"
         >
           <span
             className="absolute top-2 bottom-2 rounded-full bg-[#1B3B5F] shadow-[0_8px_24px_-8px_rgba(27,59,95,.45)] transition-[left] duration-500 ease-out"
@@ -154,7 +154,7 @@ export function TrustGradient() {
             className="agent-focus alma-card rounded-2xl border border-[#D9CFB5] p-6 md:p-7"
           >
             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">
-              Right now: {current.label}
+              Current setting: {current.label}
             </p>
             <p className="mt-3 text-base leading-relaxed text-[#4A5260] md:text-lg">
               {current.description}
@@ -163,7 +163,7 @@ export function TrustGradient() {
         </div>
 
         <p className="mt-4 text-center text-xs text-[#8A8674]">
-          Starts in Copilot. Graduates only after approvals. Always one tap to step back.
+          Founding users start with drafts only. More automation is earned, optional, and reversible.
         </p>
       </div>
     </section>

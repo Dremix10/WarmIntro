@@ -1,7 +1,7 @@
 // Inline product mocks for the landing surfaces section.
 // Drawn in React + Tailwind so they stay crisp at any size and match the
 // Alma palette exactly. Each mirrors what the actual page renders:
-//   TodayMock     → /today    (queue + trust dial)
+//   TodayMock     → /today    (queue + approval setting)
 //   DeckMock      → /deck     (firm decks + level pills)
 //   PipelineMock  → /pipeline (transit map by firm)
 // Demo data is illustrative.
@@ -27,16 +27,16 @@ export function TodayMock() {
   // Each line is short enough not to need truncation.
   const drafts = [
     {
-      who: "Maya Chen",
-      firm: "Morgan Stanley · TMT",
+      who: "Jordan Lee",
+      firm: "Morgan Stanley · software group",
       warmth: 88,
-      line: "Saw your team led the Q4 software deal",
+      line: "Same-school alum, non-finance major",
     },
     {
-      who: "Alex Park",
-      firm: "Goldman Sachs · M&A",
+      who: "Maya Patel",
+      firm: "Goldman Sachs · advisory",
       warmth: 76,
-      line: "Same-school CS '20, shared club overlap",
+      line: "Shared club overlap, replied before",
     },
   ];
 
@@ -67,13 +67,13 @@ export function TodayMock() {
             className="rounded-full px-2 py-[3px] font-semibold text-white"
             style={{ backgroundColor: PALETTE.blue }}
           >
-            Copilot
+            Drafts
           </span>
           <span className="px-1.5 py-[3px]" style={{ color: PALETTE.muted }}>
-            Preview
+            Review
           </span>
           <span className="px-1.5 py-[3px]" style={{ color: PALETTE.muted }}>
-            Auto
+            Send
           </span>
         </div>
       </div>
@@ -140,9 +140,9 @@ export function DeckMock() {
   // each shown as a small stacked card with firm name + level pill. Sized
   // for the 16:10 surface card.
   const DECKS = [
-    { firm: "Lazard", tier: "EB · Restructuring", count: 2, roman: "V", name: "1st Round", color: "#5A3D5C", levelTone: "gold" },
-    { firm: "Goldman Sachs", tier: "BB · M&A", count: 3, roman: "IV", name: "Referral", color: "#2E5A88", levelTone: "ochre" },
-    { firm: "Morgan Stanley", tier: "BB · TMT", count: 4, roman: "III", name: "Coffee", color: "#1B3B5F", levelTone: "blue" },
+    { firm: "Lazard", tier: "advisory firm", count: 2, roman: "V", name: "Interview", color: "#5A3D5C", levelTone: "gold" },
+    { firm: "Goldman Sachs", tier: "large bank", count: 3, roman: "IV", name: "Referral", color: "#2E5A88", levelTone: "ochre" },
+    { firm: "Morgan Stanley", tier: "large bank", count: 4, roman: "III", name: "Coffee", color: "#1B3B5F", levelTone: "blue" },
   ];
   const tonePill = (t: string) =>
     t === "gold"
@@ -179,8 +179,8 @@ export function DeckMock() {
           >
             All
           </span>
-          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>BB</span>
-          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>EB</span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>Large</span>
+          <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>Advisory</span>
         </div>
       </div>
 
@@ -256,13 +256,14 @@ export function PipelineMock() {
   // Transit-map miniature. Mirrors what /pipeline actually renders: each
   // firm is a horizontal line, stations are stages, bankers are circular
   // markers. Sized to the 16:10 surface card.
-  type Stage = "sent" | "replied" | "coffee" | "referral" | "first" | "offer";
+  type Stage = "found" | "sent" | "replied" | "coffee" | "referral" | "interview" | "offer";
   const STATIONS: { stage: Stage; label: string }[] = [
+    { stage: "found", label: "Found" },
     { stage: "sent", label: "Sent" },
     { stage: "replied", label: "Replied" },
     { stage: "coffee", label: "Coffee" },
     { stage: "referral", label: "Referral" },
-    { stage: "first", label: "1st Rd" },
+    { stage: "interview", label: "Int." },
     { stage: "offer", label: "Offer" },
   ];
   type Marker = { stage: Stage; initial: string; size: "s" | "m" | "l"; status?: "positive" | "due" };
@@ -271,7 +272,7 @@ export function PipelineMock() {
   const FIRMS: Firm[] = [
     {
       name: "Lazard",
-      tier: "EB",
+      tier: "Advisory",
       color: "#5A3D5C",
       markers: [
         { stage: "offer", initial: "R", size: "l", status: "positive" },
@@ -279,7 +280,7 @@ export function PipelineMock() {
     },
     {
       name: "Evercore",
-      tier: "EB",
+      tier: "Advisory",
       color: PALETTE.terracotta,
       markers: [
         { stage: "coffee", initial: "N", size: "m", status: "positive" },
@@ -288,17 +289,17 @@ export function PipelineMock() {
     },
     {
       name: "Morgan Stanley",
-      tier: "BB",
+      tier: "Large",
       color: PALETTE.blue,
       markers: [
-        { stage: "sent", initial: "J", size: "s", status: "due" },
+        { stage: "found", initial: "J", size: "s", status: "due" },
         { stage: "replied", initial: "R", size: "m", status: "positive" },
         { stage: "coffee", initial: "M", size: "l", status: "positive" },
       ],
     },
     {
       name: "Goldman Sachs",
-      tier: "BB",
+      tier: "Large",
       color: PALETTE.blueHover,
       markers: [
         { stage: "sent", initial: "S", size: "s" },
@@ -308,12 +309,13 @@ export function PipelineMock() {
   ];
 
   const STAGE_INDEX: Record<Stage, number> = {
-    sent: 0,
-    replied: 1,
-    coffee: 2,
-    referral: 3,
-    first: 4,
-    offer: 5,
+    found: 0,
+    sent: 1,
+    replied: 2,
+    coffee: 3,
+    referral: 4,
+    interview: 5,
+    offer: 6,
   };
   const TICK_CENTERS = STATIONS.map((_, i) => ((i + 0.5) * 100) / STATIONS.length);
   function highestStageIndex(firm: Firm): number {
@@ -360,13 +362,13 @@ export function PipelineMock() {
             All
           </span>
           <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
-            BB
+            Large
           </span>
           <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
-            EB
+            Advisory
           </span>
           <span className="px-1 py-[2px]" style={{ color: PALETTE.muted }}>
-            MM
+            Other
           </span>
         </div>
       </div>

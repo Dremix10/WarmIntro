@@ -48,22 +48,32 @@ export default function RequestAccessPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#EAE3D2] text-[#14182A] flex items-center justify-center px-6 py-16">
+    <div className="relative min-h-screen bg-[#EAE3D2] px-6 pt-32 pb-16 text-[#14182A] sm:flex sm:items-center sm:justify-center sm:py-16">
       <PublicTopBar />
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Request list open</p>
-          <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request access</h1>
-          <p className="text-sm text-[#14182A]/70">
-            Alma is gated while we onboard the first cohort for the 2026 IB cycle. Drop your school email and we&rsquo;ll reach out as soon as we can support your campus well.
+          <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">
+            Founding-user cohort
           </p>
+          <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request a founding seat</h1>
+          <p className="text-sm text-[#14182A]/70">
+            Brown and Rice students are first priority. Founding users get Alma free for the
+            2026 IB recruiting cycle while helping us tune the product around real feedback.
+          </p>
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            {["Brown", "Rice", "100 seats"].map((item) => (
+              <div key={item} className="rounded-xl border border-[#D9CFB5] bg-white px-3 py-2 text-xs font-medium text-[#1B3B5F]">
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
         {state === "submitted" ? (
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Got it.</p>
             <p className="text-sm text-[#14182A]/70 mb-3">
-              We&rsquo;ll email <strong>{email}</strong> when your access is ready.
+              We&rsquo;ll email <strong>{email}</strong> when your founding seat is ready.
             </p>
             <p className="text-xs text-[#14182A]/55 mb-4 leading-relaxed">
               School inboxes sometimes route new senders to <strong>spam</strong> on first contact.
@@ -119,9 +129,12 @@ export default function RequestAccessPage() {
               disabled={state === "submitting"}
               className="w-full rounded-xl bg-[#1B3B5F] text-white py-3 text-sm font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
             >
-              {state === "submitting" ? "Sending..." : "Request access"}
+              {state === "submitting" ? "Sending..." : "Request founding seat"}
             </button>
             <p className="text-xs text-[#14182A]/55 text-center pt-2">
+              Not at Brown or Rice? Still request access. We are opening more campuses after the first cohort.
+            </p>
+            <p className="text-xs text-[#14182A]/55 text-center">
               Already have access? <a href="/login" className="underline text-[#2E5A88]">Sign in →</a>
             </p>
           </form>

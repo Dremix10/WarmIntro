@@ -12,21 +12,21 @@ type Surface = {
 
 const SURFACES: Surface[] = [
   {
-    eyebrow: "Your queue",
-    title: "Today's outreach, lined up.",
-    body: "Review Gmail-ready drafts, approve sends, skip with feedback, or let the trust window handle it.",
+    eyebrow: "Today",
+    title: "A short daily queue.",
+    body: "See who Alma found, why they are a reasonable person to email, and the draft waiting in Gmail.",
     Mock: TodayMock,
   },
   {
-    eyebrow: "Deck",
-    title: "Each firm is a deck.",
-    body: "Tap a firm to fan its bankers out. Each card shows relationship strength, stage, and the next move.",
+    eyebrow: "Targets",
+    title: "Banks become people.",
+    body: "Pick firms, then see the alumni and bankers behind them instead of staring at a spreadsheet.",
     Mock: DeckMock,
   },
   {
     eyebrow: "Pipeline",
-    title: "Every banker, every stage.",
-    body: "Sent, replied, coffee, referral, first round, superday, offer. Closed threads stay recoverable.",
+    title: "Consistency stays visible.",
+    body: "Names found, emails sent, replies, coffee chats, referrals, interviews, and offers stay in one place.",
     Mock: PipelineMock,
   },
 ];
@@ -86,11 +86,11 @@ export function SurfacesStack() {
       <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
-            Your week in Alma
+            What you see
           </p>
           <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            <span className="block">The whole recruiting loop,</span>
-            <span className="block italic text-[#2E5A88]">without the spreadsheet.</span>
+            <span className="block">A recruiting dashboard</span>
+            <span className="block italic text-[#2E5A88]">built for staying consistent.</span>
           </h2>
         </div>
 

@@ -6,32 +6,30 @@ import Image from "next/image";
 type Bank = {
   mono: string;
   name: string;
-  tier: "BB" | "EB" | "MM";
+  variant: "primary";
   logo?: string; // path under /public, omit for monogram
 };
 
 // Only banks with real SVG logos in /public/logos/. Monogram fallbacks
-// were creating "we couldn't get this logo" tells in the marquee. EB/MM
-// firms still appear in the bankers DB and in /companies — they're just
-// not on the marketing slider until we add their SVGs.
+// were creating "we couldn't get this logo" tells in the marquee. Advisory
+// and middle-market firms still appear in the product; they're just not on
+// the marketing slider until we add their SVGs.
 const BANKS: Bank[] = [
-  { mono: "MS", name: "Morgan Stanley", tier: "BB", logo: "/logos/morganstanley.svg" },
-  { mono: "GS", name: "Goldman Sachs", tier: "BB", logo: "/logos/goldmansachs.svg" },
-  { mono: "JPM", name: "JPMorgan", tier: "BB", logo: "/logos/jpmorgan.svg" },
-  { mono: "BAC", name: "BofA", tier: "BB", logo: "/logos/bankofamerica.svg" },
-  { mono: "C", name: "Citi", tier: "BB", logo: "/logos/citi.svg" },
-  { mono: "BCS", name: "Barclays", tier: "BB", logo: "/logos/barclays.svg" },
-  { mono: "DB", name: "Deutsche Bank", tier: "BB", logo: "/logos/deutschebank.svg" },
+  { mono: "MS", name: "Morgan Stanley", variant: "primary", logo: "/logos/morganstanley.svg" },
+  { mono: "GS", name: "Goldman Sachs", variant: "primary", logo: "/logos/goldmansachs.svg" },
+  { mono: "JPM", name: "JPMorgan", variant: "primary", logo: "/logos/jpmorgan.svg" },
+  { mono: "BAC", name: "BofA", variant: "primary", logo: "/logos/bankofamerica.svg" },
+  { mono: "C", name: "Citi", variant: "primary", logo: "/logos/citi.svg" },
+  { mono: "BCS", name: "Barclays", variant: "primary", logo: "/logos/barclays.svg" },
+  { mono: "DB", name: "Deutsche Bank", variant: "primary", logo: "/logos/deutschebank.svg" },
 ];
 
-const TIER_STYLES: Record<Bank["tier"], { tile: string; text: string }> = {
-  BB: { tile: "bg-[#1B3B5F] text-white border-[#1B3B5F]", text: "text-[#14182A]" },
-  EB: { tile: "bg-white text-[#1B3B5F] border-[#1B3B5F]", text: "text-[#14182A]" },
-  MM: { tile: "bg-white text-[#C86B4F] border-[#C86B4F]", text: "text-[#14182A]" },
+const TILE_STYLES: Record<Bank["variant"], { tile: string; text: string }> = {
+  primary: { tile: "bg-[#1B3B5F] text-white border-[#1B3B5F]", text: "text-[#14182A]" },
 };
 
 function Tile({ bank }: { bank: Bank }) {
-  const s = TIER_STYLES[bank.tier];
+  const s = TILE_STYLES[bank.variant];
 
   return (
     <div className="flex shrink-0 items-center gap-2.5 pr-7">
@@ -65,7 +63,7 @@ export function LogoMarquee() {
       <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-4">
         <p className="hidden shrink-0 text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6472] sm:block">
           Bank coverage live ·{" "}
-          <span className="text-[#1B3B5F]">BB, EB + MM</span> targets
+          <span className="text-[#1B3B5F]">major IB targets</span>
         </p>
         <div
           className="relative flex-1 overflow-hidden"

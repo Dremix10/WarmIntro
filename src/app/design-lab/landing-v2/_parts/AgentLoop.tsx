@@ -18,30 +18,30 @@ type Step = {
 // of the marketing page.
 const STEPS: Step[] = [
   {
-    shortLabel: "Find",
+    shortLabel: "Match",
     eyebrow: "Step 1 · just now",
-    title: "Maya Chen, VP TMT, Morgan Stanley",
-    body: "Same-school alum · warmth 88 · led a software deal last quarter · posted 2 days ago.",
+    title: "Jordan Lee, associate at a bank you picked",
+    body: "Same school · studied engineering before banking · works with software companies · replied to students before.",
   },
   {
-    shortLabel: "Write",
+    shortLabel: "Draft",
     eyebrow: "Step 2 · in your voice",
-    title: "Email drafted, sounds like you",
-    body: "Hi Maya, I'm a sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal and wanted to understand how bankers think through retention and product risk. Would 15 minutes by phone next week work?",
+    title: "A curious beginner email, not pretend-expert finance talk",
+    body: "Hi Jordan, I'm an architecture major starting to learn how students break into banking. I saw you studied engineering before moving into a group that works with software companies, and I wanted to ask how you explained a non-finance background in recruiting. Would 15 minutes by phone next week work?",
     variant: "draft",
   },
   {
-    shortLabel: "Send",
+    shortLabel: "Approve",
     eyebrow: "Step 3 · from your Gmail",
-    title: "Drafted in Gmail at your preferred time",
-    body: "Starts as a Gmail draft in Copilot. When you approve, it sends from your real address and the banker replies to your thread, not to a third-party system.",
+    title: "You approve before anything sends",
+    body: "Alma puts the draft in Gmail. You can edit the wording, skip the banker, or approve it. The first version always stays under your control.",
     variant: "approve",
   },
   {
-    shortLabel: "Reply",
+    shortLabel: "Book",
     eyebrow: "Step 4 · 2 days later",
-    title: "Reply received from Maya",
-    body: "\"Tuesday 4pm work for you?\" Pipeline advances from Sent to Coffee. Follow-up suggestions surface automatically.",
+    title: "Reply received",
+    body: "\"Tuesday 4pm works.\" Alma moves the banker from Sent to Coffee Chat and reminds you what to ask before the call.",
   },
 ];
 
@@ -72,6 +72,7 @@ export function AgentLoop() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [started, setStarted] = useState(false);
   const [userOverride, setUserOverride] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
 
   // Trigger the loop only when the user has actually scrolled the section
@@ -124,6 +125,18 @@ export function AgentLoop() {
     setActiveIndex(0);
   };
 
+  const handleSwipeEnd = (x: number) => {
+    if (touchStartX.current === null) return;
+    const delta = x - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 42) return;
+    if (delta < 0) {
+      handleSelect(Math.min(STEPS.length - 1, activeIndex + 1));
+    } else {
+      handleSelect(Math.max(0, activeIndex - 1));
+    }
+  };
+
   const step = STEPS[activeIndex];
   const atEnd = activeIndex === STEPS.length - 1;
 
@@ -140,12 +153,16 @@ export function AgentLoop() {
             One banker, end to end
           </p>
           <h2 className="mt-4 text-[40px] leading-[1.05] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            From cold name to coffee.
+            From &ldquo;who should I email?&rdquo; to coffee chat.
           </h2>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-[#4A5260]">
+            Swipe or tap through the path. Alma does the research and draft work,
+            but you stay in charge of what leaves your inbox.
+          </p>
         </div>
 
-        {/* Horizontal pipeline — click any chip to jump */}
-        <div className="agent-pipeline mx-auto mt-12 hidden w-full max-w-5xl items-stretch gap-3 md:flex">
+        {/* Horizontal pipeline — tap/swipe any chip to jump */}
+        <div className="agent-pipeline scrollbar-hidden mx-auto mt-10 flex w-full max-w-5xl snap-x items-stretch gap-3 overflow-x-auto pb-2 md:mt-12 md:overflow-visible md:pb-0">
           {STEPS.map((s, i) => {
             const state =
               i < activeIndex ? "done" : i === activeIndex ? "active" : "folded";
@@ -155,7 +172,7 @@ export function AgentLoop() {
                 type="button"
                 data-state={state}
                 onClick={() => handleSelect(i)}
-                className="agent-chip relative flex flex-1 cursor-pointer flex-col rounded-xl border border-[#D9CFB5] bg-white p-3 text-left"
+                className="agent-chip relative flex min-w-[132px] flex-1 snap-start cursor-pointer flex-col rounded-xl border border-[#D9CFB5] bg-white p-3 text-left"
                 aria-label={`Jump to step ${i + 1}: ${s.shortLabel}`}
               >
                 <div className="flex items-center justify-between gap-1">
@@ -220,6 +237,12 @@ export function AgentLoop() {
           <div
             key={activeIndex}
             className="agent-focus alma-card rounded-2xl border border-[#D9CFB5] p-6 md:p-8"
+            onTouchStart={(e) => {
+              touchStartX.current = e.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              handleSwipeEnd(e.changedTouches[0]?.clientX ?? 0);
+            }}
           >
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#2E5A88]">
@@ -239,7 +262,8 @@ export function AgentLoop() {
         </div>
 
         <p className="mx-auto mt-6 max-w-md text-center text-xs text-[#8A8674]">
-          One banker takes about 90 seconds end to end. Multiply by your batch size, and Alma keeps the queue moving while you sleep.
+          This is the loop Alma repeats: find a reasonable person, write a believable ask,
+          get your approval, then keep track of the reply.
         </p>
       </div>
     </section>

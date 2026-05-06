@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Alma - Email-first recruiting for investment banking",
     description:
-      "The warm-intro engine for students breaking into investment banking.",
+      "Start networking into investment banking without already speaking finance.",
     url: "https://alma.careers",
     siteName: "Alma",
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Alma - Email-first recruiting for investment banking",
     description:
-      "The warm-intro engine for students breaking into investment banking.",
+      "Start networking into investment banking without already speaking finance.",
     images: ["/opengraph-image"],
   },
 };

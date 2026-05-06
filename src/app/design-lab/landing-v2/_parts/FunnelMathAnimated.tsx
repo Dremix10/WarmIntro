@@ -10,16 +10,16 @@ import { useEffect, useRef, useState } from "react";
 // component jumps to the final state instantly — no animation missed.
 
 const STAGES = [
-  { value: 120, label: "calls sent", sub: "networking reaches" },
-  { value: 40, label: "responses", sub: "~33% reply rate" },
-  { value: 20, label: "coffees", sub: "warm conversations" },
-  { value: 8, label: "referrals", sub: "a banker vouches" },
-  { value: 4, label: "first rounds", sub: "HireVue / phone" },
-  { value: 2, label: "superdays", sub: "the final 6 hours" },
-  { value: 1, label: "offer", sub: "yours" },
+  { value: 180, label: "names found", sub: "real bankers to research" },
+  { value: 120, label: "emails sent", sub: "steady outreach" },
+  { value: 36, label: "replies", sub: "people answer" },
+  { value: 18, label: "coffee chats", sub: "real conversations" },
+  { value: 7, label: "referrals", sub: "someone vouches" },
+  { value: 3, label: "interviews", sub: "first rounds and superdays" },
+  { value: 1, label: "offer", sub: "the goal" },
 ];
 
-const MAX = 120;
+const MAX = 180;
 const STAGGER = 350; // ms between each bar starting
 const GROW_DURATION = 800; // ms for each bar to reach full height + number
 const EASING = "cubic-bezier(.22,.75,.3,1)";
@@ -97,9 +97,9 @@ export function FunnelMathAnimated() {
       </div>
 
       <div className="mt-5 flex items-center justify-between border-t border-[#ECE5D0] pt-4 text-[11px] text-[#5C6472] sm:mt-6 sm:pt-5 sm:text-xs">
-        <p>Based on early 2026 BB + EB recruiting cohorts</p>
+        <p>Illustrative funnel for a serious recruiting cycle</p>
         <p className="hidden font-medium text-[#C86B4F] sm:block">
-          → that&rsquo;s ~8 calls/week for 16 weeks
+          → about 8 emails/week for 16 weeks
         </p>
       </div>
     </div>

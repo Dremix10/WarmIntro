@@ -3,21 +3,21 @@ import { Reveal } from "@/components/Reveal";
 // What most students get out of ChatGPT or a generic template — formal,
 // hedged, generic. The bits the banker reads as AI: "I hope this finds you
 // well", "passionate about", "deeply appreciate", "intersection of...".
-const TYPICAL_AI = `Hi Maya,
+const TYPICAL_AI = `Hi Jordan,
 
-I hope this email finds you well. I'm a sophomore studying CS, passionate about finance and excited about the intersection of technology and capital markets. I'd love to learn more about your journey at Morgan Stanley TMT and would deeply appreciate 15 minutes of your time for a virtual coffee.
+I hope this email finds you well. I'm a sophomore passionate about finance and excited by investment banking. I would love to learn more about your journey and deeply appreciate 15 minutes of your time for a virtual coffee.
 
 Best,
-Sarah`;
+Nia`;
 
-// What Alma writes — short, specific, sounds like a real sophomore.
-const ALMA = `Hi Maya,
+// What Alma writes — short, specific, and honest about being early.
+const ALMA = `Hi Jordan,
 
-I'm a sophomore studying Applied Mathematics-Computer Science and looking at TMT. I saw your team led the Q4 software deal, and I'm trying to understand how bankers think through retention and product risk in a process like that.
+I'm an architecture major just starting to learn how students break into banking. I saw you studied engineering before moving into a group that works with software companies, and I wanted to ask how you explained a non-finance background in recruiting.
 
 Would 15 minutes by phone next week work?
 
-Sarah`;
+Nia`;
 
 export function NoAITells() {
   return (
@@ -28,11 +28,12 @@ export function NoAITells() {
             No AI tells
           </p>
           <h2 className="mx-auto mt-3 max-w-3xl text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[60px]">
-            <span className="block">Bankers spot AI tells in three seconds.</span>
-            <span className="block italic text-[#2E5A88]">Alma sounds like you.</span>
+            <span className="block">You should not sound like a finance expert.</span>
+            <span className="block italic text-[#2E5A88]">You should sound worth helping.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
-            Same student, same banker, same ask. The difference is whether the email reads like a template or like a real person.
+            Same student, same banker, same ask. The difference is whether the email pretends
+            or opens a real beginner conversation.
           </p>
         </div>
       </Reveal>
@@ -101,7 +102,8 @@ export function NoAITells() {
 
       <Reveal delay={300}>
         <p className="mx-auto mt-8 max-w-md text-center text-xs text-[#5C6472]">
-          Specific deal reference. Real student context. One concrete ask. No hedging. Reads like a sophomore who actually noticed something, not a template.
+          Clear background. Real common ground. One concrete ask. The email shows curiosity
+          without pretending the student already knows the job inside out.
         </p>
       </Reveal>
     </section>
