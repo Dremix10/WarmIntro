@@ -14,6 +14,8 @@ import { SurfacesStack } from "./_parts/SurfacesStack";
 import { FlywheelTile } from "./_parts/FlywheelTile";
 
 
+const INSTAGRAM_URL = "https://www.instagram.com/alma_careers/";
+
 const FAQ = [
   {
     q: "Is Alma a jobs board?",
@@ -131,8 +133,8 @@ function Hero() {
           style={{ animation: "fade-rise 800ms cubic-bezier(.22,.75,.3,1) 1500ms forwards" }}
         >
           Alma is the email-first recruiting agent for students breaking into investment banking.
-          It finds the right alumni, drafts outreach in your voice, mirrors it into Gmail, tracks
-          replies, and keeps your pipeline moving while you focus on calls.
+          Built first for Brown and Rice, it finds the right alumni, drafts outreach in your voice,
+          mirrors it into Gmail, tracks replies, and keeps your pipeline moving while you focus on calls.
         </p>
 
         <div
@@ -326,6 +328,7 @@ function Footer() {
         </p>
         <div className="flex flex-wrap items-center gap-5">
           <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>
+          <a href={INSTAGRAM_URL} className="hover:text-[#1B3B5F]">Instagram</a>
           <a href="mailto:founders@alma.careers" className="hover:text-[#1B3B5F]">Contact</a>
           <span className="text-[#8A8674]">2026 cycle</span>
         </div>

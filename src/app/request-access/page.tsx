@@ -56,7 +56,7 @@ export default function RequestAccessPage() {
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">Request list open</p>
           <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request access</h1>
           <p className="text-sm text-[#14182A]/70">
-            Alma is gated while we onboard the founding cohort for the 2026 IB cycle. Drop your school email and we&rsquo;ll reach out as soon as we can support you well.
+            Alma is gated while we onboard the founding cohort for the 2026 IB cycle. Brown and Rice students are first in line. Drop your school email and we&rsquo;ll reach out as soon as we can support you well.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function RequestAccessPage() {
               type="text"
               value={university}
               onChange={(e) => setUniversity(e.target.value)}
-              placeholder="School (Rice, Brown, etc.)"
+              placeholder="School (Rice or Brown)"
               className="w-full rounded-xl border border-[#D9CFB5] bg-white px-4 py-3 text-sm focus:border-[#2E5A88] focus:outline-none"
             />
             <input

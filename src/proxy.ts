@@ -141,6 +141,7 @@ const GATE_BYPASS_PREFIXES = [
   "/reset-password",
   "/privacy",
   "/terms",
+  "/opengraph-image",
   "/api/pilot-signup",
   "/api/extract-pdf", // pre-auth resume upload
   "/api/parse-resume", // guest-safe parse

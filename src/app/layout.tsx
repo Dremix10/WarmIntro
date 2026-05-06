@@ -25,7 +25,32 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "Alma - Email-first recruiting for investment banking",
   description:
-    "Alma finds the right bankers, drafts outreach in your voice, mirrors it into Gmail, and tracks replies through your investment banking pipeline.",
+    "Alma helps Brown and Rice students find the right bankers, draft outreach in their voice, mirror it into Gmail, and track replies through the investment banking pipeline.",
+  metadataBase: new URL("https://alma.careers"),
+  openGraph: {
+    title: "Alma - Email-first recruiting for investment banking",
+    description:
+      "The warm-intro engine for Brown and Rice students breaking into investment banking.",
+    url: "https://alma.careers",
+    siteName: "Alma",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Alma - coffee chats, not cold sweat",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Alma - Email-first recruiting for investment banking",
+    description:
+      "The warm-intro engine for Brown and Rice students breaking into investment banking.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export const viewport: import("next").Viewport = {
