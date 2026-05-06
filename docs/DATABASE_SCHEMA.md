@@ -497,7 +497,7 @@ The schema breaks into five logical domains:
 
 ### `demo_sessions`
 
-**Purpose:** persists the public /demo's parsed resume + people-found list. Anonymous (no user_id).
+**Purpose:** legacy table from the retired public `/demo` upload flow. Anonymous (no user_id); kept for historical funnel analysis, not used by the launch landing.
 **Owner:** anon (insert only — `No client reads` policy).
 
 ---

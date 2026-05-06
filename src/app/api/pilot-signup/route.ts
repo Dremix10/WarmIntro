@@ -1,6 +1,6 @@
 // POST /api/pilot-signup — capture an access request from a visitor.
-// Used by both the /demo flow (after resume parse) and the lighter
-// /request-access page (just email + university). Inserts into the
+// Used by /request-access and any old clients still posting the same shape.
+// Inserts into the
 // pilot_signups table — admin reviews and approves manually via the
 // admin reset-password flow.
 //
@@ -13,14 +13,40 @@ import { createServerClient } from "@/lib/supabase-server";
 import { sendTelegram } from "@/lib/telegram";
 import { isSyntheticEmail } from "@/lib/synthetic-email";
 
+function cleanString(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned ? cleaned.slice(0, maxLength) : null;
+}
+
+function cleanStringArray(value: unknown, maxItems: number, maxLength: number): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => cleanString(item, maxLength))
+    .filter((item): item is string => !!item)
+    .slice(0, maxItems);
+}
+
+function cleanGraduationYear(value: unknown): number | null {
+  const year = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(year) || year < 2020 || year > 2040) return null;
+  return year;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
     const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    if (!email || email.length > 254 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return NextResponse.json({ error: "Valid email is required" }, { status: 400 });
     }
+    const name = cleanString(body.name, 120);
+    const university = cleanString(body.university, 120);
+    const major = cleanString(body.major, 120);
+    const graduationYear = cleanGraduationYear(body.graduationYear);
+    const skills = cleanStringArray(body.skills, 20, 80);
+    const targetIndustries = cleanStringArray(body.targetIndustries, 20, 80);
 
     const supabase = createServerClient();
     // upsert on email — re-submitting the same email updates the row
@@ -35,12 +61,12 @@ export async function POST(request: Request) {
 
     const { error } = await supabase.from("pilot_signups").upsert({
       email,
-      name: body.name ?? null,
-      university: body.university ?? null,
-      major: body.major ?? null,
-      graduation_year: body.graduationYear ?? null,
-      skills: body.skills ? JSON.parse(JSON.stringify(body.skills)) : [],
-      target_industries: body.targetIndustries ? JSON.parse(JSON.stringify(body.targetIndustries)) : [],
+      name,
+      university,
+      major,
+      graduation_year: graduationYear,
+      skills,
+      target_industries: targetIndustries,
     }, { onConflict: "email" });
 
     if (error) {
@@ -53,12 +79,12 @@ export async function POST(request: Request) {
     // stays signal-only and real signups don't get drowned by test runs.
     if (isNew && !isSyntheticEmail(email)) {
       void sendTelegram(
-        `📥 New Alma access request\n\n` +
+          `📥 New Alma access request\n\n` +
           `Email: ${email}\n` +
-          `Name: ${body.name ?? "(not provided)"}\n` +
-          `University: ${body.university ?? "(not provided)"}\n` +
-          `Major: ${body.major ?? "(not provided)"}\n` +
-          `Grad year: ${body.graduationYear ?? "(not provided)"}\n\n` +
+          `Name: ${name ?? "(not provided)"}\n` +
+          `University: ${university ?? "(not provided)"}\n` +
+          `Major: ${major ?? "(not provided)"}\n` +
+          `Grad year: ${graduationYear ?? "(not provided)"}\n\n` +
           `Approve via /admin → Reset password → email link.`
       );
     }

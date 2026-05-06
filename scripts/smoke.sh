@@ -45,10 +45,17 @@ echo ""
 #    /demo is intentionally redirected to the static walkthrough because the
 #    upload-based demo is not part of the launch surface anymore.
 echo "[public routes]"
-for p in / /login /request-access /coming-soon /privacy /terms /forgot-password /reset-password; do
+for p in / /login /request-access /privacy /terms /forgot-password /reset-password; do
   CODE=$(http_code "$BASE$p")
   if [ "$CODE" = "200" ]; then run "$p returns 200" 1; else run "$p returns 200 (got $CODE)" 0; fi
 done
+COMING_SOON_CODE=$(http_code "$BASE/coming-soon")
+COMING_SOON_LOC=$(http_redirect "$BASE/coming-soon")
+if [ "$COMING_SOON_CODE" = "307" ] && [ "$COMING_SOON_LOC" = "/request-access" ]; then
+  run "/coming-soon redirects to request access" 1
+else
+  run "/coming-soon redirects to request access (got $COMING_SOON_CODE $COMING_SOON_LOC)" 0
+fi
 DEMO_CODE=$(http_code "$BASE/demo")
 DEMO_LOC=$(http_redirect "$BASE/demo")
 if [ "$DEMO_CODE" = "307" ] && [ "$DEMO_LOC" = "/#how" ]; then
@@ -74,14 +81,7 @@ FIRMS=$(http_body "$BASE/api/setup/firms")
 COUNT=$(echo "$FIRMS" | python3 -c "import json,sys;d=json.load(sys.stdin);print(len(d.get('firms',[])))" 2>/dev/null)
 if [ -n "$COUNT" ] && [ "$COUNT" -ge 20 ]; then run "/api/setup/firms returns >=20 firms ($COUNT)" 1; else run "/api/setup/firms (got $COUNT)" 0; fi
 
-# 5. /api/parse-resume — guest endpoint, no auth needed
-PARSE=$(curl -s -X POST -H "User-Agent: $UA" -H "Content-Type: application/json" \
-  -d '{"resumeText":"Test User\nRice University\nB.S. Economics 2028","university":"Rice University"}' \
-  --max-time 25 "$BASE/api/parse-resume" 2>/dev/null)
-PARSED_NAME=$(echo "$PARSE" | python3 -c "import json,sys;print(json.load(sys.stdin).get('profile',{}).get('name',''))" 2>/dev/null)
-if [ -n "$PARSED_NAME" ]; then run "/api/parse-resume returns parsed profile" 1; else run "/api/parse-resume failed" 0; fi
-
-# 6. /api/pilot-signup — accepts unique email
+# 5. /api/pilot-signup — accepts unique email
 EMAIL="smoke-$(date +%s)-$RANDOM@example.com"
 SIGNUP=$(curl -s -X POST -H "User-Agent: $UA" -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\"}" "$BASE/api/pilot-signup" 2>/dev/null)
@@ -103,7 +103,7 @@ fi
 # 9. Authenticated routes return 403 without auth (gate caught them with redirect — confirm API also)
 echo ""
 echo "[auth-gated APIs]"
-for p in /api/today /api/agents/runs /api/account/activity; do
+for p in /api/today /api/agents/runs /api/account/activity /api/parse-resume /api/extract-pdf /api/find-people /api/find-companies /api/demo/bankers; do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: $UA" "$BASE$p" 2>/dev/null)
   if [ "$CODE" = "307" ] || [ "$CODE" = "403" ] || [ "$CODE" = "401" ]; then run "$p denies unauth'd ($CODE)" 1; else run "$p denies unauth'd (got $CODE)" 0; fi
 done

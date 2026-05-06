@@ -449,7 +449,7 @@ Files: `src/app/today/page.tsx`, `src/app/crm/page.tsx`, `src/components/Outreac
 
 **0.5 Tighter middleware matcher** `✅ done`
 
-`src/proxy.ts:344-348` now excludes `_next/static`, `_next/image`, `_next/data`, favicon, robots, sitemap, manifest, plus all of woff/woff2/ttf/otf/svg/png/jpg/jpeg/gif/webp/ico/txt/xml/json/map/css/js. Bypass-prefix list also covers /api/cron, /api/auth, /api/pilot-signup, /api/demo, /api/setup/firms.
+`src/proxy.ts:344-348` now excludes `_next/static`, `_next/image`, `_next/data`, favicon, robots, sitemap, manifest, plus all of woff/woff2/ttf/otf/svg/png/jpg/jpeg/gif/webp/ico/txt/xml/json/map/css/js. Bypass-prefix list also covers /api/cron, /api/auth, /api/pilot-signup, /api/setup/firms.
 
 **0.6 Cron pre-warm** *(mitigates cold-start tax during business hours)* `🚫 blocked`
 

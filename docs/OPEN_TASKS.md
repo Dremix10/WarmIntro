@@ -16,13 +16,13 @@ This started as the Claude → Codex migration snapshot and now carries the live
 
 ---
 
-## #78 — Public copy: Rice/Brown only until MIT expansion reopens
+## #78 — Public launch copy and retired demo surfaces
 
-**Status:** Shipped 2026-05-05 for the main public surfaces; verify in browser next session.
+**Status:** Shipped 2026-05-06 for the main public surfaces; verify in browser before posting.
 
-**Why:** The MIT person is not moving forward, and Dremix may delay MIT expansion. Public copy should not imply a Rice/Brown/MIT team or MIT founding cohort until that changes.
+**Why:** Public launch copy should read broadly for students breaking into IB. Rice/Brown proof stays useful in the deck and conversations, but the landing page should not make non-Rice/Brown visitors think they are excluded. The upload demo and coming-soon page are retired launch surfaces.
 
-**Action:** Landing, demo CTA, request-access helper copy, coming-soon, and test welcome preview were updated to Rice/Brown public positioning. Next session should visually check the landing page and QR destination before the accelerator meeting.
+**Action:** Landing, request-access helper copy, legal/legacy copy, test welcome preview, `/demo`, and `/coming-soon` now point visitors toward the canonical landing/request-access flow. Next session should visually check the landing page and QR destination before posting.
 
 ---
 
@@ -80,12 +80,10 @@ This started as the Claude → Codex migration snapshot and now carries the live
 
 9. **Evangelos's gelo-touch UI** (`24b6637`) — `/setup` gets right-column MentorCompanion sidecar (sticky on desktop, stacks on mobile), step indicator strip, numbered trust dial. `/today` gets a "Sent to {first name}" paper-plane badge during the fade animation.
 
-10. **/demo overhaul** (`aaf3bd2`) — fake Alex/Maya/Jordan bankers replaced with REAL bankers from DB. Verify by:
-    - Upload your resume to `/demo` → see 3 real Brown/Rice/MIT alumni with clickable LinkedIn URLs
-    - Click "sample run (Rice CS sophomore)" → see 3 real Rice bankers
-    - Click a LinkedIn link from each card → confirm it's a real profile
-    - Copy a draft → confirm the body uses real banker name/title/firm with same-school or firm anchor (no fake "Alex was a TMT analyst before VP" hooks)
-    - For each banker shown, confirm their `anchorLine` quote (the italic "From their profile: ..." line) is something verifiable, not invented
+10. **Legacy /demo surface retired for launch** (`23c6860`, follow-up hardening on 2026-05-06) — `/demo` now redirects to the landing walkthrough, and public demo-only parser / banker endpoints are no longer part of the launch surface. Verify by:
+    - Visit `/demo` signed out → redirect to `/#how`
+    - Request `/api/demo/bankers`, `/api/parse-resume`, `/api/extract-pdf`, `/api/find-people`, and `/api/find-companies` signed out → denied by the private-beta gate
+    - Confirm `/request-access` remains public and still inserts `pilot_signups`
 
 ---
 

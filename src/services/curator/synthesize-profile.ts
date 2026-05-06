@@ -35,8 +35,7 @@ interface SynthesisResult {
   error?: string;
 }
 
-// LinkedIn UI noise we strip from post titles before storing — same set
-// as src/app/api/demo/bankers/route.ts so the two surfaces stay aligned.
+// LinkedIn UI noise we strip from post titles before storing.
 const LINKEDIN_UI_NOISE = /\b(?:'s Post|View profile for|Report this post|Close menu|Brown University Graphic|Rice University Graphic)\b/gi;
 
 function cleanPostTitle(title: string | null | undefined): string | null {

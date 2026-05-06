@@ -10,11 +10,16 @@ const AI_ROUTES = [
   "/api/scrape-linkedin",
 ];
 
-// Routes that call Claude but allow guest access (no auth required)
-const GUEST_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate-outreach", "/api/find-people"];
+// Routes that call Claude but do not require the stricter "Bearer token"
+// programmatic auth path. The private-beta gate still runs before rate limits,
+// so these are reachable only from allowlisted signed-in users.
+const APP_AI_ROUTES = ["/api/parse-resume", "/api/find-alumni", "/api/generate-outreach", "/api/find-people"];
 
 // Auth routes — brute-force protection
-const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup", "/api/auth/reset-password"];
+const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup", "/api/auth/reset-password", "/api/auth/set-password"];
+
+// Public write routes — no auth, but tighter than ordinary read-only APIs.
+const PUBLIC_WRITE_ROUTES = ["/api/pilot-signup"];
 
 // Rate limit tiers (requests per window).
 // Default bumped to 60/min on 2026-04-30 — observed: an authed user
@@ -22,12 +27,13 @@ const AUTH_ROUTES = ["/api/auth/signin", "/api/auth/signup", "/api/auth/reset-pa
 // refreshes inside 2 minutes was tripping the old 20/min ceiling.
 // Each Run Alma fires planner/run-now + a /api/today reload; users
 // clicking around legitimately exceed 1-every-3-seconds.
-// AI / guest_ai stay tight (cost control), auth stays tight
+// AI / app_ai stay tight (cost control), auth stays tight
 // (brute-force protection).
 const RATE_LIMITS = {
   ai: { max: 5, windowMs: 60_000 },
-  guest_ai: { max: 5, windowMs: 60_000 },
+  app_ai: { max: 5, windowMs: 60_000 },
   auth: { max: 3, windowMs: 60_000 },
+  public_write: { max: 5, windowMs: 60_000 },
   default: { max: 60, windowMs: 60_000 },
   global: { max: 120, windowMs: 60_000 },
 };
@@ -35,8 +41,10 @@ const RATE_LIMITS = {
 // User-Agent substrings that indicate automated tooling (case-insensitive match)
 const BOT_UA_PATTERNS = ["curl", "wget", "python-requests", "httpie", "postmanruntime"];
 
-// Routes exempt from bot UA checks (cron runs as a bot by design; uploads; analytics)
-const BOT_CHECK_EXEMPT_ROUTES = ["/api/extract-pdf", "/api/analytics", "/api/admin", "/api/cron"];
+// Routes exempt from bot UA checks (cron runs as a bot by design; analytics may
+// be emitted from browser extensions / unusual user agents). Everything else,
+// including upload/parser endpoints, should look like a real browser request.
+const BOT_CHECK_EXEMPT_ROUTES = ["/api/analytics", "/api/admin", "/api/cron"];
 
 // Routes that bypass rate limiting entirely:
 //   - /api/cron — fixed schedule, bearer-token auth, can't be abused
@@ -69,8 +77,9 @@ function getClientIp(request: NextRequest): string {
 
 function getTier(pathname: string): keyof typeof RATE_LIMITS {
   if (AI_ROUTES.some((r) => pathname.startsWith(r))) return "ai";
-  if (GUEST_AI_ROUTES.some((r) => pathname.startsWith(r))) return "guest_ai";
+  if (APP_AI_ROUTES.some((r) => pathname.startsWith(r))) return "app_ai";
   if (AUTH_ROUTES.some((r) => pathname.startsWith(r))) return "auth";
+  if (PUBLIC_WRITE_ROUTES.some((r) => pathname.startsWith(r))) return "public_write";
   return "default";
 }
 
@@ -133,7 +142,6 @@ function isAllowlisted(email: string): boolean {
 // NOTE: "/" is handled separately via exact match — startsWith("/") would
 // match every path on the site and disable the gate entirely.
 const GATE_BYPASS_PREFIXES = [
-  "/coming-soon",
   "/request-access", // closed-beta waitlist form
   "/login", // testers sign in here
   "/forgot-password",
@@ -142,11 +150,6 @@ const GATE_BYPASS_PREFIXES = [
   "/terms",
   "/opengraph-image",
   "/api/pilot-signup",
-  "/api/extract-pdf", // pre-auth resume upload
-  "/api/parse-resume", // guest-safe parse
-  "/api/find-people", // guest-safe demo people finder
-  "/api/find-companies", // legacy, safe
-  "/api/demo", // /api/demo/bankers — public demo, no auth required
   "/api/setup/firms", // public reference data — seeded firms+groups
   "/api/cron",
   "/api/auth", // includes /api/auth/reset-password — needs to work for non-signed-in users
@@ -158,12 +161,6 @@ const GATE_BYPASS_PREFIXES = [
 // page — "/" can't go in GATE_BYPASS_PREFIXES because startsWith("/") would
 // short-circuit the gate for every URL.
 const GATE_BYPASS_EXACT = ["/"];
-
-// Gate passthrough API pattern — these run after Supabase auth check and emit a 403 if email isn't whitelisted
-function isGatedApiRoute(pathname: string): boolean {
-  if (!pathname.startsWith("/api/")) return false;
-  return !GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p));
-}
 
 async function getSessionEmailFromCookie(request: NextRequest, response: NextResponse): Promise<string | null> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -216,7 +213,6 @@ async function checkTestingGate(
 
   // Always allow the gate page itself + bypass routes + Next internals
   if (
-    pathname === "/coming-soon" ||
     GATE_BYPASS_EXACT.includes(pathname) ||
     GATE_BYPASS_PREFIXES.some((p) => pathname.startsWith(p))
   ) {
@@ -257,6 +253,12 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.hash = "how";
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/coming-soon") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/request-access";
     return NextResponse.redirect(url);
   }
 
@@ -355,13 +357,13 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-// Skip middleware for static assets, fonts, manifests, and the gate page itself.
+// Skip middleware for static assets, fonts, and manifests.
 // Every excluded request saves a Supabase auth round-trip (~100-300ms).
 // Asset extensions extended beyond v1: woff/woff2/ttf/otf (fonts),
 // txt/xml/json/map (manifests, sourcemaps), css/js (legacy compiled assets).
 export const config = {
   matcher: [
     "/api/:path*",
-    "/((?!coming-soon|_next/static|_next/image|_next/data|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|apple-icon|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|txt|xml|json|map|css|js)).*)",
+    "/((?!_next/static|_next/image|_next/data|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|apple-icon|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf|txt|xml|json|map|css|js)).*)",
   ],
 };

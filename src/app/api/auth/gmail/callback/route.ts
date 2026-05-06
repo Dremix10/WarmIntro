@@ -1,24 +1,11 @@
 // Gmail OAuth callback — exchange auth code for tokens, persist encrypted, return success
 
 import { NextResponse } from "next/server";
-import { exchangeCodeForTokens, encryptToken } from "@/services/gmail/oauth";
+import { exchangeCodeForTokens, encryptToken, verifyOAuthState } from "@/services/gmail/oauth";
 import { getAdminClient } from "@/lib/supabase-admin";
 import type { TablesInsert } from "@/lib/db-helpers";
 
 export const runtime = "nodejs";
-
-interface OAuthState {
-  userId: string;
-  ts: number;
-}
-
-function decodeState(state: string): OAuthState | null {
-  try {
-    return JSON.parse(Buffer.from(state, "base64url").toString("utf8"));
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -29,7 +16,7 @@ export async function GET(request: Request) {
   if (oauthError) return NextResponse.redirect(new URL(`/setup?gmail_error=${oauthError}`, request.url));
   if (!code || !stateRaw) return NextResponse.redirect(new URL("/setup?gmail_error=missing_params", request.url));
 
-  const state = decodeState(stateRaw);
+  const state = verifyOAuthState(stateRaw);
   if (!state) return NextResponse.redirect(new URL("/setup?gmail_error=bad_state", request.url));
   // State must be fresh (< 10 min)
   if (Date.now() - state.ts > 10 * 60 * 1000) return NextResponse.redirect(new URL("/setup?gmail_error=state_expired", request.url));

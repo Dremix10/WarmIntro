@@ -64,6 +64,7 @@ Requires `.env.local` with:
 - `SERPER_API_KEY` — Google Serper fallback for LinkedIn search (gracefully degrades if missing)
 - `HUNTER_API_KEY` — Hunter.io email enrichment (Curator + Researcher; gracefully degrades)
 - `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI` — Gmail OAuth (send + readonly + modify scopes)
+- `GMAIL_OAUTH_STATE_SECRET` — optional HMAC secret for Gmail OAuth state; falls back to Google/Supabase server secrets when unset
 - `ALMA_CRON_SECRET` — bearer token protecting `/api/cron/*` endpoints
 - `SUPABASE_SERVICE_ROLE_KEY` — used server-side for service-role writes (bankers, signals, flywheel tables)
 

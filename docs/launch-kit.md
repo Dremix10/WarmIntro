@@ -1,6 +1,6 @@
 # Alma launch kit — 3-day push to 25-30 signups
 
-> **2026-05-05 update:** Public launch posture is Rice/Brown only until Dremix reopens MIT expansion. For the 2026-05-06 accelerator-founder meeting, the pitch deck should end with a QR code to `https://alma.careers/request-access` or the homepage with the request-access CTA visible. Refresh all signup / activation / sent / reply numbers from Supabase before using this kit in a deck.
+> **2026-05-06 update:** Public launch posture is broad student-facing copy, with Rice/Brown proof kept for conversations and the deck. The old upload demo is no longer part of the launch surface; point every public CTA at `https://alma.careers` or `https://alma.careers/request-access`. Refresh all signup / activation / sent / reply numbers from Supabase before using this kit in a deck.
 
 > **Goal:** 25+ signups, 8-12 activations, 1-3 booked coffees by Apr 30 (YC submission day).
 > **Audience:** rising sophomores at Rice + Brown targeting SA2028 IB recruiting.
@@ -24,7 +24,7 @@ banks, it finds bankers worth emailing, drafts the cold emails in your voice,
 and tracks replies. The whole loop, automated, send-from-your-Gmail.
 
 We're opening it to ~10 testers from [Rice/Brown] this week. If anyone's
-gunning for SA2028 and wants in: alma.careers/demo. Drop your email there
+gunning for SA2028 and wants in: alma.careers/request-access. Drop your email there
 and I'll send you an invite tonight.
 
 Honest expectations: still rough, you'd be a real beta tester. But the loop
@@ -36,7 +36,7 @@ last week.
 
 ```
 Built an AI for IB networking. Drafts cold emails to bankers, tracks replies,
-runs while you're in class. Looking for sophomore beta testers. alma.careers/demo
+runs while you're in class. Looking for sophomore beta testers. alma.careers/request-access
 ```
 
 ### Personal note for posting
@@ -58,7 +58,7 @@ runs while you're in class. Looking for sophomore beta testers. alma.careers/dem
 ```
 sophomore IB friends — built an AI that does your networking calls for you.
 finds bankers, writes the emails, tracks who replies. opening to a few rice/brown
-testers this week. dm if interested. (alma.careers/demo)
+testers this week. dm if interested. (alma.careers/request-access)
 ```
 
 Posted from sidechat = anonymous, but one of you should follow up to DMs.
@@ -89,7 +89,7 @@ replies. So you do less of the spreadsheet-and-stress part of recruiting.
 
 Opening to ~10 testers from [Rice/Brown] this week. Want a slot?
 
-alma.careers/demo — drop your email and I'll send you the beta invite tonight.
+alma.careers/request-access — drop your email and I'll send you the beta invite tonight.
 ```
 
 ### Reply hook for "what's the catch"
@@ -118,7 +118,7 @@ study, drafts the call requests in your voice (no AI tells), sends them from
 your Gmail, and tracks every reply through superday.
 
 We're opening the beta to Rice and Brown sophomores this week. If you know
-someone who'd benefit, send them: alma.careers/demo
+someone who'd benefit, send them: alma.careers/request-access
 
 Founders: a Rice student and a Brown student — built for our own classes
 first.
