@@ -12,6 +12,10 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { sendTelegram } from "@/lib/telegram";
 import { isSyntheticEmail } from "@/lib/synthetic-email";
+import { getFromAddress } from "@/lib/email-from";
+import { buildAccessRequestConfirmationEmail } from "@/lib/access-request-email";
+
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
 
 function cleanString(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") return null;
@@ -73,6 +77,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    let confirmationEmailSent = false;
+    let confirmationEmailError: string | null = null;
+    const resendKey = process.env.RESEND_API_KEY?.trim();
+    if (!isSyntheticEmail(email) && resendKey) {
+      const firstName = name?.split(" ")[0] ?? null;
+      const { subject, html, text } = buildAccessRequestConfirmationEmail({
+        firstName,
+        requestEmail: email,
+        siteUrl: SITE_URL,
+      });
+      const replyTo = (process.env.ALMA_REPLY_TO_EMAIL ?? "founders@alma.careers").trim();
+      try {
+        const r = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: getFromAddress(),
+            to: [email],
+            reply_to: replyTo,
+            subject,
+            text,
+            html,
+          }),
+        });
+        confirmationEmailSent = r.ok;
+        if (!r.ok) {
+          confirmationEmailError = `Resend ${r.status}: ${(await r.text().catch(() => "")).slice(0, 200)}`;
+        }
+      } catch (err) {
+        confirmationEmailError = err instanceof Error ? err.message : String(err);
+      }
+    } else if (!resendKey) {
+      confirmationEmailError = "RESEND_API_KEY not set";
+    }
+
     // Real-time admin ping. Fire-and-forget — don't add latency to the
     // user's response, and don't fail the signup if Telegram is down.
     // Skip synthetic CI emails (smoke-/e2e-/@example.com) so the channel
@@ -84,12 +123,13 @@ export async function POST(request: Request) {
           `Name: ${name ?? "(not provided)"}\n` +
           `University: ${university ?? "(not provided)"}\n` +
           `Major: ${major ?? "(not provided)"}\n` +
-          `Grad year: ${graduationYear ?? "(not provided)"}\n\n` +
+          `Grad year: ${graduationYear ?? "(not provided)"}\n` +
+          `Confirmation email: ${confirmationEmailSent ? "sent" : `not sent (${confirmationEmailError ?? "skipped"})`}\n\n` +
           `Approve via /admin → Reset password → email link.`
       );
     }
 
-    return NextResponse.json({ success: true, isNew });
+    return NextResponse.json({ success: true, isNew, confirmationEmailSent });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Signup failed";
     return NextResponse.json({ error: message }, { status: 500 });
