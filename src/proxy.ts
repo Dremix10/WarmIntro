@@ -140,6 +140,7 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_para
 interface GateUser {
   id: string;
   email: string;
+  approvedProfile: boolean;
 }
 
 function isExplicitlyAllowlisted(email: string): boolean {
@@ -152,18 +153,18 @@ function isDomainAllowlisted(email: string): boolean {
   return TESTING_ALLOWED_DOMAINS.some((domain) => lower.endsWith(`@${domain}`));
 }
 
-async function hasApprovedProfile(userId: string): Promise<boolean> {
+async function hasApprovedProfileWithBearer(userId: string, token: string): Promise<boolean> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!supabaseUrl || !serviceKey) return false;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return false;
 
   try {
     const res = await fetch(
       `${supabaseUrl}/rest/v1/profiles?select=id&id=eq.${encodeURIComponent(userId)}&limit=1`,
       {
         headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${token}`,
         },
       }
     );
@@ -214,7 +215,13 @@ async function getSessionUserFromRequest(request: NextRequest, response: NextRes
           headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` },
         }).then((r) => r.json()).then((d) => ({ data: { user: d } }));
         const user = data?.user as { id?: string; email?: string } | null;
-        if (user?.id && user.email) return { id: user.id, email: user.email.toLowerCase() };
+        if (user?.id && user.email) {
+          return {
+            id: user.id,
+            email: user.email.toLowerCase(),
+            approvedProfile: await hasApprovedProfileWithBearer(user.id, token),
+          };
+        }
       } catch {
         // fall through to cookie path
       }
@@ -235,7 +242,16 @@ async function getSessionUserFromRequest(request: NextRequest, response: NextRes
     });
     const { data } = await supabase.auth.getUser();
     if (data.user?.id && data.user.email) {
-      return { id: data.user.id, email: data.user.email.toLowerCase() };
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      return {
+        id: data.user.id,
+        email: data.user.email.toLowerCase(),
+        approvedProfile: Boolean(profile?.id),
+      };
     }
     return null;
   } catch {
@@ -270,7 +286,7 @@ async function checkTestingGate(
     return null; // explicit allowlist — caller returns `response` (with refreshed cookies)
   }
 
-  if (user && isDomainAllowlisted(user.email) && await hasApprovedProfile(user.id)) {
+  if (user && isDomainAllowlisted(user.email) && user.approvedProfile) {
     return null; // approved launch user — caller returns `response` (with refreshed cookies)
   }
 
