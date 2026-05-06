@@ -28,7 +28,7 @@ const FAQ = [
   },
   {
     q: "What does founding-user access include?",
-    a: "Brown and Rice founding users get Alma free for the 2026 recruiting cycle. In return, we ask for honest feedback so the product gets sharper while your recruiting pipeline is live.",
+    a: "We are opening 50 founding seats for Brown and Rice students, first come, first served. Founding users get Alma free for the 2026 recruiting cycle. In return, we ask for honest feedback so the product gets sharper while your recruiting pipeline is live.",
   },
   {
     q: "I'm not a finance major. Does that matter?",
@@ -50,12 +50,12 @@ const FAQ = [
 
 const LIVE_POINTS = [
   {
-    k: "Closed beta",
-    v: "Brown and Rice founding users get the 2026 cycle free while seats open in waves.",
+    k: "50 founding seats",
+    v: "Brown and Rice exclusive. Free for the 2026 cycle. First come, first served.",
   },
   {
-    k: "Beginner friendly",
-    v: "Alma writes like a curious student, not someone pretending to know banking already.",
+    k: "Fair shot",
+    v: "Get to real coffee chats where your curiosity, preparation, and story can show.",
   },
   {
     k: "Gmail-first",
@@ -172,7 +172,7 @@ function Hero() {
           </a>
         </div>
         <p className="mt-4 text-xs leading-relaxed text-[#5C6472]">
-          Brown and Rice priority · founding users free for the 2026 recruiting cycle
+          50 Brown/Rice founding seats · free for the 2026 cycle · first come, first served
         </p>
       </div>
     </section>
@@ -254,6 +254,11 @@ function FunnelSection() {
             find names, send thoughtful emails, get replies, book coffee chats, earn referrals,
             and turn those relationships into interviews.
           </p>
+          <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260] md:text-base">
+            Alma is built so more students get a fair shot at the conversation itself. The coffee
+            chat should test your curiosity and preparation, not whether you already had the network,
+            the spreadsheet, or someone ghostwriting emails.
+          </p>
         </div>
       </Reveal>
 
@@ -282,12 +287,12 @@ function FoundingCohort() {
               Founding-user cohort
             </p>
             <h2 className="mt-4 max-w-xl text-[36px] leading-[1.05] font-[family-name:var(--font-fraunces)] md:text-[56px]">
-              Brown and Rice students get the 2026 cycle free.
+              50 Brown/Rice seats. First come, first served.
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 md:text-base">
               We are bringing students in carefully because this touches your real inbox and your
-              real recruiting year. Founding users get the full product free, direct feedback loops
-              with us, and priority on improvements while recruiting is live.
+              real recruiting year. Founding users get the full product free for the 2026 cycle,
+              direct feedback loops with us, and priority on improvements while recruiting is live.
             </p>
             <a
               href="/request-access"
@@ -371,7 +376,7 @@ function ClosingCTA() {
           Get your recruiting system <span className="italic text-[#2E5A88]">running</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm text-[#4A5260] md:text-base">
-          Request a founding seat. We are opening Brown and Rice first, then expanding as fast as we can support students well.
+          Request one of 50 founding seats. We are opening Brown and Rice first, then expanding as fast as we can support students well.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a

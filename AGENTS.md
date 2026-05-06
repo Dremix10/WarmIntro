@@ -117,11 +117,11 @@ When given a multi-hour window (his exam, his sleep, his calendar block), defaul
 
 This section captures snapshots that decay fast. Treat as starting points, not facts.
 
-### Launch sprint (snapshot 2026-05-05)
+### Launch sprint (snapshot 2026-05-06)
 
 - **Goal:** collect public access requests before Dremix's accelerator-founder meeting on 2026-05-06 and the YC application planned late on 2026-05-07.
-- **Public posture:** the app is still gated, but the request list is open. Landing CTAs should route to `/request-access` first and `/demo` second; avoid sending new visitors to `/coming-soon`.
-- **Landing message:** lead with Alma as an email-first IB recruiting agent: Gmail drafts, real-thread reply tracking, trust gradient, live pipeline, and prompt calibration from tester feedback. Avoid stale "pending May 3" flywheel copy and avoid making "closed beta / 100 founding users" the main public message.
+- **Public posture:** the app is still gated, but the landing page and request list are public. `/demo` is not part of the public launch surface; keep redirects and CTAs focused on `/` and `/request-access`.
+- **Landing message:** public copy now leads with a beginner-friendly, fair-shot frame: Alma helps students get to real coffee chats where curiosity, preparation, and judgment can show. The launch offer is **50 Brown/Rice founding seats**, free for the 2026 recruiting cycle, first come, first served.
 - **Rice/Brown only for public copy.** MIT expansion is delayed because the MIT person is not moving forward. Do not describe the team, founding cohort, demo audience, or footer as MIT / Rice-Brown-MIT until Dremix explicitly reopens that expansion. Keep internal MIT code paths only where they already support existing school strings.
 - **Pitch deck next session:** Dremix plans to start the next session by creating a prompt that generates an accelerator slide deck for Alma. The last slide should include a QR code to `https://alma.careers/request-access` (or the landing page with the access form clearly visible). Use the latest launch metrics from Supabase before writing traction slides.
 

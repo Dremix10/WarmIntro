@@ -57,11 +57,11 @@ export default function RequestAccessPage() {
           </p>
           <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request a founding seat</h1>
           <p className="text-sm text-[#14182A]/70">
-            Brown and Rice students are first priority. Founding users get Alma free for the
-            2026 IB recruiting cycle while helping us tune the product around real feedback.
+            We are opening 50 Brown/Rice founding seats, first come, first served. Founding users get
+            Alma free for the 2026 IB recruiting cycle while helping us tune the product around real feedback.
           </p>
           <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-            {["Brown", "Rice", "100 seats"].map((item) => (
+            {["Brown", "Rice", "50 seats"].map((item) => (
               <div key={item} className="rounded-xl border border-[#D9CFB5] bg-white px-3 py-2 text-xs font-medium text-[#1B3B5F]">
                 {item}
               </div>
@@ -132,7 +132,7 @@ export default function RequestAccessPage() {
               {state === "submitting" ? "Sending..." : "Request founding seat"}
             </button>
             <p className="text-xs text-[#14182A]/55 text-center pt-2">
-              Not at Brown or Rice? Still request access. We are opening more campuses after the first cohort.
+              Not at Brown or Rice? Still request access. We are opening more campuses after the first 50 seats.
             </p>
             <p className="text-xs text-[#14182A]/55 text-center">
               Already have access? <a href="/login" className="underline text-[#2E5A88]">Sign in →</a>

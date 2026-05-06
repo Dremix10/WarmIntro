@@ -1,227 +1,236 @@
-# Alma launch kit — 3-day push to 25-30 signups
+# Alma launch kit - May 6 launch
 
-> **2026-05-06 update:** Public launch posture is broad student-facing copy, with Rice/Brown proof kept for conversations and the deck. The old upload demo is no longer part of the launch surface; point every public CTA at `https://alma.careers` or `https://alma.careers/request-access`. Refresh all signup / activation / sent / reply numbers from Supabase before using this kit in a deck.
+> **Current public posture:** Alma is public as a landing page and closed as a product. The launch CTA is `https://alma.careers`, with `/request-access` one click away. Brown and Rice get the first 50 founding seats, free for the 2026 IB recruiting cycle, first come, first served.
 
-> **Goal:** 25+ signups, 8-12 activations, 1-3 booked coffees by Apr 30 (YC submission day).
-> **Audience:** rising sophomores at Rice + Brown targeting SA2028 IB recruiting.
-> **Pitch in one line:** "I built an AI agent that runs your IB networking — finds bankers, writes the cold emails, tracks replies. Looking for 5 testers from [Rice/Brown]."
+## Launch Decision
 
----
+Post the carousel and text today. Add a short demo video only if it can be recorded cleanly in under 45 minutes.
 
-## Channel 1 — Rice + Brown finance club Slack/GroupMe/Discord
+Reason: the fastest path to access requests is a clear story plus a credible founder post. The demo video is valuable, but a rough demo right before the investor meeting can create avoidable product-risk if a mock looks inconsistent or the live app hiccups.
 
-**Audience:** people who are ALREADY trying to do IB networking. Highest-intent group.
+Best launch stack for today:
 
-**Where:** Rice Finance Club, Owls on Wall Street, Brown Finance Club, Brown Investment Group.
+1. Dremix personal LinkedIn post: credibility, professors, alumni, investor-adjacent people, parents, career-office people.
+2. Alma Instagram carousel: student-shareable, visual, link in bio.
+3. Dremix personal Instagram story: reshare the Alma post with a human note and link sticker to `https://alma.careers/request-access`.
+4. Cofounder reposts: Evangelos posts/reposts from Brown, third cofounder reposts from Rice.
+5. Direct DMs after the post: finance clubs, friends recruiting for IB, non-finance students curious about IB.
 
-### DM template (one per club, one of you posts to each)
+## Positioning
 
-```
-Hey — sorry for the random drop. I've been building something with my cofounder
-(Demetris @ Rice / Evangelos @ Brown) for the last 3 weeks: an AI agent that
-runs the IB networking grind for you. You upload your resume, pick your target
-banks, it finds bankers worth emailing, drafts the cold emails in your voice,
-and tracks replies. The whole loop, automated, send-from-your-Gmail.
+Use this public idea:
 
-We're opening it to ~10 testers from [Rice/Brown] this week. If anyone's
-gunning for SA2028 and wants in: alma.careers/request-access. Drop your email there
-and I'll send you an invite tonight.
+> Investment banking recruiting should not be decided by who already knows the script. Alma helps students get to real coffee chats, where curiosity, preparation, and judgment can actually show.
 
-Honest expectations: still rough, you'd be a real beta tester. But the loop
-works — first cold email I sent through it landed a coffee with an MS TMT VP
-last week.
-```
+Avoid the meme version of the fairness idea publicly. It is funny internally, but outside the room it can read as unserious. The cleaner line is:
 
-### Variant — for general all-club channel (more concise)
+> Make the coffee chat the competition, not the spreadsheet.
 
-```
-Built an AI for IB networking. Drafts cold emails to bankers, tracks replies,
-runs while you're in class. Looking for sophomore beta testers. alma.careers/request-access
-```
+## LinkedIn Post
 
-### Personal note for posting
+Use from Dremix's personal LinkedIn.
 
-- Post in the off-hours when channel is quietest (right before bed or first thing
-  AM) so it sits at the top.
-- Reply to your own post 30 min later with a screenshot of `/today` showing real
-  drafts. Social proof.
-- Don't oversell. The honest framing converts better than hype.
+```text
+Investment banking recruiting is rigged.
 
----
+Not by the banks. By the grind.
 
-## Channel 2 — Sidechat / Yik Yak
+200 emails. Follow-up spreadsheets. Six months of awkward cold outreach while taking classes.
 
-**Audience:** broader undergrad pool. Lower intent, higher reach.
+The students who break in are not always the smartest. A lot of the time, they are the ones who could afford to obsess, already knew the script, or had someone rewriting every email.
 
-### Post
+We built Alma to make that part less stupid.
 
-```
-sophomore IB friends — built an AI that does your networking calls for you.
-finds bankers, writes the emails, tracks who replies. opening to a few rice/brown
-testers this week. dm if interested. (alma.careers/request-access)
+Alma finds relevant bankers, drafts beginner-friendly emails in your voice, puts them in Gmail for approval, tracks replies, and keeps follow-ups moving.
+
+The goal is simple: get more students to real coffee chats where they can show curiosity, preparation, and judgment, instead of losing at the spreadsheet stage.
+
+Early proof: an architecture major with no finance background used Alma for 30 cold emails and booked 3 banker coffee chats.
+
+Opening 50 founding seats for Brown and Rice students today.
+Free for the 2026 recruiting cycle.
+First come, first served.
+
+Request access: https://alma.careers
+
+#investmentbanking #IBrecruiting #BrownUniversity #RiceUniversity #AI
 ```
 
-Posted from sidechat = anonymous, but one of you should follow up to DMs.
+If posting with media, use one polished landing-page screenshot or a 30-second product walkthrough. Do not attach the same text carousel unless it is formatted as a clean PDF/document carousel.
 
----
+## Instagram Caption
 
-## Channel 3 — Direct DMs to known sophomores
+Post from `@alma_careers`.
 
-**Audience:** highest-conversion, slowest-scaling. 30 personal DMs across
-your two networks.
+```text
+IB recruiting should not come down to who already knows the script.
 
-### Identifying the list (do this first)
+Alma helps you:
 
-- Pull your finance-club roster (you both have admin access)
-- Filter to '28 (rising sophomores)
-- Annotate: who's gunning for IB, who's been complaining about networking
-- Sort: most-active networker first
+1. upload your resume
+2. pick target banks
+3. get matched to bankers with real common ground
+4. approve beginner-friendly emails in Gmail
+5. keep replies and follow-ups organized
 
-### DM template
+Early tester: architecture major, no finance background, 30 emails, 3 coffee chats.
 
-```
-Hey [Name] —
+50 Brown/Rice founding seats.
+Free for the 2026 recruiting cycle.
+First come, first served.
 
-Working on something with [Demetris/Evangelos] you'd probably actually use:
-an AI agent that runs IB networking for you. It finds the bankers, drafts
-the call requests in your voice, sends them from your Gmail, and tracks
-replies. So you do less of the spreadsheet-and-stress part of recruiting.
+Request access at the link in bio.
 
-Opening to ~10 testers from [Rice/Brown] this week. Want a slot?
-
-alma.careers/request-access — drop your email and I'll send you the beta invite tonight.
+#investmentbanking #IBrecruiting #BrownUniversity #RiceUniversity #collegecareers
 ```
 
-### Reply hook for "what's the catch"
+Suggested Alma Instagram bio:
 
-```
-No catch — it's free for the 2026 cycle. We need ~20 real students using it
-to apply to YC next week. You give us feedback, we give you 100 networking
-calls automated through superday. Fair trade.
-```
-
----
-
-## Channel 4 — LinkedIn (you + cofounder, personal posts)
-
-**Audience:** parents, professors, school administrators (won't sign up but might share).
-
-### Post
-
-```
-For the last three weeks, [cofounder] and I have been building what we wish
-existed when we started recruiting — an AI agent that runs the networking
-grind for IB-bound college sophomores.
-
-It reads your resume, finds bankers at every BB and EB whose path you should
-study, drafts the call requests in your voice (no AI tells), sends them from
-your Gmail, and tracks every reply through superday.
-
-We're opening the beta to Rice and Brown sophomores this week. If you know
-someone who'd benefit, send them: alma.careers/request-access
-
-Founders: a Rice student and a Brown student — built for our own classes
-first.
+```text
+IB networking, minus the spreadsheet.
+50 Brown/Rice founding seats.
+Free for the 2026 cycle.
+Request access below.
 ```
 
----
+Bio link: `https://alma.careers`
 
-## Channel 5 — Twitter / X (one cofounder, optional)
+## Instagram Carousel
 
-If either of you has a Twitter presence:
+The carousel should not repeat the bio. It should tell the problem, show the mechanism, prove the result, and end with the seat limit.
 
-```
-shipped: alma.careers — the AI that runs IB recruiting networking for sophomores.
+Use 6 slides:
 
-reads resume → finds bankers → drafts cold emails in your voice → sends from
-your gmail → tracks replies through superday.
+1. **IB recruiting is rigged by the grind.**
+   - Subcopy: Not the banks. The spreadsheet.
+   - Visual: big type, small Alma arc/logo.
 
-opening to rice + brown sophomores this week. (1/3)
-```
+2. **Most students never get to show their skills.**
+   - Subcopy: They lose before the coffee chat: no network, bad cold emails, no follow-up system.
+   - Visual: messy mini pipeline or ghosted inbox.
 
-Thread continuation = walk through the agent system (Researcher / Correspondent
-/ Critic / Watcher / Curator) with screenshots from `/agents`.
+3. **Alma turns networking into a daily system.**
+   - Subcopy: Resume -> target banks -> banker matches -> Gmail drafts -> replies -> coffee chats.
+   - Visual: simple five-step flow, not product screenshots.
 
----
+4. **Beginner-friendly by design.**
+   - Subcopy: Sound curious and prepared, not like a fake finance expert.
+   - Visual: split email example, one generic line crossed out, one grounded line highlighted.
 
-## Daily ops while we drive signups
+5. **Early proof.**
+   - Subcopy: Architecture major. No finance background. 30 emails -> 3 coffee chats.
+   - Visual: `30 -> 3` as the hero number.
 
-### Morning sweep (you, 9am ET)
+6. **50 Brown/Rice founding seats.**
+   - Subcopy: Free for the 2026 cycle. First come, first served. alma.careers
+   - Visual: 50 seat markers, Brown/Rice labels, request access CTA.
 
-Check `pilot_signups` table for overnight signups. For each new email:
+Rendered square PNGs live at `docs/launch-assets/alma-carousel-01.png` through
+`docs/launch-assets/alma-carousel-06.png`. The source file is
+`docs/launch-assets/carousel.html`.
 
-1. Send a personal welcome DM/email within 2 hours: "You're in. Sign in at
-   alma.careers/login with the password I'll send when you reply."
-2. Reset their Supabase password to something memorable (I can do this from
-   the admin API).
-3. Note their school + flag if they hit any onboarding bug.
+## Optional Demo Video
 
-### Midday sweep (1pm ET)
+Only record this if the flow is clean. Keep it under 30 seconds for the first launch wave.
 
-- Anyone signed up but stuck at /setup? DM them.
-- Anyone connected Gmail but no drafts surfaced? DM them.
-- Anyone with approved drafts they haven't sent? Encourage.
+Script:
 
-### Evening sweep (8pm ET)
+```text
+Investment banking recruiting should not be decided by who can manage 200 cold emails.
 
-- Total signups today vs target
-- Activation rate (signups → completed setup → first send)
-- What broke today
-- What to push tomorrow
+This is Alma.
 
-### Telegram alerts (already wired)
+You upload your resume, pick target banks, and Alma finds bankers with real common ground.
 
-You'll get a Telegram ping if any agent errors > 5/hr or Hunter credits drop
-below 20%.
+It drafts beginner-friendly emails in your voice and puts them in Gmail.
 
----
+You approve before anything sends.
 
-## Tracking dashboard (run these queries when you want a pulse)
+Replies and follow-ups stay organized, so you can focus on the actual coffee chats.
 
-```sql
--- Today's funnel
-SELECT
-  (SELECT COUNT(*) FROM pilot_signups WHERE created_at::date = CURRENT_DATE) AS signed_up_today,
-  (SELECT COUNT(*) FROM auth.users WHERE created_at::date = CURRENT_DATE) AS accounts_today,
-  (SELECT COUNT(*) FROM profiles WHERE array_length(target_firms,1) > 0 AND updated_at::date = CURRENT_DATE) AS completed_setup_today,
-  (SELECT COUNT(*) FROM profiles WHERE gmail_connected_at::date = CURRENT_DATE) AS gmail_connected_today,
-  (SELECT COUNT(*) FROM drafts WHERE sent_at::date = CURRENT_DATE) AS sent_today,
-  (SELECT COUNT(*) FROM signals WHERE signal_type = 'reply_received' AND occurred_at::date = CURRENT_DATE) AS replies_today;
-
--- Cumulative
-SELECT
-  (SELECT COUNT(*) FROM pilot_signups) AS waitlist,
-  (SELECT COUNT(*) FROM auth.users) AS accounts,
-  (SELECT COUNT(*) FROM profiles WHERE array_length(target_firms,1) > 0) AS active_users,
-  (SELECT COUNT(*) FROM drafts WHERE sent_at IS NOT NULL) AS emails_sent,
-  (SELECT COUNT(DISTINCT user_id) FROM signals WHERE signal_type = 'reply_received') AS users_with_replies;
+50 Brown/Rice founding seats are open today at alma.careers.
 ```
 
-I'll run these on demand when you ping me.
+Shot list:
 
----
+1. Landing page hero and 50-seat line.
+2. Onboarding path: resume, banks, matches, approve.
+3. Email example: beginner-friendly draft.
+4. Pipeline/follow-up UI.
+5. Request access page.
 
-## YC application — assembling on day 4
+## Stories And Reposts
 
-The application asks for:
-- **Company name + URL:** Alma — alma.careers
-- **One-liner:** *"AI agent that runs IB networking for college sophomores."*
-- **Founders:** Demetris Chrysostomou (Rice '28) & Evangelos Paraskeva (Brown '28)
-- **Why now:** IB recruiting starts 2 years earlier than it did a decade ago. Sophomores are drowning. Generic AI tools (ChatGPT, automation services) don't understand the specific recruiting calendar, banker-by-banker context, or trust signals that matter. We built a niche-deep system.
-- **Why this team:** We're literally the customer. Two finance-club kids at the schools we're selling into.
-- **Traction (filled in day 4):** [signups] users, [sends] emails sent, [replies] replies tracked through Watcher. 1 published `flywheel_release` showing measurable learning.
-- **Demo video:** 90 seconds. Screen recording of `/setup` → `/today` → approve a draft → live response from Watcher detecting reply. Voiceover by either you or cofounder.
+Dremix personal Instagram story after the Alma carousel:
 
-I'll produce a draft of all of this on day 4 once we have the numbers.
+```text
+Built this with my cofounders for the IB recruiting grind.
 
----
+50 Brown/Rice founding seats are open today.
+Free for the 2026 cycle.
 
-## What to do RIGHT NOW
+Request access:
+```
 
-1. You: finish the Gmail send test (open `/today`, click "Run Alma now", approve a draft, send to your personal email).
-2. Cofounder: same flow on his account.
-3. When both work: I flip `TESTING_GATE_ENABLED=false` on Vercel.
-4. Post to channels above (start with the highest-intent one — your finance club).
-5. DM your top-10 personal list.
+Add link sticker to `https://alma.careers/request-access`.
 
-I'll stay watching DB + Vercel logs while you do this. Ping me with anything broken.
+Cofounder repost note:
+
+```text
+Opening the first Alma seats today.
+Brown + Rice first.
+If you are recruiting for IB and hate the networking spreadsheet, request access.
+```
+
+## DM Templates
+
+Finance-club / high-intent student:
+
+```text
+Hey [Name], we just opened Alma to 50 Brown/Rice founding users.
+
+It helps with the IB networking grind: finds relevant bankers, drafts beginner-friendly emails in your voice, puts them in Gmail, and tracks replies/follow-ups.
+
+Free for the 2026 cycle for founding users. First come, first served.
+
+Request access here: https://alma.careers
+```
+
+Non-finance friend who might be curious:
+
+```text
+Hey [Name], launching something today that might be useful if you are even slightly curious about IB.
+
+Alma helps students who do not already know finance networking: it finds people to talk to, drafts emails that sound curious instead of fake-expert, and keeps follow-ups organized.
+
+50 Brown/Rice seats, free for the 2026 cycle: https://alma.careers
+```
+
+## Today Timeline
+
+Houston time:
+
+1. **Now to 2:00pm:** publish LinkedIn + Alma Instagram carousel, then personal IG story repost.
+2. **2:00pm to 3:30pm:** DM 20 high-intent students and finance club leaders. Ask cofounders to repost.
+3. **3:30pm to 4:45pm:** pitch cleanup and live-demo smoke check. Do not ship risky backend changes into `main` unless deterministic tests pass.
+4. **5:00pm:** Rice professor pitch-feedback meeting.
+5. **6:15pm:** brief Rice cofounder.
+6. **6:45pm:** investor Zoom with Rice + Brown founders.
+
+## Pitch Notes To Carry Into The Meeting
+
+Use the fair-shot frame:
+
+> Alma does not replace the coffee chat. Alma gets more students to the coffee chat, so the actual conversation can test curiosity, preparation, and judgment.
+
+Likely answer if asked about "all emails sounding the same":
+
+> The system starts from the student's resume, school, targets, edits, and skip feedback. Founding users approve drafts first, and those edits become personal preferences. The goal is not an Alma voice. The goal is a prepared version of the student's voice.
+
+Likely answer if asked about "moat":
+
+> The moat is the workflow plus feedback loop, not just a prompt. Alma sees which banker matches, draft styles, follow-ups, and timing produce replies and coffee chats for a narrow recruiting funnel. Generic data helps find people, but the product learns from real recruiting outcomes.
+
+Likely answer if asked about costs:
+
+> Founding users are free because the feedback and outcome data are the asset right now. Long term, this can be a per-cycle student subscription or university-sponsored recruiting infrastructure.
