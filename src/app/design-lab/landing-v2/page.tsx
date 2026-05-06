@@ -12,7 +12,6 @@ import { NoAITells } from "./_parts/NoAITells";
 import { TrustGradient } from "./_parts/TrustGradient";
 import { SurfacesStack } from "./_parts/SurfacesStack";
 import { FlywheelTile } from "./_parts/FlywheelTile";
-import { FoundersStrip } from "./_parts/FoundersStrip";
 
 
 const FAQ = [
@@ -81,8 +80,6 @@ export default function LandingV2() {
       <SurfacesStack />
       <Divider />
       <FlywheelTile />
-      <Divider />
-      <FoundersStrip />
       <Divider />
       <FAQSection />
       <ClosingCTA />
@@ -304,7 +301,7 @@ function ClosingCTA() {
             href="mailto:founders@alma.careers"
             className="rounded-full border border-[#D9CFB5] bg-white px-5 py-3 text-sm font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
           >
-            Talk to a founder
+            Contact us
           </a>
         </div>
       </Reveal>
@@ -328,7 +325,6 @@ function Footer() {
           alma &middot; built at Rice &amp; Brown
         </p>
         <div className="flex flex-wrap items-center gap-5">
-          <a href="#about" className="hover:text-[#1B3B5F]">About</a>
           <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>
           <a href="mailto:founders@alma.careers" className="hover:text-[#1B3B5F]">Contact</a>
           <span className="text-[#8A8674]">2026 cycle</span>
