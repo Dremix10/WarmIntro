@@ -2,29 +2,29 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Mode = "drafts" | "review" | "send";
+type Mode = "review" | "learn" | "autopilot";
 
 const MODES: { id: Mode; label: string; subtitle: string; description: string }[] = [
   {
-    id: "drafts",
-    label: "Drafts first",
-    subtitle: "nothing sends",
-    description:
-      "Alma writes each email as a Gmail draft. You edit, approve, and send. This is where every early user starts.",
-  },
-  {
     id: "review",
-    label: "Ask me first",
-    subtitle: "preview window",
+    label: "Review first",
+    subtitle: "one-minute check",
     description:
-      "Once you trust the draft quality, Alma can queue a preview before the send window. You can skip, edit, or approve before it goes out.",
+      "Alma finds reply-likely alumni and bankers, writes the email, and places it in Gmail. You approve, edit, or skip before anything sends.",
   },
   {
-    id: "send",
-    label: "Send routine batches",
+    id: "learn",
+    label: "Learns you",
+    subtitle: "edits matter",
+    description:
+      "Every wording change, skip, reply, and preference tunes the next batch toward your voice and the kinds of people you actually want to meet.",
+  },
+  {
+    id: "autopilot",
+    label: "Autopilot later",
     subtitle: "optional later",
     description:
-      "Later, you can let Alma send routine, already-approved outreach categories and send you a digest. One tap moves back to review-first.",
+      "When the system earns your trust, routine outreach can run with less review and a clear digest. You can always move back to review-first.",
   },
 ];
 
@@ -82,23 +82,23 @@ export function TrustGradient() {
     <section
       ref={sectionRef}
       className="relative"
-      aria-label="Send control settings"
+      aria-label="Review and automation settings"
     >
       <div className="mx-auto max-w-3xl px-6 py-24 md:py-32">
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
-            You stay in control
+            Review less as trust builds
           </p>
           <h2 className="mt-3 text-[40px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[64px]">
-            <span className="block">You decide what leaves Gmail.</span>
-            <span className="block italic text-[#2E5A88]">Start cautious. Speed up later.</span>
+            <span className="block">Start with a quick check.</span>
+            <span className="block italic text-[#2E5A88]">Let Alma take more once it proves itself.</span>
           </h2>
         </div>
 
         <div
           className="relative mx-auto mt-10 flex w-full items-center rounded-full border border-[#D9CFB5] bg-white p-2"
           role="radiogroup"
-          aria-label="Send control mode"
+          aria-label="Review mode"
         >
           <span
             className="absolute top-2 bottom-2 rounded-full bg-[#1B3B5F] shadow-[0_8px_24px_-8px_rgba(27,59,95,.45)] transition-transform duration-500 ease-out"
@@ -155,7 +155,7 @@ export function TrustGradient() {
             className="agent-focus alma-card rounded-2xl border border-[#D9CFB5] p-6 md:p-7"
           >
             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2E5A88]">
-              Current setting: {current.label}
+              Current mode: {current.label}
             </p>
             <p className="mt-3 text-base leading-relaxed text-[#4A5260] md:text-lg">
               {current.description}
@@ -164,7 +164,7 @@ export function TrustGradient() {
         </div>
 
         <p className="mt-4 text-center text-xs text-[#8A8674]">
-          Early users start with drafts only. More automation is earned, optional, and reversible.
+          Early users start review-first. More automation is optional, earned, and reversible.
         </p>
       </div>
     </section>

@@ -15,11 +15,20 @@ import { getFromAddress } from "@/lib/email-from";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { logSignal } from "@/services/signals/log";
 import { isAdmin } from "@/services/auth/admin";
+import type { TablesInsert } from "@/lib/db-helpers";
 
 export const runtime = "nodejs";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
 const TOKEN_TTL_MIN = 60;
+
+function inferUniversity(email: string, requestedUniversity: string | null): string {
+  const clean = requestedUniversity?.trim();
+  if (clean) return clean;
+  if (email.endsWith("@brown.edu")) return "Brown University";
+  if (email.endsWith("@rice.edu")) return "Rice University";
+  return "Unknown University";
+}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -71,6 +80,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       { error: createErr?.message ?? "couldn't create or find user" },
       { status: 500 }
     );
+  }
+
+  // This profile row is also the private-beta approval marker used by
+  // src/proxy.ts. A verified school email alone is not enough to enter the app.
+  const { error: profileErr } = await admin.from("profiles").upsert(
+    {
+      id: userId,
+      email,
+      name: row.name?.trim() || email.split("@")[0] || "Student",
+      major: "Undeclared",
+      graduation_year: new Date().getFullYear() + 3,
+      university: inferUniversity(email, row.university),
+      resume_text: "",
+      updated_at: new Date().toISOString(),
+    } satisfies TablesInsert<"profiles">,
+    { onConflict: "id" }
+  );
+  if (profileErr) {
+    return NextResponse.json({ error: profileErr.message }, { status: 500 });
   }
 
   // Mint a password_reset_tokens row — same machinery as the user-initiated

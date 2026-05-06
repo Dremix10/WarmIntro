@@ -19,9 +19,9 @@ type Step = {
 const STEPS: Step[] = [
   {
     shortLabel: "Match",
-    eyebrow: "Step 1 · just now",
-    title: "Jordan Lee, associate at a bank you picked",
-    body: "Same school · studied engineering before banking · works with software companies · replied to students before.",
+    eyebrow: "Step 1 · reply-likely match",
+    title: "Alma finds someone worth emailing",
+    body: "Jordan Lee is in our private recruiting database: same school, studied engineering before banking, works with software companies, and has replied to student cold emails before.",
   },
   {
     shortLabel: "Draft",
@@ -110,9 +110,11 @@ export function AgentLoop() {
 
   // Reduced-motion: snap to final step on viewport entry.
   useEffect(() => {
-    if (started && reducedMotion) {
+    if (!started || !reducedMotion) return;
+    const id = window.setTimeout(() => {
       setActiveIndex(STEPS.length - 1);
-    }
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [started, reducedMotion]);
 
   const handleSelect = (i: number) => {
@@ -156,8 +158,8 @@ export function AgentLoop() {
             From &ldquo;who should I email?&rdquo; to coffee chat.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-[#4A5260]">
-            Swipe or tap through the path. Alma does the research and draft work,
-            but you stay in charge of what leaves your inbox.
+            Swipe or tap through the path. Alma turns a bank target into a real
+            person, writes the email, and keeps you in charge of what leaves your inbox.
           </p>
         </div>
 
@@ -262,8 +264,8 @@ export function AgentLoop() {
         </div>
 
         <p className="mx-auto mt-6 max-w-md text-center text-xs text-[#8A8674]">
-          This is the loop Alma repeats: find a reasonable person, write a believable ask,
-          get your approval, then keep track of the reply.
+          This is the loop Alma repeats: find a reply-likely person, write a believable
+          ask, get your approval, then keep track of the reply.
         </p>
       </div>
     </section>

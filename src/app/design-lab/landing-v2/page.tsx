@@ -6,11 +6,9 @@ import { LogoMarquee } from "@/components/LogoMarquee";
 import { StickyUploadCTA } from "@/components/StickyUploadCTA";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { AnimatedHeadline } from "./_parts/AnimatedHeadline";
-import { FunnelMathAnimated } from "./_parts/FunnelMathAnimated";
 import { AgentLoop } from "./_parts/AgentLoop";
 import { NoAITells } from "./_parts/NoAITells";
 import { TrustGradient } from "./_parts/TrustGradient";
-import { SurfacesStack } from "./_parts/SurfacesStack";
 import { FlywheelTile } from "./_parts/FlywheelTile";
 
 
@@ -23,7 +21,7 @@ const FAQ = [
   },
   {
     q: "Why connect my Gmail?",
-    a: "So the emails come from your real school address and replies land in your real inbox. Alma creates drafts, watches only Alma-started threads for replies, and logs every action at /account/privacy. You can revoke access anytime.",
+    a: "So drafts live in your real school inbox and replies land where you already work. Today Alma creates Gmail drafts and watches Alma-started threads for replies. Optional tone review from recent sent-email examples will be permissioned, visible, and revocable.",
   },
   {
     q: "Does Alma send emails without me?",
@@ -43,7 +41,7 @@ const FAQ = [
   },
   {
     q: "Will every email sound the same?",
-    a: "No. Alma uses your resume, school, target banks, edits, and skip feedback. If you change a phrase or say a draft sounds off, we use that signal to make the next batch closer to you.",
+    a: "No. Alma uses your resume, school, target banks, edits, and skip feedback. If you change a phrase, say a draft sounds off, or give tone preferences, the next batch should move closer to you.",
   },
   {
     q: "Can I request access if I am not at Brown or Rice?",
@@ -66,17 +64,15 @@ export default function LandingV2() {
       <Divider />
       <AgentLoop />
       <Divider />
-      <LaunchSeats />
-      <Divider />
-      <FunnelSection />
-      <Divider />
       <NoAITells />
+      <Divider />
+      <FlywheelTile />
       <Divider />
       <TrustGradient />
       <Divider />
-      <SurfacesStack />
+      <LaunchSeats />
       <Divider />
-      <FlywheelTile />
+      <FunnelSection />
       <Divider />
       <FAQSection />
       <ClosingCTA />
@@ -93,12 +89,12 @@ function TopBar() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <Link href="/" aria-label="Alma home" className="block transition-opacity hover:opacity-80">
           <Image
-            src="/brand/alma-wordmark-cream.webp"
+            src="/logo-alma.svg"
             alt="Alma"
-            width={220}
-            height={93}
+            width={180}
+            height={60}
             priority
-            className="h-10 w-auto mix-blend-multiply"
+            className="h-10 w-auto"
           />
         </Link>
         <nav className="flex items-center gap-5 text-sm text-[#5C6472]">
@@ -132,9 +128,9 @@ function Hero() {
         <p
           className="mt-6 max-w-2xl text-base leading-[1.55] text-[#4A5260] sm:mt-8 sm:text-lg md:text-xl"
         >
-          Alma helps students break into investment banking without already speaking finance.
-          It finds alumni and bankers worth contacting, drafts beginner-friendly emails in your voice,
-          puts them in Gmail, and keeps the follow-up loop moving.
+          Alma finds alumni and bankers from our private recruiting database, prioritizes people with
+          a reason to reply, writes the email in your voice, and puts it in Gmail for review.
+          Start with a one-minute check. Speed up when you trust it.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -163,8 +159,8 @@ function OnboardingPath() {
   const steps = [
     {
       k: "01",
-      title: "Upload your resume",
-      body: "Alma learns your school, major, clubs, story, and what you have already done.",
+      title: "Upload your resume + connect Gmail",
+      body: "Alma learns your background and drafts in your real inbox. With permission, tone review can use recent sent-email examples too.",
     },
     {
       k: "02",
@@ -202,39 +198,32 @@ function OnboardingPath() {
 
 function FunnelSection() {
   return (
-    <section className="relative mx-auto max-w-4xl px-6 py-28 md:py-36">
+    <section className="relative mx-auto max-w-3xl px-6 py-20 md:py-24">
       <Reveal>
         <div className="text-center">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472]">
             The IB funnel, honestly
           </p>
-          <h2 className="mx-auto mt-4 max-w-3xl text-[28px] leading-[1.1] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] sm:text-[40px] sm:leading-[1.08] md:text-[60px]">
+          <h2 className="mx-auto mt-4 max-w-2xl text-[32px] leading-[1.08] tracking-[-0.015em] font-[family-name:var(--font-fraunces)] text-[#14182A] md:text-[56px]">
             <span className="block">The students who win keep showing up.</span>
             <span className="block italic text-[#2E5A88]">Consistency wins.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260] md:text-base">
-            The pipeline is not referral to first round to offer on day one. It starts much earlier:
-            find names, send thoughtful emails, get replies, book coffee chats, earn referrals,
-            and turn those relationships into interviews.
-          </p>
-          <p className="mx-auto mt-4 max-w-lg text-sm text-[#4A5260] md:text-base">
-            Alma is built so more students get a fair shot at the conversation itself. The coffee
-            chat should test your curiosity and preparation, not whether you already had the network,
-            the spreadsheet, or someone ghostwriting emails.
+            IB recruiting starts before referrals and interviews: find the right people, send
+            thoughtful emails, get replies, book coffee chats, then earn the next step. Alma
+            turns that grind into a repeatable system.
           </p>
         </div>
       </Reveal>
 
-      <Reveal delay={100} className="mt-12">
-        <FunnelMathAnimated />
-      </Reveal>
-
-      <Reveal delay={200}>
-        <p className="mx-auto mt-12 max-w-2xl text-center text-lg font-[family-name:var(--font-fraunces)] italic leading-snug text-[#4A5260] md:text-xl">
-          &ldquo;Five minutes a morning. Sixteen weeks of consistent outreach. One serious shot.&rdquo;
-          <br />
-          <span className="text-xs not-italic text-[#5C6472]">· Alma</span>
-        </p>
+      <Reveal delay={100}>
+        <div className="mx-auto mt-8 flex max-w-2xl flex-wrap justify-center gap-2 text-xs font-semibold text-[#1B3B5F]">
+          {["Find names", "Send well", "Book chats", "Earn interviews"].map((item) => (
+            <span key={item} className="rounded-full border border-[#D9CFB5] bg-white px-3 py-2">
+              {item}
+            </span>
+          ))}
+        </div>
       </Reveal>
     </section>
   );
@@ -368,11 +357,11 @@ function Footer() {
     <footer className="border-t border-[#D9CFB5] bg-[#F4EDDB]">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-10 text-xs text-[#5C6472]">
         <Image
-          src="/brand/alma-wordmark-cream.webp"
+          src="/logo-alma.svg"
           alt="Alma"
-          width={220}
-          height={93}
-          className="h-8 w-auto mix-blend-multiply"
+          width={180}
+          height={60}
+          className="h-8 w-auto"
         />
         <div className="flex flex-wrap items-center gap-5">
           <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>

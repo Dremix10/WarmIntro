@@ -117,13 +117,14 @@ const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB (PDF uploads)
 // Private-beta gate — blocks public access except for the target audience.
 // Disable by setting TESTING_GATE_ENABLED=false in env.
 //
-// Two-tier allowlist:
-//   1. Domain match (TESTING_ALLOWED_DOMAINS): any signed-in user from these
-//      email domains gets through. Default: @rice.edu, @brown.edu.
-//   2. Explicit email override (TESTING_ALLOWED_EMAILS): for off-domain testers
+// Three-tier allowlist:
+//   1. Explicit admin email (ADMIN_EMAILS): always gets through.
+//   2. Explicit tester email (TESTING_ALLOWED_EMAILS): for off-domain testers
 //      (e.g. @gmail.com founders, design partners). Comma-separated.
+//   3. Domain + approval marker: school email must also have a profiles row
+//      created by the admin approve flow. A raw Supabase auth user is not enough.
 const TESTING_GATE_ENABLED = process.env.TESTING_GATE_ENABLED !== "false";
-const TESTING_ALLOWED_DOMAINS = (process.env.TESTING_ALLOWED_DOMAINS ?? "rice.edu,brown.edu,mit.edu")
+const TESTING_ALLOWED_DOMAINS = (process.env.TESTING_ALLOWED_DOMAINS ?? "rice.edu,brown.edu")
   .split(",")
   .map((d) => d.trim().toLowerCase().replace(/^@/, ""))
   .filter(Boolean);
@@ -131,11 +132,47 @@ const TESTING_ALLOWED_EMAILS = (process.env.TESTING_ALLOWED_EMAILS ?? "")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "dc118@rice.edu,evangelos_paraskeva@brown.edu")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
-function isAllowlisted(email: string): boolean {
+interface GateUser {
+  id: string;
+  email: string;
+}
+
+function isExplicitlyAllowlisted(email: string): boolean {
   const lower = email.toLowerCase();
-  if (TESTING_ALLOWED_EMAILS.includes(lower)) return true;
+  return ADMIN_EMAILS.includes(lower) || TESTING_ALLOWED_EMAILS.includes(lower);
+}
+
+function isDomainAllowlisted(email: string): boolean {
+  const lower = email.toLowerCase();
   return TESTING_ALLOWED_DOMAINS.some((domain) => lower.endsWith(`@${domain}`));
+}
+
+async function hasApprovedProfile(userId: string): Promise<boolean> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!supabaseUrl || !serviceKey) return false;
+
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/profiles?select=id&id=eq.${encodeURIComponent(userId)}&limit=1`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      }
+    );
+    if (!res.ok) return false;
+    const rows = (await res.json()) as unknown;
+    return Array.isArray(rows) && rows.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 // Gate passthrough list — these paths are always accessible (signup flow, static, cron, the gate itself).
@@ -162,7 +199,7 @@ const GATE_BYPASS_PREFIXES = [
 // short-circuit the gate for every URL.
 const GATE_BYPASS_EXACT = ["/"];
 
-async function getSessionEmailFromCookie(request: NextRequest, response: NextResponse): Promise<string | null> {
+async function getSessionUserFromRequest(request: NextRequest, response: NextResponse): Promise<GateUser | null> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnonKey) return null;
@@ -176,8 +213,8 @@ async function getSessionEmailFromCookie(request: NextRequest, response: NextRes
         const { data } = await fetch(`${supabaseUrl}/auth/v1/user`, {
           headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${token}` },
         }).then((r) => r.json()).then((d) => ({ data: { user: d } }));
-        const email = (data?.user as { email?: string } | null)?.email;
-        if (email) return email.toLowerCase();
+        const user = data?.user as { id?: string; email?: string } | null;
+        if (user?.id && user.email) return { id: user.id, email: user.email.toLowerCase() };
       } catch {
         // fall through to cookie path
       }
@@ -197,7 +234,10 @@ async function getSessionEmailFromCookie(request: NextRequest, response: NextRes
       },
     });
     const { data } = await supabase.auth.getUser();
-    return data.user?.email?.toLowerCase() ?? null;
+    if (data.user?.id && data.user.email) {
+      return { id: data.user.id, email: data.user.email.toLowerCase() };
+    }
+    return null;
   } catch {
     return null;
   }
@@ -224,10 +264,14 @@ async function checkTestingGate(
   // on the happy path so the browser actually receives the rotated tokens
   // — otherwise refresh-token rotation eats the next request and the user
   // gets bounced (this was the bug that surfaced right after password reset).
-  const email = await getSessionEmailFromCookie(request, response);
+  const user = await getSessionUserFromRequest(request, response);
 
-  if (email && isAllowlisted(email)) {
-    return null; // allowlisted — caller returns `response` (with refreshed cookies)
+  if (user && isExplicitlyAllowlisted(user.email)) {
+    return null; // explicit allowlist — caller returns `response` (with refreshed cookies)
+  }
+
+  if (user && isDomainAllowlisted(user.email) && await hasApprovedProfile(user.id)) {
+    return null; // approved launch user — caller returns `response` (with refreshed cookies)
   }
 
   // For API routes: 403 JSON

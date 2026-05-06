@@ -16,11 +16,18 @@ import { getFromAddress } from "@/lib/email-from";
 import { buildWelcomeEmail } from "@/lib/welcome-email";
 import { logSignal } from "@/services/signals/log";
 import { isAdmin } from "@/services/auth/admin";
+import type { TablesInsert } from "@/lib/db-helpers";
 
 export const runtime = "nodejs";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.alma.careers").trim();
 const TOKEN_TTL_MIN = 60;
+
+function inferUniversity(email: string): string {
+  if (email.endsWith("@brown.edu")) return "Brown University";
+  if (email.endsWith("@rice.edu")) return "Rice University";
+  return "Unknown University";
+}
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -54,7 +61,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (lookupErr || !target?.user?.email) {
     return NextResponse.json({ error: "user_not_found" }, { status: 404 });
   }
-  const email = target.user.email;
+  const email = target.user.email.trim().toLowerCase();
 
   // Skip-if-password-set check
   if (body.skipIfPasswordSet) {
@@ -73,13 +80,29 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
   }
 
-  // Pull a friendly first name from profiles if available — falls back
-  // to "Hi" when we don't have it.
+  // Pull a friendly first name from profiles if available. Also make sure
+  // existing auth-only users get the approval marker used by src/proxy.ts.
   const { data: profile } = await admin
     .from("profiles")
-    .select("name")
-    .eq("user_id", target.user.id)
+    .select("name, major, graduation_year, university, resume_text")
+    .eq("id", target.user.id)
     .maybeSingle();
+  const { error: profileErr } = await admin.from("profiles").upsert(
+    {
+      id: target.user.id,
+      email,
+      name: profile?.name ?? email.split("@")[0] ?? "Student",
+      major: profile?.major ?? "Undeclared",
+      graduation_year: profile?.graduation_year ?? new Date().getFullYear() + 3,
+      university: profile?.university ?? inferUniversity(email),
+      resume_text: profile?.resume_text ?? "",
+      updated_at: new Date().toISOString(),
+    } satisfies TablesInsert<"profiles">,
+    { onConflict: "id" }
+  );
+  if (profileErr) {
+    return NextResponse.json({ error: profileErr.message }, { status: 500 });
+  }
   const greeting = profile?.name
     ? `Hi ${profile.name.split(" ")[0]}`
     : "Hi";

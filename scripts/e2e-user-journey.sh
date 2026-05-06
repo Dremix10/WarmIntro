@@ -77,9 +77,16 @@ ACCESS=$(echo "$SIGNIN" | python3 -c "import json,sys;print(json.load(sys.stdin)
 if [ -z "$ACCESS" ]; then err "signin" "no token"; exit 1; fi
 ok "signin returns access token"
 
-# Add to whitelist temporarily for gate
-EMAIL_LOWER=$(echo "$TEST_EMAIL" | tr '[:upper:]' '[:lower:]')
-WHITELIST_ENV=$(grep "^TESTING_ALLOWED_EMAILS=" .env.local | cut -d= -f2)
+# The private-beta gate requires an admin-created profile row as the approval
+# marker. Direct Supabase signup alone should not be enough to enter /setup.
+step "1b. Create approval marker profile row"
+MARKER=$(curl -s -w "\n%{http_code}" -X POST "$PROJECT_URL/rest/v1/profiles?on_conflict=id" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" -H "Prefer: resolution=merge-duplicates" \
+  -d "{\"id\":\"$TEST_USER_ID\",\"email\":\"$TEST_EMAIL\",\"name\":\"E2E Tester\",\"major\":\"Undeclared\",\"graduation_year\":2028,\"university\":\"Brown University\",\"resume_text\":\"\"}")
+CODE=$(echo "$MARKER" | tail -1)
+BODY=$(echo "$MARKER" | head -n -1)
+if [[ "$CODE" =~ ^20[014]$ ]]; then ok "approval marker created"; else err "approval marker" "$CODE $BODY"; exit 1; fi
 
 # ── 2. Save profile (the upsert) ─────────────────────────────
 step "2. POST /api/setup/profile (upsert path that was buggy before)"
