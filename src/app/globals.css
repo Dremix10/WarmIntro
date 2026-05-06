@@ -708,10 +708,46 @@ html, body {
   filter: drop-shadow(0 0 2px currentColor);
 }
 
+/* HTML overlay version of the progress fill + leading-edge pulse. Used in
+   /pipeline so the fill smoothly extends from the old fillEnd to the new
+   one when a banker advances stages — CSS width/left transitions on real
+   DOM elements work reliably across browsers, unlike SVG path-d updates. */
+.alma-fill-bar {
+  transition: width 0.55s cubic-bezier(.22, .75, .3, 1);
+  /* Initial draw-in on mount: fade + grow from 70% to current width. */
+  animation: alma-fill-bar-in 0.7s cubic-bezier(.22, .75, .3, 1) both;
+  transform-origin: left center;
+}
+@keyframes alma-fill-bar-in {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+.alma-fill-tip-html {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 3px currentColor);
+  transition: left 0.55s cubic-bezier(.22, .75, .3, 1);
+  animation: alma-fill-tip-html 1.6s ease-in-out infinite;
+}
+@keyframes alma-fill-tip-html {
+  0%, 100% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 4px transparent;
+    opacity: 0.55;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .alma-line-flow { animation: none; opacity: 0; }
   .alma-fill-grow { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
   .alma-fill-tip { animation: none; }
+  .alma-fill-bar { animation: none; transition: none; }
+  .alma-fill-tip-html { animation: none; transition: none; }
 }
 
 /* Mobile firm-accordion forward indicator. The transit map is desktop-only;

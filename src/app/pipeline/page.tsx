@@ -436,58 +436,69 @@ export default function CrmPage() {
                         const fillEnd = highestIdx === STATIONS.length - 1 ? 100 : Math.max(0, tickX);
                         const atFinal = highestIdx === STATIONS.length - 1;
                         return (
-                          <svg
+                          <div
                             className="absolute pointer-events-none"
                             style={{ left: "140px", right: 0, top: 0, height: "80px" }}
-                            preserveAspectRatio="none"
-                            viewBox="0 0 100 80"
                           >
-                            {/* Track */}
-                            <path
-                              d="M 0 40 L 100 40"
-                              stroke="#D9CFB5"
-                              strokeWidth="2.4"
-                              strokeLinecap="round"
-                              strokeDasharray="1.5 2.5"
-                              fill="none"
-                              opacity="0.85"
-                            />
-                            {/* Fill */}
+                            {/* Dashed track + animated forward-flow stay in
+                                SVG. The colored fill and the leading-edge
+                                pulse are HTML divs so they can animate
+                                smoothly between old and new fillEnd when a
+                                banker advances stages. */}
+                            <svg
+                              className="absolute inset-0 h-full w-full"
+                              preserveAspectRatio="none"
+                              viewBox="0 0 100 80"
+                            >
+                              <path
+                                d="M 0 40 L 100 40"
+                                stroke="#D9CFB5"
+                                strokeWidth="2.4"
+                                strokeLinecap="round"
+                                strokeDasharray="1.5 2.5"
+                                fill="none"
+                                opacity="0.85"
+                              />
+                              {!atFinal && fillEnd < 100 && (
+                                <path
+                                  d={`M ${fillEnd} 40 L 100 40`}
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                  fill="none"
+                                  className="alma-line-flow"
+                                  opacity="0.6"
+                                />
+                              )}
+                            </svg>
+                            {/* Colored fill — width transitions smoothly so
+                                the line visibly extends from the old station
+                                to the new one when stage advances. */}
                             {fillEnd > 0 && (
-                              <path
-                                d={`M 0 40 L ${fillEnd} 40`}
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                fill="none"
-                                className="alma-fill-grow"
+                              <div
+                                className="alma-fill-bar absolute"
+                                style={{
+                                  left: 0,
+                                  top: "calc(50% - 1.5px)",
+                                  width: `${fillEnd}%`,
+                                  height: "3px",
+                                  backgroundColor: "currentColor",
+                                  borderRadius: "999px",
+                                }}
                               />
                             )}
-                            {/* Forward-flow only on the unfilled (remaining) portion */}
-                            {!atFinal && fillEnd < 100 && (
-                              <path
-                                d={`M ${fillEnd} 40 L 100 40`}
-                                stroke="currentColor"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                fill="none"
-                                className="alma-line-flow"
-                                opacity="0.6"
-                              />
-                            )}
-                            {/* Leading-edge pulse dot — sits at the rightmost
-                                point of the fill. Hidden if the firm is at
-                                the final stage (no further to advance). */}
+                            {/* Leading-edge pulse — left transitions in lockstep with the fill width. */}
                             {fillEnd > 0 && !atFinal && (
-                              <circle
-                                cx={fillEnd}
-                                cy={40}
-                                r={2.4}
-                                fill="currentColor"
-                                className="alma-fill-tip"
+                              <div
+                                className="alma-fill-tip-html absolute"
+                                style={{
+                                  left: `${fillEnd}%`,
+                                  top: "50%",
+                                  backgroundColor: "currentColor",
+                                }}
                               />
                             )}
-                          </svg>
+                          </div>
                         );
                       })()}
 
