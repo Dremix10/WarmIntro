@@ -9,7 +9,7 @@
 // users max while Gmail OAuth is in testing mode.
 
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase-server";
+import { getAdminClient } from "@/lib/supabase-admin";
 import { sendTelegram } from "@/lib/telegram";
 import { isSyntheticEmail } from "@/lib/synthetic-email";
 import { getFromAddress } from "@/lib/email-from";
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const skills = cleanStringArray(body.skills, 20, 80);
     const targetIndustries = cleanStringArray(body.targetIndustries, 20, 80);
 
-    const supabase = createServerClient();
+    const supabase = getAdminClient();
     // upsert on email — re-submitting the same email updates the row
     // (e.g., they fill out the demo a second time with more profile data)
     // rather than creating duplicates.
