@@ -44,12 +44,3 @@ export interface FirmDeck {
   highestStage: Stage;
   histogram: number[];
 }
-
-export interface DraftRow {
-  id: string;
-  subject: string | null;
-  status: string;
-  sent_at: string | null;
-  created_at: string;
-}
-
