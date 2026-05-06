@@ -26,7 +26,7 @@ export function StickyUploadCTA({ afterPx = 700 }: { afterPx?: number }) {
           className="rounded-full bg-[#1B3B5F] px-5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           style={{ animation: "pulse-shadow 5.5s ease-in-out infinite" }}
         >
-          Join cohort →
+          Request a seat →
         </a>
         <a
           href="#how"

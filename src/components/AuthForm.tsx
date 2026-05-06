@@ -99,7 +99,7 @@ export function AuthForm({ onSuccess }: { onSuccess: () => void }) {
           Request access →
         </a>
         <p className="mt-1 text-[10px] text-[#8A8674]">
-          Closed beta · 100 founding users · we&rsquo;ll email you when a spot opens
+          Closed launch · 50 Brown/Rice seats · we&rsquo;ll email you when a spot opens
         </p>
       </div>
     </div>

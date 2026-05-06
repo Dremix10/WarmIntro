@@ -53,15 +53,16 @@ export default function RequestAccessPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <p className="text-xs uppercase tracking-[0.2em] text-[#C86B4F] font-semibold mb-2">
-            Founding-user cohort
+            50 launch seats
           </p>
-          <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request a founding seat</h1>
+          <h1 className="font-[family-name:var(--font-fraunces)] text-4xl mb-3">Request a seat</h1>
           <p className="text-sm text-[#14182A]/70">
-            We are opening 50 Brown/Rice founding seats, first come, first served. Founding users get
-            Alma free for the 2026 IB recruiting cycle while helping us tune the product around real feedback.
+            Brown/Rice students get first priority for 50 launch seats, first come, first served.
+            Early users get Alma free for the 2026 IB recruiting cycle while we tune the product
+            around real feedback.
           </p>
           <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-            {["Brown", "Rice", "50 seats"].map((item) => (
+            {["Brown/Rice first", "50 seats", "Free this cycle"].map((item) => (
               <div key={item} className="rounded-xl border border-[#D9CFB5] bg-white px-3 py-2 text-xs font-medium text-[#1B3B5F]">
                 {item}
               </div>
@@ -73,7 +74,7 @@ export default function RequestAccessPage() {
           <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5] text-center">
             <p className="font-[family-name:var(--font-fraunces)] text-2xl mb-2">Got it.</p>
             <p className="text-sm text-[#14182A]/70 mb-3">
-              We&rsquo;ll email <strong>{email}</strong> when your founding seat is ready.
+              We&rsquo;ll email <strong>{email}</strong> when your seat is ready.
             </p>
             <p className="text-xs text-[#14182A]/55 mb-4 leading-relaxed">
               School inboxes sometimes route new senders to <strong>spam</strong> on first contact.
@@ -129,10 +130,10 @@ export default function RequestAccessPage() {
               disabled={state === "submitting"}
               className="w-full rounded-xl bg-[#1B3B5F] text-white py-3 text-sm font-medium hover:bg-[#2E5A88] disabled:opacity-50 transition-colors"
             >
-              {state === "submitting" ? "Sending..." : "Request founding seat"}
+              {state === "submitting" ? "Sending..." : "Request access"}
             </button>
             <p className="text-xs text-[#14182A]/55 text-center pt-2">
-              Not at Brown or Rice? Still request access. We are opening more campuses after the first 50 seats.
+              Not at Brown or Rice? Still request access. Brown/Rice are prioritized this week, and other campuses join the waitlist.
             </p>
             <p className="text-xs text-[#14182A]/55 text-center">
               Already have access? <a href="/login" className="underline text-[#2E5A88]">Sign in →</a>

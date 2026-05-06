@@ -12,7 +12,7 @@ export function FlywheelTile() {
             Your edits become better next drafts.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[#4A5260] md:text-base">
-            Alma improves in two ways: the product learns from all founding-user feedback, and your
+            Alma improves in two ways: the product learns from early-user feedback, and your
             own drafts learn from your edits, skips, replies, and preferences.
           </p>
         </div>
@@ -52,7 +52,7 @@ export function FlywheelTile() {
             </div>
           </div>
           <p className="mt-4 border-t border-[#ECE7DE] pt-4 text-xs text-[#5C6472]">
-            This is why founding users matter: every real edit turns into a better personal system.
+            This is why early users matter: every real edit turns into a better personal system.
           </p>
         </div>
       </Reveal>

@@ -10,7 +10,7 @@ const MODES: { id: Mode; label: string; subtitle: string; description: string }[
     label: "Drafts first",
     subtitle: "nothing sends",
     description:
-      "Alma writes each email as a Gmail draft. You edit, approve, and send. This is where every founding user starts.",
+      "Alma writes each email as a Gmail draft. You edit, approve, and send. This is where every early user starts.",
   },
   {
     id: "review",
@@ -101,11 +101,12 @@ export function TrustGradient() {
           aria-label="Send control mode"
         >
           <span
-            className="absolute top-2 bottom-2 rounded-full bg-[#1B3B5F] shadow-[0_8px_24px_-8px_rgba(27,59,95,.45)] transition-[left] duration-500 ease-out"
+            className="absolute top-2 bottom-2 rounded-full bg-[#1B3B5F] shadow-[0_8px_24px_-8px_rgba(27,59,95,.45)] transition-transform duration-500 ease-out"
             aria-hidden
             style={{
-              left: `calc(${(activeIdx / 3) * 100}% + 0.5rem)`,
-              width: "calc(33.3333% - 0.6667rem)",
+              left: "0.5rem",
+              width: "calc((100% - 1rem) / 3)",
+              transform: `translateX(${activeIdx * 100}%)`,
             }}
           />
           {MODES.map((m, i) => {
@@ -163,7 +164,7 @@ export function TrustGradient() {
         </div>
 
         <p className="mt-4 text-center text-xs text-[#8A8674]">
-          Founding users start with drafts only. More automation is earned, optional, and reversible.
+          Early users start with drafts only. More automation is earned, optional, and reversible.
         </p>
       </div>
     </section>

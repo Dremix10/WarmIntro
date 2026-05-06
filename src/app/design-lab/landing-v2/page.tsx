@@ -4,7 +4,6 @@ import { Reveal } from "@/components/Reveal";
 import { GrainOverlay } from "@/components/GrainOverlay";
 import { LogoMarquee } from "@/components/LogoMarquee";
 import { StickyUploadCTA } from "@/components/StickyUploadCTA";
-import { AuthAwareLogin } from "@/components/AuthAwareLogin";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { AnimatedHeadline } from "./_parts/AnimatedHeadline";
 import { FunnelMathAnimated } from "./_parts/FunnelMathAnimated";
@@ -19,16 +18,20 @@ const INSTAGRAM_URL = "https://www.instagram.com/alma_careers/";
 
 const FAQ = [
   {
-    q: "Is Alma a jobs board?",
-    a: "No. Alma is the work before the application: finding people to talk to, writing the first email, following up, and keeping track of who replied. The goal is to turn a cold list into real conversations before interviews start.",
+    q: "What exactly does Alma do?",
+    a: "Alma helps with the networking work before applications: finding people to talk to, drafting the first email, following up, and keeping track of who replied. The goal is to turn a cold list into real conversations.",
   },
   {
     q: "Why connect my Gmail?",
     a: "So the emails come from your real school address and replies land in your real inbox. Alma creates drafts, watches only Alma-started threads for replies, and logs every action at /account/privacy. You can revoke access anytime.",
   },
   {
-    q: "What does founding-user access include?",
-    a: "We are opening 50 founding seats for Brown and Rice students, first come, first served. Founding users get Alma free for the 2026 recruiting cycle. In return, we ask for honest feedback so the product gets sharper while your recruiting pipeline is live.",
+    q: "Does Alma send emails without me?",
+    a: "Not at the start. Alma creates Gmail drafts first. You can edit, approve, skip, or ask for a rewrite before anything leaves your inbox. More automation is optional later.",
+  },
+  {
+    q: "What does a launch seat include?",
+    a: "The first 50 Brown/Rice students get Alma free for the 2026 recruiting cycle. We are opening seats carefully because Alma uses your real inbox and real recruiting pipeline. Students from other schools can still request access and join the waitlist.",
   },
   {
     q: "I'm not a finance major. Does that matter?",
@@ -36,30 +39,15 @@ const FAQ = [
   },
   {
     q: "Which banks do you cover?",
-    a: "During setup you pick the banks you care about. Alma covers the large banks students know, smaller advisory firms, and middle-market banks, then prioritizes bankers with some reason to reply: same school, similar major, shared club, or relevant career path.",
+    a: "During setup you pick the banks you care about. Alma starts with major investment banking targets and prioritizes people with some reason to reply: same school, similar major, shared club, or a relevant career path.",
   },
   {
     q: "Will every email sound the same?",
-    a: "No. Alma uses your resume, your school, your target banks, your edits, and your skip feedback. If you keep changing a phrase, Alma should learn that. If you say an email sounds too formal, the next batch should move closer to you.",
+    a: "No. Alma uses your resume, school, target banks, edits, and skip feedback. If you change a phrase or say a draft sounds off, we use that signal to make the next batch closer to you.",
   },
   {
-    q: "Are you private-beta or public?",
-    a: "The landing page is public, but the product is still a closed beta. Brown and Rice students are first priority. Students from other schools can still request access and join as we open more seats.",
-  },
-];
-
-const LIVE_POINTS = [
-  {
-    k: "50 founding seats",
-    v: "Brown and Rice exclusive. Free for the 2026 cycle. First come, first served.",
-  },
-  {
-    k: "Fair shot",
-    v: "Get to real coffee chats where your curiosity, preparation, and story can show.",
-  },
-  {
-    k: "Gmail-first",
-    v: "You approve drafts from your inbox. Replies come back to the same thread.",
+    q: "Can I request access if I am not at Brown or Rice?",
+    a: "Yes. Brown and Rice students are first priority this week, but students from other schools can request access and join the waitlist as we open more seats.",
   },
 ];
 
@@ -71,15 +59,14 @@ export default function LandingV2() {
 
       <TopBar />
 
+      <LogoMarquee />
       <Hero />
       <OnboardingPath />
-      <LogoMarquee />
-      <LaunchStatus />
 
       <Divider />
       <AgentLoop />
       <Divider />
-      <FoundingCohort />
+      <LaunchSeats />
       <Divider />
       <FunnelSection />
       <Divider />
@@ -119,11 +106,10 @@ function TopBar() {
           <a href="#faq" className="hover:text-[#1B3B5F]">FAQ</a>
           <a
             href="/request-access"
-            className="hidden rounded-full bg-[#1B3B5F] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5A88] sm:inline-flex"
+            className="rounded-full bg-[#1B3B5F] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5A88]"
           >
-            Join cohort
+            Request a seat
           </a>
-          <AuthAwareLogin className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]" />
         </nav>
       </div>
     </header>
@@ -138,7 +124,7 @@ function Hero() {
           className="text-xs font-medium uppercase tracking-[0.18em] text-[#5C6472] opacity-0"
           style={{ animation: "fade-rise 700ms cubic-bezier(.22,.75,.3,1) 0ms forwards" }}
         >
-          Investment banking &middot; founding-user cohort &middot; 2026 cycle
+          Investment banking &middot; 50 launch seats &middot; 2026 cycle
         </p>
 
         <AnimatedHeadline />
@@ -156,7 +142,7 @@ function Hero() {
             href="/request-access"
             className="w-full rounded-full bg-[#1B3B5F] px-7 py-3.5 text-center text-base font-semibold text-white shadow-[0_8px_24px_-8px_rgba(27,59,95,.5)] transition-all hover:-translate-y-0.5 hover:bg-[#2E5A88] hover:shadow-[0_12px_32px_-8px_rgba(27,59,95,.6)] sm:w-auto"
           >
-            Join the founding cohort →
+            Request a seat →
           </a>
           <a
             href="#how"
@@ -164,15 +150,9 @@ function Hero() {
           >
             See how it works
           </a>
-          <a
-            href="/login"
-            className="alma-card w-full rounded-full border border-[#1B3B5F]/40 bg-white px-6 py-3.5 text-center text-base font-medium text-[#1B3B5F] hover:border-[#1B3B5F] hover:bg-[#1B3B5F]/5 sm:w-auto"
-          >
-            Already in? Sign in →
-          </a>
         </div>
         <p className="mt-4 text-xs leading-relaxed text-[#5C6472]">
-          50 Brown/Rice founding seats · free for the 2026 cycle · first come, first served
+          50 Brown/Rice launch seats · free for the 2026 cycle · first come, first served
         </p>
       </div>
     </section>
@@ -220,23 +200,6 @@ function OnboardingPath() {
   );
 }
 
-function LaunchStatus() {
-  return (
-    <section className="bg-[#F4EDDB]">
-      <div className="mx-auto grid max-w-5xl gap-4 px-6 py-7 md:grid-cols-3">
-        {LIVE_POINTS.map((point) => (
-          <div key={point.k} className="border-l border-[#D9CFB5] pl-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#2E5A88]">
-              {point.k}
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-[#4A5260]">{point.v}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function FunnelSection() {
   return (
     <section className="relative mx-auto max-w-4xl px-6 py-28 md:py-36">
@@ -277,53 +240,42 @@ function FunnelSection() {
   );
 }
 
-function FoundingCohort() {
+function LaunchSeats() {
   return (
     <section className="mx-auto max-w-5xl px-6 py-20">
       <Reveal>
-        <div className="grid gap-5 md:grid-cols-[1.1fr_0.9fr] md:items-stretch">
-          <div className="rounded-3xl bg-[#1B3B5F] p-7 text-white md:p-9">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
-              Founding-user cohort
-            </p>
-            <h2 className="mt-4 max-w-xl text-[36px] leading-[1.05] font-[family-name:var(--font-fraunces)] md:text-[56px]">
-              50 Brown/Rice seats. First come, first served.
-            </h2>
-            <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 md:text-base">
-              We are bringing students in carefully because this touches your real inbox and your
-              real recruiting year. Founding users get the full product free for the 2026 cycle,
-              direct feedback loops with us, and priority on improvements while recruiting is live.
-            </p>
-            <a
-              href="/request-access"
-              className="mt-7 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#1B3B5F] transition-colors hover:bg-[#F4EDDB]"
-            >
-              Request a founding seat →
-            </a>
-          </div>
-          <div className="rounded-3xl border border-[#D9CFB5] bg-white p-7 md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C86B4F]">
-              Early proof
-            </p>
-            <p className="mt-4 text-5xl leading-none font-[family-name:var(--font-fraunces)] text-[#14182A]">
-              30 → 3
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-[#4A5260]">
-              An architecture major with no finance background used Alma for 30 cold emails and
-              booked 3 coffee chats with bankers. The point was not sounding like a finance expert. It
-              was sounding prepared enough for someone to help.
-            </p>
-            <div className="mt-6 grid grid-cols-3 gap-2 text-center">
-              {["You", "Next", "Next"].map((label, i) => (
-                <div key={`${label}-${i}`} className="rounded-2xl border border-dashed border-[#D9CFB5] bg-[#F9F5EB] p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#8A8674]">
-                    Seat
-                  </p>
-                  <p className="mt-1 text-sm font-[family-name:var(--font-fraunces)] text-[#1B3B5F]">
-                    {label}
-                  </p>
-                </div>
-              ))}
+        <div className="rounded-3xl bg-[#1B3B5F] p-7 text-white md:p-10">
+          <div className="grid gap-8 md:grid-cols-[0.85fr_1.15fr] md:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                Early proof
+              </p>
+              <p className="mt-5 text-[72px] leading-none font-[family-name:var(--font-fraunces)] md:text-[104px]">
+                30 → 3
+              </p>
+              <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/78 md:text-base">
+                An architecture major with no finance background used Alma for 30 cold emails and
+                booked 3 coffee chats with bankers.
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
+                50 launch seats
+              </p>
+              <h2 className="mt-4 max-w-xl text-[34px] leading-[1.05] font-[family-name:var(--font-fraunces)] md:text-[56px]">
+                Brown/Rice first. Free for the 2026 cycle.
+              </h2>
+              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 md:text-base">
+                We are opening access carefully because Alma touches your real inbox and real
+                recruiting year. Early users get the full product free this cycle and a direct line
+                to us while we tune it around real results.
+              </p>
+              <a
+                href="/request-access"
+                className="mt-7 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#1B3B5F] transition-colors hover:bg-[#F4EDDB]"
+              >
+                Request one of 50 seats →
+              </a>
             </div>
           </div>
         </div>
@@ -376,14 +328,14 @@ function ClosingCTA() {
           Get your recruiting system <span className="italic text-[#2E5A88]">running</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-md text-sm text-[#4A5260] md:text-base">
-          Request one of 50 founding seats. We are opening Brown and Rice first, then expanding as fast as we can support students well.
+          Request one of 50 launch seats. We are opening Brown and Rice first, then expanding as fast as we can support students well.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
             href="/request-access"
             className="rounded-full bg-[#1B3B5F] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#2E5A88]"
           >
-            Request a founding seat →
+            Request a seat →
           </a>
           <a
             href="#how"
@@ -426,6 +378,7 @@ function Footer() {
           <a href="/privacy" className="hover:text-[#1B3B5F]">Privacy</a>
           <a href={INSTAGRAM_URL} className="hover:text-[#1B3B5F]">Instagram</a>
           <a href="mailto:founders@alma.careers" className="hover:text-[#1B3B5F]">Contact</a>
+          <a href="/login" className="hover:text-[#1B3B5F]">Sign in</a>
           <span className="text-[#8A8674]">2026 cycle</span>
         </div>
       </div>

@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Alma - Email-first recruiting for investment banking",
     description:
-      "50 Brown/Rice founding seats for students networking into investment banking.",
+      "50 Brown/Rice launch seats for students networking into investment banking.",
     url: "https://alma.careers",
     siteName: "Alma",
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Alma - Email-first recruiting for investment banking",
     description:
-      "50 Brown/Rice founding seats for students networking into investment banking.",
+      "50 Brown/Rice launch seats for students networking into investment banking.",
     images: ["/opengraph-image"],
   },
 };

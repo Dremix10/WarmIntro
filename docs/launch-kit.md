@@ -1,6 +1,6 @@
 # Alma launch kit - May 6 launch
 
-> **Current public posture:** Alma is public as a landing page and closed as a product. The launch CTA is `https://alma.careers`, with `/request-access` one click away. Brown and Rice get the first 50 founding seats, free for the 2026 IB recruiting cycle, first come, first served.
+> **Current public posture:** Alma is public as a landing page and closed as a product. The launch CTA is `https://alma.careers`, with `/request-access` one click away. Brown and Rice get the first 50 launch seats, free for the 2026 IB recruiting cycle, first come, first served.
 
 ## Launch Decision
 
@@ -47,7 +47,7 @@ The goal is simple: get more students to real coffee chats where they can show c
 
 Early proof: an architecture major with no finance background used Alma for 30 cold emails and booked 3 banker coffee chats.
 
-Opening 50 founding seats for Brown and Rice students today.
+Opening 50 launch seats for Brown and Rice students today.
 Free for the 2026 recruiting cycle.
 First come, first served.
 
@@ -75,7 +75,7 @@ Alma helps you:
 
 Early tester: architecture major, no finance background, 30 emails, 3 coffee chats.
 
-50 Brown/Rice founding seats.
+50 Brown/Rice launch seats.
 Free for the 2026 recruiting cycle.
 First come, first served.
 
@@ -88,7 +88,7 @@ Suggested Alma Instagram bio:
 
 ```text
 IB networking, minus the spreadsheet.
-50 Brown/Rice founding seats.
+50 Brown/Rice launch seats.
 Free for the 2026 cycle.
 Request access below.
 ```
@@ -121,7 +121,7 @@ Use 6 slides:
    - Subcopy: Architecture major. No finance background. 30 emails -> 3 coffee chats.
    - Visual: `30 -> 3` as the hero number.
 
-6. **50 Brown/Rice founding seats.**
+6. **50 Brown/Rice launch seats.**
    - Subcopy: Free for the 2026 cycle. First come, first served. alma.careers
    - Visual: 50 seat markers, Brown/Rice labels, request access CTA.
 
@@ -148,7 +148,7 @@ You approve before anything sends.
 
 Replies and follow-ups stay organized, so you can focus on the actual coffee chats.
 
-50 Brown/Rice founding seats are open today at alma.careers.
+50 Brown/Rice launch seats are open today at alma.careers.
 ```
 
 Shot list:
@@ -166,7 +166,7 @@ Dremix personal Instagram story after the Alma carousel:
 ```text
 Built this with my cofounders for the IB recruiting grind.
 
-50 Brown/Rice founding seats are open today.
+50 Brown/Rice launch seats are open today.
 Free for the 2026 cycle.
 
 Request access:
@@ -187,11 +187,11 @@ If you are recruiting for IB and hate the networking spreadsheet, request access
 Finance-club / high-intent student:
 
 ```text
-Hey [Name], we just opened Alma to 50 Brown/Rice founding users.
+Hey [Name], we just opened Alma to 50 Brown/Rice early users.
 
 It helps with the IB networking grind: finds relevant bankers, drafts beginner-friendly emails in your voice, puts them in Gmail, and tracks replies/follow-ups.
 
-Free for the 2026 cycle for founding users. First come, first served.
+Free for the 2026 cycle for the first 50 users. First come, first served.
 
 Request access here: https://alma.careers
 ```
@@ -225,7 +225,7 @@ Use the fair-shot frame:
 
 Likely answer if asked about "all emails sounding the same":
 
-> The system starts from the student's resume, school, targets, edits, and skip feedback. Founding users approve drafts first, and those edits become personal preferences. The goal is not an Alma voice. The goal is a prepared version of the student's voice.
+> The system starts from the student's resume, school, targets, edits, and skip feedback. Early users approve drafts first, and those edits become personal preferences. The goal is not an Alma voice. The goal is a prepared version of the student's voice.
 
 Likely answer if asked about "moat":
 
@@ -233,4 +233,4 @@ Likely answer if asked about "moat":
 
 Likely answer if asked about costs:
 
-> Founding users are free because the feedback and outcome data are the asset right now. Long term, this can be a per-cycle student subscription or university-sponsored recruiting infrastructure.
+> The first 50 seats are free because feedback and outcome data are the asset right now. Long term, this can be a per-cycle student subscription or university-sponsored recruiting infrastructure.
