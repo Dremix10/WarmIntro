@@ -16,12 +16,12 @@ export function PublicTopBar() {
         aria-label="alma — home"
       >
         <Image
-          src="/brand/alma-wordmark-cream.webp"
+          src="/logo-alma.svg"
           alt="Alma"
           width={220}
-          height={93}
+          height={73}
           priority
-          className="h-10 w-auto mix-blend-multiply"
+          className="h-10 w-auto"
         />
       </Link>
     </header>

@@ -87,10 +87,9 @@ Request access at the link in bio.
 Suggested Alma Instagram bio:
 
 ```text
-IB networking, minus the spreadsheet.
-50 Brown/Rice launch seats.
-Free for the 2026 cycle.
-Request access below.
+You don't need a banker uncle. You need a system.
+AI for IB recruiting, inside Gmail.
+Brown/Rice first: 50 launch seats.
 ```
 
 Bio link: `https://alma.careers`
