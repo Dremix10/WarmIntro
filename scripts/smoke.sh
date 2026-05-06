@@ -41,12 +41,21 @@ echo ""
 echo "smoke: $BASE"
 echo ""
 
-# 1. Public routes — / is the landing, /demo + /request-access + /login are CTAs from it
+# 1. Public routes — / is the landing; /request-access + /login are CTAs from it.
+#    /demo is intentionally redirected to the static walkthrough because the
+#    upload-based demo is not part of the launch surface anymore.
 echo "[public routes]"
-for p in / /demo /login /request-access /coming-soon /privacy /terms /forgot-password /reset-password; do
+for p in / /login /request-access /coming-soon /privacy /terms /forgot-password /reset-password; do
   CODE=$(http_code "$BASE$p")
   if [ "$CODE" = "200" ]; then run "$p returns 200" 1; else run "$p returns 200 (got $CODE)" 0; fi
 done
+DEMO_CODE=$(http_code "$BASE/demo")
+DEMO_LOC=$(http_redirect "$BASE/demo")
+if [ "$DEMO_CODE" = "307" ] && [ "$DEMO_LOC" = "/#how" ]; then
+  run "/demo redirects to walkthrough" 1
+else
+  run "/demo redirects to walkthrough (got $DEMO_CODE $DEMO_LOC)" 0
+fi
 
 # 2. Gated routes redirect unauth'd users to / (the landing). Was /demo before
 #    the landing existed; flipped on 2026-04-30.
