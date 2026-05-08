@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -44,16 +44,7 @@ export default function PrivacyActivityPage() {
   const [data, setData] = useState<ActivityResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!authLoading && !session) {
-      router.push("/login");
-      return;
-    }
-    if (session) load();
-    // Use user.id — token refresh shouldn't refetch.
-  }, [authLoading, session?.user?.id]);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch("/api/account/activity", {
@@ -61,7 +52,16 @@ export default function PrivacyActivityPage() {
     });
     if (res.ok) setData(await res.json());
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.push("/login");
+      return;
+    }
+    if (session) void load();
+    // Use user.id — token refresh shouldn't refetch.
+  }, [authLoading, load, router, session]);
 
   if (authLoading || loading) {
     return <SkeletonPage />;

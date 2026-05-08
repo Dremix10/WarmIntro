@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, useRef, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -110,6 +110,17 @@ function SetupInner() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const checkGmail = useCallback(async () => {
+    if (!session) return;
+    const { data } = await supabase.from("profiles").select("gmail_connected_at, gmail_email").eq("id", session.user.id).maybeSingle();
+    if (data?.gmail_connected_at) {
+      setGmailConnected(true);
+      if (data.gmail_email) setGmailEmail(data.gmail_email);
+    } else {
+      setGmailConnected(false);
+    }
+  }, [session]);
+
   // Persist state to sessionStorage on every change so OAuth redirect doesn't lose progress
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -198,7 +209,7 @@ function SetupInner() {
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [checkGmail]);
 
   useEffect(() => {
     loadFirms();
@@ -313,17 +324,6 @@ function SetupInner() {
       setFirms(json.firms);
     } catch (err) {
       setError(`Network error loading banks: ${String(err)}`);
-    }
-  }
-
-  async function checkGmail() {
-    if (!session) return;
-    const { data } = await supabase.from("profiles").select("gmail_connected_at, gmail_email").eq("id", session.user.id).maybeSingle();
-    if (data?.gmail_connected_at) {
-      setGmailConnected(true);
-      if (data.gmail_email) setGmailEmail(data.gmail_email);
-    } else {
-      setGmailConnected(false);
     }
   }
 

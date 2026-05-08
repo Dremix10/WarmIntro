@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -41,16 +41,7 @@ export default function AgentsPage() {
   const [flywheel, setFlywheel] = useState<FlywheelRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!authLoading && !session) {
-      router.push("/");
-      return;
-    }
-    if (session) load();
-    // Use user.id — Supabase token refresh on tab focus mints a new session ref.
-  }, [session?.user?.id, authLoading]);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     const { data: { session: s } } = await supabase.auth.getSession();
     const res = await fetch("/api/agents/runs", {
@@ -62,7 +53,16 @@ export default function AgentsPage() {
       setFlywheel(json.flywheel);
     }
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.push("/");
+      return;
+    }
+    if (session) void load();
+    // Use user.id — Supabase token refresh on tab focus mints a new session ref.
+  }, [authLoading, load, router, session]);
 
   // Group runs by agent
   const byAgent: Record<string, AgentRunRow[]> = {};

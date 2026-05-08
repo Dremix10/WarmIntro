@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -157,17 +157,7 @@ export default function TodayPage() {
     setTimeout(() => setActionToasts((ts) => ts.filter((t) => t.id !== id)), 4500);
   }
 
-  useEffect(() => {
-    if (!authLoading && !session) {
-      router.push("/");
-      return;
-    }
-    if (session) load();
-    // Use user.id so token refreshes (which create a new session object) don't
-    // refetch and flash the loading state every time the tab regains focus.
-  }, [session?.user?.id, authLoading]);
-
-  async function load(opts: { silent?: boolean } = {}) {
+  const load = useCallback(async (opts: { silent?: boolean } = {}) => {
     if (!session) return;
     // Skeleton flash only on the very first load. Subsequent refreshes
     // (after run-now finishes, after approve/send) keep the existing UI
@@ -192,7 +182,17 @@ export default function TodayPage() {
     } finally {
       if (!opts.silent) setLoading(false);
     }
-  }
+  }, [router, session]);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.push("/");
+      return;
+    }
+    if (session) void load();
+    // Use user.id so token refreshes (which create a new session object) don't
+    // refetch and flash the loading state every time the tab regains focus.
+  }, [authLoading, load, router, session]);
 
   async function act(
     draftId: string,
