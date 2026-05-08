@@ -7,7 +7,7 @@
 // "Copy for prompt tuning" button that puts a structured block onto
 // the clipboard so we can paste it into a prompt-iteration session.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -65,12 +65,7 @@ export default function AdminDraftsPage() {
   const [filter, setFilter] = useState<FilterMode>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !session) { router.push("/login"); return; }
-    if (session) load();
-  }, [authLoading, session?.user?.id]);
-
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     const { data: { session: s } } = await supabase.auth.getSession();
@@ -82,7 +77,12 @@ export default function AdminDraftsPage() {
     const json = await res.json();
     setItems(json.items ?? []);
     setLoading(false);
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!authLoading && !session) { router.push("/login"); return; }
+    if (session) void load();
+  }, [authLoading, load, router, session]);
 
   function toggle(id: string) {
     setExpanded((s) => {

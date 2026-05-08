@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -37,13 +37,7 @@ export default function AccountPage() {
   const [pwErr, setPwErr] = useState<string | null>(null);
   const [disconnectState, setDisconnectState] = useState<"idle" | "working">("idle");
 
-  useEffect(() => {
-    if (!authLoading && !session) { router.push("/login"); return; }
-    if (session) load();
-    // Use user.id — token refresh shouldn't refetch.
-  }, [authLoading, session?.user?.id]);
-
-  async function load() {
+  const load = useCallback(async () => {
     if (!session) return;
     setLoading(true);
     const { data } = await supabase
@@ -77,7 +71,13 @@ export default function AccountPage() {
     }
 
     setLoading(false);
-  }
+  }, [router, session]);
+
+  useEffect(() => {
+    if (!authLoading && !session) { router.push("/login"); return; }
+    if (session) void load();
+    // Use user.id — token refresh shouldn't refetch.
+  }, [authLoading, load, router, session]);
 
   async function savePassword(e: FormEvent) {
     e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -57,12 +57,7 @@ export default function AdminPage() {
   const [cleanupState, setCleanupState] = useState<{ busy?: boolean; deleted?: number; error?: string }>({});
   const [welcomeState, setWelcomeState] = useState<Record<string, { busy?: boolean; sent?: boolean; emailId?: string; error?: string }>>({});
 
-  useEffect(() => {
-    if (!authLoading && !session) { router.push("/login"); return; }
-    if (session) load();
-  }, [authLoading, session?.user?.id]);
-
-  async function load() {
+  const load = useCallback(async () => {
     if (!session) return;
     setLoading(true);
     setError(null);
@@ -90,7 +85,12 @@ export default function AdminPage() {
       setRequests(reqJson.requests ?? []);
     }
     setLoading(false);
-  }
+  }, [session]);
+
+  useEffect(() => {
+    if (!authLoading && !session) { router.push("/login"); return; }
+    if (session) void load();
+  }, [authLoading, load, router, session]);
 
   async function approveRequest(requestId: string) {
     setApproveState((s) => ({ ...s, [requestId]: { busy: true } }));

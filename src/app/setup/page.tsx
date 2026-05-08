@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense, type ChangeEvent } from "react";
+import { useCallback, useEffect, useState, useRef, Suspense, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppState } from "@/components/AppProvider";
 import { supabase } from "@/lib/supabase-browser";
@@ -198,7 +198,7 @@ function SetupInner() {
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [checkGmail]);
 
   useEffect(() => {
     loadFirms();
@@ -316,7 +316,7 @@ function SetupInner() {
     }
   }
 
-  async function checkGmail() {
+  const checkGmail = useCallback(async () => {
     if (!session) return;
     const { data } = await supabase.from("profiles").select("gmail_connected_at, gmail_email").eq("id", session.user.id).maybeSingle();
     if (data?.gmail_connected_at) {
@@ -325,7 +325,7 @@ function SetupInner() {
     } else {
       setGmailConnected(false);
     }
-  }
+  }, [session]);
 
   async function handlePdf(file: File) {
     if (!file.name.endsWith(".pdf") && !file.type.includes("pdf")) {
