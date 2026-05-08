@@ -110,6 +110,17 @@ function SetupInner() {
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const checkGmail = useCallback(async () => {
+    if (!session) return;
+    const { data } = await supabase.from("profiles").select("gmail_connected_at, gmail_email").eq("id", session.user.id).maybeSingle();
+    if (data?.gmail_connected_at) {
+      setGmailConnected(true);
+      if (data.gmail_email) setGmailEmail(data.gmail_email);
+    } else {
+      setGmailConnected(false);
+    }
+  }, [session]);
+
   // Persist state to sessionStorage on every change so OAuth redirect doesn't lose progress
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -315,17 +326,6 @@ function SetupInner() {
       setError(`Network error loading banks: ${String(err)}`);
     }
   }
-
-  const checkGmail = useCallback(async () => {
-    if (!session) return;
-    const { data } = await supabase.from("profiles").select("gmail_connected_at, gmail_email").eq("id", session.user.id).maybeSingle();
-    if (data?.gmail_connected_at) {
-      setGmailConnected(true);
-      if (data.gmail_email) setGmailEmail(data.gmail_email);
-    } else {
-      setGmailConnected(false);
-    }
-  }, [session]);
 
   async function handlePdf(file: File) {
     if (!file.name.endsWith(".pdf") && !file.type.includes("pdf")) {
