@@ -19,15 +19,35 @@ function encodeSubject(subject: string): string {
   return `=?UTF-8?B?${Buffer.from(subject, "utf8").toString("base64")}?=`;
 }
 
-function buildMime(opts: { from: string; to: string; subject: string; body: string; messageId: string }): string {
+export interface GmailThreadHeaders {
+  threadId?: string | null;
+  inReplyTo?: string | null;
+  references?: string[] | string | null;
+}
+
+function referenceHeaderValue(references: GmailThreadHeaders["references"], inReplyTo?: string | null): string | null {
+  const refs = Array.isArray(references)
+    ? references
+    : typeof references === "string"
+      ? references.split(/\s+/)
+      : [];
+  if (inReplyTo) refs.push(inReplyTo);
+  const unique = Array.from(new Set(refs.map((r) => r.trim()).filter(Boolean)));
+  return unique.length > 0 ? unique.join(" ") : null;
+}
+
+function buildMime(opts: { from: string; to: string; subject: string; body: string; messageId: string } & GmailThreadHeaders): string {
   // Date header improves deliverability. Some spam filters flag mail without it.
   const dateHeader = new Date().toUTCString();
   const subject = sanitizeEmailSubject(opts.subject);
+  const references = referenceHeaderValue(opts.references, opts.inReplyTo);
   const lines = [
     `From: ${opts.from}`,
     `To: ${opts.to}`,
     `Subject: ${encodeSubject(subject)}`,
     `Message-ID: ${opts.messageId}`,
+    ...(opts.inReplyTo ? [`In-Reply-To: ${opts.inReplyTo}`] : []),
+    ...(references ? [`References: ${references}`] : []),
     `Date: ${dateHeader}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset="UTF-8"`,
@@ -51,7 +71,7 @@ export async function sendEmailAsUser(opts: {
   toEmail: string;
   subject: string;
   body: string;
-}): Promise<GmailSendResult | { error: GmailSendError }> {
+} & GmailThreadHeaders): Promise<GmailSendResult | { error: GmailSendError }> {
   const accessToken = await getAccessTokenForUser(opts.userId);
   if (!accessToken) {
     console.warn(`[gmail/send] no access token for user ${opts.userId} — Gmail not connected? (or refresh failed)`);
@@ -66,19 +86,30 @@ export async function sendEmailAsUser(opts: {
     subject: opts.subject,
     body: opts.body,
     messageId,
+    threadId: opts.threadId,
+    inReplyTo: opts.inReplyTo,
+    references: opts.references,
   });
 
   const base64url = Buffer.from(mime, "utf8").toString("base64url");
 
-  try {
-    const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+  const payloadWithThread = { raw: base64url, ...(opts.threadId ? { threadId: opts.threadId } : {}) };
+  const sendPayload = async (payload: { raw: string; threadId?: string }) => {
+    return fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ raw: base64url }),
+      body: JSON.stringify(payload),
     });
+  };
+
+  try {
+    let res = await sendPayload(payloadWithThread);
+    if (res.status === 404 && opts.threadId) {
+      res = await sendPayload({ raw: base64url });
+    }
 
     if (!res.ok) {
       const text = await res.text();
@@ -113,7 +144,7 @@ export async function saveToDrafts(opts: {
   // Gmail UI position so the user can refresh and see the new content
   // in place without a duplicate appearing.
   existingDraftId?: string;
-}): Promise<{ draftId: string } | null> {
+} & GmailThreadHeaders): Promise<{ draftId: string } | null> {
   const accessToken = await getAccessTokenForUser(opts.userId);
   if (!accessToken) return null;
 
@@ -123,17 +154,28 @@ export async function saveToDrafts(opts: {
     subject: opts.subject,
     body: opts.body,
     messageId: `<alma-draft-${Date.now()}@mail.alma.app>`,
+    threadId: opts.threadId,
+    inReplyTo: opts.inReplyTo,
+    references: opts.references,
   });
   const base64url = Buffer.from(mime, "utf8").toString("base64url");
 
   const url = opts.existingDraftId
     ? `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${opts.existingDraftId}`
     : "https://gmail.googleapis.com/gmail/v1/users/me/drafts";
-  const res = await fetch(url, {
-    method: opts.existingDraftId ? "PUT" : "POST",
-    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ message: { raw: base64url } }),
+  const draftPayload = (includeThreadId: boolean) => ({
+    message: { raw: base64url, ...(includeThreadId && opts.threadId ? { threadId: opts.threadId } : {}) },
   });
+  const sendDraftPayload = (includeThreadId: boolean) =>
+    fetch(url, {
+      method: opts.existingDraftId ? "PUT" : "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(draftPayload(includeThreadId)),
+    });
+  let res = await sendDraftPayload(Boolean(opts.threadId));
+  if (res.status === 404 && opts.threadId) {
+    res = await sendDraftPayload(false);
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     console.warn(`[gmail/saveToDrafts] failed ${res.status}: ${text.slice(0, 200)}`);

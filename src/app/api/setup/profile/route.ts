@@ -41,7 +41,9 @@ export async function POST(request: Request) {
   const fallbackMajor = "Undeclared";
   const fallbackGradYear = new Date().getFullYear() + 3;
   const fallbackUniversity =
-    ctx.user.email?.endsWith("@brown.edu") ? "Brown University" : "Rice University";
+    ctx.user.email?.endsWith("@brown.edu") ? "Brown University"
+      : ctx.user.email?.endsWith("@mit.edu") ? "Massachusetts Institute of Technology"
+        : "Rice University";
 
   const payload: Record<string, unknown> = {
     id: ctx.user.id,

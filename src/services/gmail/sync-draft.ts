@@ -12,13 +12,14 @@
 // path) so Gmail stays in sync with our DB.
 
 import { saveToDrafts } from "./send";
+import { getGmailThreadHeadersForConnection } from "./thread-context";
 import { getAdminClient } from "@/lib/supabase-admin";
 
 export async function ensureGmailDraft(draftId: string): Promise<string | null> {
   const admin = getAdminClient();
   const { data: draft } = await admin
     .from("drafts")
-    .select("id, user_id, banker_id, subject, body, gmail_draft_id, sent_at, status")
+    .select("id, user_id, banker_id, connection_id, type, subject, body, gmail_draft_id, sent_at, status")
     .eq("id", draftId)
     .single();
   if (!draft || draft.sent_at) return null;
@@ -38,6 +39,14 @@ export async function ensureGmailDraft(draftId: string): Promise<string | null> 
     .maybeSingle();
   if (!banker?.email) return null;
 
+  const threadHeaders = draft.type === "cold"
+    ? {}
+    : await getGmailThreadHeadersForConnection({
+        userId: draft.user_id,
+        connectionId: draft.connection_id,
+        bankerId: draft.banker_id,
+      });
+
   // If we already saved a Gmail draft, update it in place (PUT) rather
   // than creating a duplicate. Keeps Gmail Drafts list clean across
   // user-edit-then-resave cycles.
@@ -48,6 +57,7 @@ export async function ensureGmailDraft(draftId: string): Promise<string | null> 
     subject: draft.subject ?? "",
     body: draft.body,
     existingDraftId: draft.gmail_draft_id ?? undefined,
+    ...threadHeaders,
   });
   if (!result) return null;
 

@@ -49,7 +49,11 @@ export async function GET(request: Request) {
 
   const { data: authUser } = await admin.auth.admin.getUserById(state.userId);
   const authEmail = authUser?.user?.email ?? gmailEmail ?? existing?.email ?? "";
-  const fallbackUniversity = authEmail.endsWith("@brown.edu") ? "Brown University" : "Rice University";
+  const fallbackUniversity = authEmail.endsWith("@brown.edu")
+    ? "Brown University"
+    : authEmail.endsWith("@mit.edu")
+      ? "Massachusetts Institute of Technology"
+      : "Rice University";
 
   const payload = {
     id: state.userId,

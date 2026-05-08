@@ -167,6 +167,7 @@ export default function TodayPage() {
       const { data: { session: s } } = await supabase.auth.getSession();
       const res = await fetch("/api/today", {
         headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+        cache: "no-store",
       });
       if (!res.ok) throw new Error(`api error ${res.status}`);
       const json = (await res.json()) as TodayResponse;
@@ -372,7 +373,7 @@ export default function TodayPage() {
               <p className="mt-2 text-xs text-[#14182A]/55">
                 {data.sameSchoolPool.remaining > 0 ? (
                   <>
-                    {data.sameSchoolPool.remaining} {shortSchool(data.userSchool)} alum{data.sameSchoolPool.remaining === 1 ? "" : "s"} left at your target firms ({data.sameSchoolPool.contacted} of {data.sameSchoolPool.total} already touched)
+                    {data.sameSchoolPool.remaining} {shortSchool(data.userSchool)} alum{data.sameSchoolPool.remaining === 1 ? "" : "s"} left at your target firms ({data.sameSchoolPool.contacted} of {data.sameSchoolPool.total} already reached)
                   </>
                 ) : (
                   <>
@@ -412,7 +413,7 @@ export default function TodayPage() {
         {/* Gmail-required banner — drafts can't send without Gmail. Show this
             prominently so the user doesn't waste time approving drafts that
             can't go anywhere. */}
-        {data.needsGmail && <GmailRequiredBanner />}
+        {data.needsGmail && <GmailRequiredBanner onConnected={() => { void load({ silent: true }); }} />}
 
         {/* Same-school pool exhausted banner. Sets the "what to do next"
             decision in front of the user instead of letting them hit Run
@@ -722,6 +723,8 @@ function DraftCard({
   const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [sendError, setSendError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [displaySubject, setDisplaySubject] = useState(draft.subject ?? "");
+  const [displayBody, setDisplayBody] = useState(draft.body);
   const [editedSubject, setEditedSubject] = useState(draft.subject ?? "");
   const [editedBody, setEditedBody] = useState(draft.body);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -729,6 +732,13 @@ function DraftCard({
   // before the data refresh removes it from the queue.
   const [fading, setFading] = useState(false);
   const banker = draft.bankers;
+
+  useEffect(() => {
+    setDisplaySubject(draft.subject ?? "");
+    setDisplayBody(draft.body);
+    setEditedSubject(draft.subject ?? "");
+    setEditedBody(draft.body);
+  }, [draft.body, draft.id, draft.subject]);
 
   async function saveEdit(opts: { reload?: boolean } = { reload: true }): Promise<boolean> {
     setSavingEdit(true);
@@ -740,6 +750,13 @@ function DraftCard({
         body: JSON.stringify({ subject: editedSubject, body: editedBody }),
       });
       if (!res.ok) return false;
+      const json = (await res.json().catch(() => null)) as { subject?: string | null; body?: string } | null;
+      const canonicalSubject = json?.subject ?? editedSubject;
+      const canonicalBody = json?.body ?? editedBody;
+      setDisplaySubject(canonicalSubject);
+      setDisplayBody(canonicalBody);
+      setEditedSubject(canonicalSubject);
+      setEditedBody(canonicalBody);
       setEditing(false);
       if (opts.reload) await onReload();
       return true;
@@ -748,8 +765,8 @@ function DraftCard({
     }
   }
   function cancelEdit() {
-    setEditedSubject(draft.subject ?? "");
-    setEditedBody(draft.body);
+    setEditedSubject(displaySubject);
+    setEditedBody(displayBody);
     setEditing(false);
   }
   // Flush any unsaved local edits to the server BEFORE sending or copying so
@@ -758,11 +775,11 @@ function DraftCard({
   // dispatch the stale server-side body. Returns the body+subject that's now
   // canonical (DB matches this, send routes will read it).
   async function ensureSavedBeforeAction(): Promise<{ body: string; subject: string } | null> {
-    if (!editing) return { body: draft.body, subject: draft.subject ?? "" };
-    const dirty = editedBody !== draft.body || editedSubject !== (draft.subject ?? "");
+    if (!editing) return { body: displayBody, subject: displaySubject };
+    const dirty = editedBody !== displayBody || editedSubject !== displaySubject;
     if (!dirty) {
       setEditing(false);
-      return { body: draft.body, subject: draft.subject ?? "" };
+      return { body: displayBody, subject: displaySubject };
     }
     const ok = await saveEdit({ reload: false });
     if (!ok) return null;
@@ -857,8 +874,8 @@ function DraftCard({
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EAE3D2] text-[#14182A]/60">{TYPE_LABEL[draft.type]}</span>
           </div>
         </div>
-        {draft.subject && <p className="text-sm italic text-[#14182A]/70 mt-2 font-[family-name:var(--font-fraunces)]">{draft.subject}</p>}
-        {!expanded && <p className="text-xs text-[#14182A]/60 mt-2 line-clamp-2">{draft.body}</p>}
+        {displaySubject && <p className="text-sm italic text-[#14182A]/70 mt-2 font-[family-name:var(--font-fraunces)]">{displaySubject}</p>}
+        {!expanded && <p className="text-xs text-[#14182A]/60 mt-2 line-clamp-2">{displayBody}</p>}
       </button>
       {expanded && (
         <div className="p-4 border-t border-[#D9CFB5]">
@@ -919,12 +936,12 @@ function DraftCard({
             </div>
           ) : (
             <div className="relative group">
-              <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[#14182A]/80">{draft.body}</pre>
+              <pre className="text-sm whitespace-pre-wrap font-[family-name:var(--font-geist-sans)] text-[#14182A]/80">{displayBody}</pre>
               <button
                 type="button"
                 onClick={() => {
-                  setEditedSubject(draft.subject ?? "");
-                  setEditedBody(draft.body);
+                  setEditedSubject(displaySubject);
+                  setEditedBody(displayBody);
                   setEditing(true);
                 }}
                 className="absolute top-0 right-0 text-[10px] text-[#2E5A88] hover:text-[#1B3B5F] underline opacity-60 hover:opacity-100"
@@ -1446,25 +1463,53 @@ function SectionShell({ id, accent, title, count, children }: {
   );
 }
 
-function GmailRequiredBanner() {
+function GmailRequiredBanner({ onConnected }: { onConnected: () => void }) {
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as { type?: string; status?: string; error?: string | null } | null;
+      if (data?.type !== "alma-gmail-oauth") return;
+      setPending(false);
+      if (data.status === "connected") onConnected();
+      else setError(data.error ?? "Gmail connection failed.");
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [onConnected]);
+
   async function start() {
     setPending(true);
-    try {
-      const { data: { session: s } } = await supabase.auth.getSession();
-      const res = await fetch("/api/auth/gmail/start", {
-        headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
-      });
-      if (!res.ok) return;
-      const { url } = await res.json();
-      if (!url) return;
-      // Match /setup behavior: open in a new tab. Setup-page popup handler
-      // closes itself on completion; the user comes back to /today and can
-      // refresh manually. (We can't postMessage between unrelated tabs.)
-      window.open(url, "_blank");
-    } finally {
+    setError(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch("/api/auth/gmail/start", {
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}` },
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setError((json.error as string | undefined) ?? `HTTP ${res.status}`);
       setPending(false);
+      return;
     }
+    const { url } = await res.json();
+    if (!url) {
+      setError("No Gmail auth URL returned.");
+      setPending(false);
+      return;
+    }
+    const popup = window.open(url, "alma-gmail-oauth");
+    if (!popup) {
+      window.location.href = url;
+      return;
+    }
+    const pollId = window.setInterval(() => {
+      if (popup.closed) {
+        window.clearInterval(pollId);
+        setPending(false);
+        onConnected();
+      }
+    }, 600);
   }
   return (
     <div className="mb-6 rounded-2xl border-2 border-[#C86B4F]/30 bg-[#C86B4F]/5 px-5 py-4 flex items-start gap-3">
@@ -1474,6 +1519,7 @@ function GmailRequiredBanner() {
         <p className="text-xs text-[#14182A]/70 mt-0.5">
           Drafts below are real, but they&apos;ll sit here until you connect the mailbox they should send from.
         </p>
+        {error && <p className="mt-1 text-xs text-[#C86B4F]">{error}</p>}
       </div>
       <button
         type="button"
@@ -1603,8 +1649,8 @@ function RunAlmaNowButton({
   const [state, setState] = useState<RunAlmaStatus["state"]>("idle");
   const [stageIdx, setStageIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
-  const [batchSize, setBatchSize] = useState(1);
-  const [progress, setProgress] = useState({ done: 0, total: 1 });
+  const [batchSize, setBatchSize] = useState(3);
+  const [progress, setProgress] = useState({ done: 0, total: 3 });
 
   // Mirror state to the parent so the page-level banner can render.
   // Effect keeps both in sync on every change without coupling internals.

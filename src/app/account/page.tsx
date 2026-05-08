@@ -33,9 +33,13 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [pwNew, setPwNew] = useState("");
   const [pwConfirm, setPwConfirm] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [pwState, setPwState] = useState<"idle" | "saving" | "saved" | "err">("idle");
   const [pwErr, setPwErr] = useState<string | null>(null);
   const [disconnectState, setDisconnectState] = useState<"idle" | "working">("idle");
+  const [gmailState, setGmailState] = useState<"idle" | "opening" | "err">("idle");
+  const [gmailErr, setGmailErr] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -117,6 +121,56 @@ export default function AccountPage() {
     setDisconnectState("idle");
   }
 
+  async function startGmailConnect() {
+    if (!session) return;
+    setGmailState("opening");
+    setGmailErr(null);
+    try {
+      const res = await fetch("/api/auth/gmail/start", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error((json.error as string | undefined) ?? `HTTP ${res.status}`);
+      }
+      const { url } = (await res.json()) as { url?: string };
+      if (!url) throw new Error("No Gmail auth URL returned.");
+      const popup = window.open(url, "alma-gmail-oauth");
+      if (!popup) {
+        window.location.href = url;
+        return;
+      }
+      const pollId = window.setInterval(() => {
+        if (popup.closed) {
+          window.clearInterval(pollId);
+          setGmailState("idle");
+          void load();
+        }
+      }, 600);
+    } catch (err) {
+      setGmailErr(err instanceof Error ? err.message : "Could not start Gmail connection.");
+      setGmailState("err");
+    }
+  }
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data as { type?: string; status?: string; error?: string | null } | null;
+      if (data?.type !== "alma-gmail-oauth") return;
+      if (data.status === "connected") {
+        setGmailState("idle");
+        void load();
+      } else {
+        setGmailState("err");
+        setGmailErr(data?.error ?? "Gmail connection failed.");
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
+
   async function handleSignOut() {
     await signOut();
     router.push("/login");
@@ -184,21 +238,38 @@ export default function AccountPage() {
                   {new Date(profile.gmail_connected_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}.
                 </p>
                 <p className="text-xs text-[#14182A]/60 mt-1 italic">Scopes: gmail.compose + gmail.readonly. See what Alma touched at <a href="/account/privacy" className="underline text-[#2E5A88]">/account/privacy</a>.</p>
-                <button
-                  type="button"
-                  onClick={disconnectGmail}
-                  disabled={disconnectState === "working"}
-                  className="mt-4 rounded-lg border border-[#C86B4F] text-[#C86B4F] px-4 py-2 text-sm font-medium hover:bg-[#C86B4F] hover:text-white transition-colors disabled:opacity-50"
-                >
-                  {disconnectState === "working" ? "Disconnecting..." : "Disconnect Gmail"}
-                </button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={startGmailConnect}
+                    disabled={gmailState === "opening"}
+                    className="rounded-lg bg-[#2E5A88] text-white px-4 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-50"
+                  >
+                    {gmailState === "opening" ? "Opening..." : "Reconnect Gmail"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={disconnectGmail}
+                    disabled={disconnectState === "working"}
+                    className="rounded-lg border border-[#C86B4F] text-[#C86B4F] px-4 py-2 text-sm font-medium hover:bg-[#C86B4F] hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    {disconnectState === "working" ? "Disconnecting..." : "Disconnect Gmail"}
+                  </button>
+                </div>
+                {gmailErr && <p className="mt-2 text-xs text-[#C86B4F]">{gmailErr}</p>}
               </>
             ) : (
               <>
                 <p className="text-sm">Gmail not connected.</p>
-                <a href="/setup" className="mt-3 inline-block rounded-lg bg-[#2E5A88] text-white px-4 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors">
-                  Connect Gmail
-                </a>
+                <button
+                  type="button"
+                  onClick={startGmailConnect}
+                  disabled={gmailState === "opening"}
+                  className="mt-3 rounded-lg bg-[#2E5A88] text-white px-4 py-2 text-sm font-medium hover:bg-[#1B3B5F] transition-colors disabled:opacity-50"
+                >
+                  {gmailState === "opening" ? "Opening..." : "Connect Gmail"}
+                </button>
+                {gmailErr && <p className="mt-2 text-xs text-[#C86B4F]">{gmailErr}</p>}
               </>
             )}
           </div>
@@ -208,12 +279,20 @@ export default function AccountPage() {
         <section className="mb-8">
           <h2 className="font-[family-name:var(--font-fraunces)] text-xl mb-3">Change password</h2>
           <form onSubmit={savePassword} className="rounded-2xl bg-white p-5 border border-[#D9CFB5] space-y-3">
-            <input type="password" value={pwNew} onChange={(e) => setPwNew(e.target.value)}
-              placeholder="New password (6+ chars)" minLength={6}
-              className="w-full rounded-xl border border-[#D9CFB5] px-4 py-3 text-sm focus:border-[#2E5A88] focus:outline-none" />
-            <input type="password" value={pwConfirm} onChange={(e) => setPwConfirm(e.target.value)}
-              placeholder="Confirm new password" minLength={6}
-              className="w-full rounded-xl border border-[#D9CFB5] px-4 py-3 text-sm focus:border-[#2E5A88] focus:outline-none" />
+            <PasswordField
+              value={pwNew}
+              onChange={setPwNew}
+              placeholder="New password (6+ chars)"
+              visible={showNewPassword}
+              onToggle={() => setShowNewPassword((v) => !v)}
+            />
+            <PasswordField
+              value={pwConfirm}
+              onChange={setPwConfirm}
+              placeholder="Confirm new password"
+              visible={showConfirmPassword}
+              onToggle={() => setShowConfirmPassword((v) => !v)}
+            />
             {pwErr && <p className="text-sm text-[#C86B4F]">{pwErr}</p>}
             <button type="submit" disabled={pwState === "saving"}
               className="w-full rounded-xl bg-[#1B3B5F] text-white py-3 text-sm font-medium hover:bg-[#2E5A88] disabled:opacity-50">
@@ -243,6 +322,45 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex gap-3">
       <span className="w-28 text-xs text-[#14182A]/50 uppercase tracking-wider">{label}</span>
       <span className="flex-1 text-[#14182A]/90">{value}</span>
+    </div>
+  );
+}
+
+function PasswordField({
+  value,
+  onChange,
+  placeholder,
+  visible,
+  onToggle,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="relative">
+      <input
+        type={visible ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        minLength={6}
+        className="w-full rounded-xl border border-[#D9CFB5] px-4 py-3 pr-11 text-sm focus:border-[#2E5A88] focus:outline-none"
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={visible ? "Hide password" : "Show password"}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A8674] hover:text-[#2E5A88] transition-colors"
+      >
+        {visible ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        )}
+      </button>
     </div>
   );
 }

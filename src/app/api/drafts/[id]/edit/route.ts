@@ -41,7 +41,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   };
   if (!draft.pre_edit_ai_body) update.pre_edit_ai_body = draft.body;
 
-  await ctx.supabase.from("drafts").update(update).eq("id", id);
+  const { data: updated, error: updateError } = await ctx.supabase
+    .from("drafts")
+    .update(update)
+    .eq("id", id)
+    .select("id, subject, body, status, updated_at")
+    .single();
+  if (updateError || !updated) {
+    return NextResponse.json(
+      { error: updateError?.message ?? "edit_update_failed" },
+      { status: 500 },
+    );
+  }
 
   await logSignal({
     userId: ctx.user.id,
@@ -70,5 +81,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     console.warn(`[edit] ensureGmailDraft failed for ${id}`, err);
   }
 
-  return NextResponse.json({ ok: true, subject: cleanedSubject || null, body });
+  return NextResponse.json({
+    ok: true,
+    subject: updated.subject || null,
+    body: updated.body,
+    status: updated.status,
+    updatedAt: updated.updated_at,
+  });
 }

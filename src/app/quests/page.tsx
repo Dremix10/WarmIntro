@@ -168,7 +168,7 @@ function Header() {
       <nav className="flex items-center gap-6 text-sm text-[#5C6472]">
         <span>Pipeline</span>
         <span>Companies</span>
-        <span>CRM</span>
+        <span>Network</span>
         <span>Leaderboard</span>
         
       </nav>

@@ -249,6 +249,18 @@ export default function AdminPage() {
         <div className="mb-6 rounded-2xl bg-white p-4 border border-[#D9CFB5]">
           <div className="flex items-baseline justify-between gap-3 mb-2">
             <div>
+              <p className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold mb-0.5">Follow-ups</p>
+              <p className="text-xs text-[#14182A]/70">
+                Batch the sent/no-reply pool into short same-thread nudges. Defaults to 36h+ old threads and skips anything without Gmail thread context.
+              </p>
+            </div>
+            <BatchFollowupsButton />
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl bg-white p-4 border border-[#D9CFB5]">
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <div>
               <p className="text-[10px] uppercase tracking-wider text-[#14182A]/55 font-semibold mb-0.5">Architect</p>
               <p className="text-xs text-[#14182A]/70">
                 Run the meta-prompting agent now. Reads the last 24h of failed drafts and proposes positive prompt fixes diagnosed at the right layer (prompt / upstream_data / iteration_regression).
@@ -758,6 +770,114 @@ function TestWelcomeButton() {
         <span className={`text-[10px] ${state === "error" ? "text-[#C86B4F]" : "text-[#14182A]/60"}`}>
           {msg}
         </span>
+      )}
+    </div>
+  );
+}
+
+interface BatchFollowupResult {
+  mode: "draft" | "send";
+  dryRun: boolean;
+  minAgeHours: number;
+  eligible: number;
+  drafted: number;
+  sent: number;
+  skippedTooFresh: number;
+  skippedExistingFollowup: number;
+  skippedNoGmail: number;
+  skippedNoBankerEmail: number;
+  skippedNoThread: number;
+  failed: number;
+  byUser: Record<string, { eligible: number; drafted: number; sent: number; failed: number }>;
+  sample?: { subject: string; body: string };
+}
+
+function BatchFollowupsButton() {
+  const [state, setState] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [result, setResult] = useState<BatchFollowupResult | null>(null);
+  const [minAgeHours, setMinAgeHours] = useState(36);
+
+  async function run(mode: "draft" | "send", dryRun: boolean) {
+    if (!dryRun && mode === "draft" && !window.confirm(`Queue Gmail drafts for every eligible ${minAgeHours}h+ sent/no-reply thread?`)) return;
+    if (mode === "send" && !window.confirm("Send these follow-ups now from testers' Gmail accounts? This is irreversible.")) return;
+
+    setState("running");
+    setErrorMsg(null);
+    const { data: { session: s } } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/followups/batch", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${s?.access_token ?? ""}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ minAgeHours, dryRun, mode, confirmSend: mode === "send" }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErrorMsg(json.error ?? `HTTP ${res.status}`);
+      setState("error");
+      return;
+    }
+    setResult(json.result ?? null);
+    setState("done");
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-2 min-w-[220px]">
+      <div className="flex items-center gap-2">
+        <label className="text-[10px] text-[#14182A]/55" htmlFor="followup-age">min age</label>
+        <input
+          id="followup-age"
+          type="number"
+          min={1}
+          max={336}
+          value={minAgeHours}
+          onChange={(e) => setMinAgeHours(Number(e.target.value))}
+          className="w-16 rounded-lg border border-[#D9CFB5] px-2 py-1.5 text-xs"
+        />
+        <span className="text-[10px] text-[#14182A]/55">h</span>
+      </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => run("draft", true)}
+          disabled={state === "running"}
+          className="rounded-lg border border-[#D9CFB5] px-3 py-1.5 text-xs font-medium hover:bg-[#EAE3D2] disabled:opacity-50"
+        >
+          Preview
+        </button>
+        <button
+          type="button"
+          onClick={() => run("draft", false)}
+          disabled={state === "running"}
+          className="rounded-lg bg-[#1B3B5F] text-white px-3 py-1.5 text-xs font-medium hover:bg-[#2E5A88] disabled:opacity-50"
+        >
+          {state === "running" ? "Working…" : "Queue drafts"}
+        </button>
+        <button
+          type="button"
+          onClick={() => run("send", false)}
+          disabled={state === "running"}
+          className="rounded-lg border border-[#C86B4F] text-[#C86B4F] px-3 py-1.5 text-xs font-medium hover:bg-[#C86B4F] hover:text-white disabled:opacity-50"
+        >
+          Send now
+        </button>
+      </div>
+      {errorMsg && <span className="text-[10px] text-[#C86B4F]">{errorMsg}</span>}
+      {result && (
+        <div className="max-w-xl text-right text-[10px] text-[#14182A]/60">
+          <p>
+            {result.dryRun ? "preview" : result.mode} · {result.eligible} eligible · {result.drafted} drafted · {result.sent} sent · {result.failed} failed · {result.skippedNoThread} no-thread
+          </p>
+          {Object.keys(result.byUser).length > 0 && (
+            <p className="truncate">
+              {Object.entries(result.byUser).map(([email, r]) => `${email}: ${r.eligible}`).join(" · ")}
+            </p>
+          )}
+          {result.sample && (
+            <p className="mt-1 italic font-[family-name:var(--font-fraunces)] text-[#1B3B5F]">
+              {result.sample.subject} · {result.sample.body.split("\n")[0]}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

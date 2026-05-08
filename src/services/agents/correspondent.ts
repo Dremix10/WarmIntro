@@ -74,7 +74,7 @@ export async function findCommonGround(
   user: UserContext,
   banker: BankerContext
 ): Promise<CommonGroundAnchor[]> {
-  const prompt = `Find 2-3 genuine common-ground anchors between a college sophomore and a banker they want to email. Rank by opener-value.
+  const prompt = `Find 2-3 genuine common-ground anchors between a college student and a banker they want to email. Rank by opener-value.
 
 STUDENT:
 ${JSON.stringify(user, null, 2)}
@@ -333,7 +333,7 @@ export async function runCorrespondent(input: CorrespondentInput): Promise<Corre
 
 // ===== Prompts =====
 
-const BASE_VOICE = `You write cold emails from a college sophomore to an investment banker. Real students who noticed something specific about THIS person. Not "smart networking email" template energy.
+const BASE_VOICE = `You write cold emails from a college student to an investment banker. Real students who noticed something specific about THIS person. Not "smart networking email" template energy.
 
 # DATA → DRAFT CONTRACT
 Every claim in your email must trace to the data block below. The student's profile is real. The banker's name, firm, title, group, university (when listed) are real. SCOUTED FINDINGS with snippets are real, cite them by URL. COMMON-GROUND ANCHORS are real.
@@ -343,6 +343,8 @@ Anything else is unwritten. If the data doesn't say it, this email doesn't say i
 # STUDENT-SIDE FACTS ARE FACTS TOO
 
 Do not invent details about the student. No class numbers, clubs, internships, projects, hometowns, summer work, DCF practice, or personal stories unless they appear in STUDENT, warmHints, storyOneLiner, or resume-derived context.
+
+Do not call the student a sophomore, junior, senior, or freshman unless the data explicitly says that class standing. Graduation year alone is not enough. Prefer "School 'YY | Major" or "School 'YY student."
 
 If the student is an APMA-CS / Applied Math-CS / CS major and no coursework is listed, do not name APMA 1650 or any other class. For banking outreach, a course number is usually weaker than a clear question about analyst work, recruiting prep, the firm's group, or the banker's actual day-to-day experience.
 
@@ -360,11 +362,11 @@ When in doubt, delete the first sentence and start with the second.
 
 # WHAT GREAT LOOKS LIKE — a real cold email that scored 9/10
 
-Subject: Brown CS sophomore - quick question on healthcare M&A
+Subject: Brown '28 CS student - quick question on healthcare M&A
 
 Hi Sarah,
 
-Saw your team advised on the Hologic carve-out last spring. I'm a Brown Applied Math-CS sophomore trying to understand how much analyst work on a live healthcare M&A deal is learned from technical prep vs. picked up on the desk.
+Saw your team advised on the Hologic carve-out last spring. I'm a Brown '28 Applied Math-CS student trying to understand how much analyst work on a live healthcare M&A deal is learned from technical prep vs. picked up on the desk.
 
 Would 15 min by phone next week work?
 
@@ -398,6 +400,16 @@ Fix: replace with one concrete thing. "I keep coming back to TMT after watching 
 Why it fails: it sounds like consultant-speak, even when the underlying story is real. Architecture, engineering, CS, and policy students need a concrete bridge, not a broad trait.
 Fix: if the student's data gives a real artifact, use it; otherwise keep the bridge honest and formal. "I'm studying architecture at Rice and trying to understand whether the analytical parts of studio work translate to energy banking" is better than inventing a project.
 
+Worked fix when a real architecture/studio artifact is present:
+
+  Hi Bryan,
+
+  I'm a Rice '28 B.Arch student and just spent a studio week breaking a mixed-use project into site constraints, materials, and cost tradeoffs. Saw you're at Jefferies Houston covering energy, and I'm trying to understand how much analyst work is also about turning physical businesses into numbers.
+
+  Would 15 min next week work?
+
+Why this works: the bridge is physical and concrete, not "analytical thinking"; the banker anchor is verified; the ask stays simple. Only use a studio/project detail like this if it appears in the student's data.
+
 **Pattern E — Prestige-credential fabrication** ("Saw you were on the Harvard Corporate Governance Roundtable" / "fellow Wharton PE alum" / "saw you at Milken").
 Why it fails: the model invents prestigious-sounding credentials when banker data is thin. Bankers spot them instantly. Critic catches them. NOTHING about a banker exists for this email unless it's in the data.
 Fix: if their data is thin, anchor on firm + group + title only — those are always real.
@@ -420,13 +432,15 @@ Silently choose exactly ONE anchor before drafting. It must be either:
 - one concrete SCOUTED FINDING / about-line / current title / group / firm fact,
 - or, in thin-data mode, one verified student-side reason from the STUDENT block.
 
+If SCOUTED FINDINGS or DISTINCTIVE BANKER FACTS contain a specific verified item, use that before current title/office. "Saw you're an SVP at Jefferies Houston" is a fallback, not a real hook, unless the student's question makes that role/location matter.
+
 Line 1 must use that anchor concretely. "Saw you're an SVP at Jefferies Houston" is not enough by itself; that only states a fact. Pair it with a real student question or a specific reason the role matters.
 
 Good anchor use:
 
   Hi Bryan,
 
-  Saw you're at Jefferies Houston covering energy. I'm a Rice B.Arch sophomore trying to understand how Houston energy bankers think about clients whose businesses are physical, technical, and capital-intensive.
+  Saw you're at Jefferies Houston covering energy. I'm a Rice '28 B.Arch student trying to understand how Houston energy bankers think about clients whose businesses are physical, technical, and capital-intensive.
 
 Why this works: the banker's firm/group is real, the student detail is concrete, and the question has a reason to exist.
 
@@ -439,14 +453,14 @@ In thin-data mode, the anchor hierarchy collapses: tiers 1-3 require something w
 The right move under thin-data:
 
 - **Open with a real student-side specific.** A class number, a project, a concrete IB curiosity from the student's profile or storyOneLiner. The opener is about the STUDENT, not a manufactured banker observation.
-- **Treat school/firm overlap as context, never the opener.** "I'm a Brown Applied Math-CS sophomore trying to understand analyst work in M&A" — the Brown match is context, not the hook.
+- **Treat school/firm overlap as context, never the opener.** "I'm a Brown '28 Applied Math-CS student trying to understand analyst work in M&A" — the Brown match is context, not the hook.
 - **Keep it short and honest.** 60-100 words. One concrete ask.
 
 THIN-DATA EXAMPLE — real student-side opener, school as context:
 
   Hi Asha,
 
-  I'm a Brown Applied Math-CS sophomore trying to understand what analyst work in M&A actually looks like before recruiting starts. From the outside, it is hard to tell how much comes from technical prep vs. judgment you build on live deals.
+  I'm a Brown '28 Applied Math-CS student trying to understand what analyst work in M&A actually looks like before recruiting starts. From the outside, it is hard to tell how much comes from technical prep vs. judgment you build on live deals.
 
   I would value your perspective from Morgan Stanley.
 
@@ -458,7 +472,7 @@ THIN-DATA EXAMPLE — real student-side opener, school as context:
 
 Why this works under thin-data: every claim traces to the student's profile. No course numbers, invented clubs, or banker-specific claims. Asha can reply with a concrete view on prep vs. live-deal learning.
 
-# VOICE — what a real sophomore sounds like
+# VOICE — what a real student sounds like
 
 - Plain, direct, slightly under-polished. Not consultant-speak.
 - Short. They know the banker is busy.

@@ -84,12 +84,12 @@ export function IslandDetail({ island, onClose }: { island: Island; onClose: () 
             the bigger builds.”
           </p>
           <div className="flex gap-2">
-            <button
-              type="button"
+            <a
+              href="/pipeline"
               className="rounded-full border border-[#D9CFB5] bg-white px-4 py-1.5 text-xs font-medium text-[#1B3B5F] hover:border-[#2E5A88]"
             >
-              View in CRM
-            </button>
+              View in Pipeline
+            </a>
             <button
               type="button"
               className="rounded-full bg-[#1B3B5F] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#2E5A88]"

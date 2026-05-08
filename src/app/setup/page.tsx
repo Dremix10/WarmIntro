@@ -258,7 +258,9 @@ function SetupInner() {
       if (tf.length > 0 || data.story_one_liner) {
         const sessionEmail = session.user.email ?? "";
         const fallbackUniversity =
-          sessionEmail.endsWith("@brown.edu") ? "Brown University" : "Rice University";
+          sessionEmail.endsWith("@brown.edu") ? "Brown University"
+            : sessionEmail.endsWith("@mit.edu") ? "Massachusetts Institute of Technology"
+              : "Rice University";
         setParsed((prev) => prev ?? ({
           name: data.name ?? "Student",
           email: data.email ?? undefined,
@@ -295,11 +297,11 @@ function SetupInner() {
     if (firms.length > 0) return; // already loaded — don't refetch on every effect run
     try {
       const universityParam = profile?.university ? `?university=${encodeURIComponent(profile.university)}` : "";
-      const res = await fetch(`/api/setup/firms${universityParam}`);
+      const res = await fetch(`/api/setup/firms${universityParam}`, { cache: "no-store" });
       if (res.status === 429) {
         // Backoff and retry once — should be rare now that the route is rate-limit-exempt
         await new Promise((r) => setTimeout(r, 1500));
-        const retry = await fetch(`/api/setup/firms${universityParam}`);
+        const retry = await fetch(`/api/setup/firms${universityParam}`, { cache: "no-store" });
         if (!retry.ok) {
           setError(`Couldn't load banks (${retry.status}). Refresh in a few seconds.`);
           return;
@@ -360,6 +362,7 @@ function SetupInner() {
     const email = session.user.email ?? "";
     const universityHint =
       email.endsWith("@brown.edu") ? "Brown University"
+        : email.endsWith("@mit.edu") ? "Massachusetts Institute of Technology"
         : email.endsWith("@rice.edu") ? "Rice University"
         : ""; // empty → resume parser must extract from the resume itself
     const res = await fetch("/api/parse-resume", {
@@ -722,7 +725,7 @@ function SetupInner() {
 
             <div className="rounded-2xl bg-white p-6 border border-[#D9CFB5]">
               <p className="font-[family-name:var(--font-fraunces)] text-lg mb-1">Which banks?</p>
-              <p className="text-sm text-[#14182A]/70 mb-1 italic">Tap everything you&apos;d take a coffee at.</p>
+              <p className="text-sm text-[#14182A]/70 mb-1 italic">Tap everything you&apos;d take a coffee at. Alma drafts only from these target banks until you add more.</p>
               <p className="text-xs text-[#14182A]/50 mb-5">{targetFirms.size} selected · {firms.length} total</p>
 
               {(["bulge_bracket", "elite_boutique", "middle_market"] as const).map((tier) => (

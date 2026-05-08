@@ -29,6 +29,7 @@
 import { getAdminClient } from "@/lib/supabase-admin";
 import { sendEmailAsUser, sendGmailDraft, saveToDrafts, isGmailSendSuccess } from "@/services/gmail/send";
 import type { GmailSendError, GmailSendResult } from "@/services/gmail/send";
+import { getGmailThreadHeadersForConnection } from "@/services/gmail/thread-context";
 import { logSignal } from "@/services/signals/log";
 import { upsertConnectionAtStage, type BankerSnapshot } from "@/services/pipeline/upsertConnectionAtStage";
 
@@ -281,6 +282,13 @@ export async function sendDraft(input: SendDraftInput): Promise<SendDraftResult>
   // Branch: real Gmail send. Use the two-way-sync drafts.send API when
   // we have a stored gmail_draft_id; otherwise fall back to a fresh send.
   let sendRes: GmailSendResult | { error: GmailSendError };
+  const threadHeaders = draftWithBanker.type === "cold"
+    ? {}
+    : await getGmailThreadHeadersForConnection({
+        userId: input.userId,
+        connectionId: draftWithBanker.connection_id,
+        bankerId: draftWithBanker.banker_id,
+      });
   try {
     if (draftWithBanker.gmail_draft_id) {
       const synced = await saveToDrafts({
@@ -290,6 +298,7 @@ export async function sendDraft(input: SendDraftInput): Promise<SendDraftResult>
         subject: draftWithBanker.subject ?? "",
         body: draftWithBanker.body,
         existingDraftId: draftWithBanker.gmail_draft_id,
+        ...threadHeaders,
       });
       sendRes = synced
         ? await sendGmailDraft({
@@ -309,6 +318,7 @@ export async function sendDraft(input: SendDraftInput): Promise<SendDraftResult>
         toEmail: bankerEmail!,
         subject: draftWithBanker.subject ?? "",
         body: draftWithBanker.body,
+        ...threadHeaders,
       });
     }
   } catch (err) {
