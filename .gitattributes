@@ -1,0 +1,40 @@
+# Normalize line endings to LF on commit. Without explicit eol=lf the
+# default text=auto only normalizes on commit but doesn't enforce LF on
+# checkout — which means Windows users still see CRLF in their working
+# tree, ESLint flags it, and diffs get noisy. eol=lf forces LF on disk
+# everywhere.
+* text=auto eol=lf
+
+# Source code
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.jsx  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.css  text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.svg  text eol=lf
+*.sql  text eol=lf
+*.sh   text eol=lf
+
+# Lockfiles
+package-lock.json text eol=lf
+yarn.lock         text eol=lf
+pnpm-lock.yaml    text eol=lf
+
+# Binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary

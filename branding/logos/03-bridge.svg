@@ -1,0 +1,19 @@
+<svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Alma — bridge / warm intro mark">
+  <defs>
+    <style>
+      .word { font-family: "Fraunces", "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 500; font-size: 100px; fill: #1B3B5F; letter-spacing: -0.02em; }
+    </style>
+  </defs>
+  <!-- left island = student -->
+  <path d="M 30 155 Q 60 130 90 132 Q 120 134 150 155 Z" fill="#1B3B5F"/>
+  <circle cx="90" cy="118" r="6" fill="#C86B4F"/>
+  <!-- right island = the bank -->
+  <path d="M 230 155 Q 270 122 310 124 Q 350 126 390 155 Z" fill="#2E5A88"/>
+  <circle cx="310" cy="108" r="6" fill="#E8B339"/>
+  <!-- the warm intro: dotted arc bridging the two islands -->
+  <path d="M 90 105 Q 200 30 310 95" fill="none" stroke="#C86B4F" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7"/>
+  <!-- water / horizon -->
+  <path d="M 20 175 Q 200 185 400 175" fill="none" stroke="#D9CFB5" stroke-width="1.3"/>
+  <!-- wordmark -->
+  <text x="430" y="160" class="word">alma</text>
+</svg>

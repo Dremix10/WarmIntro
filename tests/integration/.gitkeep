@@ -1,0 +1,3 @@
+# Reserved for the integration test suite (D7 Option B — Supabase Local Docker).
+# Empty for now; vitest.config.ts excludes this folder from default runs.
+# When ready to add real-DB tests, see docs/refactor-plan.md (D7).

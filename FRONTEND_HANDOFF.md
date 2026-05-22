@@ -1,0 +1,197 @@
+# Alma — Frontend Handoff
+
+> For: backend cofounder. Last updated: 2026-04-23.
+
+## IB pivot (2026-04-23)
+
+We niched to **investment banking** for the YC application. UI is now tailored for Brown/Rice students breaking into IB. **Same brand, same design system, same page structure** — just a few smart swaps:
+
+- **Landing copy** niches to IB (hero, funnel math, FAQ all rewritten)
+- **Funnel math** updated: 120 calls → 40 responses → 20 coffees → 8 referrals → 4 first rounds → 2 superdays → 1 offer
+- **Profile "Target Groups" picker** replaces industries — M&A, TMT, Healthcare, Consumer, Industrials, Energy, FIG, Sponsors, LevFin, Restructuring, Real Estate, ECM/DCM
+- **Companies = banks**, tiered (Bulge Bracket / Elite Boutique / Middle Market). Shortlist now: Morgan Stanley, Goldman Sachs, Evercore, Centerview, JPMorgan, PJT. Browse has 24 more.
+- **CRM stages extended**: sent → replied → coffee → referral → **firstRound → superday** → offer (added two stages to match real IB funnel)
+- **NEW: `<TimelineBanner />` component** (`src/components/TimelineBanner.tsx`) — the signature IB-specific UI. Shows the 6-phase 2026 cycle (Prep → Networking → Apps → First Rounds → Superdays → Offers) with current phase highlighted and days-to-next-milestone. Dropped into `/design-lab/pipeline-hybrid`. Add to the real `/pipeline` during migration.
+
+**Archipelago stage glyphs unchanged** — logs / foundation / walls / roof / home still work; `firstRound`, `superday`, `offer` all map to "home" visually (sub-stage granularity lives in /crm where it matters).
+
+**What the cofounder needs to add on the backend for IB** (see BACKEND_REQUESTS.md for full detail):
+- **Bank+group tree** as a first-class data model (firm → group → banker), replaces the generic "industry" string
+- **IB recruiting calendar** config (phase dates + per-bank app-open dates) driving `<TimelineBanner />`
+- **Deal tracker** per banker — what deals have they worked on, for networking-call prep
+- **Technical prep tracker** (DCF, LBO, M&A, accounting) — stretch goal for v1
+
+---
+
+
+You're picking this up to wire the backend. This doc tells you what the frontend looks like now, what's mock, what uses real state, and what backend work each page needs.
+
+---
+
+## TL;DR — state of the repo
+
+- **Brand**: renamed from "WarmIntro" to **Alma**. Logo, copy, metadata updated. Rice + Brown cofounder framing is baked into the UX.
+- **Visual direction**: Aegean × Atrium hybrid. Palette = warm stone body (`#EAE3D2`), Aegean blue (`#2E5A88` / `#1B3B5F`), terracotta (`#C86B4F`), ochre (`#E8B339`). Fonts = **Fraunces** for display + **Geist Sans** for UI. Tailwind only.
+- **What's live in the real app**: `/`, `/network`, `/quests`, `/recap`, `/cohort`, `/leaderboard` are the new designs. `/pipeline`, `/companies`, `/profile`, `/outreach/[id]`, `/crm` still use the existing AppProvider-wired UI — they're scheduled for staged migration after backend features land (see below).
+- **Design lab preserved**: every new design also lives under `/design-lab/*` as a visual reference — open that in a browser any time to see the target look/feel for the remaining page migrations.
+
+---
+
+## Routes — what's shipped, what's pending
+
+| Route | State | Notes |
+|---|---|---|
+| `/` (landing) | **NEW — shipped** | Hero + funnel math + how-it-works + FAQ. No state. |
+| `/network` | **NEW — shipped** | Archipelago visualization. All mock data. Needs `GET /api/network` once alumni stages are persisted. |
+| `/quests` | **NEW — shipped** | Weekly quests + milestones feed. All mock. Needs quest engine. |
+| `/recap` | **NEW — shipped** | Sunday letter. All mock. Needs weekly-recap generator. |
+| `/cohort` | **NEW — shipped** | Aggregate numbers + signals feed. All mock. Needs cohort aggregation endpoint. |
+| `/leaderboard` | **NEW — shipped** | Board + spotlights. Wired to existing `Leaderboard` context shape. |
+| `/profile` | **legacy UI, works** | Uses AppProvider. Migrate to design-lab version once resume-read / industries-recommended fields land. |
+| `/companies` | **legacy UI, works** | Uses AppProvider. Migrate to curated-picks design once warmth-score field lands. |
+| `/pipeline` | **legacy UI, works** | Uses AppProvider. Migrate to hybrid design once `trajectoryHistory` + `todayTasks` fields land. |
+| `/outreach/[id]` | **legacy UI, works** | Uses AppProvider. Migrate to compose design once `warmPathNarrative` + tone presets land. |
+| `/crm` | **legacy UI, works** | Uses AppProvider. Migrate to kanban+list design once `fresh` / `needsFollowUp` flags land. |
+| `/design-lab/*` | **reference** | Every new design as a standalone visual. Safe to delete any time once we've migrated everything. |
+
+---
+
+## AppProvider — what's there, what's needed
+
+Current shape (unchanged by me — see `src/components/AppProvider.tsx`):
+
+```ts
+interface AppState {
+  session, authLoading, profile, selectedCompanies, allCompanies,
+  funnel, gameState, leaderboard, isProfileShared,
+  sentOutreach, companyAlumniCount, alumniStages, connections, connectionNotes,
+  // ... setters + selectors
+}
+```
+
+### Fields the new UI will need — please add when the backend is ready
+
+| Field | Used by | Why |
+|---|---|---|
+| `trajectoryHistory: Array<{ weekIso: string; sent: number; target: number }>` | /pipeline | Drives the 12-week actual-vs-pace line chart |
+| `todayTasks: Array<{ id: string; title: string; meta: string; cta: string; href: string }>` | /pipeline | The "Today · 3 tasks · ~25 min" panel. Generated daily by Alma based on pipeline state |
+| `coachNotes: { weeklyRead: string; alumaSuggests: string }` | /pipeline, /crm, /network | Italic Fraunces mentor quotes. Generated by Claude |
+| `recommendedIndustries: string[]` | /profile | Top 2–3 industries Alma picked; shown as "Alma's pick" badges on the industry grid |
+| `shortlist: Company[]` with per-row `reason: string`, `warmthTier: "strong" \| "medium" \| "light"` | /companies | Curated picks up top with a Claude-generated "why Alma picked this" line |
+| `connections[alumniId].warmth: number`, `.stage: Stage`, `.fresh: boolean`, `.needsFollowUp: boolean`, `.lastAction: string`, `.daysAgo: number` | /crm, /network, /outreach | Already mostly exists in `TrackedConnection`; we need `warmth` (copy from `warmthScore`), `fresh`, `needsFollowUp` (derived from `daysAgo` + stage), and `lastAction` (latest event) |
+| `quests: Array<{ id; title; why; progress; target; days; reward; color }>` + `milestones: Array<{ id; title; note; unlockedAt; xp; fresh }>` | /quests | Structured weekly goals + private milestone celebrations |
+| `weeklyRecap: { date: string; sections: Array<{heading; body}>; insight; questSuggestions: string[] }` | /recap | Sunday letter content, generated weekly |
+| `cohortAggregate: { weekTotals: {sent; replies; coffees; referrals}; goals: Array<{label; current; target}>; signals: Array<{text; when}>; heartbeat: number[] }` | /cohort | Collective celebration data |
+| `archipelago: { islands: Array<{companyId; people: Array<{alumniId; stage; warmth; fresh}>}> }` | /network | Graph-shaped view of the same alumni/connections data we already have — a derived view |
+
+The **Field → Component** mapping is in `docs/INTEGRATION.md` (create this if you prefer, or inline in each page).
+
+---
+
+## Pages — what each new page expects
+
+### `/` — landing
+- Static. No state. Safe to ship as is.
+- CTAs (`Upload your resume`, `Talk to a founder`, log in) currently don't wire anywhere. Hook them up to `/profile` upload flow + auth.
+
+### `/network` — archipelago
+- Currently uses **hardcoded mock** data in `src/app/network/_data.ts`.
+- Replace `MOCK_ISLANDS` with a selector that maps `connections` + `selectedCompanies` into the island/marker shape.
+- Each island = one company from `selectedCompanies`. Each marker = one `TrackedConnection` at that company. Size-by-warmth comes from `connection.warmth` (new field — see above).
+- The "construction glyph" (logs / foundation / walls / roof / home) maps from stage: `sent → logs`, `replied → foundation`, `coffee → walls`, `referral → roof`, `interview → home`.
+
+### `/quests` — weekly quests + milestones
+- Mock data in `src/app/quests/_data.ts`.
+- **Quest engine needed**: each Monday, generate 2–3 personalized quests based on pipeline state. Store in Supabase. Endpoint: `GET /api/quests/active`, `POST /api/quests/:id/complete`, `POST /api/quests/:id/skip`.
+- **Milestone engine needed**: listen for funnel events (first reply, 10 sent, week streak, came back) and emit milestone records. Each has a Claude-generated `note` in Alma's voice.
+
+### `/recap` — Sunday letter
+- Mock data in `src/app/recap/_data.ts`.
+- **Generator needed**: each Sunday 4pm ET, generate a recap per active user. Sections (company-by-company analysis), one "Alma noticed" insight (derived from user's send timing / response rates), three quest suggestions. Claude does the writing; backend aggregates the pipeline data to feed Claude.
+- Serve at `GET /api/recap/current`. Optional `POST /api/recap/accept-quests` to apply the suggested quests.
+
+### `/cohort` — collective numbers
+- Mock data in `src/app/cohort/_data.ts`.
+- Aggregates across users in the same school+cohort. Endpoint: `GET /api/cohort/summary?school=brown&classYear=2027`.
+- **Signals feed**: anonymized recent events ("someone from Brown CS '27 booked their first coffee at Stripe"). Privacy rule: never name the student; vague time ("2 hours ago"); never link to their profile.
+
+### `/leaderboard` — competitive board
+- Already wired to `Leaderboard` context shape. Current implementation is basically drop-in but uses new palette + Fraunces + hero sentence. Mostly works.
+- Cohort board, Brown board, All-Alma board are the three views. Backend owns the board identity: a user gets their cohort leaderboard by default; can join/create private boards.
+
+---
+
+## Backend features to stand up (summary — full list in BACKEND_REQUESTS.md)
+
+1. **Outbound email send** from Alma (Gmail OAuth) + message-id storage
+2. **Inbound reply detection** (Gmail Push or IMAP poll, thread matching) → auto stage advance
+3. **Notifications** (in-app bell + optional email/push) for replies, milestones, silence-nudges
+4. **Email scraping** (Hunter.io or similar) — find alumni email from LinkedIn profile
+5. **Copywriting guardrails** in `outreach-writer.ts` — no em-dashes, student voice, banned words
+6. **Warmth score** computation persisted on each alumni/connection (currently ephemeral)
+7. **Quest engine** + **milestone engine**
+8. **Weekly recap generator** (cron on Sunday 4pm)
+9. **Cohort aggregation** (scheduled rollup of anonymous signals)
+10. **Archipelago selector** (view that derives islands+markers from existing tables)
+
+Full priorities + acceptance criteria live in `BACKEND_REQUESTS.md`.
+
+---
+
+## How to work the migration
+
+Suggested order (low risk → high):
+
+1. **Land warmth-score persistence** (simple field add) → unlocks `/network` real data + `/crm` ordering
+2. **Land quest + milestone engines** (new tables, cron) → unlocks `/quests`
+3. **Land recap generator** (weekly cron) → unlocks `/recap`
+4. **Cohort aggregation** (nightly rollup) → unlocks `/cohort`
+5. **Then**: migrate `/pipeline`, `/companies`, `/outreach`, `/profile`, `/crm` one at a time. For each:
+   a. Open the design-lab version (`/design-lab/<name>`) to see the target
+   b. Copy the structure to the real route
+   c. Replace mock data references with AppProvider hooks
+   d. Verify existing service calls still work
+
+The design-lab routes never go away until we're fully migrated — they're the spec.
+
+---
+
+## Tokens + palette (copy into your head)
+
+```
+Body bg        #EAE3D2   (warm stone)
+Panel          #F4EDDB   (cream accent)
+Cards          #FFFFFF
+Hairline       #D9CFB5
+Divider        #ECE5D0
+
+Ink            #14182A
+Ink muted      #4A5260  / #5C6472
+
+Aegean deep    #1B3B5F   (primary buttons, headings)
+Aegean         #2E5A88   (italic accents, secondary primary)
+Aegean light   #3F6FA3   (gradients)
+
+Terracotta     #C86B4F   (warmth, fresh, alert — use sparingly)
+Ochre          #E8B339   (streak only)
+Ochre deep     #B08100
+Sage           #6E8F6A / #4D6A4A   (referral / success states)
+
+Construction (archipelago stages):
+  Sent       #C9C1A4  (logs — muted)
+  Replied    #6E8F6A  (foundation — sage)
+  Coffee     #E8B339  (walls — ochre)
+  Referral   #C86B4F  (roof — terracotta)
+  Interview  #1B3B5F  (home — deep blue)
+```
+
+Typography: **Fraunces** for display + big tabular numbers. **Geist Sans** for UI. Fraunces italic is the Alma "voice" style — use it for mentor quotes and headline accents.
+
+---
+
+## Questions? Start here
+
+- `BACKEND_REQUESTS.md` — backlog of every backend ask, with why/acceptance
+- `/design-lab` — browse every page design in isolation
+- `CLAUDE.md` — original project architecture (still mostly accurate; update as you go)
+- This file — living doc for the handoff

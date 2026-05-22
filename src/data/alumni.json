@@ -1,0 +1,1956 @@
+[
+  {
+    "id": "alumni-1",
+    "name": "Sarah Chen",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Senior Manufacturing Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sarah%20Chen%20Tesla%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Robotics Club",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-2",
+    "name": "James Park",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Electrical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Battery Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=James%20Park%20Tesla%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-3",
+    "name": "Maria Gonzalez",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Process Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Maria%20Gonzalez%20Tesla%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-4",
+    "name": "David Kim",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Materials Science",
+    "currentCompany": "Tesla",
+    "currentRole": "Staff Engineer Gigafactory",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=David%20Kim%20Tesla%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Materials Science"
+    ]
+  },
+  {
+    "id": "alumni-5",
+    "name": "Priya Patel",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Industrial Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Manufacturing Quality Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Priya%20Patel%20Tesla%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Industrial Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-6",
+    "name": "Marcus Johnson",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Electrical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Power Electronics Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Marcus%20Johnson%20Tesla%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-7",
+    "name": "Emily Tran",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Tesla",
+    "currentRole": "Autopilot Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Emily%20Tran%20Tesla%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-8",
+    "name": "Carlos Reyes",
+    "university": "Rice University",
+    "graduationYear": 2018,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Engineering Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Carlos%20Reyes%20Tesla%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Mechanical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-9",
+    "name": "Aisha Mohammed",
+    "university": "Rice University",
+    "graduationYear": 2025,
+    "major": "Chemical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Battery Materials Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Aisha%20Mohammed%20Tesla%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-10",
+    "name": "Ryan O'Brien",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Industrial Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Supply Chain Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Ryan%20O'Brien%20Tesla%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Industrial Engineering"
+    ]
+  },
+  {
+    "id": "alumni-11",
+    "name": "Yuki Tanaka",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Materials Science",
+    "currentCompany": "Tesla",
+    "currentRole": "Materials Research Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Yuki%20Tanaka%20Tesla%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Materials Science",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-12",
+    "name": "Jasmine Williams",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Tesla",
+    "currentRole": "Thermal Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Jasmine%20Williams%20Tesla%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-13",
+    "name": "Takeshi Yamamoto",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Toyota",
+    "currentRole": "Powertrain Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Takeshi%20Yamamoto%20Toyota%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-14",
+    "name": "Rachel Adams",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Industrial Engineering",
+    "currentCompany": "Toyota",
+    "currentRole": "Manufacturing Process Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Rachel%20Adams%20Toyota%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Industrial Engineering"
+    ]
+  },
+  {
+    "id": "alumni-15",
+    "name": "Andre Washington",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Toyota",
+    "currentRole": "Senior Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Andre%20Washington%20Toyota%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Engineering Student Council",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-16",
+    "name": "Mei-Lin Wu",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Electrical Engineering",
+    "currentCompany": "Toyota",
+    "currentRole": "Hybrid Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Mei-Lin%20Wu%20Toyota%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-17",
+    "name": "Omar Hassan",
+    "university": "Rice University",
+    "graduationYear": 2017,
+    "major": "Civil Engineering",
+    "currentCompany": "Toyota",
+    "currentRole": "Facilities Engineering Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Omar%20Hassan%20Toyota%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Civil Engineering"
+    ]
+  },
+  {
+    "id": "alumni-18",
+    "name": "Lauren Mitchell",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Materials Science",
+    "currentCompany": "Toyota",
+    "currentRole": "Materials Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Lauren%20Mitchell%20Toyota%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Materials Science",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-19",
+    "name": "Vikram Sharma",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "Toyota",
+    "currentRole": "Autonomous Driving Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Vikram%20Sharma%20Toyota%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-20",
+    "name": "Christina Nguyen",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Chemical Engineering",
+    "currentCompany": "Toyota",
+    "currentRole": "Fuel Cell Research Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Christina%20Nguyen%20Toyota%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-21",
+    "name": "Derek Robinson",
+    "university": "Rice University",
+    "graduationYear": 2018,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Ford",
+    "currentRole": "Vehicle Dynamics Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Derek%20Robinson%20Ford%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Mechanical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-22",
+    "name": "Sophia Martinez",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Electrical Engineering",
+    "currentCompany": "Ford",
+    "currentRole": "EV Charging Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sophia%20Martinez%20Ford%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-23",
+    "name": "Kevin Lee",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Computer Science",
+    "currentCompany": "Ford",
+    "currentRole": "Connected Vehicle Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Kevin%20Lee%20Ford%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-24",
+    "name": "Fatima Al-Rashid",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Industrial Engineering",
+    "currentCompany": "Ford",
+    "currentRole": "Production Systems Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Fatima%20Al-Rashid%20Ford%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Industrial Engineering"
+    ]
+  },
+  {
+    "id": "alumni-25",
+    "name": "Tyler Brooks",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Ford",
+    "currentRole": "Senior Chassis Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Tyler%20Brooks%20Ford%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-26",
+    "name": "Nina Petrov",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Materials Science",
+    "currentCompany": "Ford",
+    "currentRole": "Lightweight Materials Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Nina%20Petrov%20Ford%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Materials Science"
+    ]
+  },
+  {
+    "id": "alumni-27",
+    "name": "Brandon Carter",
+    "university": "Rice University",
+    "graduationYear": 2017,
+    "major": "Mechanical Engineering",
+    "currentCompany": "GM",
+    "currentRole": "Lead Propulsion Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Brandon%20Carter%20GM%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Mechanical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-28",
+    "name": "Hana Sato",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Electrical Engineering",
+    "currentCompany": "GM",
+    "currentRole": "Battery Management Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Hana%20Sato%20GM%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-29",
+    "name": "Isaiah Thompson",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Industrial Engineering",
+    "currentCompany": "GM",
+    "currentRole": "Operations Research Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Isaiah%20Thompson%20GM%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Industrial Engineering"
+    ]
+  },
+  {
+    "id": "alumni-30",
+    "name": "Elena Popova",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Computer Science",
+    "currentCompany": "GM",
+    "currentRole": "ADAS Software Developer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Elena%20Popova%20GM%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-31",
+    "name": "Daniel Okafor",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Chemical Engineering",
+    "currentCompany": "GM",
+    "currentRole": "EV Battery Chemistry Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Daniel%20Okafor%20GM%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-32",
+    "name": "Ingrid Lindqvist",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Mechanical Engineering",
+    "currentCompany": "BMW",
+    "currentRole": "Drivetrain Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Ingrid%20Lindqvist%20BMW%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-33",
+    "name": "Jonathan Rivera",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Electrical Engineering",
+    "currentCompany": "BMW",
+    "currentRole": "Senior Infotainment Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Jonathan%20Rivera%20BMW%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-34",
+    "name": "Amara Diallo",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Materials Science",
+    "currentCompany": "BMW",
+    "currentRole": "Composites Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Amara%20Diallo%20BMW%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Materials Science"
+    ]
+  },
+  {
+    "id": "alumni-35",
+    "name": "Michelle Yang",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "BMW",
+    "currentRole": "Embedded Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Michelle%20Yang%20BMW%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-36",
+    "name": "Sung-Ho Choi",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Hyundai",
+    "currentRole": "Platform Development Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sung-Ho%20Choi%20Hyundai%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Mechanical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-37",
+    "name": "Grace Okonkwo",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Electrical Engineering",
+    "currentCompany": "Hyundai",
+    "currentRole": "EV Motor Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Grace%20Okonkwo%20Hyundai%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-38",
+    "name": "Lucas Ferreira",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Industrial Engineering",
+    "currentCompany": "Hyundai",
+    "currentRole": "Quality Assurance Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Lucas%20Ferreira%20Hyundai%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Industrial Engineering"
+    ]
+  },
+  {
+    "id": "alumni-39",
+    "name": "Nadia Volkov",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Chemical Engineering",
+    "currentCompany": "Hyundai",
+    "currentRole": "Hydrogen Fuel Cell Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Nadia%20Volkov%20Hyundai%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-40",
+    "name": "Alex Brennan",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Rivian",
+    "currentRole": "Skateboard Platform Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Alex%20Brennan%20Rivian%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Robotics Club",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-41",
+    "name": "Diana Cruz",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Electrical Engineering",
+    "currentCompany": "Rivian",
+    "currentRole": "Charging Infrastructure Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Diana%20Cruz%20Rivian%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-42",
+    "name": "Nathan Wright",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Rivian",
+    "currentRole": "Vehicle Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Nathan%20Wright%20Rivian%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "alumni-43",
+    "name": "Astrid Johansson",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Volvo",
+    "currentRole": "Safety Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Astrid%20Johansson%20Volvo%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Mechanical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-44",
+    "name": "Roberto Morales",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Civil Engineering",
+    "currentCompany": "Volvo",
+    "currentRole": "Structural Analysis Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Roberto%20Morales%20Volvo%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Civil Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-45",
+    "name": "Jennifer Chang",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Electrical Engineering",
+    "currentCompany": "Volvo",
+    "currentRole": "ADAS Sensor Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Jennifer%20Chang%20Volvo%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-46",
+    "name": "Tariq Mansour",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Lucid",
+    "currentRole": "Aerodynamics Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Tariq%20Mansour%20Lucid%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Design Club"
+    ]
+  },
+  {
+    "id": "alumni-47",
+    "name": "Olivia Bennett",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Electrical Engineering",
+    "currentCompany": "Lucid",
+    "currentRole": "High Voltage Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Olivia%20Bennett%20Lucid%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-48",
+    "name": "Wei Zhang",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Electrical Engineering",
+    "currentCompany": "BYD",
+    "currentRole": "Power Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Wei%20Zhang%20BYD%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-49",
+    "name": "Aarav Mehta",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Google",
+    "currentRole": "Senior Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Aarav%20Mehta%20Google%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-50",
+    "name": "Samantha Foster",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Computer Science",
+    "currentCompany": "Microsoft",
+    "currentRole": "Cloud Platform Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Samantha%20Foster%20Microsoft%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-51",
+    "name": "Raj Krishnamurthy",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Electrical Engineering",
+    "currentCompany": "Apple",
+    "currentRole": "Hardware Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Raj%20Krishnamurthy%20Apple%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-52",
+    "name": "Hannah Lewis",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Amazon",
+    "currentRole": "SDE II",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Hannah%20Lewis%20Amazon%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-53",
+    "name": "Christopher Adeyemi",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Computer Science",
+    "currentCompany": "Meta",
+    "currentRole": "Production Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Christopher%20Adeyemi%20Meta%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "alumni-54",
+    "name": "Lisa Nakamura",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Electrical Engineering",
+    "currentCompany": "NVIDIA",
+    "currentRole": "GPU Architecture Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Lisa%20Nakamura%20NVIDIA%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Rice Robotics Club",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-55",
+    "name": "Patrick Sullivan",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Salesforce",
+    "currentRole": "Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Patrick%20Sullivan%20Salesforce%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "alumni-56",
+    "name": "Zara Hussain",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "Stripe",
+    "currentRole": "Backend Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Zara%20Hussain%20Stripe%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-57",
+    "name": "Maxwell Reed",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Databricks",
+    "currentRole": "Data Platform Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Maxwell%20Reed%20Databricks%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-58",
+    "name": "Ananya Reddy",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Palantir",
+    "currentRole": "Forward Deployed Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Ananya%20Reddy%20Palantir%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-59",
+    "name": "Trevor Holloway",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Economics",
+    "currentCompany": "Goldman Sachs",
+    "currentRole": "Investment Banking Associate",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Trevor%20Holloway%20Goldman%20Sachs%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Economics",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-60",
+    "name": "Victoria Lawson",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Economics",
+    "currentCompany": "JPMorgan Chase",
+    "currentRole": "Quantitative Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Victoria%20Lawson%20JPMorgan%20Chase%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Economics",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-61",
+    "name": "Brian Xu",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Business/Finance",
+    "currentCompany": "McKinsey",
+    "currentRole": "Associate Consultant",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Brian%20Xu%20McKinsey%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-62",
+    "name": "Camille Dubois",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Economics",
+    "currentCompany": "BCG",
+    "currentRole": "Strategy Consultant",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Camille%20Dubois%20BCG%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Economics"
+    ]
+  },
+  {
+    "id": "alumni-63",
+    "name": "Jordan Taylor",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Business/Finance",
+    "currentCompany": "Bain",
+    "currentRole": "Senior Associate",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Jordan%20Taylor%20Bain%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-64",
+    "name": "Simone Richardson",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Business/Finance",
+    "currentCompany": "Deloitte",
+    "currentRole": "Financial Advisory Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Simone%20Richardson%20Deloitte%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Business/Finance",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-65",
+    "name": "Edward Nakamura",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Economics",
+    "currentCompany": "Morgan Stanley",
+    "currentRole": "Equity Research Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Edward%20Nakamura%20Morgan%20Stanley%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Economics"
+    ]
+  },
+  {
+    "id": "alumni-66",
+    "name": "Angela Qiu",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Citadel",
+    "currentRole": "Quantitative Developer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Angela%20Qiu%20Citadel%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Finance Club",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-67",
+    "name": "Rebecca Sharma",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Bioengineering",
+    "currentCompany": "Johnson & Johnson",
+    "currentRole": "Biomedical Device Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Rebecca%20Sharma%20Johnson%20&%20Johnson%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Bioengineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-68",
+    "name": "Anthony Bello",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Chemical Engineering",
+    "currentCompany": "Pfizer",
+    "currentRole": "Process Development Scientist",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Anthony%20Bello%20Pfizer%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Chemical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-69",
+    "name": "Sarah Goldstein",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Bioengineering",
+    "currentCompany": "Medtronic",
+    "currentRole": "Senior R&D Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sarah%20Goldstein%20Medtronic%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Bioengineering"
+    ]
+  },
+  {
+    "id": "alumni-70",
+    "name": "Kenneth Osei",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Electrical Engineering",
+    "currentCompany": "Abbott",
+    "currentRole": "Embedded Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Kenneth%20Osei%20Abbott%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-71",
+    "name": "Monica Gutierrez",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Bioengineering",
+    "currentCompany": "Genentech",
+    "currentRole": "Biologics Manufacturing Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Monica%20Gutierrez%20Genentech%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Bioengineering",
+      "Rice Engineering Student Council",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-72",
+    "name": "Justin Cho",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Computer Science",
+    "currentCompany": "Intuitive Surgical",
+    "currentRole": "Robotics Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Justin%20Cho%20Intuitive%20Surgical%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-73",
+    "name": "Aaliyah Jackson",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Bioengineering",
+    "currentCompany": "23andMe",
+    "currentRole": "Genomics Research Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Aaliyah%20Jackson%2023andMe%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Bioengineering",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-74",
+    "name": "Rishi Agarwal",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Chemical Engineering",
+    "currentCompany": "Moderna",
+    "currentRole": "mRNA Process Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Rishi%20Agarwal%20Moderna%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-75",
+    "name": "Marcus Dominguez",
+    "university": "Rice University",
+    "graduationYear": 2018,
+    "major": "Chemical Engineering",
+    "currentCompany": "Chevron",
+    "currentRole": "Senior Process Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Marcus%20Dominguez%20Chevron%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-76",
+    "name": "Ashley Park",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Chemical Engineering",
+    "currentCompany": "ExxonMobil",
+    "currentRole": "Reservoir Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Ashley%20Park%20ExxonMobil%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-77",
+    "name": "Samuel Ibekwe",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Electrical Engineering",
+    "currentCompany": "NextEra Energy",
+    "currentRole": "Renewable Energy Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Samuel%20Ibekwe%20NextEra%20Energy%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-78",
+    "name": "Laura Bianchi",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Tesla Energy",
+    "currentRole": "Solar Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Laura%20Bianchi%20Tesla%20Energy%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-79",
+    "name": "Dennis Huang",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Electrical Engineering",
+    "currentCompany": "Enphase Energy",
+    "currentRole": "Power Electronics Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Dennis%20Huang%20Enphase%20Energy%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-80",
+    "name": "Tanya Singh",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Chemical Engineering",
+    "currentCompany": "Bloom Energy",
+    "currentRole": "Fuel Cell Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Tanya%20Singh%20Bloom%20Energy%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-81",
+    "name": "Kyle Henderson",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Materials Science",
+    "currentCompany": "First Solar",
+    "currentRole": "Thin Film Research Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Kyle%20Henderson%20First%20Solar%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Materials Science",
+      "Energy Club"
+    ]
+  },
+  {
+    "id": "alumni-82",
+    "name": "Isabel Fuentes",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Sunnova",
+    "currentRole": "Installation Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Isabel%20Fuentes%20Sunnova%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Energy Club",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-83",
+    "name": "Chad Nkemelu",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Chemical Engineering",
+    "currentCompany": "Procter & Gamble",
+    "currentRole": "Product Development Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Chad%20Nkemelu%20Procter%20&%20Gamble%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Chemical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-84",
+    "name": "Megan O'Connell",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Business/Finance",
+    "currentCompany": "Nike",
+    "currentRole": "Brand Strategy Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Megan%20O'Connell%20Nike%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance",
+      "Rice Design Club"
+    ]
+  },
+  {
+    "id": "alumni-85",
+    "name": "Aaron Baptiste",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Computer Science",
+    "currentCompany": "Amazon",
+    "currentRole": "Senior Software Development Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Aaron%20Baptiste%20Amazon%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-86",
+    "name": "Destiny Mitchell",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Industrial Engineering",
+    "currentCompany": "Walmart",
+    "currentRole": "Supply Chain Operations Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Destiny%20Mitchell%20Walmart%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Industrial Engineering"
+    ]
+  },
+  {
+    "id": "alumni-87",
+    "name": "Victor Sousa",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Business/Finance",
+    "currentCompany": "Target",
+    "currentRole": "Merchandise Planning Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Victor%20Sousa%20Target%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Business/Finance"
+    ]
+  },
+  {
+    "id": "alumni-88",
+    "name": "Catherine Tran",
+    "university": "Rice University",
+    "graduationYear": 2019,
+    "major": "Industrial Engineering",
+    "currentCompany": "HEB",
+    "currentRole": "Operations Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Catherine%20Tran%20HEB%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Industrial Engineering",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-89",
+    "name": "Malik Davis",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Business/Finance",
+    "currentCompany": "Costco",
+    "currentRole": "Financial Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Malik%20Davis%20Costco%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-90",
+    "name": "Helena Kovalenko",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Chemical Engineering",
+    "currentCompany": "Unilever",
+    "currentRole": "Formulation Scientist",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Helena%20Kovalenko%20Unilever%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Chemical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-91",
+    "name": "Ethan Collier",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Computer Science",
+    "currentCompany": "Google",
+    "currentRole": "Site Reliability Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Ethan%20Collier%20Google%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "alumni-92",
+    "name": "Naomi Abernathy",
+    "university": "Rice University",
+    "graduationYear": 2025,
+    "major": "Bioengineering",
+    "currentCompany": "Medtronic",
+    "currentRole": "Biomedical Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Naomi%20Abernathy%20Medtronic%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Bioengineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-93",
+    "name": "Frank Delgado",
+    "university": "Rice University",
+    "graduationYear": 2018,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Chevron",
+    "currentRole": "Drilling Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Frank%20Delgado%20Chevron%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-94",
+    "name": "Keiko Watanabe",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "Microsoft",
+    "currentRole": "AI Research Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Keiko%20Watanabe%20Microsoft%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-95",
+    "name": "George Papadopoulos",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Economics",
+    "currentCompany": "Goldman Sachs",
+    "currentRole": "Derivatives Trader",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=George%20Papadopoulos%20Goldman%20Sachs%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Economics",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-96",
+    "name": "Imani Clark",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Bioengineering",
+    "currentCompany": "Abbott",
+    "currentRole": "Medical Device Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Imani%20Clark%20Abbott%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Bioengineering"
+    ]
+  },
+  {
+    "id": "alumni-97",
+    "name": "Tom\u00e1s Escobar",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Mechanical Engineering",
+    "currentCompany": "ExxonMobil",
+    "currentRole": "Facilities Integrity Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Tom\u00e1s%20Escobar%20ExxonMobil%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Energy Club",
+      "Houston resident"
+    ]
+  },
+  {
+    "id": "alumni-98",
+    "name": "Danielle Moreau",
+    "university": "Rice University",
+    "graduationYear": 2025,
+    "major": "Business/Finance",
+    "currentCompany": "JPMorgan Chase",
+    "currentRole": "Investment Banking Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Danielle%20Moreau%20JPMorgan%20Chase%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-99",
+    "name": "Rohan Kapoor",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Computer Science",
+    "currentCompany": "NVIDIA",
+    "currentRole": "Deep Learning Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Rohan%20Kapoor%20NVIDIA%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-100",
+    "name": "Bianca Rossi",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Civil Engineering",
+    "currentCompany": "Procter & Gamble",
+    "currentRole": "Manufacturing Facilities Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Bianca%20Rossi%20Procter%20&%20Gamble%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Civil Engineering"
+    ]
+  },
+  {
+    "id": "alumni-101",
+    "name": "Oscar Ramirez",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Electrical Engineering",
+    "currentCompany": "Apple",
+    "currentRole": "Chip Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Oscar%20Ramirez%20Apple%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-102",
+    "name": "Sydney Marshall",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Business/Finance",
+    "currentCompany": "McKinsey",
+    "currentRole": "Business Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sydney%20Marshall%20McKinsey%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Business/Finance",
+      "Rice Entrepreneurship Club",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-103",
+    "name": "Henry Zhao",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Bioengineering",
+    "currentCompany": "Intuitive Surgical",
+    "currentRole": "Surgical Robotics Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Henry%20Zhao%20Intuitive%20Surgical%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Bioengineering",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-104",
+    "name": "Priya Nair",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Computer Science",
+    "currentCompany": "Google",
+    "currentRole": "ML Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Priya%20Nair%20Google%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-105",
+    "name": "Derek Johnson",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Google",
+    "currentRole": "Product Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Derek%20Johnson%20Google%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-106",
+    "name": "Mei-Lin Wu",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Electrical Engineering",
+    "currentCompany": "Google",
+    "currentRole": "Hardware Systems Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Mei-Lin%20Wu%20Google%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-107",
+    "name": "Aiden Torres",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Microsoft",
+    "currentRole": "Senior Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Aiden%20Torres%20Microsoft%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-108",
+    "name": "Rachel Kim",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Computer Science",
+    "currentCompany": "Microsoft",
+    "currentRole": "Program Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Rachel%20Kim%20Microsoft%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-109",
+    "name": "Nolan Pham",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Electrical Engineering",
+    "currentCompany": "Microsoft",
+    "currentRole": "Azure Cloud Infrastructure Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Nolan%20Pham%20Microsoft%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-110",
+    "name": "Sophia Hernandez",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Apple",
+    "currentRole": "iOS Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sophia%20Hernandez%20Apple%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Design Club"
+    ]
+  },
+  {
+    "id": "alumni-111",
+    "name": "Tyler Washington",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Mechanical Engineering",
+    "currentCompany": "Apple",
+    "currentRole": "Product Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Tyler%20Washington%20Apple%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Mechanical Engineering",
+      "Rice Robotics Club"
+    ]
+  },
+  {
+    "id": "alumni-112",
+    "name": "Jasmine Lee",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "Apple",
+    "currentRole": "Machine Learning Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Jasmine%20Lee%20Apple%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-113",
+    "name": "Marcus Chen",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Amazon",
+    "currentRole": "Senior SDE, AWS",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Marcus%20Chen%20Amazon%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-114",
+    "name": "Layla Robinson",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Industrial Engineering",
+    "currentCompany": "Amazon",
+    "currentRole": "Operations Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Layla%20Robinson%20Amazon%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Industrial Engineering",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-115",
+    "name": "Kevin Patel",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "Amazon",
+    "currentRole": "Software Development Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Kevin%20Patel%20Amazon%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "alumni-116",
+    "name": "Isabella Garcia",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Meta",
+    "currentRole": "Software Engineer, Reality Labs",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Isabella%20Garcia%20Meta%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-117",
+    "name": "Nathan Brooks",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "Meta",
+    "currentRole": "Infrastructure Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Nathan%20Brooks%20Meta%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-118",
+    "name": "Chloe Nguyen",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "Meta",
+    "currentRole": "Data Scientist",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Chloe%20Nguyen%20Meta%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-119",
+    "name": "Andre Williams",
+    "university": "Rice University",
+    "graduationYear": 2020,
+    "major": "Electrical Engineering",
+    "currentCompany": "Meta",
+    "currentRole": "Senior Hardware Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Andre%20Williams%20Meta%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Electrical Engineering"
+    ]
+  },
+  {
+    "id": "alumni-120",
+    "name": "Vivek Sharma",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "NVIDIA",
+    "currentRole": "CUDA Software Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Vivek%20Sharma%20NVIDIA%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Robotics Club",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-121",
+    "name": "Emily Zhang",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Electrical Engineering",
+    "currentCompany": "NVIDIA",
+    "currentRole": "ASIC Design Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Emily%20Zhang%20NVIDIA%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Electrical Engineering",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-122",
+    "name": "Carlos Rivera",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Computer Science",
+    "currentCompany": "NVIDIA",
+    "currentRole": "AI Platform Engineer",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Carlos%20Rivera%20NVIDIA%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science"
+    ]
+  },
+  {
+    "id": "alumni-123",
+    "name": "Sarah O'Brien",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Economics",
+    "currentCompany": "Goldman Sachs",
+    "currentRole": "Equity Research Associate",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Sarah%20OBrien%20Goldman%20Sachs%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Economics",
+      "Finance Club",
+      "Rice Entrepreneurship Club"
+    ]
+  },
+  {
+    "id": "alumni-124",
+    "name": "David Nakamura",
+    "university": "Rice University",
+    "graduationYear": 2022,
+    "major": "Computer Science",
+    "currentCompany": "Goldman Sachs",
+    "currentRole": "Quantitative Strategist",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=David%20Nakamura%20Goldman%20Sachs%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-125",
+    "name": "Nicole Thompson",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Business/Finance",
+    "currentCompany": "Goldman Sachs",
+    "currentRole": "Investment Banking Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Nicole%20Thompson%20Goldman%20Sachs%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-126",
+    "name": "James Liu",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Economics",
+    "currentCompany": "JPMorgan Chase",
+    "currentRole": "Vice President, Trading",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=James%20Liu%20JPMorgan%20Chase%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Economics",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-127",
+    "name": "Amanda Singh",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Computer Science",
+    "currentCompany": "JPMorgan Chase",
+    "currentRole": "Technology Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Amanda%20Singh%20JPMorgan%20Chase%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Computer Science",
+      "Finance Club",
+      "Rice Data Science Club"
+    ]
+  },
+  {
+    "id": "alumni-128",
+    "name": "Ryan Cooper",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Business/Finance",
+    "currentCompany": "JPMorgan Chase",
+    "currentRole": "Asset Management Analyst",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Ryan%20Cooper%20JPMorgan%20Chase%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Business/Finance"
+    ]
+  },
+  {
+    "id": "alumni-129",
+    "name": "Olivia Park",
+    "university": "Rice University",
+    "graduationYear": 2023,
+    "major": "Economics",
+    "currentCompany": "McKinsey",
+    "currentRole": "Junior Associate",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Olivia%20Park%20McKinsey%20Rice%20University",
+    "connectionStrength": "strong",
+    "sharedBackground": [
+      "Economics",
+      "Rice Entrepreneurship Club",
+      "Finance Club"
+    ]
+  },
+  {
+    "id": "alumni-130",
+    "name": "Daniel Okafor",
+    "university": "Rice University",
+    "graduationYear": 2021,
+    "major": "Business/Finance",
+    "currentCompany": "McKinsey",
+    "currentRole": "Engagement Manager",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Daniel%20Okafor%20McKinsey%20Rice%20University",
+    "connectionStrength": "medium",
+    "sharedBackground": [
+      "Business/Finance",
+      "Rice Engineering Student Council"
+    ]
+  },
+  {
+    "id": "alumni-131",
+    "name": "Grace Chen",
+    "university": "Rice University",
+    "graduationYear": 2024,
+    "major": "Computer Science",
+    "currentCompany": "McKinsey",
+    "currentRole": "Digital Associate",
+    "linkedinUrl": "https://www.linkedin.com/search/results/people/?keywords=Grace%20Chen%20McKinsey%20Rice%20University",
+    "connectionStrength": "weak",
+    "sharedBackground": [
+      "Computer Science",
+      "Rice Data Science Club"
+    ]
+  },
+  {"id":"alumni-132","name":"Sofia Martinez","university":"Rice University","graduationYear":2021,"major":"Architecture","currentCompany":"Gensler","currentRole":"Designer II","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=Gensler%20Rice%20University%20Architecture","connectionStrength":"strong","sharedBackground":["Architecture","Rice Design Alliance"]},
+  {"id":"alumni-133","name":"David Park","university":"Rice University","graduationYear":2020,"major":"Architecture","currentCompany":"Gensler","currentRole":"Senior Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=Gensler%20Rice%20University%20Architect","connectionStrength":"strong","sharedBackground":["Architecture","Houston resident"]},
+  {"id":"alumni-134","name":"Rachel Liu","university":"Rice University","graduationYear":2022,"major":"Architecture","currentCompany":"Skidmore, Owings & Merrill","currentRole":"Architectural Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=SOM%20Rice%20University%20Architecture","connectionStrength":"medium","sharedBackground":["Architecture"]},
+  {"id":"alumni-135","name":"Marcus Thompson","university":"Rice University","graduationYear":2019,"major":"Architecture","currentCompany":"AECOM","currentRole":"Project Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=AECOM%20Rice%20University%20Architecture","connectionStrength":"medium","sharedBackground":["Architecture","Rice Building Workshop"]},
+  {"id":"alumni-136","name":"Priya Sharma","university":"Rice University","graduationYear":2023,"major":"Architecture","currentCompany":"AECOM","currentRole":"Design Analyst","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=AECOM%20Rice%20University%20Architect","connectionStrength":"medium","sharedBackground":["Architecture"]},
+  {"id":"alumni-137","name":"James Walsh","university":"Rice University","graduationYear":2020,"major":"Architecture","currentCompany":"HKS Architects","currentRole":"Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=HKS%20Rice%20University%20Architecture","connectionStrength":"medium","sharedBackground":["Architecture","Houston resident"]},
+  {"id":"alumni-138","name":"Mia Chen","university":"Rice University","graduationYear":2022,"major":"Architecture","currentCompany":"Lake|Flato Architects","currentRole":"Intern Architect","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=Lake%20Flato%20Rice%20University%20Architecture","connectionStrength":"strong","sharedBackground":["Architecture","Rice Design Alliance"]},
+  {"id":"alumni-139","name":"Carlos Rivera","university":"Rice University","graduationYear":2021,"major":"Architecture","currentCompany":"Page","currentRole":"Architectural Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=Page%20Architects%20Rice%20University","connectionStrength":"strong","sharedBackground":["Architecture","Houston resident"]},
+  {"id":"alumni-140","name":"Emma Nguyen","university":"Rice University","graduationYear":2023,"major":"Architecture","currentCompany":"Page","currentRole":"Junior Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=Page%20Houston%20Rice%20University%20Architecture","connectionStrength":"medium","sharedBackground":["Architecture"]},
+  {"id":"alumni-141","name":"Alex Dubois","university":"Rice University","graduationYear":2019,"major":"Architecture","currentCompany":"Perkins&Will","currentRole":"Senior Designer","linkedinUrl":"https://www.linkedin.com/search/results/people/?keywords=Perkins%20Will%20Rice%20University%20Architecture","connectionStrength":"weak","sharedBackground":["Architecture"]}
+]

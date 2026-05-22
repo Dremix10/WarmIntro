@@ -1,0 +1,767 @@
+@import "tailwindcss";
+
+/* Hide native scrollbar on horizontal nav strips (mobile NavHeader) */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Page-content fade-in. Skeletons swap to real content with a soft fade. */
+@keyframes content-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: content-fade-in 280ms ease-out forwards;
+}
+
+/* Draft card transitions on /today. When a draft moves between sections
+   (in-review → ready, ready → sent), the new card animates in instead of
+   blinking. Used in DraftCard via cardClass. */
+@keyframes card-enter-soft {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes card-enter-emphasis {
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+  60%  { opacity: 1; transform: translateY(2px) scale(1.005); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.draft-card-enter-soft {
+  animation: card-enter-soft 280ms ease-out forwards;
+}
+.draft-card-enter-emphasis {
+  animation: card-enter-emphasis 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sent-card fade-out: triggered after a successful Auto-send via Gmail.
+   Three beats: lift + glow ring (Alma blue), fade body, collapse height +
+   margin so the section closes cleanly instead of leaving a tall empty card
+   between fade-end and the silent reload. */
+@keyframes card-sent-fade {
+  0%   {
+    opacity: 1;
+    max-height: 1200px;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(46, 90, 136, 0);
+  }
+  15%  {
+    opacity: 1;
+    max-height: 1200px;
+    transform: translateY(-3px) scale(1.005);
+    box-shadow: 0 0 0 4px rgba(46, 90, 136, 0.22);
+  }
+  55%  {
+    opacity: 0;
+    max-height: 1200px;
+    transform: translateY(-10px) scale(0.985);
+    box-shadow: 0 0 0 0 rgba(46, 90, 136, 0);
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    transform: translateY(-12px) scale(0.985);
+    border-width: 0;
+  }
+}
+.draft-card-sent-fade {
+  animation: card-sent-fade 900ms cubic-bezier(.4, 0, .2, 1) forwards !important;
+  overflow: hidden;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* Branded "sent" badge that floats up briefly during the fade. Italic
+   Fraunces, Alma blue, paper-plane glyph. Sits absolutely centered over
+   the card while it's collapsing. */
+@keyframes alma-sent-rise {
+  0%   { opacity: 0; transform: translate(-50%, 8px); }
+  20%  { opacity: 1; transform: translate(-50%, 0); }
+  75%  { opacity: 1; transform: translate(-50%, -10px); }
+  100% { opacity: 0; transform: translate(-50%, -22px); }
+}
+.alma-sent-badge {
+  animation: alma-sent-rise 850ms cubic-bezier(.22, .8, .3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draft-card-sent-fade {
+    animation: none !important;
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    border-width: 0;
+    overflow: hidden;
+  }
+  .alma-sent-badge { animation: none; opacity: 0; }
+}
+
+/* Success toast bloom-in: appears from the bottom with a soft bounce. */
+@keyframes sent-toast-enter {
+  0%   { opacity: 0; transform: translate(-50%, 24px) scale(0.94); }
+  50%  { opacity: 1; transform: translate(-50%, -3px) scale(1.02); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+.sent-toast-enter {
+  animation: sent-toast-enter 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Top-of-page progress bar slide */
+@keyframes loading-bar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.animate-loading-bar {
+  animation: loading-bar 1.4s ease-in-out infinite;
+}
+
+:root {
+  /* Alma palette — Aegean stone. Light-only by design (no dark-mode override). */
+  --background: #EAE3D2;
+  --foreground: #14182A;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti-fall {
+  animation: confetti-fall ease-out forwards;
+}
+
+/* Alma landing-v2 motion */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(24px, -14px); }
+  50%      { transform: translate(-10px, 20px); }
+  75%      { transform: translate(-18px, -8px); }
+}
+
+@keyframes pulse-shadow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(27, 59, 95, 0.35); }
+  50%      { box-shadow: 0 0 0 12px rgba(27, 59, 95, 0); }
+}
+
+@keyframes fade-up-center {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes fade-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-in {
+  from { text-shadow: 0 0 0 rgba(46, 90, 136, 0); }
+  to   { text-shadow: 0 0 24px rgba(46, 90, 136, 0.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes alma-soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 134, 116, 0); }
+  50%      { box-shadow: 0 0 0 6px rgba(139, 134, 116, 0.06); }
+}
+
+.alma-flywheel-slot {
+  animation: alma-soft-pulse 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-flywheel-slot { animation: none; }
+}
+
+/* Premium card surface — subtle vertical gradient + soft layered shadow.
+   Used for hero/section cards to add depth without breaking the calm tone. */
+.alma-card {
+  background-image: linear-gradient(180deg, #ffffff 0%, #FCFAF5 100%);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px 0 rgba(20, 24, 42, 0.04),
+    0 12px 28px -12px rgba(20, 24, 42, 0.08);
+  transition:
+    transform 320ms cubic-bezier(.22,.75,.3,1),
+    box-shadow 320ms cubic-bezier(.22,.75,.3,1),
+    border-color 320ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 4px 0 rgba(20, 24, 42, 0.04),
+    0 24px 48px -12px rgba(20, 24, 42, 0.12);
+}
+
+/* Page atmosphere — slow ambient drift on scattered orbs.
+   Longer duration than orb-drift keeps it feeling alive but never busy. */
+@keyframes orb-drift-slow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(40px, -30px, 0) scale(1.04); }
+  66%      { transform: translate3d(-30px, 24px, 0) scale(0.98); }
+}
+.alma-orb-slow {
+  animation: orb-drift-slow 42s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-orb-slow { animation: none; }
+  .alma-card { transition: none; }
+  .alma-card:hover { transform: none; box-shadow: none; }
+}
+
+/* Agent-loop horizontal pipeline — chips light up sequentially as the
+   auto-play timer advances (or the user clicks to jump). Three states:
+   folded (not yet reached), active (current step), done (already passed).
+   Active chip plays a one-shot "leap" — small arc + soft spring landing —
+   that nods to Alma's name (ἄλμα = leap). */
+.agent-chip {
+  transition:
+    opacity 500ms cubic-bezier(.22,.75,.3,1),
+    transform 600ms cubic-bezier(.22,.75,.3,1),
+    border-color 400ms ease,
+    background-color 400ms ease,
+    box-shadow 400ms ease,
+    filter 500ms cubic-bezier(.22,.75,.3,1);
+  will-change: transform, opacity;
+}
+.agent-chip[data-state="folded"] {
+  opacity: 0.32;
+  transform: translateX(-8px) scale(0.95);
+  filter: blur(2px);
+}
+.agent-chip[data-state="done"] {
+  opacity: 0.85;
+  transform: translateX(0) scale(1);
+  filter: none;
+  background-image: linear-gradient(180deg, #ffffff 0%, #FCFAF5 100%);
+  border-color: rgba(27, 59, 95, 0.25);
+}
+.agent-chip[data-state="active"] {
+  opacity: 1;
+  filter: none;
+  background-color: #1B3B5F;
+  border-color: #1B3B5F;
+  box-shadow: 0 12px 28px -10px rgba(27, 59, 95, 0.45);
+  animation: alma-chip-leap 720ms cubic-bezier(0.22, 0.9, 0.32, 1.2);
+}
+.agent-chip[data-state="active"] * {
+  color: #fff !important;
+}
+
+/* Leap — chip arcs upward briefly then settles with a soft spring. */
+@keyframes alma-chip-leap {
+  0%   { transform: translateX(0) translateY(0) scale(1); }
+  35%  { transform: translateX(0) translateY(-14px) scale(1.06); }
+  70%  { transform: translateX(0) translateY(2px) scale(1.02); }
+  100% { transform: translateX(0) translateY(0) scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-chip[data-state="active"] {
+    animation: none;
+    transform: scale(1.04);
+  }
+}
+
+/* Focus panel cross-fade when active step changes (key prop on the panel
+   forces a remount, this animation runs each time). */
+@keyframes agent-focus-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.agent-focus {
+  animation: agent-focus-in 380ms cubic-bezier(.22,.75,.3,1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-chip {
+    transition: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .agent-focus { animation: none; }
+}
+
+/* Surfaces leaflet — three product cards unfold sequentially as the section
+   pins and scroll progress advances. Subtle 3D rotateY (left-edge hinge) +
+   translate up + clear blur. Works across devices; perspective only on the
+   parent. data-state on each card flips closed -> open. */
+.surface-leaflet {
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+}
+.surface-card {
+  transform-origin: 0% 50%;
+  backface-visibility: hidden;
+  transition:
+    transform 900ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms),
+    opacity 700ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms),
+    filter 700ms cubic-bezier(.22,.75,.3,1) var(--surface-delay, 0ms);
+  will-change: transform, opacity;
+}
+.surface-card[data-state="closed"] {
+  opacity: 0;
+  transform: translateY(28px) rotateY(-22deg) scale(0.97);
+  filter: blur(2px);
+}
+.surface-card[data-state="open"] {
+  opacity: 1;
+  transform: translateY(0) rotateY(0deg) scale(1);
+  filter: blur(0);
+}
+
+/* Mobile keeps the same animation but with a flatter rotateY so it doesn't
+   look weird with cards stacked vertically. */
+@media (max-width: 767.98px) {
+  .surface-card[data-state="closed"] {
+    transform: translateY(28px) scale(0.98);
+    filter: none;
+  }
+  .surface-card[data-state="open"] {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface-leaflet { perspective: none; }
+  .surface-card {
+    transition: none;
+    transform: none;
+    filter: none;
+    opacity: 1;
+  }
+}
+
+/* Run-Alma progress banner. The active stage line cross-fades with a
+   gentle upward drift each time the stage advances; the indicator dot
+   pulses while the call is in flight. Designed to feel calm-but-alive
+   (Alma voice) rather than busy spinner energy. */
+@keyframes alma-stage-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.alma-stage-enter {
+  animation: alma-stage-enter 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes alma-dot-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+.alma-dot-pulse {
+  animation: alma-dot-pulse 1400ms ease-in-out infinite;
+}
+
+@keyframes alma-banner-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 90, 136, 0); }
+  50%      { box-shadow: 0 0 0 6px rgba(46, 90, 136, 0.05); }
+}
+.alma-banner-glow {
+  animation: alma-banner-glow 3200ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-stage-enter,
+  .alma-dot-pulse,
+  .alma-banner-glow {
+    animation: none;
+  }
+}
+
+/* Pipeline transit-map — pulsing halo around banker markers when activity is
+   fresh (Aegean blue) or a follow-up is overdue (amber). Outer ring grows +
+   fades to mimic a soft sonar pulse. */
+@keyframes alma-halo-positive {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(46, 90, 136, 0.55),
+      0 0 0 5px rgba(46, 90, 136, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(46, 90, 136, 0.55),
+      0 0 0 14px rgba(46, 90, 136, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+}
+@keyframes alma-halo-due {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(232, 179, 57, 0.6),
+      0 0 0 5px rgba(232, 179, 57, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px #F4EDDB,
+      0 0 0 5px rgba(232, 179, 57, 0.6),
+      0 0 0 14px rgba(232, 179, 57, 0),
+      0 4px 14px -2px rgba(20,24,42,0.2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-status="positive"], [data-status="due"] { animation: none !important; }
+}
+
+/* /deck — firm-decks UX. Each firm is a stack of cards. Click to collapse the
+   ghosts, reveal a header, and fan banker cards into a staged spread. */
+.alma-deck {
+  position: relative;
+  perspective: 1200px;
+  transition: padding-bottom 600ms cubic-bezier(.22,.75,.3,1);
+  padding-bottom: 0;
+}
+.alma-deck[data-open] { padding-bottom: 16px; }
+
+.alma-deck-stack {
+  position: relative;
+  height: 196px;
+  cursor: pointer;
+  transition: height 540ms cubic-bezier(.22,.75,.3,1), transform 480ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-deck:hover .alma-deck-stack { transform: translateY(-2px); }
+.alma-deck[data-open] .alma-deck-stack {
+  transform: translateY(0);
+  height: 64px;
+}
+
+.alma-deck-stack-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+  border: 1px solid #D9CFB5;
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,0.9) inset,
+    0 1px 2px 0 rgba(20,24,42,0.04),
+    0 12px 28px -12px rgba(20,24,42,0.10);
+  transition: transform 540ms cubic-bezier(.22,.75,.3,1), opacity 380ms ease;
+  pointer-events: none;
+}
+.alma-deck-stack-card.ghost-1 { transform: translate(-6px, 5px) rotate(-3deg); opacity: 0.85; z-index: 1; }
+.alma-deck-stack-card.ghost-2 { transform: translate(6px, 5px) rotate(3deg); opacity: 0.85; z-index: 1; }
+.alma-deck-stack-card.top { z-index: 2; }
+
+.alma-deck[data-open] .alma-deck-stack-card.ghost-1 { transform: translate(-2px, 1px) rotate(-1deg) scale(0.97); opacity: 0; }
+.alma-deck[data-open] .alma-deck-stack-card.ghost-2 { transform: translate(2px, 1px) rotate(1deg) scale(0.97); opacity: 0; }
+.alma-deck[data-open] .alma-deck-stack-card.top { transform: scale(0.96); opacity: 0; }
+
+.alma-deck-top-content {
+  position: relative;
+  z-index: 3;
+  padding: 18px 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+.alma-deck[data-open] .alma-deck-top-content { opacity: 0; }
+
+.alma-deck-open-header {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 64px;
+  padding: 12px 16px;
+  width: 100%;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+  border: 1px solid #D9CFB5;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 18px -8px rgba(20,24,42,0.10);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font: inherit;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  transform: translateY(-4px);
+  transition:
+    opacity 360ms cubic-bezier(.22,.75,.3,1) 80ms,
+    transform 360ms cubic-bezier(.22,.75,.3,1) 80ms,
+    background 180ms ease;
+  z-index: 4;
+}
+.alma-deck-open-header:hover {
+  background: linear-gradient(180deg, #fff 0%, #F7F0DE 100%);
+}
+.alma-deck[data-open] .alma-deck-open-header {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.alma-deck-stage-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid #D9CFB5;
+  background: rgba(46, 90, 136, 0.08);
+  color: #1B3B5F;
+  flex-shrink: 0;
+}
+.alma-deck-stage-roman {
+  font-family: var(--font-fraunces, Georgia, serif);
+  font-style: italic;
+  font-weight: 600;
+}
+.alma-deck-stage-name {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #5C6472;
+}
+.alma-deck[data-highest="V"] .alma-deck-stage-pill,
+.alma-deck[data-highest="VI"] .alma-deck-stage-pill,
+.alma-deck[data-highest="VII"] .alma-deck-stage-pill {
+  background: rgba(201, 162, 76, 0.15);
+  border-color: rgba(201, 162, 76, 0.45);
+  color: #8E6E14;
+}
+.alma-deck[data-highest="V"] .alma-deck-stage-pill .alma-deck-stage-name,
+.alma-deck[data-highest="VI"] .alma-deck-stage-pill .alma-deck-stage-name,
+.alma-deck[data-highest="VII"] .alma-deck-stage-pill .alma-deck-stage-name {
+  color: #8E6E14;
+}
+.alma-deck[data-highest="IV"] .alma-deck-stage-pill {
+  background: rgba(232, 179, 57, 0.15);
+  border-color: rgba(232, 179, 57, 0.45);
+  color: #92400E;
+}
+.alma-deck[data-highest="IV"] .alma-deck-stage-pill .alma-deck-stage-name {
+  color: #92400E;
+}
+
+.alma-deck-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #D9CFB5;
+  color: #5C6472;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease, background 200ms ease, color 200ms ease;
+}
+.alma-deck[data-open] .alma-deck-close { opacity: 1; pointer-events: auto; }
+.alma-deck-close:hover { background: white; color: #14182A; }
+
+.alma-deck-spread {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 700ms cubic-bezier(.22,.75,.3,1);
+}
+.alma-deck[data-open] .alma-deck-spread { max-height: 2400px; }
+
+@keyframes alma-card-leap-in {
+  0%   { opacity: 0; transform: translateY(-30px) scale(0.92); }
+  50%  { opacity: 1; transform: translateY(-6px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.alma-banker-card {
+  opacity: 0;
+  transform: translateY(-30px) scale(0.92);
+  position: relative;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+  border: 1px solid #D9CFB5;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 8px 18px -8px rgba(20,24,42,0.10);
+  cursor: pointer;
+  transition: border-color 240ms ease, box-shadow 240ms ease, transform 240ms ease;
+}
+.alma-deck[data-open] .alma-banker-card {
+  animation: alma-card-leap-in 700ms cubic-bezier(.22,.7,.3,1.05) forwards;
+  animation-delay: var(--alma-stagger, 80ms);
+}
+.alma-banker-card:hover {
+  transform: translateY(-1px);
+  border-color: #2E5A88;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 16px 32px -10px rgba(20,24,42,0.16);
+}
+.alma-banker-card[data-active] {
+  border-color: #1B3B5F;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 0 0 2px rgba(27,59,95,0.18), 0 16px 32px -10px rgba(20,24,42,0.18);
+}
+
+.alma-banker-card[data-tier="paper"] {
+  background: linear-gradient(180deg, #fff 0%, #FCFAF5 100%);
+}
+.alma-banker-card[data-tier="aegean"] {
+  background: linear-gradient(180deg, #fff 0%, #F4F8FC 100%);
+  border-left: 3px solid #2E5A88;
+  padding-left: 14px;
+}
+.alma-banker-card[data-tier="ochre"] {
+  background: linear-gradient(180deg, #FFFCF2 0%, #FAEFD2 100%);
+  border-left: 3px solid #E8B339;
+  padding-left: 14px;
+}
+.alma-banker-card[data-tier="gold"] {
+  background: linear-gradient(180deg, #FFFCF2 0%, #FBF1D6 100%);
+  border-color: #C9A24C;
+  border-left: 4px solid #C9A24C;
+  padding-left: 13px;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,0.9) inset, 0 0 0 1px rgba(201, 162, 76, 0.18), 0 16px 32px -10px rgba(201, 162, 76, 0.28);
+}
+
+.alma-banker-warmth {
+  background: rgba(46, 90, 136, 0.10);
+  color: #1B3B5F;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.alma-banker-card[data-tier="ochre"] .alma-banker-warmth {
+  background: rgba(232, 179, 57, 0.18);
+  color: #92400E;
+}
+.alma-banker-card[data-tier="gold"] .alma-banker-warmth {
+  background: rgba(201, 162, 76, 0.18);
+  color: #8E6E14;
+}
+
+.alma-banker-stage-roman { color: #1B3B5F; }
+.alma-banker-stage-name { color: #5C6472; }
+.alma-banker-card[data-tier="ochre"] .alma-banker-stage-roman,
+.alma-banker-card[data-tier="ochre"] .alma-banker-stage-name { color: #92400E; }
+.alma-banker-card[data-tier="gold"] .alma-banker-stage-roman,
+.alma-banker-card[data-tier="gold"] .alma-banker-stage-name { color: #8E6E14; }
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-deck-stack,
+  .alma-deck-stack-card,
+  .alma-deck-top-content,
+  .alma-deck-open-header,
+  .alma-deck-close,
+  .alma-deck-spread,
+  .alma-banker-card {
+    transition: none !important;
+    animation: none !important;
+  }
+  .alma-deck[data-open] .alma-banker-card {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes alma-line-flow {
+  to { stroke-dashoffset: 16; }
+}
+
+.alma-line-flow {
+  stroke-dasharray: 10 6;
+  animation: alma-line-flow 1.4s linear infinite;
+  opacity: 0.7;
+}
+
+.alma-fill-grow {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: alma-fill-grow 1.2s cubic-bezier(.22, .75, .3, 1) 200ms forwards;
+}
+
+@keyframes alma-fill-grow {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+.alma-fill-tip {
+  animation: alma-fill-tip 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 2px currentColor);
+  transform-origin: center;
+}
+
+@keyframes alma-fill-tip {
+  0%, 100% {
+    r: 2.4;
+    opacity: 1;
+  }
+  50% {
+    r: 4;
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alma-line-flow {
+    animation: none;
+    opacity: 0;
+  }
+  .alma-fill-grow {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .alma-fill-tip {
+    animation: none;
+  }
+}
