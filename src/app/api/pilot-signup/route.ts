@@ -4,7 +4,7 @@
 // pilot_signups table — admin reviews and approves manually via the
 // admin reset-password flow.
 //
-// Fires a Telegram alert on every new request so admins get real-time
+// Fires a Telegram alert on every real request (new or repeat) so admins get real-time
 // pings instead of having to poll the table. Closed-beta posture: 100
 // users max while Gmail OAuth is in testing mode.
 
@@ -116,11 +116,13 @@ export async function POST(request: Request) {
     // the user's response — a bare `void` promise gets frozen with the
     // function once the response is sent, silently dropping the alert.
     // sendTelegram never throws, so Telegram being down can't fail signup.
-    // Skip synthetic CI emails (smoke-/e2e-/@example.com) so the channel
-    // stays signal-only and real signups don't get drowned by test runs.
-    if (isNew && !isSyntheticEmail(email)) {
+    // Fires on every real submission, including re-submits of an existing
+    // email (labelled as such), so admins see all activity. Skip synthetic
+    // CI emails (smoke-/e2e-/@example.com) so the channel stays signal-only
+    // and real signups don't get drowned by test runs.
+    if (!isSyntheticEmail(email)) {
       after(() => sendTelegram(
-          `📥 New Alma access request\n\n` +
+          (isNew ? `📥 New Alma access request\n\n` : `🔁 Repeat Alma access request (existing email, row updated)\n\n`) +
           `Email: ${email}\n` +
           `Name: ${name ?? "(not provided)"}\n` +
           `University: ${university ?? "(not provided)"}\n` +
