@@ -8,7 +8,7 @@
 // pings instead of having to poll the table. Closed-beta posture: 100
 // users max while Gmail OAuth is in testing mode.
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getAdminClient } from "@/lib/supabase-admin";
 import { sendTelegram } from "@/lib/telegram";
 import { isSyntheticEmail } from "@/lib/synthetic-email";
@@ -112,12 +112,14 @@ export async function POST(request: Request) {
       confirmationEmailError = "RESEND_API_KEY not set";
     }
 
-    // Real-time admin ping. Fire-and-forget — don't add latency to the
-    // user's response, and don't fail the signup if Telegram is down.
+    // Real-time admin ping. Sent via after() so it doesn't add latency to
+    // the user's response — a bare `void` promise gets frozen with the
+    // function once the response is sent, silently dropping the alert.
+    // sendTelegram never throws, so Telegram being down can't fail signup.
     // Skip synthetic CI emails (smoke-/e2e-/@example.com) so the channel
     // stays signal-only and real signups don't get drowned by test runs.
     if (isNew && !isSyntheticEmail(email)) {
-      void sendTelegram(
+      after(() => sendTelegram(
           `📥 New Alma access request\n\n` +
           `Email: ${email}\n` +
           `Name: ${name ?? "(not provided)"}\n` +
@@ -126,7 +128,7 @@ export async function POST(request: Request) {
           `Grad year: ${graduationYear ?? "(not provided)"}\n` +
           `Confirmation email: ${confirmationEmailSent ? "sent" : `not sent (${confirmationEmailError ?? "skipped"})`}\n\n` +
           `Approve via /admin → Reset password → email link.`
-      );
+      ));
     }
 
     return NextResponse.json({ success: true, isNew, confirmationEmailSent });

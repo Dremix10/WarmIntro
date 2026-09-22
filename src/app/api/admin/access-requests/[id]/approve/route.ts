@@ -6,7 +6,7 @@
 //
 // `id` here is the pilot_signups row id, NOT a user id.
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
@@ -179,14 +179,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Telegram backup — admin can still copy the link if email delivery
   // failed or RESEND_API_KEY isn't set.
-  void sendTelegram(
+  after(() => sendTelegram(
     `✅ Approved access\n\n` +
       `Email: ${email}\n` +
       `Name: ${row.name ?? "(not provided)"}\n` +
       `University: ${row.university ?? "(not provided)"}\n` +
       `Welcome email: ${emailSent ? "sent ✓" : "FAILED — forward manually"}\n\n` +
       `Setup link (good for ${WELCOME_SETUP_TOKEN_TTL_LABEL}):\n${setupLink}`
-  );
+  ));
 
   return NextResponse.json({ ok: true, email, setupLink, expiresAt, emailSent });
 }

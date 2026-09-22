@@ -2,7 +2,7 @@
 // floating button inside the app. Writes to the feedback table and fires
 // a Telegram alert so admins see it in real time.
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getUser } from "@/lib/auth";
 import { sendTelegram } from "@/lib/telegram";
 
@@ -45,11 +45,11 @@ export async function POST(request: Request) {
   // Telegram so admins get the ping without polling the table. Plain
   // text (no Markdown) — feedback bodies have arbitrary punctuation.
   const emoji = kind === "bug" ? "🐛" : kind === "praise" ? "💛" : "💬";
-  void sendTelegram(
+  after(() => sendTelegram(
     `${emoji} ${kind.toUpperCase()} from ${ctx.user.email ?? "(unknown)"}\n` +
       (page ? `On: ${page}\n` : "") +
       `\n${body.slice(0, 800)}`
-  );
+  ));
 
   return NextResponse.json({ ok: true });
 }
