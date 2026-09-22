@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alma
 
-## Getting Started
+**[alma.careers](https://www.alma.careers)** — AI-powered outreach for investment banking recruiting.
 
-First, run the development server:
+Alma finds the right bankers to talk to, drafts personalized cold emails on your behalf, and gets smarter every week about who actually replies.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What it does
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Sources and verifies contacts** at target banks and groups, enriching each one with real-time context — recent posts, deals, quotes — so outreach never reads like a template.
+- **Drafts, reviews, and fact-checks** every email before it sends. A dedicated agent verifies every specific claim against live web evidence before a human ever sees the draft.
+- **Learns from outcomes.** A weekly job correlates who actually replied against how the system scored them going in, and recalibrates future targeting based on what worked — not assumptions baked in on day one.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+A deterministic planner (not an LLM call) dispatches a small team of specialized agents:
 
-## Learn More
+- **Researcher** finds and ranks candidates against the user's target list
+- **Correspondent** drafts the email
+- **Critic** reviews every draft on four axes and can escalate to a human
+- **Fact-checker** verifies every specific claim against live web search before the draft goes out
+- **Architect** watches for recurring rejection patterns and proposes prompt improvements, closing the loop
 
-To learn more about Next.js, take a look at the following resources:
+Send actions are gated by a graduated trust system — Alma earns more autonomy as its output proves reliable, rather than starting with full send access.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Next.js, TypeScript, Claude (Sonnet 4.5), Supabase, Gmail API, Hunter.io.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with a Brown University collaborator after pitching the idea at their Emergent Conference, following a hackathon win.
